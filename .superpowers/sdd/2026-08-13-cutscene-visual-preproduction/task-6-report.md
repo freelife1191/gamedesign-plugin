@@ -91,3 +91,36 @@ workflow task before that broader suite can be green.
 - `quick_validate.py` → pass. The Career image suite was re-run unchanged and
   still has the same two pre-existing host-callback failures documented above
   (29 passing, 2 failing); Fix round 1 does not touch that runtime or product.
+
+## Fix round 2 — serial predecessor dispatch guard
+
+### Baseline and RED
+
+- The forward test found that a fully current cost schedule and live approval
+  could dispatch `keyframes` before `reference-masters`, or `storyboard`
+  before `keyframes`; explicit retry read its journal before enforcing serial
+  completion. Three new public tests reproduced those paths.
+
+### Forward result
+
+- `runApprovedCutsceneImageWave` and `retryCutsceneFailedAssets` share the
+  `assertCurrent` predecessor guard. Before any journal/artifact I/O or
+  provider dispatch, every earlier wave must be `completed` and have an exact
+  `{kind:"completed", assetIds}` set. Missing state rejects with stable
+  `cutscene.predecessor_wave_incomplete` and the exact plan wave-state path.
+- The regressions prove keyframes/reference-masters, storyboard/keyframes, and
+  retry all make zero provider calls and leave the complete artifact snapshot,
+  including journal contents, unchanged. Existing full predecessor completion
+  still permits storyboard dispatch and the reference-wave public retry.
+
+### Limit
+
+- This guard enforces serial state authority only; existing plan validation,
+  request binding, approval, cost-cap, journal, and continuity gates retain
+  responsibility for their own closed contracts. No live provider or network
+  call was made by this fix.
+
+### Fix validation
+
+- Task 4/6 plus Studio/Career source matrix → 238 passing, 0 failing,
+  including temporary Studio/Career shared runtime/schema parity.

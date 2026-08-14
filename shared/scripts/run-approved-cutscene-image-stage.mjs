@@ -35,6 +35,15 @@ function selectedWave(plan, waveId, selectedAssetIds, allowSubset = false) {
   return wave;
 }
 
+function assertCompletedPredecessors(plan, waveId) {
+  const targetIndex = plan.cutsceneWorkflow.waves.findIndex(({ id }) => id === waveId);
+  for (let index = 0; index < targetIndex; index += 1) {
+    const wave = plan.cutsceneWorkflow.waves[index];
+    if (wave.state !== "completed") throw coded("cutscene.predecessor_wave_incomplete", `/cutsceneWorkflow/waves/${index}/state`);
+    if (wave.completion?.kind !== "completed" || !same(wave.completion.assetIds, wave.assetIds)) throw coded("cutscene.predecessor_completion_incomplete", `/cutsceneWorkflow/waves/${index}/completion/assetIds`);
+  }
+}
+
 function journalRelativePath(record) {
   return `cutscene/usage-receipts/${record.waveId}/${record.assetId}/${sequenceName(record.attemptSequence)}-${record.attemptId}.${record.kind}.json`;
 }
@@ -145,6 +154,7 @@ function assertCurrent(input) {
   if (input.plan?.mode !== "generate-after-approval") throw coded("cutscene.mode_generation_forbidden", "/mode");
   if (Object.hasOwn(input, "authorizeProviderAttempt")) throw coded("cutscene.authorization_seam_forbidden", "/authorizeProviderAttempt");
   const wave = selectedWave(input.plan, input.waveId, input.selectedAssetIds, isExplicitRetry(input));
+  assertCompletedPredecessors(input.plan, wave.id);
   const authority = resolveCutsceneGenerationAuthority({ plan: input.plan, promptPackage: input.promptPackage });
   const estimate = assertCurrentCutsceneEstimate({ estimate: input.estimate, authority, pricingSnapshot: input.pricingSnapshot });
   if (estimate.costStatus !== "available") throw coded("cutscene.cost_estimate_unavailable", "/estimate/costStatus");

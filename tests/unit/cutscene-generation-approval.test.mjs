@@ -70,9 +70,8 @@ function manifestFixture(plan = planFixture()) {
   }).manifest;
 }
 
-function promptPackageFixture(plan = planFixture()) {
+function promptPackageFixture(plan = planFixture(), manifest = manifestFixture(plan)) {
   const assetIds = plan.cutsceneWorkflow.waves.flatMap((wave) => wave.assetIds);
-  const manifest = manifestFixture(plan);
   const manifestById = new Map(manifest.assets.map((asset) => [asset.asset_id, asset]));
   const promptPackage = {
     kind: "generation-ready",
@@ -84,6 +83,25 @@ function promptPackageFixture(plan = planFixture()) {
     prompts: assetIds.map((assetId) => ({ assetId, prompt: manifestById.get(assetId).prompt, promptSha256: manifestById.get(assetId).prompt_sha256 })),
   };
   return { ...promptPackage, promptPackageSha256: digest(promptPackage) };
+}
+
+function markPredecessorsCompleted(plan, waveId) {
+  const targetIndex = plan.cutsceneWorkflow.waves.findIndex(({ id }) => id === waveId);
+  for (const wave of plan.cutsceneWorkflow.waves.slice(0, targetIndex)) {
+    wave.state = "completed";
+    wave.completion = { kind: "completed", assetIds: [...wave.assetIds] };
+  }
+  return plan;
+}
+
+function manifestBoundToPlan(plan) {
+  const manifest = manifestFixture(plan);
+  const planSha256 = digest(plan);
+  const dagSha256 = digest(plan.cutsceneWorkflow.downstream);
+  for (const asset of manifest.assets) {
+    asset.approval_binding_sha256 = digest({ assetId: asset.asset_id, dagSha256, planSha256, promptSha256: asset.prompt_sha256 });
+  }
+  return manifest;
 }
 
 function pricingSnapshotFixture(overrides = {}) {
@@ -116,10 +134,10 @@ const issue = (authority = authorityFixture()) => {
 };
 const context = (binding, overrides = {}) => ({ ...approvalEvent(), now: "2026-08-13T00:01:00.000Z", ...binding, ...overrides });
 
-function stageFixture({ waveId = "style-master", retryReserve = 1, provider = "openai", ceilings } = {}) {
-  const plan = planFixture();
-  const manifest = manifestFixture(plan);
-  const promptPackage = promptPackageFixture(plan);
+function stageFixture({ waveId = "style-master", retryReserve = 1, provider = "openai", ceilings, plan = planFixture(), completePredecessors = true } = {}) {
+  if (completePredecessors) markPredecessorsCompleted(plan, waveId);
+  const manifest = manifestBoundToPlan(plan);
+  const promptPackage = promptPackageFixture(plan, manifest);
   const pricingSnapshot = pricingSnapshotFixture({ provider });
   const assetIds = [...plan.cutsceneWorkflow.waves.find(({ id }) => id === waveId).assetIds].sort();
   const attemptCeilings = assetIds.map((assetId, index) => ({ assetId, maximumUsd: ceilings?.[index] ?? 0.4 }));
@@ -148,6 +166,20 @@ async function journalSnapshot(artifactRoot, waveId) {
       entries.push([path.relative(artifactRoot, absolute), await readFile(absolute, "utf8")]);
     }
   }
+  return entries;
+}
+
+async function artifactSnapshot(artifactRoot) {
+  const entries = [];
+  async function visit(directory, relative = "") {
+    for (const entry of (await readdir(directory, { withFileTypes: true })).sort((left, right) => left.name.localeCompare(right.name))) {
+      const childRelative = relative ? `${relative}/${entry.name}` : entry.name;
+      const absolute = path.join(directory, entry.name);
+      if (entry.isDirectory()) await visit(absolute, childRelative);
+      else entries.push([childRelative, await readFile(absolute)]);
+    }
+  }
+  await visit(artifactRoot);
   return entries;
 }
 
@@ -334,6 +366,7 @@ test("v2 journal keeps a wave-global sequence across internal and explicit retri
   const artifactRoot = await mkdtemp(path.join(tmpdir(), "cutscene-journal-"));
   t.after(() => rm(artifactRoot, { recursive: true, force: true }));
   const fixture = stageFixture({ waveId: "reference-masters", retryReserve: 2, ceilings: [0.3, 0.5] });
+  assert.deepEqual(fixture.plan.cutsceneWorkflow.waves[0].completion, { kind: "completed", assetIds: [...fixture.plan.cutsceneWorkflow.waves[0].assetIds] });
   let calls = 0;
   const first = await runApprovedCutsceneImageWave({
     ...fixture, artifactRoot, workspaceRoot: artifactRoot,
@@ -471,6 +504,95 @@ test("a fresh named approval for the still-current full-wave retry preserves pri
   assert.deepEqual(retried.output.providerResult.results.map(({ asset_id: assetId }) => assetId), [failedAssetId]);
   assert.deepEqual(await readFile(path.join(artifactRoot, succeededOutput)), preservedBytes);
   assert.equal(retried.output.journal.retryConsumed, 2);
+});
+
+test("keyframe dispatch rejects an uncompleted reference-masters predecessor before provider or artifact writes", async (t) => {
+  const artifactRoot = await mkdtemp(path.join(tmpdir(), "cutscene-keyframe-predecessor-"));
+  t.after(() => rm(artifactRoot, { recursive: true, force: true }));
+  const plan = planFixture();
+  markPredecessorsCompleted(plan, "reference-masters");
+  const fixture = stageFixture({ plan, waveId: "keyframes", completePredecessors: false, ceilings: [0.4] });
+  await mkdir(path.join(artifactRoot, "unrelated"));
+  await writeFile(path.join(artifactRoot, "unrelated", "keep.txt"), "unchanged\n");
+  const before = await artifactSnapshot(artifactRoot);
+  let providerCalls = 0;
+  await assert.rejects(
+    () => runApprovedCutsceneImageWave({
+      ...fixture,
+      artifactRoot,
+      workspaceRoot: artifactRoot,
+      fetchFn: async () => { providerCalls += 1; return imageResponse({ requestId: "must-not-dispatch" }); },
+    }),
+    { code: "cutscene.predecessor_wave_incomplete", path: "/cutsceneWorkflow/waves/1/state" },
+  );
+  assert.equal(providerCalls, 0);
+  assert.deepEqual(await artifactSnapshot(artifactRoot), before);
+});
+
+test("storyboard dispatch rejects an uncompleted keyframes predecessor before provider or artifact writes", async (t) => {
+  const artifactRoot = await mkdtemp(path.join(tmpdir(), "cutscene-storyboard-predecessor-"));
+  t.after(() => rm(artifactRoot, { recursive: true, force: true }));
+  const plan = planFixture();
+  markPredecessorsCompleted(plan, "keyframes");
+  const fixture = stageFixture({ plan, waveId: "storyboard", completePredecessors: false, ceilings: [0.4] });
+  await mkdir(path.join(artifactRoot, "unrelated"));
+  await writeFile(path.join(artifactRoot, "unrelated", "keep.txt"), "unchanged\n");
+  const before = await artifactSnapshot(artifactRoot);
+  let providerCalls = 0;
+  await assert.rejects(
+    () => runApprovedCutsceneImageWave({
+      ...fixture,
+      artifactRoot,
+      workspaceRoot: artifactRoot,
+      fetchFn: async () => { providerCalls += 1; return imageResponse({ requestId: "must-not-dispatch" }); },
+    }),
+    { code: "cutscene.predecessor_wave_incomplete", path: "/cutsceneWorkflow/waves/2/state" },
+  );
+  assert.equal(providerCalls, 0);
+  assert.deepEqual(await artifactSnapshot(artifactRoot), before);
+});
+
+test("retry rejects an uncompleted predecessor before reading or changing the journal", async (t) => {
+  const artifactRoot = await mkdtemp(path.join(tmpdir(), "cutscene-retry-predecessor-"));
+  t.after(() => rm(artifactRoot, { recursive: true, force: true }));
+  const plan = planFixture();
+  markPredecessorsCompleted(plan, "reference-masters");
+  const fixture = stageFixture({ plan, waveId: "keyframes", completePredecessors: false, ceilings: [0.4] });
+  await mkdir(path.join(artifactRoot, "cutscene", "usage-receipts", fixture.waveId), { recursive: true });
+  await writeFile(path.join(artifactRoot, "cutscene", "usage-receipts", fixture.waveId, "keep.txt"), "unchanged\n");
+  const before = await artifactSnapshot(artifactRoot);
+  let providerCalls = 0;
+  await assert.rejects(
+    () => retryCutsceneFailedAssets({
+      ...fixture,
+      artifactRoot,
+      workspaceRoot: artifactRoot,
+      failedAssetIds: [fixture.selectedAssetIds[0]],
+      fetchFn: async () => { providerCalls += 1; return imageResponse({ requestId: "must-not-dispatch" }); },
+    }),
+    { code: "cutscene.predecessor_wave_incomplete", path: "/cutsceneWorkflow/waves/1/state" },
+  );
+  assert.equal(providerCalls, 0);
+  assert.deepEqual(await artifactSnapshot(artifactRoot), before);
+});
+
+test("storyboard dispatch remains available when every predecessor has an exact completed asset set", async (t) => {
+  const artifactRoot = await mkdtemp(path.join(tmpdir(), "cutscene-storyboard-complete-"));
+  t.after(() => rm(artifactRoot, { recursive: true, force: true }));
+  const fixture = stageFixture({ waveId: "storyboard", ceilings: [0.4] });
+  for (const wave of fixture.plan.cutsceneWorkflow.waves.slice(0, 3)) {
+    assert.equal(wave.state, "completed");
+    assert.deepEqual(wave.completion, { kind: "completed", assetIds: [...wave.assetIds] });
+  }
+  let providerCalls = 0;
+  const output = await runApprovedCutsceneImageWave({
+    ...fixture,
+    artifactRoot,
+    workspaceRoot: artifactRoot,
+    fetchFn: async () => { providerCalls += 1; return imageResponse({ requestId: "storyboard-complete" }); },
+  });
+  assert.equal(providerCalls, fixture.selectedAssetIds.length);
+  assert.equal(output.providerResult.results.length, fixture.selectedAssetIds.length);
 });
 
 test("authorization without outcome consumes its full ceiling and blocks ordinary reentry while legacy records fail closed", async (t) => {
@@ -641,14 +763,15 @@ test("real Task 2 manifest and generation-ready package bind Task 3 approval thr
   const planned = planCutsceneVisualPreproduction({
     cutsceneId: "cutscene-escape", mode: "generate-after-approval", beats: [{ beatId: "BEAT-01" }], shots: [{ shotId: "SHOT-01", beatId: "BEAT-01" }],
   });
-  const manifest = structuredClone(planned.manifest);
+  const waveId = "reference-masters";
+  markPredecessorsCompleted(planned.plan, waveId);
+  const manifest = manifestBoundToPlan(planned.plan);
   const styleId = planned.plan.cutsceneWorkflow.waves.find(({ id }) => id === "style-master").assetIds[0];
   const style = manifest.assets.find(({ asset_id }) => asset_id === styleId);
   style.generation_state = "generated";
   await mkdir(path.dirname(path.join(artifactRoot, style.output.path)), { recursive: true });
   await writeFile(path.join(artifactRoot, style.output.path), validPng(1024, 1024));
   const promptPackage = await bindCutscenePromptPackage({ artifactRoot, plan: planned.plan, manifest });
-  const waveId = "reference-masters";
   const assetIds = [...planned.plan.cutsceneWorkflow.waves.find(({ id }) => id === waveId).assetIds].sort();
   const pricingSnapshot = pricingSnapshotFixture();
   const estimate = estimateCutsceneImageCost({ plan: planned.plan, promptPackage, manifest, waveId, pricingSnapshot, retryReserve: 1, attemptCeilings: assetIds.map((assetId, index) => ({ assetId, maximumUsd: index === 0 ? 0.31 : 0.47 })) });
