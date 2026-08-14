@@ -1,0 +1,5 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://local.game-design-plugin/shared/image-assets/schema/cutscene-generation-usage.schema.json", "title": "Cutscene generation usage receipt", "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "waveId", "assetId", "attemptId", "providerRequestId", "inputTokens", "inputTextTokens", "inputImageTokens", "cachedTextTokens", "cachedImageTokens", "outputTokens", "totalTokens"],
+  "properties": {"schemaVersion": {"const": 1}, "waveId": {"enum": ["style-master", "reference-masters", "keyframes", "storyboard"]}, "assetId": {"type": "string", "minLength": 1}, "attemptId": {"type": "string", "minLength": 1}, "providerRequestId": {"type": "string", "minLength": 1}, "inputTokens": {"type": "integer", "minimum": 0}, "inputTextTokens": {"type": "integer", "minimum": 0}, "inputImageTokens": {"type": "integer", "minimum": 0}, "cachedTextTokens": {"type": "integer", "minimum": 0}, "cachedImageTokens": {"type": "integer", "minimum": 0}, "outputTokens": {"type": "integer", "minimum": 0}, "totalTokens": {"type": "integer", "minimum": 0}}
+}
