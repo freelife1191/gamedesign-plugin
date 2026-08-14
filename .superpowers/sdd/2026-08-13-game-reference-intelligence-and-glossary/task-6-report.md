@@ -30,3 +30,17 @@ Implemented and verified. The source contracts now append the canonical `referen
 ## Scope note
 
 `tooling/lib/product-contract.mjs` received the approved one-item allowlist extension. `tooling/lib/user-guides.mjs`, the two product contract suites, and the isolation suite update only the exact installed 21→23 inventory; Task 5’s ordered 22 route IDs and Studio’s 13 route shapes remain unchanged. No generated `plugins/` output was modified.
+
+## Fix round 1/5 — provenance, syntax-aware graph, and semantic tuples
+
+### RED
+
+- The exact-byte and zero-byte product overlays initially built successfully because generic package deduplication intentionally accepts equal bytes; only the different-byte overlay failed as a generic content collision.
+- The scanner consumer module did not exist, so its unit test failed to import. The old regex graph scanner could not distinguish comments, strings, template text, import attributes, or nonliteral dynamic imports.
+
+### GREEN
+
+- Reference-intelligence destinations now reject a second producer before output publication, including exact-byte, zero-byte/same-hash, and different-byte overlays. Existing shared-module byte-identical deduplication remains covered by the unchanged build-product tests.
+- `tooling/lib/js-import-scanner.mjs` provides the shared lexer used by both contract graph checks and isolation fixture runtime collection. It recognizes static/bare/export imports and literal dynamic imports with options, ignores comments/string/template text, and rejects nonliteral dynamic imports.
+- `tooling/lib/reference-intelligence-contract.mjs` owns the exact closed dual-layout parser/classifier. Direct tests fix the three allowed source-runtime tuples and reject contract or counterpart mutation. Tree audit consumes an opaque tuple set and isolation requires all three exact tuples to be consumed once; a byte-mutated source declaration now reaches semantic classification before byte verification.
+- Focused verification: 64 primary tests and 31 isolation/product tests pass; isolation smoke passes both products at 23 exact skills. MJS syntax, repository JSON parsing, and diff checks pass.

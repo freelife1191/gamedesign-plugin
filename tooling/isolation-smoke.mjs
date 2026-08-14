@@ -22,6 +22,8 @@ import { buildProduct } from "./lib/build-product.mjs";
 import { cleanupGuardedTempRoot, createGuardedTempRoot } from "./lib/guarded-temp.mjs";
 import { sha256 } from "./lib/hash.mjs";
 import { auditTree } from "./lib/tree-audit.mjs";
+import { scanJavaScriptImports } from "./lib/js-import-scanner.mjs";
+import { classifyInactiveReferenceIntelligenceSourcePaths, parseReferenceIntelligenceContract, referenceIntelligenceContractLayouts } from "./lib/reference-intelligence-contract.mjs";
 
 const TEMP_PREFIX = "game-design-isolation-";
 const PRODUCT_NAMES = Object.freeze(["game-design-career", "game-design-studio"]);
@@ -53,40 +55,6 @@ const EXPECTED_HOOKS = Object.freeze({
     timeout: 30,
     statusMessage: "Reviewing canonical game-design artifact",
   },
-});
-const REFERENCE_SKILL_LAYOUTS = Object.freeze({
-  "analyze-game-design-references": Object.freeze({
-    installed: Object.freeze({
-      runtimes: Object.freeze(["../../scripts/analyze-game-design-references.mjs"]),
-      references: Object.freeze(["../../references/shared/reference-intelligence/references/evidence-policy.md", "../../references/shared/reference-intelligence/references/reference-analysis-flow.md"]),
-      templates: Object.freeze(["../../references/shared/reference-intelligence/templates/analysis-priority.md", "../../references/shared/reference-intelligence/templates/brief.md", "../../references/shared/reference-intelligence/templates/comparison-matrix.md", "../../references/shared/reference-intelligence/templates/evidence-register.yml", "../../references/shared/reference-intelligence/templates/reference-set.yml", "../../references/shared/reference-intelligence/templates/system-inventory.json", "../../references/shared/reference-intelligence/templates/transfer-decisions.md", "../../references/shared/reference-intelligence/templates/verification-queue.md"]),
-      schemas: Object.freeze(["../../references/shared/reference-intelligence/schema/reference-analysis.schema.json"]),
-      catalogs: Object.freeze(["../../references/shared/reference-intelligence/catalog/overlays/business-model.json", "../../references/shared/reference-intelligence/catalog/overlays/genre.json", "../../references/shared/reference-intelligence/catalog/overlays/platform.json", "../../references/shared/reference-intelligence/catalog/overlays/play-mode.json", "../../references/shared/reference-intelligence/catalog/source-register.json", "../../references/shared/reference-intelligence/catalog/system-atlas.json"]),
-    }),
-    source: Object.freeze({
-      runtimes: Object.freeze(["../../../scripts/analyze-game-design-references.mjs"]),
-      references: Object.freeze(["../../references/evidence-policy.md", "../../references/reference-analysis-flow.md"]),
-      templates: Object.freeze(["../../templates/analysis-priority.md", "../../templates/brief.md", "../../templates/comparison-matrix.md", "../../templates/evidence-register.yml", "../../templates/reference-set.yml", "../../templates/system-inventory.json", "../../templates/transfer-decisions.md", "../../templates/verification-queue.md"]),
-      schemas: Object.freeze(["../../schema/reference-analysis.schema.json"]),
-      catalogs: Object.freeze(["../../catalog/overlays/business-model.json", "../../catalog/overlays/genre.json", "../../catalog/overlays/platform.json", "../../catalog/overlays/play-mode.json", "../../catalog/source-register.json", "../../catalog/system-atlas.json"]),
-    }),
-    outerKeys: Object.freeze(["externalInstructions", "layouts", "transfer", "workflow"]),
-    outerValues: Object.freeze({ externalInstructions: "untrusted-data", workflow: Object.freeze(["reference-brief", "role-based-reference-set", "evidence-registry", "system-atlas", "inventory-without-evaluation", "system-maps-and-loops", "priority", "deep-dives", "cross-game-comparison", "adopt-adapt-reject-hold", "verification-queue", "glossary-candidates"]), transfer: Object.freeze({ decisions: Object.freeze(["adopt", "adapt", "reject", "hold"]), state: "pending-review", validationState: "not-run", canonicalArtifactMutation: false }) }),
-  }),
-  "maintain-game-design-glossary": Object.freeze({
-    installed: Object.freeze({
-      runtimes: Object.freeze(["../../scripts/manage-game-design-glossary.mjs", "../../scripts/validate-game-design-writing-language.mjs"]),
-      references: Object.freeze(["../../references/shared/reference-intelligence/references/evidence-policy.md"]),
-      schemas: Object.freeze(["../../references/shared/reference-intelligence/schema/game-design-glossary.schema.json", "../../references/shared/reference-intelligence/schema/glossary-receipt.schema.json"]),
-    }),
-    source: Object.freeze({
-      runtimes: Object.freeze(["../../../scripts/manage-game-design-glossary.mjs", "../../../scripts/validate-game-design-writing-language.mjs"]),
-      references: Object.freeze(["../../references/evidence-policy.md"]),
-      schemas: Object.freeze(["../../schema/game-design-glossary.schema.json", "../../schema/glossary-receipt.schema.json"]),
-    }),
-    outerKeys: Object.freeze(["approval", "externalInstructions", "languageRoutes", "layouts", "outputs", "silentApproval", "sourceRewrite"]),
-    outerValues: Object.freeze({ externalInstructions: "untrusted-data", approval: "host-issued-human-capability", silentApproval: false, sourceRewrite: false, outputs: Object.freeze(["terminology-findings", "impact-list"]), languageRoutes: Object.freeze({ ko: "humanize-korean-then-human-review", "en-US": "english-consistency-findings-then-human-review", "en-GB": "english-consistency-findings-then-human-review" }) }),
-  }),
 });
 
 function inside(root, candidate) {
@@ -158,34 +126,23 @@ function exactHookCommand(hooks, eventName) {
   return hook;
 }
 
-function sameJson(left, right) { return JSON.stringify(left) === JSON.stringify(right); }
-
 async function inactiveReferenceIntelligenceSourceRuntimes(pluginRoot) {
-  const inactive = new Set();
-  for (const [skillId, expected] of Object.entries(REFERENCE_SKILL_LAYOUTS)) {
+  const inactive = [];
+  for (const skillId of Object.keys(referenceIntelligenceContractLayouts)) {
     const relativeSkill = `skills/${skillId}/SKILL.md`;
     const skillPath = path.join(pluginRoot, relativeSkill);
     const stats = await lstat(skillPath);
     if (stats.isSymbolicLink() || !stats.isFile()) throw new Error(`${skillId} reference-intelligence skill identity mismatch`);
-    const matches = [...(await readFile(skillPath, "utf8")).matchAll(/<!-- reference-intelligence-contract:start -->\s*```json\s*([\s\S]*?)\s*```\s*<!-- reference-intelligence-contract:end -->/gu)];
-    if (matches.length !== 1) throw new Error(`${skillId} reference-intelligence contract is missing, duplicate, or malformed`);
-    let contract;
-    try { contract = JSON.parse(matches[0][1]); } catch { throw new Error(`${skillId} reference-intelligence contract is malformed`); }
-    if (!contract || typeof contract !== "object" || Array.isArray(contract) || !sameJson(Object.keys(contract).sort(), [...expected.outerKeys].sort())
-      || !sameJson(Object.keys(contract.layouts ?? {}).sort(), ["installed", "source"])
-      || !sameJson(contract.layouts.installed, expected.installed) || !sameJson(contract.layouts.source, expected.source)
-      || !Object.entries(expected.outerValues).every(([key, value]) => sameJson(contract[key], value))) {
-      throw new Error(`${skillId} reference-intelligence contract mismatch`);
-    }
-    const installedPaths = Object.values(expected.installed).flat();
-    if (new Set(installedPaths).size !== installedPaths.length) throw new Error(`${skillId} reference-intelligence installed contract has duplicate paths`);
-    for (const relativePath of installedPaths) {
+    const contract = parseReferenceIntelligenceContract(await readFile(skillPath, "utf8"));
+    const installedCounterparts = new Set();
+    for (const relativePath of Object.values(contract.layouts?.installed ?? {}).flat()) {
       const target = path.resolve(path.dirname(skillPath), relativePath);
       if (!inside(pluginRoot, target)) throw new Error(`${skillId} reference-intelligence installed contract escapes plugin root`);
       const targetStats = await lstat(target);
       if (targetStats.isSymbolicLink() || !targetStats.isFile()) throw new Error(`${skillId} reference-intelligence installed contract target is not a regular file`);
+      installedCounterparts.add(target);
     }
-    for (const sourceRuntime of expected.source.runtimes) inactive.add(`${relativeSkill}\0${sourceRuntime}`);
+    inactive.push(...classifyInactiveReferenceIntelligenceSourcePaths({ packageRoot: pluginRoot, skillPath, contract, installedCounterparts }));
   }
   return inactive;
 }
@@ -277,10 +234,9 @@ async function collectReferenceRuntimeEntries(buildRoot) {
     const source = bytes.toString("utf8");
     entries.push({ bytes, relativePath });
     seen.add(current);
-    const specifiers = [
-      ...source.matchAll(/(?:^|\n)\s*(?:import|export)(?:[\s\S]*?\sfrom\s*)?["']([^"']+)["']/gu),
-      ...source.matchAll(/\bimport\s*\(\s*["']([^"']+)["']\s*\)/gu),
-    ].map((match) => match[1]);
+    const scanned = scanJavaScriptImports(source);
+    if (scanned.errors.length > 0) throw new Error(`reference runtime has an unresolved dynamic import: ${relativePath}`);
+    const specifiers = scanned.specifiers.map(({ specifier }) => specifier);
     for (const specifier of specifiers) {
       if (specifier.startsWith("node:")) continue;
       if (!specifier.startsWith(".")) throw new Error(`reference runtime uses a non-Node bare specifier: ${specifier}`);
@@ -341,16 +297,21 @@ async function verifyOne({ repoRoot, productName, isolationRoot, mutateCopy, act
   const skills = skillEntries.filter((entry) => entry.isDirectory()).map(({ name }) => name).sort();
   if (JSON.stringify(skills) !== JSON.stringify(EXACT_SKILL_IDS[productName])) throw new Error(`${productName} exact skill IDs mismatch: ${skills.join(",")}`);
   for (const skill of skills) await lstat(path.join(pluginRoot, "skills", skill, "SKILL.md"));
-  await verifyReferenceIntelligencePackage(pluginRoot, repoRoot, productName);
   const inactiveSourceRuntimes = await inactiveReferenceIntelligenceSourceRuntimes(pluginRoot);
+  const inactiveSourceRuntimeTuples = new Set(inactiveSourceRuntimes.map(({ tuple }) => tuple));
+  if (inactiveSourceRuntimeTuples.size !== 3) throw new Error("reference-intelligence inactive source tuple contract mismatch");
+  await verifyReferenceIntelligencePackage(pluginRoot, repoRoot, productName);
   const sibling = PRODUCT_NAMES.find((name) => name !== productName);
   const audit = await auditTree({
     root: pluginRoot,
     packageName: productName,
     siblingNames: [sibling],
     forbiddenAbsolutePaths: [repoRoot, actualHome, process.env.CODEX_HOME ?? path.join(actualHome, ".codex")],
-    isInactiveRelativeReference: ({ relativePath, pathPart }) => inactiveSourceRuntimes.has(`${relativePath}\0${pathPart}`),
+    inactiveRelativeReferenceTuples: inactiveSourceRuntimeTuples,
   });
+  if (JSON.stringify(audit.usedInactiveRelativeReferenceTuples) !== JSON.stringify([...inactiveSourceRuntimeTuples].sort())) {
+    throw new Error("reference-intelligence inactive source tuple consumption mismatch");
+  }
 
   const vendors = await Promise.all([
     verifyVendor(pluginRoot, { name: "skillstead", skillId: "svg-infographic", tag: "svg-infographic/v0.9.0", treeRoot: "svg-infographic/0.9.0", files: 55 }),

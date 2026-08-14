@@ -333,12 +333,21 @@ function addEntry(targets, entry, destinationPrefix, sourceLabel) {
   );
   const existing = targets.get(relativePath);
   if (existing) {
+    if (isReferenceIntelligenceDestination(relativePath)) {
+      throw new Error(`Reference-intelligence destination collision at ${relativePath} between ${existing.sourceLabel} and ${sourceLabel}`);
+    }
     if (!existing.bytes.equals(entry.bytes)) {
       throw new Error(`Content collision at ${relativePath} between ${existing.sourceLabel} and ${sourceLabel}`);
     }
     return;
   }
   targets.set(relativePath, { bytes: entry.bytes, relativePath, sourceLabel });
+}
+
+function isReferenceIntelligenceDestination(relativePath) {
+  return relativePath === "skills/analyze-game-design-references/SKILL.md"
+    || relativePath === "skills/maintain-game-design-glossary/SKILL.md"
+    || relativePath.startsWith("references/shared/reference-intelligence/");
 }
 
 function removeSourceOnlySkillsteadFallback(entry, productName) {

@@ -84,7 +84,7 @@ test("isolation smoke rejects a symlink introduced after extraction", async () =
   }), /symlink/u);
 });
 
-test("isolation smoke rejects a changed reference-intelligence source declaration before it can be used", async () => {
+test("isolation smoke sends a changed reference-intelligence source declaration to the semantic classifier before byte verification", async () => {
   await assert.rejects(runIsolationSmoke({
     repoRoot,
     mutateCopy: async ({ pluginRoot }) => {
@@ -92,7 +92,7 @@ test("isolation smoke rejects a changed reference-intelligence source declaratio
       const source = await readFile(target, "utf8");
       await writeFile(target, source.replace("../../../scripts/analyze-game-design-references.mjs", "../../../scripts/escaped-reference-runtime.mjs"));
     },
-  }), /reference-intelligence package bytes mismatch/u);
+  }), /reference-intelligence semantic contract mismatch/u);
 });
 
 test("temporary-root guard rejects broad and symlink roots", async () => {

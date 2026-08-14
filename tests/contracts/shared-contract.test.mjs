@@ -13,6 +13,7 @@ import { buildProduct } from "../../tooling/lib/build-product.mjs";
 import { collectTree } from "../../tooling/lib/copy-tree.mjs";
 import { loadProductContract, validateProductContract } from "../../tooling/lib/product-contract.mjs";
 import { verifyDiagramSkillVendor } from "../../tooling/sync-diagram-skills.mjs";
+import { scanJavaScriptImports } from "../../tooling/lib/js-import-scanner.mjs";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const sourceDocumentCategories = ["career", "fun-intent", "systems", "content", "feedback"];
@@ -176,10 +177,9 @@ async function assertCompilerlessRuntimeGraph({ root, entryPaths, allowedRoots, 
     visited.add(current);
     const source = await readFile(current, "utf8");
     assert.doesNotMatch(source, /node:child_process|(?<!\.)\b(?:spawn|exec|fork)(?:Sync|File)?\s*\(|["'][^"']*\.(?:c|cc|cpp|cxx)["']|\b(?:gcc|clang|cc|c\+\+)\s*\(/u);
-    const specifiers = [
-      ...source.matchAll(/(?:^|\n)\s*(?:import|export)(?:[\s\S]*?\sfrom\s*)?["']([^"']+)["']/gu),
-      ...source.matchAll(/\bimport\s*\(\s*["']([^"']+)["']\s*\)/gu),
-    ].map((match) => match[1]);
+    const scanned = scanJavaScriptImports(source);
+    assert.deepEqual(scanned.errors, [], `${label} runtime has an unresolved dynamic import`);
+    const specifiers = scanned.specifiers.map(({ specifier }) => specifier);
     for (const specifier of specifiers) {
       if (specifier.startsWith("node:")) continue;
       assert.ok(specifier.startsWith("."), `${label} runtime uses a non-Node bare specifier: ${specifier}`);

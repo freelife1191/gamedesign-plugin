@@ -128,13 +128,28 @@ test("reference-intelligence rejects unsafe source changes before publishing out
     ["credential file", async (fixture) => writeText(fixture.repoRoot, "shared/reference-intelligence/catalog/credentials.json", "{\"token\":\"blocked\"}\n"), /credential|unexpected shared reference-intelligence package file/iu],
     ["symlink", async (fixture) => symlink("evidence-policy.md", path.join(fixture.repoRoot, "shared/reference-intelligence/references/policy-link.md")), /symlink/iu],
     ["special file", async (fixture) => execFileSync("/usr/bin/mkfifo", [path.join(fixture.repoRoot, "shared/reference-intelligence/templates/blocked.fifo")]), /unsupported filesystem entry/iu],
-    ["product overlay collision", async (fixture) => writeText(fixture.repoRoot, "products/reference-intelligence-fixture/plugin/skills/analyze-game-design-references/SKILL.md", "overlay\n"), /content collision/iu],
+    ["product overlay collision", async (fixture) => writeText(fixture.repoRoot, "products/reference-intelligence-fixture/plugin/skills/analyze-game-design-references/SKILL.md", "overlay\n"), /reference-intelligence destination collision/iu],
   ];
   for (const [label, mutate, expected] of cases) {
     await t.test(label, async (t) => {
       const fixture = await buildFixture(t);
       await mutate(fixture);
       await assertNoOutputPublication(fixture, () => fixture.build(), expected);
+    });
+  }
+});
+
+test("reference-intelligence rejects every product overlay even when bytes match", async (t) => {
+  for (const [label, sourceContents, overlayContents] of [
+    ["exact bytes", "analysis skill\n", "analysis skill\n"],
+    ["zero-byte same hash", "", ""],
+    ["different bytes", "analysis skill\n", "different overlay\n"],
+  ]) {
+    await t.test(label, async (t) => {
+      const fixture = await buildFixture(t);
+      await writeText(fixture.repoRoot, "shared/reference-intelligence/skills/analyze-game-design-references/SKILL.md", sourceContents);
+      await writeText(fixture.repoRoot, "products/reference-intelligence-fixture/plugin/skills/analyze-game-design-references/SKILL.md", overlayContents);
+      await assertNoOutputPublication(fixture, () => fixture.build(), /reference-intelligence destination collision/iu);
     });
   }
 });
