@@ -6,6 +6,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { extractMarkdownLinks, validateUserGuides } from "../../tooling/lib/user-guides.mjs";
+import { validateArchifyCatalog } from "../../tooling/lib/archify-catalog.mjs";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const products = ["game-design-studio", "game-design-career"];
@@ -49,6 +50,38 @@ const rootGuideLinks = [
   { label: "Studio 용어 사전", target: "guides/game-design-studio/glossary.md" },
   { label: "Career 분석", target: "guides/game-design-career/reference-analysis.md" },
   { label: "Career 용어 사전", target: "guides/game-design-career/glossary.md" },
+];
+const baselineArchifyErrors = [
+  "stale-source: products/game-design-career/plugin/skills/reverse-engineer-game-design/SKILL.md",
+  "stale-source: products/game-design-studio/plugin/skills/design-game-systems/SKILL.md",
+  "stale-source: products/game-design-career/plugin/skills/polish-game-design-writing/SKILL.md",
+  "stale-source: products/game-design-studio/plugin/skills/polish-game-design-writing/SKILL.md",
+];
+const referenceGuideCatalogRecords = [
+  {
+    id: "excluded-6cfb0f7c2ba4",
+    product: "studio",
+    source_document: "guides/game-design-studio/reference-analysis.md",
+    source_section: "경쟁작 분석으로 설계 가설을 검토하기",
+  },
+  {
+    id: "excluded-38fa4feccf84",
+    product: "studio",
+    source_document: "guides/game-design-studio/glossary.md",
+    source_section: "용어 후보를 검토하고 스냅샷 만들기",
+  },
+  {
+    id: "excluded-3df497a4b09e",
+    product: "career",
+    source_document: "guides/game-design-career/reference-analysis.md",
+    source_section: "레퍼런스 분석을 포트폴리오 근거로 정리하기",
+  },
+  {
+    id: "excluded-2eb68785035f",
+    product: "career",
+    source_document: "guides/game-design-career/glossary.md",
+    source_section: "포트폴리오 용어를 사람 검토로 관리하기",
+  },
 ];
 
 function assertActiveInventoryStatements({ guideIndex, studioUseCases, marketplaceSmoke, archifyCatalog, careerWorkbench }) {
@@ -210,4 +243,65 @@ test("guide validation count follows the actual Markdown inventory", async () =>
   const validation = await validateUserGuides({ repoRoot, requireComplete: true });
   assert.equal(validation.ok, true, validation.errors.join("\n"));
   assert.equal(validation.counts.guides, files.length);
+});
+
+test("Task 7 Archify records leave only the a061964 baseline validator errors", async () => {
+  const catalog = JSON.parse(await readFile(path.join(repoRoot, "guides/archify-diagrams/catalog.json"), "utf8"));
+  const validation = await validateArchifyCatalog(catalog, { repoRoot });
+  assert.deepEqual(validation.errors, baselineArchifyErrors);
+  assert.deepEqual(validation.uncovered, []);
+
+  for (const record of referenceGuideCatalogRecords) {
+    const entry = catalog.entries.find((candidate) => candidate.id === record.id);
+    const source = await readFile(path.join(repoRoot, record.source_document));
+    assert.deepEqual(
+      {
+        id: entry?.id,
+        product: entry?.product,
+        source_document: entry?.source_document,
+        source_section: entry?.source_section,
+        source_digest: entry?.source_digest,
+        decision: entry?.decision,
+        exclusion_code: entry?.exclusion_code,
+        diagnostics: entry?.diagnostics,
+        spec: entry?.spec,
+        html: entry?.html,
+        receipt: entry?.receipt,
+        delivery_status: entry?.delivery_status,
+        visual_review: entry?.visual_review,
+      },
+      {
+        ...record,
+        source_digest: createHash("sha256").update(source).digest("hex"),
+        decision: "excluded",
+        exclusion_code: "excluded-better-as-text",
+        diagnostics: [],
+        spec: null,
+        html: null,
+        receipt: null,
+        delivery_status: "not-applicable",
+        visual_review: "not-applicable",
+      },
+      `${record.source_document}: canonical text exclusion`,
+    );
+    assert.match(entry.decision_reason, /copyable|복사 가능한/u);
+    assert.match(entry.decision_reason, /artifact|경로/u);
+    assert.match(entry.decision_reason, /사람 검토|승인/u);
+    assert.match(entry.decision_reason, /도식.*대체하지 못|본문.*정확/u);
+  }
+
+  const target = referenceGuideCatalogRecords[0];
+  const staleDigestCatalog = {
+    ...catalog,
+    entries: catalog.entries.map((entry) => entry.id === target.id ? { ...entry, source_digest: "0".repeat(64) } : entry),
+  };
+  const staleDigest = await validateArchifyCatalog(staleDigestCatalog, { repoRoot });
+  assert.ok(staleDigest.errors.includes(`stale-source: ${target.source_document}`), "guide digest mutation is rejected");
+
+  const omittedGuideCatalog = {
+    ...catalog,
+    entries: catalog.entries.filter((entry) => entry.id !== target.id),
+  };
+  const omittedGuide = await validateArchifyCatalog(omittedGuideCatalog, { repoRoot });
+  assert.deepEqual(omittedGuide.uncovered, [target.source_document], "guide omission is uncovered");
 });

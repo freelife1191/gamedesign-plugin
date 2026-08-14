@@ -44,7 +44,7 @@ function assertNoRepeatedGenericReasonTemplates(entries) {
 }
 
 function assertSuiteCatalogCardinality(catalog) {
-  assert.equal(catalog.entries.length, 711, "catalog must retain exactly 711 entries");
+  assert.equal(catalog.entries.length, 715, "catalog must retain exactly 715 entries");
   assert.equal(
     catalog.entries.filter((entry) => entry.source_document === "README.md").length,
     1,
@@ -418,10 +418,10 @@ test("Suite catalog cardinality rejects an appended record or duplicate README r
   const catalog = await loadArchifyCatalog({ repoRoot });
   const appended = structuredClone(catalog);
   appended.entries.push({ ...appended.entries[0], id: "unexpected-712th-record", source_document: "guides/README.md" });
-  assert.throws(() => assertSuiteCatalogCardinality(appended), /711/u);
+  assert.throws(() => assertSuiteCatalogCardinality(appended), /715/u);
   const duplicateReadme = structuredClone(catalog);
   duplicateReadme.entries.push({ ...duplicateReadme.entries[0], id: "duplicate-readme-record" });
-  assert.throws(() => assertSuiteCatalogCardinality(duplicateReadme), /711/u);
+  assert.throws(() => assertSuiteCatalogCardinality(duplicateReadme), /715/u);
   duplicateReadme.entries.pop();
   duplicateReadme.entries[1] = { ...duplicateReadme.entries[1], source_document: "README.md" };
   assert.throws(() => assertSuiteCatalogCardinality(duplicateReadme), /exactly one catalog record/u);
