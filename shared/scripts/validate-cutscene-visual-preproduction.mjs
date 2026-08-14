@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 
 import { validateImageAssetManifest } from "./validate-image-assets.mjs";
+import { isRfc3339DateTime } from "./lib/rfc3339.mjs";
 
 const WAVE_IDS = ["style-master", "reference-masters", "keyframes", "storyboard"];
 const WAVE_STATES = ["planned", "template-ready", "generation-ready", "cost-estimated", "approval-pending", "approved", "dispatching", "completed", "blocked", "invalidated"];
@@ -67,8 +68,12 @@ function closed(value, keys, path, issue, { unknownCode = "cutscene.unknown_key"
 
 function nonEmptySortedUnique(values, path, issue, { code = "cutscene.ids_unsorted_or_duplicate", emptyCode = "cutscene.array_empty", predicate = isText } = {}) {
   if (!Array.isArray(values) || values.length === 0) { issue(emptyCode, path); return false; }
-  for (const [index, value] of values.entries()) if (!predicate(value)) issue("cutscene.id_invalid", `${path}/${index}`);
-  for (let index = 1; index < values.length; index += 1) if (compareUtf8(values[index - 1], values[index]) >= 0) { issue(code, path); break; }
+  const valid = values.map((value, index) => {
+    const accepted = typeof value === "string" && predicate(value);
+    if (!accepted) issue("cutscene.id_invalid", `${path}/${index}`);
+    return accepted;
+  });
+  for (let index = 1; index < values.length; index += 1) if (valid[index - 1] && valid[index] && compareUtf8(values[index - 1], values[index]) >= 0) { issue(code, path); break; }
   return true;
 }
 
@@ -193,7 +198,7 @@ export function validateCutsceneGenerationApproval(value) {
     if (value?.schemaVersion !== 1) issue("cutscene.schema_version_invalid", "/schemaVersion");
     for (const field of ["eventId", "actor", "reviewer"]) if (!isText(value?.[field])) issue("cutscene.text_invalid", `/${field}`);
     if (value?.decision !== "approved") issue("cutscene.approval_decision_invalid", "/decision");
-    if (!isText(value?.decidedAt) || Number.isNaN(Date.parse(value.decidedAt))) issue("cutscene.timestamp_invalid", "/decidedAt");
+    if (!isRfc3339DateTime(value?.decidedAt)) issue("cutscene.timestamp_invalid", "/decidedAt");
     if (!WAVE_IDS.includes(value?.waveId)) issue("cutscene.wave_id_invalid", "/waveId");
     nonEmptySortedUnique(value?.assetIds, "/assetIds", issue, { emptyCode: "cutscene.asset_ids_empty", predicate: (id) => CUTSCENE_ID.test(id ?? "") });
     if (typeof value?.maximumApprovedUsd !== "number" || !Number.isFinite(value.maximumApprovedUsd) || value.maximumApprovedUsd < 0) issue("cutscene.maximum_approved_usd_invalid", "/maximumApprovedUsd");
@@ -209,7 +214,8 @@ export function validateCutsceneGenerationUsage(value) {
     closed(value, ["schemaVersion", "waveId", "assetId", "attemptId", "providerRequestId", "inputTokens", "inputTextTokens", "inputImageTokens", "cachedTextTokens", "cachedImageTokens", "outputTokens", "totalTokens"], "", issue);
     if (value?.schemaVersion !== 1) issue("cutscene.schema_version_invalid", "/schemaVersion");
     if (!WAVE_IDS.includes(value?.waveId)) issue("cutscene.wave_id_invalid", "/waveId");
-    for (const field of ["assetId", "attemptId", "providerRequestId"]) if (!isText(value?.[field])) issue("cutscene.text_invalid", `/${field}`);
+    if (!CUTSCENE_ID.test(value?.assetId ?? "")) issue("cutscene.asset_id_invalid", "/assetId");
+    for (const field of ["attemptId", "providerRequestId"]) if (!isText(value?.[field])) issue("cutscene.text_invalid", `/${field}`);
     const fields = ["inputTokens", "inputTextTokens", "inputImageTokens", "cachedTextTokens", "cachedImageTokens", "outputTokens", "totalTokens"];
     for (const field of fields) if (!Number.isInteger(value?.[field]) || value[field] < 0) issue("cutscene.usage_token_invalid", `/${field}`);
     if (value?.inputTokens !== value?.inputTextTokens + value?.inputImageTokens) issue("cutscene.usage_input_mismatch", "/inputTokens");
@@ -225,7 +231,7 @@ export function validateCutsceneContinuityReview(value) {
     if (value?.schemaVersion !== 1) issue("cutscene.schema_version_invalid", "/schemaVersion");
     if (!CUTSCENE_ID.test(value?.cutsceneId ?? "")) issue("cutscene.cutscene_id_invalid", "/cutsceneId");
     if (!isHash(value?.planSha256)) issue("cutscene.hash_invalid", "/planSha256");
-    if (!isText(value?.reviewedAt) || Number.isNaN(Date.parse(value.reviewedAt))) issue("cutscene.timestamp_invalid", "/reviewedAt");
+    if (!isRfc3339DateTime(value?.reviewedAt)) issue("cutscene.timestamp_invalid", "/reviewedAt");
     const expectedBlockers = [];
     if (!Array.isArray(value?.findings)) issue("cutscene.findings_invalid", "/findings");
     else value.findings.forEach((finding, index) => { const path = `/findings/${index}`; closed(finding, ["findingId", "code", "path", "sourceMasterIds", "affectedAssetIds", "blocking"], path, issue); if (!RECORD_ID.test(finding?.findingId ?? "")) issue("cutscene.finding_id_invalid", `${path}/findingId`); if (!isText(finding?.code)) issue("cutscene.finding_code_invalid", `${path}/code`); if (!isText(finding?.path)) issue("cutscene.finding_path_invalid", `${path}/path`); nonEmptySortedUnique(finding?.sourceMasterIds, `${path}/sourceMasterIds`, issue, { predicate: (id) => CUTSCENE_ID.test(id ?? "") }); nonEmptySortedUnique(finding?.affectedAssetIds, `${path}/affectedAssetIds`, issue, { predicate: (id) => CUTSCENE_ID.test(id ?? "") }); if (typeof finding?.blocking !== "boolean") issue("cutscene.finding_blocking_invalid", `${path}/blocking`); if (finding?.blocking === true) expectedBlockers.push(finding.findingId); });
@@ -262,18 +268,20 @@ function canonicalize(value, stack = new Set()) {
 export function canonicalCutsceneDocument(value) { return canonicalize(value); }
 export function cutsceneDocumentSha256(value) { return createHash("sha256").update(canonicalCutsceneDocument(value)).digest("hex"); }
 
-export function deriveCutsceneLifecycle({ manifest, waves, continuityReceipt, plan } = {}) {
+export function deriveCutsceneLifecycle({ plan, manifest, waves, continuityReceipt } = {}) {
+  const planValid = validateCutsceneVisualPlan(plan).ok;
+  const currentPlanSha256 = planValid ? cutsceneDocumentSha256(plan) : undefined;
   const listedWaves = Array.isArray(waves) && safeData(waves) ? waves : [];
+  const wavesValid = planValid && validateCutsceneVisualPlan({ ...plan, cutsceneWorkflow: { ...plan.cutsceneWorkflow, waves: listedWaves } }).ok;
   const lifecycle = listedWaves.some((wave) => wave?.state === "blocked" || wave?.state === "invalidated") ? "blocked"
     : listedWaves.some((wave) => wave?.state === "dispatching") ? "dispatching"
       : listedWaves.length > 0 && listedWaves.every((wave) => wave?.state === "completed") ? "completed" : "planned";
   const manifestValid = safeData(manifest) && validateImageAssetManifest(manifest).ok;
   const receiptValid = validateCutsceneContinuityReview(continuityReceipt).ok;
-  const planSha256 = safeData(plan) && isHash(plan?.sha256) ? plan.sha256 : undefined;
-  const receiptBound = receiptValid && planSha256 !== undefined && continuityReceipt.planSha256 === planSha256;
+  const receiptBound = receiptValid && currentPlanSha256 !== undefined && continuityReceipt.planSha256 === currentPlanSha256;
   const blockerIds = receiptBound ? [...continuityReceipt.blockingFindingIds] : [];
   const assets = manifestValid && Array.isArray(manifest.assets) ? manifest.assets : [];
-  const documentApproved = manifestValid && receiptBound && blockerIds.length === 0 && assets.length > 0 && assets.every((asset) => ["document-approved", "production-candidate"].includes(asset.approval_state));
+  const documentApproved = manifestValid && wavesValid && receiptBound && blockerIds.length === 0 && assets.length > 0 && assets.every((asset) => ["document-approved", "production-candidate"].includes(asset.approval_state));
   const productionCandidate = documentApproved && assets.every((asset) => asset.approval_state === "production-candidate");
   return { lifecycle: blockerIds.length > 0 ? "blocked" : lifecycle, documentApproved, productionCandidate, blockerIds };
 }

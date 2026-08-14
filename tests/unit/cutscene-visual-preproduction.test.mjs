@@ -1,8 +1,12 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { test } from "node:test";
+import { pathToFileURL } from "node:url";
 
 import { validateImageAssetManifest } from "../../shared/scripts/validate-image-assets.mjs";
+import { isRfc3339DateTime } from "../../shared/scripts/lib/rfc3339.mjs";
 
 import {
   canonicalCutsceneDocument,
@@ -87,16 +91,28 @@ const validUsage = () => ({
   totalTokens: 18,
 });
 
-const validContinuityReview = () => ({
+const validContinuityReview = (overrides = {}) => ({
   schemaVersion: 1,
   cutsceneId: "cutscene-escape",
   planSha256: SHA,
   reviewedAt: "2026-08-13T00:00:00.000Z",
   findings: [],
   blockingFindingIds: [],
+  ...overrides,
 });
 
-const currentPlan = () => ({ sha256: SHA });
+const currentPlan = () => validCutscenePlan();
+
+function completedPlan() {
+  const plan = validCutscenePlan();
+  plan.mode = "generate-after-approval";
+  for (const wave of plan.cutsceneWorkflow.waves) { wave.state = "completed"; wave.completion = null; }
+  return plan;
+}
+
+function currentReceipt(plan, overrides = {}) {
+  return validContinuityReview({ planSha256: cutsceneDocumentSha256(plan), ...overrides });
+}
 
 function approvedManifest() {
   return {
@@ -116,34 +132,44 @@ function approvedManifest() {
   };
 }
 
+const schemaKeywords = new Set(["$schema", "$id", "$defs", "$ref", "type", "const", "enum", "required", "additionalProperties", "properties", "items", "pattern", "minLength", "minItems", "maxItems", "uniqueItems", "minimum", "maximum", "allOf", "anyOf", "oneOf", "not", "if", "then", "else", "format"]);
+const schemaType = (value, type) => type === "null" ? value === null : type === "object" ? value !== null && typeof value === "object" && !Array.isArray(value) : type === "array" ? Array.isArray(value) : type === "string" ? typeof value === "string" : type === "integer" ? Number.isInteger(value) : type === "number" ? typeof value === "number" && Number.isFinite(value) : type === "boolean" ? typeof value === "boolean" : false;
+
 function schemaAccepts(value, rootSchema, schemas, schema = rootSchema) {
-  if (schema.$ref) return schemaAccepts(value, rootSchema, schemas, schema.$ref.startsWith("#/")
-    ? schema.$ref.slice(2).split("/").reduce((current, key) => current[key], rootSchema)
-    : schemas.get(schema.$ref));
-  if (Object.hasOwn(schema, "const") && value !== schema.const) return false;
-  if (schema.enum && !schema.enum.includes(value)) return false;
+  if (typeof schema === "boolean") return schema;
+  if (schema === null || typeof schema !== "object" || Object.keys(schema).some((key) => !schemaKeywords.has(key))) return false;
+  if (schema.$ref) {
+    if (Object.keys(schema).some((key) => !["$ref", "$schema", "$id"].includes(key))) return false;
+    const target = schema.$ref.startsWith("#/") ? schema.$ref.slice(2).split("/").reduce((current, key) => current?.[key], rootSchema) : schemas.get(schema.$ref);
+    return target === undefined ? false : schemaAccepts(value, rootSchema, schemas, target);
+  }
+  if (Object.hasOwn(schema, "const") && !Object.is(value, schema.const)) return false;
+  if (schema.enum && (!Array.isArray(schema.enum) || !schema.enum.some((candidate) => Object.is(candidate, value)))) return false;
+  if (schema.type !== undefined) { const types = Array.isArray(schema.type) ? schema.type : [schema.type]; if (!types.some((type) => schemaType(value, type))) return false; }
+  if (schema.minimum !== undefined && (typeof value !== "number" || value < schema.minimum)) return false;
+  if (schema.maximum !== undefined && (typeof value !== "number" || value > schema.maximum)) return false;
+  if (schema.minLength !== undefined && (typeof value !== "string" || value.length < schema.minLength)) return false;
+  if (schema.pattern !== undefined && (typeof value !== "string" || !new RegExp(schema.pattern, "u").test(value))) return false;
+  if (schema.format !== undefined && (schema.format !== "date-time" || !isRfc3339DateTime(value))) return false;
+  if (schema.allOf && (!Array.isArray(schema.allOf) || !schema.allOf.every((part) => schemaAccepts(value, rootSchema, schemas, part)))) return false;
+  if (schema.anyOf && (!Array.isArray(schema.anyOf) || !schema.anyOf.some((part) => schemaAccepts(value, rootSchema, schemas, part)))) return false;
+  if (schema.oneOf && (!Array.isArray(schema.oneOf) || schema.oneOf.filter((part) => schemaAccepts(value, rootSchema, schemas, part)).length !== 1)) return false;
   if (schema.not && schemaAccepts(value, rootSchema, schemas, schema.not)) return false;
-  if (schema.allOf && !schema.allOf.every((part) => schemaAccepts(value, rootSchema, schemas, part))) return false;
-  if (schema.anyOf && !schema.anyOf.some((part) => schemaAccepts(value, rootSchema, schemas, part))) return false;
-  if (schema.oneOf && schema.oneOf.filter((part) => schemaAccepts(value, rootSchema, schemas, part)).length !== 1) return false;
-  if (schema.if && schemaAccepts(value, rootSchema, schemas, schema.if) && schema.then && !schemaAccepts(value, rootSchema, schemas, schema.then)) return false;
-  const types = schema.type === undefined ? undefined : Array.isArray(schema.type) ? schema.type : [schema.type];
-  if (types?.includes("object") || schema.properties || schema.required || schema.additionalProperties !== undefined) {
-    if (value === null || typeof value !== "object" || Array.isArray(value) || (types && !types.includes("object"))) return false;
-    if ((schema.required ?? []).some((key) => !Object.hasOwn(value, key))) return false;
-    if (schema.additionalProperties === false && Object.keys(value).some((key) => !Object.hasOwn(schema.properties ?? {}, key))) return false;
-    return Object.entries(value).every(([key, child]) => !schema.properties?.[key] || schemaAccepts(child, rootSchema, schemas, schema.properties[key]));
+  if (schema.if) { const branch = schemaAccepts(value, rootSchema, schemas, schema.if) ? schema.then : schema.else; if (branch !== undefined && !schemaAccepts(value, rootSchema, schemas, branch)) return false; }
+  if (value !== null && typeof value === "object" && !Array.isArray(value)) {
+    if (schema.required && (!Array.isArray(schema.required) || schema.required.some((key) => !Object.hasOwn(value, key)))) return false;
+    for (const [key, child] of Object.entries(value)) {
+      const property = schema.properties?.[key];
+      if (property !== undefined) { if (!schemaAccepts(child, rootSchema, schemas, property)) return false; }
+      else if (schema.additionalProperties === false) return false;
+      else if (schema.additionalProperties !== undefined && !schemaAccepts(child, rootSchema, schemas, schema.additionalProperties)) return false;
+    }
   }
-  if (types?.includes("array") || schema.items || schema.minItems !== undefined) {
-    if (!Array.isArray(value) || value.length < (schema.minItems ?? 0) || (schema.maxItems !== undefined && value.length > schema.maxItems)) return false;
+  if (Array.isArray(value)) {
+    if (schema.minItems !== undefined && value.length < schema.minItems || schema.maxItems !== undefined && value.length > schema.maxItems) return false;
     if (schema.uniqueItems && new Set(value.map((item) => JSON.stringify(item))).size !== value.length) return false;
-    return !schema.items || value.every((item) => schemaAccepts(item, rootSchema, schemas, schema.items));
+    if (schema.items !== undefined && !value.every((item) => schemaAccepts(item, rootSchema, schemas, schema.items))) return false;
   }
-  if (types?.includes("string")) return typeof value === "string" && value.length >= (schema.minLength ?? 0) && (!schema.pattern || new RegExp(schema.pattern, "u").test(value));
-  if (types?.includes("integer")) return Number.isInteger(value) && value >= (schema.minimum ?? Number.NEGATIVE_INFINITY);
-  if (types?.includes("number")) return typeof value === "number" && Number.isFinite(value) && value >= (schema.minimum ?? Number.NEGATIVE_INFINITY);
-  if (types?.includes("boolean")) return typeof value === "boolean";
-  if (types?.includes("null")) return value === null;
   return true;
 }
 
@@ -238,10 +264,11 @@ test("canonical cutscene documents are deterministic and reject non-plain hidden
 });
 
 test("derived root approval uses existing asset lifecycle, current receipt, and blockers only", () => {
+  const plan = completedPlan();
   const candidate = {
-    plan: currentPlan(), manifest: approvedManifest(),
-    waves: [{ id: "storyboard", state: "completed" }],
-    continuityReceipt: validContinuityReview(),
+    plan, manifest: approvedManifest(),
+    waves: plan.cutsceneWorkflow.waves,
+    continuityReceipt: currentReceipt(plan),
   };
   assert.deepEqual(deriveCutsceneLifecycle(candidate), {
     lifecycle: "completed",
@@ -250,12 +277,12 @@ test("derived root approval uses existing asset lifecycle, current receipt, and 
     blockerIds: [],
   });
   const blocked = structuredClone(candidate);
-  blocked.continuityReceipt.blockingFindingIds = ["screen-direction"];
+  blocked.continuityReceipt = currentReceipt(plan, { findings: [{ findingId: "screen-direction", code: "continuity.break", path: "/shots/0", sourceMasterIds: ["cutscene-escape-style-master-01"], affectedAssetIds: ["cutscene-escape-style-master-01"], blocking: true }], blockingFindingIds: ["screen-direction"] });
   assert.deepEqual(deriveCutsceneLifecycle(blocked), {
-    lifecycle: "completed",
+    lifecycle: "blocked",
     documentApproved: false,
     productionCandidate: false,
-    blockerIds: [],
+    blockerIds: ["screen-direction"],
   });
   const noReceipt = structuredClone(candidate);
   noReceipt.continuityReceipt.planSha256 = "b".repeat(64);
@@ -268,7 +295,8 @@ test("derived root approval uses existing asset lifecycle, current receipt, and 
 });
 
 test("lifecycle fails closed for incomplete image manifests, stale receipts, and blocker-set mismatch", () => {
-  const input = { plan: currentPlan(), manifest: approvedManifest(), waves: [], continuityReceipt: validContinuityReview() };
+  const plan = completedPlan();
+  const input = { plan, manifest: approvedManifest(), waves: plan.cutsceneWorkflow.waves, continuityReceipt: currentReceipt(plan) };
   assert.equal(validateImageAssetManifest(input.manifest).ok, true);
   assert.equal(deriveCutsceneLifecycle(input).documentApproved, true);
   const incompleteManifest = structuredClone(input); incompleteManifest.manifest.assets[0].reviews = [];
@@ -277,6 +305,16 @@ test("lifecycle fails closed for incomplete image manifests, stale receipts, and
   assert.equal(deriveCutsceneLifecycle(staleReceipt).productionCandidate, false);
   const mismatch = structuredClone(input); mismatch.continuityReceipt.findings = [{ findingId: "screen-direction", code: "continuity.break", path: "/shots/0", sourceMasterIds: ["cutscene-escape-style-master-01"], affectedAssetIds: ["cutscene-escape-style-master-01"], blocking: true }];
   assert.equal(deriveCutsceneLifecycle(mismatch).documentApproved, false);
+});
+
+test("lifecycle hashes the actual plan and never authorizes a caller-provided hash field", () => {
+  const plan = completedPlan();
+  const receipt = currentReceipt(plan);
+  assert.equal(deriveCutsceneLifecycle({ plan, manifest: approvedManifest(), waves: plan.cutsceneWorkflow.waves, continuityReceipt: receipt }).documentApproved, true);
+  const forged = structuredClone(plan);
+  forged.sha256 = receipt.planSha256;
+  assert.equal(deriveCutsceneLifecycle({ plan: forged, manifest: approvedManifest(), waves: forged.cutsceneWorkflow.waves, continuityReceipt: receipt }).documentApproved, false);
+  assert.equal(deriveCutsceneLifecycle({ manifest: approvedManifest(), waves: plan.cutsceneWorkflow.waves, continuityReceipt: receipt }).documentApproved, false);
 });
 
 test("state evidence is closed, mode-bound, and records only permitted invalidated-to-cost re-entry", () => {
@@ -329,6 +367,29 @@ test("runtime and packaged JSON Schema agree on valid and rejected closed fixtur
   assert.equal(schemaAccepts(crossArrayOnly, byName.get("cutscene-continuity-review"), byFile), true, "packaged JSON Schema still validates its expressible structural contract");
 });
 
+test("schema evaluator fails closed for unsupported keywords, dates, and references", () => {
+  assert.equal(schemaAccepts("x", { type: "string", unsupported: true }, new Map()), false);
+  assert.equal(schemaAccepts("2026-02-30T00:00:00.000Z", { type: "string", format: "date-time" }, new Map()), false);
+  assert.equal(schemaAccepts("x", { $ref: "missing.schema.json" }, new Map()), false);
+  assert.equal(schemaAccepts(null, { type: ["string", "null"] }, new Map()), true);
+});
+
+test("every expressible ID, collection, closed-shape, and timestamp rule has schema/runtime parity", async () => {
+  const { byName, byFile } = await cutsceneSchemas();
+  const cases = [
+    ["cutscene-visual-plan", () => { const value = validCutscenePlan(); value.cutsceneId = "UPPER"; return value; }, validateCutsceneVisualPlan],
+    ["cutscene-cost-estimate", () => { const value = validEstimate(); value.assetIds = []; return value; }, validateCutsceneCostEstimate],
+    ["cutscene-cost-estimate", () => { const value = validEstimate(); value.assetIds = ["cutscene-escape-style-master-01", "cutscene-escape-style-master-01"]; return value; }, validateCutsceneCostEstimate],
+    ["cutscene-generation-approval", () => { const value = validApproval(); value.assetIds = ["UPPER"]; return value; }, validateCutsceneGenerationApproval],
+    ["cutscene-generation-approval", () => { const value = validApproval(); value.decidedAt = "not-a-date"; return value; }, validateCutsceneGenerationApproval],
+    ["cutscene-generation-usage", () => { const value = validUsage(); value.assetId = "UPPER"; return value; }, validateCutsceneGenerationUsage],
+    ["cutscene-generation-usage", () => { const value = validUsage(); value.providerRequestId = ""; return value; }, validateCutsceneGenerationUsage],
+    ["cutscene-continuity-review", () => { const value = validContinuityReview(); value.reviewedAt = "2026-02-30T00:00:00.000Z"; return value; }, validateCutsceneContinuityReview],
+    ["cutscene-continuity-review", () => { const value = validContinuityReview(); value.unknown = true; return value; }, validateCutsceneContinuityReview],
+  ];
+  for (const [name, create, validate] of cases) { const value = create(); assert.equal(validate(value).ok, false, `${name} runtime`); assert.equal(schemaAccepts(value, byName.get(name), byFile), false, `${name} schema`); }
+});
+
 test("canonical documents reject accessor arrays before observing their values", () => {
   const values = ["first"];
   let reads = 0;
@@ -343,4 +404,27 @@ test("runtime validators reject hostile accessor input without executing it", ()
   Object.defineProperty(plan.beats, "0", { enumerable: true, get() { reads += 1; throw new Error("must not execute"); } });
   assert.deepEqual(firstError(validateCutsceneVisualPlan(plan)), { code: "cutscene.hostile_input", path: "" });
   assert.equal(reads, 0);
+});
+
+test("malformed IDs and hostile Proxy input return deterministic errors without TypeError", () => {
+  for (const assetIds of [[1, 2], ["cutscene-escape-style-master-01", {}]]) {
+    const estimate = validEstimate(); estimate.assetIds = assetIds;
+    assert.doesNotThrow(() => validateCutsceneCostEstimate(estimate));
+    assert.equal(validateCutsceneCostEstimate(estimate).ok, false);
+  }
+  const proxy = new Proxy(validCutscenePlan(), { ownKeys() { throw new Error("hostile"); } });
+  assert.deepEqual(firstError(validateCutsceneVisualPlan(proxy)), { code: "cutscene.hostile_input", path: "" });
+});
+
+test("programmer errors inside the validator are not swallowed as input errors", async (t) => {
+  const source = await readFile(new URL("../../shared/scripts/validate-cutscene-visual-preproduction.mjs", import.meta.url), "utf8");
+  const root = await mkdtemp(path.join(tmpdir(), "cutscene-validator-mutation-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const filename = path.join(root, "validate-cutscene-visual-preproduction.mjs");
+  const imageValidator = new URL("../../shared/scripts/validate-image-assets.mjs", import.meta.url).href;
+  const rfc3339 = new URL("../../shared/scripts/lib/rfc3339.mjs", import.meta.url).href;
+  const mutated = source.replace('from "./validate-image-assets.mjs"', `from ${JSON.stringify(imageValidator)}`).replace('from "./lib/rfc3339.mjs"', `from ${JSON.stringify(rfc3339)}`).replace("function validateCost(value, issue) {", "function validateCost(value, issue) { throw new Error(\"intentional programmer error\");");
+  await writeFile(filename, mutated);
+  const api = await import(`${pathToFileURL(filename).href}?mutation=1`);
+  assert.throws(() => api.validateCutsceneCostEstimate(validEstimate()), /intentional programmer error/u);
 });
