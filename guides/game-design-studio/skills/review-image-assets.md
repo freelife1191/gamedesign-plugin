@@ -123,7 +123,7 @@ $game-design-studio:export-game-design-documents artifact=<artifact-path> 기존
 <!-- PROMPT-TEMPLATES:START game-design-studio:review-image-assets -->
 ### 재사용 프롬프트 템플릿
 
-- [beginner — concept-draft 문서 적합성 검토](../../prompt-templates/studio/review-image-assets.md#studioreview-image-assetsbeginner)
-- [standard — rights·readability·placement 문서 승인 검토](../../prompt-templates/studio/review-image-assets.md#studioreview-image-assetsstandard)
-- [advanced — production-candidate 재검토와 권리 revocation](../../prompt-templates/studio/review-image-assets.md#studioreview-image-assetsadvanced)
+- [beginner: concept-draft 문서 적합성 검토](../../prompt-templates/studio/review-image-assets.md#studioreview-image-assetsbeginner)
+- [standard: rights·readability·placement 문서 승인 검토](../../prompt-templates/studio/review-image-assets.md#studioreview-image-assetsstandard)
+- [advanced: production-candidate 재검토와 권리 revocation](../../prompt-templates/studio/review-image-assets.md#studioreview-image-assetsadvanced)
 <!-- PROMPT-TEMPLATES:END game-design-studio:review-image-assets -->

@@ -140,7 +140,7 @@ $game-design-career:plan-junior-growth artifact=<artifact-path> 기존 evidence/
 <!-- PROMPT-TEMPLATES:START game-design-career:practice-game-design-interview -->
 ### 재사용 프롬프트 템플릿
 
-- [beginner — 근거 질문 한 개 연습](../../prompt-templates/career/practice-game-design-interview.md#careerpractice-game-design-interviewbeginner)
-- [standard — 네 질문 유형과 답변 기록](../../prompt-templates/career/practice-game-design-interview.md#careerpractice-game-design-interviewstandard)
-- [advanced — stale 갱신·정직한 답변·coach 검토](../../prompt-templates/career/practice-game-design-interview.md#careerpractice-game-design-interviewadvanced)
+- [beginner: 근거 질문 한 개 연습](../../prompt-templates/career/practice-game-design-interview.md#careerpractice-game-design-interviewbeginner)
+- [standard: 네 질문 유형과 답변 기록](../../prompt-templates/career/practice-game-design-interview.md#careerpractice-game-design-interviewstandard)
+- [advanced: stale 갱신·정직한 답변·coach 검토](../../prompt-templates/career/practice-game-design-interview.md#careerpractice-game-design-interviewadvanced)
 <!-- PROMPT-TEMPLATES:END game-design-career:practice-game-design-interview -->

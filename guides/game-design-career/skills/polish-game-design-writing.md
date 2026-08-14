@@ -65,7 +65,7 @@
 <!-- PROMPT-TEMPLATES:START game-design-career:polish-game-design-writing -->
 ### 재사용 프롬프트 템플릿
 
-- [beginner — 커리어 문장 윤문 초안](../../prompt-templates/career/polish-game-design-writing.md#careerpolish-game-design-writingbeginner)
-- [standard — 증거 기록을 갖춘 커리어 문장 검수](../../prompt-templates/career/polish-game-design-writing.md#careerpolish-game-design-writingstandard)
-- [advanced — 보류 주장을 지키는 커리어 윤문](../../prompt-templates/career/polish-game-design-writing.md#careerpolish-game-design-writingadvanced)
+- [beginner: 커리어 문장 윤문 초안](../../prompt-templates/career/polish-game-design-writing.md#careerpolish-game-design-writingbeginner)
+- [standard: 증거 기록을 갖춘 커리어 문장 검수](../../prompt-templates/career/polish-game-design-writing.md#careerpolish-game-design-writingstandard)
+- [advanced: 보류 주장을 지키는 커리어 윤문](../../prompt-templates/career/polish-game-design-writing.md#careerpolish-game-design-writingadvanced)
 <!-- PROMPT-TEMPLATES:END game-design-career:polish-game-design-writing -->

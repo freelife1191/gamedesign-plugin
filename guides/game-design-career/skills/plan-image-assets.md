@@ -151,7 +151,7 @@ $game-design-career:visualize-career-roadmap artifact=artifacts/system-case-stud
 <!-- PROMPT-TEMPLATES:START game-design-career:plan-image-assets -->
 ### 재사용 프롬프트 템플릿
 
-- [beginner — 포트폴리오 placeholder 이미지 슬롯 계획](../../prompt-templates/career/plan-image-assets.md#careerplan-image-assetsbeginner)
-- [standard — proof 이미지·alt·권리 manifest 계획](../../prompt-templates/career/plan-image-assets.md#careerplan-image-assetsstandard)
-- [advanced — profile 슬롯과 presentation handoff 계획](../../prompt-templates/career/plan-image-assets.md#careerplan-image-assetsadvanced)
+- [beginner: 포트폴리오 placeholder 이미지 슬롯 계획](../../prompt-templates/career/plan-image-assets.md#careerplan-image-assetsbeginner)
+- [standard: proof 이미지·alt·권리 manifest 계획](../../prompt-templates/career/plan-image-assets.md#careerplan-image-assetsstandard)
+- [advanced: profile 슬롯과 presentation handoff 계획](../../prompt-templates/career/plan-image-assets.md#careerplan-image-assetsadvanced)
 <!-- PROMPT-TEMPLATES:END game-design-career:plan-image-assets -->

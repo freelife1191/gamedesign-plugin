@@ -66,7 +66,7 @@ reference master 비용과 승인
 keyframe 비용과 승인
 ```
 
-`keyframes`가 완료되어야 storyboard를 검토할 수 있습니다. visual variant도 새 derivative ID, 별도 estimate, 별도 실시간 승인을 거칩니다. 대사만 바뀌는 variant에는 이미지와 provider 호출이 없습니다.
+`keyframes` 완료는 storyboard의 generation-ready binding과 유료 dispatch에만 필요합니다. storyboard의 기획·검토·견적 초안은 먼저 만들 수 있습니다. visual variant도 새 derivative ID, 별도 estimate, 별도 실시간 승인을 거칩니다. 대사만 바뀌는 variant에는 이미지와 provider 호출이 없습니다.
 
 ```text
 storyboard와 variant 비용과 승인

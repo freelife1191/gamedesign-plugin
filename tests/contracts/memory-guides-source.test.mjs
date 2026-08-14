@@ -318,6 +318,8 @@ test("cutscene Korean source keeps quick-rule boundaries and the runtime dispatc
   const [howTo, skillGuide, catalog] = sources;
   assert.match(howTo, /견적 초안은 미리 만들 수 있습니다[\s\S]*style-master.*current estimate.*이름을 기록한 실시간 승인[\s\S]*style-master.*선행 wave가 없/u);
   assert.match(howTo, /style-master.*뒤의 wave[\s\S]*직전 모든 wave가 완료/u);
+  assert.match(howTo, /keyframes.*완료.*storyboard의 generation-ready binding과 유료 dispatch에만 필요/u);
+  assert.match(howTo, /storyboard의 기획·검토·견적 초안은 먼저 만들 수 있/u);
   assert.match(skillGuide, /style-master.*current estimate.*이름 있는 실시간 승인[\s\S]*style-master.*선행 조건이 없/u);
   assert.match(skillGuide, /뒤의 wave.*모든 선행 wave 완료/u);
   assert.match(catalog, /paid dispatch.*current estimate.*named approval[\s\S]*style-master 뒤의 wave.*선행 wave 완료/u);

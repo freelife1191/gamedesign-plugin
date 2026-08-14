@@ -121,7 +121,7 @@ $game-design-studio:review-game-design artifact=<artifact-path> 기존 evidence/
 <!-- PROMPT-TEMPLATES:START game-design-studio:design-game-systems -->
 ### 재사용 프롬프트 템플릿
 
-- [beginner — 규칙과 상태를 정의하는 게임 시스템](../../prompt-templates/studio/design-game-systems.md#studiodesign-game-systemsbeginner)
-- [standard — 예외와 데이터를 연결하는 게임 시스템](../../prompt-templates/studio/design-game-systems.md#studiodesign-game-systemsstandard)
-- [advanced — 상호 시스템 반례와 engineering handoff](../../prompt-templates/studio/design-game-systems.md#studiodesign-game-systemsadvanced)
+- [beginner: 규칙과 상태를 정의하는 게임 시스템](../../prompt-templates/studio/design-game-systems.md#studiodesign-game-systemsbeginner)
+- [standard: 예외와 데이터를 연결하는 게임 시스템](../../prompt-templates/studio/design-game-systems.md#studiodesign-game-systemsstandard)
+- [advanced: 상호 시스템 반례와 engineering handoff](../../prompt-templates/studio/design-game-systems.md#studiodesign-game-systemsadvanced)
 <!-- PROMPT-TEMPLATES:END game-design-studio:design-game-systems -->

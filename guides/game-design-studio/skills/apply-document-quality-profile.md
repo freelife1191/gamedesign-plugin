@@ -146,7 +146,7 @@ $game-design-studio:<selected-skill> artifact=artifacts/<artifact-id> routing.js
 <!-- PROMPT-TEMPLATES:START game-design-studio:apply-document-quality-profile -->
 ### 재사용 프롬프트 템플릿
 
-- [beginner — 문서 목적과 대상에 맞는 품질 프로필 선택](../../prompt-templates/studio/apply-document-quality-profile.md#studioapply-document-quality-profilebeginner)
-- [standard — Overlay와 preset manifest를 갖춘 품질 프로필 선택](../../prompt-templates/studio/apply-document-quality-profile.md#studioapply-document-quality-profilestandard)
-- [advanced — Fallback과 state receipt를 가진 품질 프로필 검토](../../prompt-templates/studio/apply-document-quality-profile.md#studioapply-document-quality-profileadvanced)
+- [beginner: 문서 목적과 대상에 맞는 품질 프로필 선택](../../prompt-templates/studio/apply-document-quality-profile.md#studioapply-document-quality-profilebeginner)
+- [standard: Overlay와 preset manifest를 갖춘 품질 프로필 선택](../../prompt-templates/studio/apply-document-quality-profile.md#studioapply-document-quality-profilestandard)
+- [advanced: Fallback과 state receipt를 가진 품질 프로필 검토](../../prompt-templates/studio/apply-document-quality-profile.md#studioapply-document-quality-profileadvanced)
 <!-- PROMPT-TEMPLATES:END game-design-studio:apply-document-quality-profile -->

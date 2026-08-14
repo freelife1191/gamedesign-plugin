@@ -139,7 +139,7 @@ $game-design-career:review-game-design-portfolio artifact=<artifact-path> 기존
 <!-- PROMPT-TEMPLATES:START game-design-career:build-game-design-portfolio -->
 ### 재사용 프롬프트 템플릿
 
-- [beginner — 문제·판단·근거로 포트폴리오 사례 시작](../../prompt-templates/career/build-game-design-portfolio.md#careerbuild-game-design-portfoliobeginner)
-- [standard — claim-evidence index로 사례 검증](../../prompt-templates/career/build-game-design-portfolio.md#careerbuild-game-design-portfoliostandard)
-- [advanced — 사례 선택·기여·공개 gate](../../prompt-templates/career/build-game-design-portfolio.md#careerbuild-game-design-portfolioadvanced)
+- [beginner: 문제·판단·근거로 포트폴리오 사례 시작](../../prompt-templates/career/build-game-design-portfolio.md#careerbuild-game-design-portfoliobeginner)
+- [standard: claim-evidence index로 사례 검증](../../prompt-templates/career/build-game-design-portfolio.md#careerbuild-game-design-portfoliostandard)
+- [advanced: 사례 선택·기여·공개 gate](../../prompt-templates/career/build-game-design-portfolio.md#careerbuild-game-design-portfolioadvanced)
 <!-- PROMPT-TEMPLATES:END game-design-career:build-game-design-portfolio -->

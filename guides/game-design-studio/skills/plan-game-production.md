@@ -121,7 +121,7 @@ $game-design-studio:review-game-design artifact=<artifact-path> 기존 evidence/
 <!-- PROMPT-TEMPLATES:START game-design-studio:plan-game-production -->
 ### 재사용 프롬프트 템플릿
 
-- [beginner — 범위와 제외 항목을 갖춘 최소 제작 계획](../../prompt-templates/studio/plan-game-production.md#studioplan-game-productionbeginner)
-- [standard — Milestone 의존성과 owner를 갖춘 제작 계획](../../prompt-templates/studio/plan-game-production.md#studioplan-game-productionstandard)
-- [advanced — Kill criteria와 외주·license 위험을 검토하는 제작 계획](../../prompt-templates/studio/plan-game-production.md#studioplan-game-productionadvanced)
+- [beginner: 범위와 제외 항목을 갖춘 최소 제작 계획](../../prompt-templates/studio/plan-game-production.md#studioplan-game-productionbeginner)
+- [standard: Milestone 의존성과 owner를 갖춘 제작 계획](../../prompt-templates/studio/plan-game-production.md#studioplan-game-productionstandard)
+- [advanced: Kill criteria와 외주·license 위험을 검토하는 제작 계획](../../prompt-templates/studio/plan-game-production.md#studioplan-game-productionadvanced)
 <!-- PROMPT-TEMPLATES:END game-design-studio:plan-game-production -->

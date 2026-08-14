@@ -141,7 +141,7 @@ $game-design-career:export-career-documents 기존 prepared manifest와 canonica
 <!-- PROMPT-TEMPLATES:START game-design-career:export-career-documents -->
 ### 재사용 프롬프트 템플릿
 
-- [beginner — MD 요약 preflight](../../prompt-templates/career/export-career-documents.md#careerexport-career-documentsbeginner)
-- [standard — PDF·DOCX preflight](../../prompt-templates/career/export-career-documents.md#careerexport-career-documentsstandard)
-- [advanced — recruiter PPTX·format QA·재개](../../prompt-templates/career/export-career-documents.md#careerexport-career-documentsadvanced)
+- [beginner: MD 요약 preflight](../../prompt-templates/career/export-career-documents.md#careerexport-career-documentsbeginner)
+- [standard: PDF·DOCX preflight](../../prompt-templates/career/export-career-documents.md#careerexport-career-documentsstandard)
+- [advanced: recruiter PPTX·format QA·재개](../../prompt-templates/career/export-career-documents.md#careerexport-career-documentsadvanced)
 <!-- PROMPT-TEMPLATES:END game-design-career:export-career-documents -->

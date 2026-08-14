@@ -121,7 +121,7 @@ $game-design-studio:review-image-assets artifact=<artifact-path> 기존 evidence
 <!-- PROMPT-TEMPLATES:START game-design-studio:generate-image-assets -->
 ### 재사용 프롬프트 템플릿
 
-- [beginner — 사용자 선택 stable asset 하나 생성](../../prompt-templates/studio/generate-image-assets.md#studiogenerate-image-assetsbeginner)
-- [standard — required mode receipt와 no-key capability 경계](../../prompt-templates/studio/generate-image-assets.md#studiogenerate-image-assetsstandard)
-- [advanced — all mode OpenAI-only failure와 provenance 분리](../../prompt-templates/studio/generate-image-assets.md#studiogenerate-image-assetsadvanced)
+- [beginner: 사용자 선택 stable asset 하나 생성](../../prompt-templates/studio/generate-image-assets.md#studiogenerate-image-assetsbeginner)
+- [standard: required mode receipt와 no-key capability 경계](../../prompt-templates/studio/generate-image-assets.md#studiogenerate-image-assetsstandard)
+- [advanced: all mode OpenAI-only failure와 provenance 분리](../../prompt-templates/studio/generate-image-assets.md#studiogenerate-image-assetsadvanced)
 <!-- PROMPT-TEMPLATES:END game-design-studio:generate-image-assets -->

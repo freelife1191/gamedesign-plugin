@@ -6,6 +6,7 @@ import test from "node:test";
 
 import {
   renderPromptCard,
+  renderPromptGuideSummary,
   renderPromptLibrary,
   replaceManagedSection,
   validateRenderedPromptCard,
@@ -127,6 +128,19 @@ test("renderPromptLibrary keeps cards in stable product, skill, level and ID ord
 
   const markdown = renderPromptLibrary(catalog);
   assertOrdered(markdown, ["PT-002", "PT-003", "PT-001"]);
+});
+
+test("renderPromptGuideSummary uses a deterministic colon separator for every catalog entry", () => {
+  const entries = [
+    { ...validSkillEntry({ id: "PT-003", title: "Advanced", skill: "sample-skill" }), level: "advanced" },
+    { ...validSkillEntry({ id: "PT-001", title: "Beginner", skill: "sample-skill" }), level: "beginner" },
+    { ...validSkillEntry({ id: "PT-002", title: "Standard", skill: "sample-skill" }), level: "standard" },
+  ];
+  const summary = renderPromptGuideSummary(entries);
+  assert.match(summary, /\[beginner: Beginner\]/u);
+  assert.match(summary, /\[standard: Standard\]/u);
+  assert.match(summary, /\[advanced: Advanced\]/u);
+  assert.doesNotMatch(summary, / — /u);
 });
 
 test("managed sections require one exact ordered marker pair", () => {
