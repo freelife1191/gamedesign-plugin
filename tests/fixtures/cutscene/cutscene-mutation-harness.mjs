@@ -189,7 +189,7 @@ export async function runCutsceneMutationHarness({ name, fixture }) {
 }
 
 function harnessError(reason) { const error = new Error("cutscene mutation evidence failed"); error.reason = reason; return error; }
-function allowlistedEnvironment() { const env = {}; for (const key of ["PATH", "TMPDIR", "TEMP", "TMP", "LANG", "LC_ALL", "HOME"]) if (typeof process.env[key] === "string") env[key] = process.env[key]; return env; }
+function allowlistedEnvironment(extra = {}) { const env = {}; for (const key of ["PATH", "TMPDIR", "TEMP", "TMP", "LANG", "LC_ALL", "HOME"]) if (typeof process.env[key] === "string") env[key] = process.env[key]; return { ...env, ...extra }; }
 function terminateTree(child) { try { if (process.platform === "win32") spawnSync("taskkill", ["/pid", String(child.pid), "/T", "/F"], { stdio: "ignore" }); else process.kill(-child.pid, "SIGKILL"); } catch {} try { child.kill("SIGKILL"); } catch {} }
 
 function parseEvidence(text, name) {
@@ -202,9 +202,9 @@ function parseEvidence(text, name) {
   return record;
 }
 
-export async function launchMutationEvidence(name, { tamper = "normal" } = {}) {
+export async function launchMutationEvidence(name, { tamper = "normal", orphanPidPath } = {}) {
   if (!MUTATIONS.includes(name)) throw harnessError("unknown-mutation");
-  const child = spawn(process.execPath, [new URL(import.meta.url).pathname, name, "--worker", tamper], { cwd: root, env: allowlistedEnvironment(), detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe", "pipe"] });
+  const child = spawn(process.execPath, [new URL(import.meta.url).pathname, name, "--worker", tamper], { cwd: root, env: allowlistedEnvironment(orphanPidPath ? { CUTSCENE_MUTATION_ORPHAN_PID_PATH: orphanPidPath } : {}), detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe", "pipe"] });
   const evidence = []; const stdout = []; const stderr = []; let evidenceBytes = 0; let outputBytes = 0;
   return await new Promise((resolve, reject) => {
     let done = false; let closeTimer; let pendingReason;
@@ -229,7 +229,8 @@ if (process.argv[2] && process.argv[3] === "--worker") {
   try {
     if (tamper === "inside-wrapper-unrelated-error") throw new TypeError("unrelated wrapper error");
     if (tamper === "timeout-orphan" || tamper === "unclosed-evidence-fd") {
-      const orphan = spawn(process.execPath, ["-e", "setInterval(() => {}, 1000)"], { detached: process.platform !== "win32", stdio: tamper === "unclosed-evidence-fd" ? ["ignore", "ignore", "ignore", 3] : "ignore" }); orphan.unref();
+      const orphan = spawn(process.execPath, ["-e", "setInterval(() => {}, 1000)"], { detached: false, stdio: tamper === "unclosed-evidence-fd" ? ["ignore", "ignore", "ignore", 3] : "ignore" }); orphan.unref();
+      if (process.env.CUTSCENE_MUTATION_ORPHAN_PID_PATH) await writeFile(process.env.CUTSCENE_MUTATION_ORPHAN_PID_PATH, `${orphan.pid}\n`);
       if (tamper === "timeout-orphan") await new Promise(() => setInterval(() => {}, 1_000));
     }
     const outcome = await runCutsceneMutationHarness({ name: process.argv[2], fixture });

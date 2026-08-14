@@ -1,4 +1,7 @@
 import assert from "node:assert/strict";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import test from "node:test";
 
 import { MUTATIONS, launchMutationEvidence } from "../fixtures/cutscene/cutscene-mutation-harness.mjs";
@@ -36,8 +39,13 @@ for (const [tamper, reason] of [
   await assert.rejects(() => launchMutationEvidence("approval-authority", { tamper }), { reason });
 });
 
-for (const tamper of ["timeout-orphan", "unclosed-evidence-fd"]) test(`process-tree cleanup bounds ${tamper}`, { timeout: 15_000 }, async () => {
-  await assert.rejects(() => launchMutationEvidence("approval-authority", { tamper }), { reason: "test-timeout" });
+function processExists(pid) { try { process.kill(pid, 0); return true; } catch (error) { if (error?.code === "ESRCH") return false; throw error; } }
+async function exited(pid) { const deadline = Date.now() + 2_000; while (processExists(pid) && Date.now() < deadline) await new Promise((resolve) => setTimeout(resolve, 20)); return !processExists(pid); }
+for (const tamper of ["timeout-orphan", "unclosed-evidence-fd"]) test(`process-tree cleanup bounds ${tamper}`, { timeout: 15_000 }, async (t) => {
+  const temporary = await mkdtemp(path.join(tmpdir(), "cutscene-mutation-orphan-")); const pidPath = path.join(temporary, "pid"); let pid;
+  t.after(async () => { if (pid && processExists(pid)) process.kill(pid, "SIGKILL"); await rm(temporary, { recursive: true, force: true }); });
+  await assert.rejects(() => launchMutationEvidence("approval-authority", { tamper, orphanPidPath: pidPath }), { reason: "test-timeout" });
+  pid = Number((await readFile(pidPath, "utf8")).trim()); assert.equal(await exited(pid), true, `orphan ${pid} survived cleanup`);
 });
 
 test("launcher strips caller NODE_OPTIONS and NODE_PATH injection", { timeout: 15_000 }, async () => {

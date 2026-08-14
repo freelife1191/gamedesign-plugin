@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import test from "node:test";
 
 import { calculateActualCost, estimateCutsceneImageCost } from "../../../shared/scripts/estimate-cutscene-image-cost.mjs";
@@ -14,10 +16,9 @@ const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const calls = (runtime) => runtime.calls.fetch + runtime.calls.host;
 
 test("prompt-only produces template prompt guidance without bytes or provider calls", async (t) => {
-  const fixture = await makeFixture(t); const runtime = makeRuntime(); const before = await snapshotArtifactTree(fixture.artifactRoot);
-  const result = planCutsceneVisualPreproduction({ cutsceneId: fixture.input.plan.cutsceneId, mode: "prompt-only", beats: fixture.input.plan.beats, shots: fixture.input.plan.shots });
-  assert.equal(fixture.input.plan.mode, "generate-after-approval");
-  assert.equal(result.plan.mode, "prompt-only"); assert.ok(result.templatePromptPackage.references.length > 0); assert.equal(result.templatePromptPackage.references.every((reference) => reference.expectedPath && !Object.hasOwn(reference, "sha256")), true); assert.equal(calls(runtime), 0); assert.deepEqual(await snapshotArtifactTree(fixture.artifactRoot), before);
+  const artifactRoot = await mkdtemp(path.join(tmpdir(), "cutscene-prompt-only-")); t.after(() => rm(artifactRoot, { recursive: true, force: true })); const runtime = makeRuntime(); const before = await snapshotArtifactTree(artifactRoot);
+  const result = planCutsceneVisualPreproduction({ cutsceneId: "cutscene-escape", mode: "prompt-only", beats: [{ beatId: "BEAT-01" }], shots: [{ shotId: "SHOT-01", beatId: "BEAT-01" }] });
+  assert.equal(result.plan.mode, "prompt-only"); assert.ok(result.templatePromptPackage.references.length > 0); assert.equal(result.templatePromptPackage.references.every((reference) => reference.expectedPath && !Object.hasOwn(reference, "sha256")), true); assert.equal(calls(runtime), 0); assert.deepEqual(before, []); assert.deepEqual(await snapshotArtifactTree(artifactRoot), []);
 });
 
 test("estimate-only invokes the estimator against a complete fixture and never reaches a provider", async (t) => {
