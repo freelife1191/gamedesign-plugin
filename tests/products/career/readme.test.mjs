@@ -12,6 +12,10 @@ import { collectProductInventory } from "../../../tooling/lib/user-guides.mjs";
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const pluginRoot = path.join(repoRoot, "products/game-design-career/plugin");
 const readmePath = path.join(pluginRoot, "README.md");
+const sourceReferenceSkillLinks = new Set([
+  "../../../shared/reference-intelligence/skills/analyze-game-design-references/SKILL.md",
+  "../../../shared/reference-intelligence/skills/maintain-game-design-glossary/SKILL.md",
+]);
 
 const skillIds = [
   "orchestrate-game-design-career",
@@ -79,20 +83,29 @@ const qualityProfileIds = [
 ];
 
 const topLevelScriptIds = [
+  "analyze-game-design-references.mjs",
   "build-image-asset-plan.mjs",
   "capability-probe.mjs",
+  "capture-design-memory.mjs",
   "compile-image-prompts.mjs",
   "data-only-snapshot.mjs",
   "generate-openai-images.mjs",
+  "load-memory-config.mjs",
+  "maintain-design-memory.mjs",
+  "manage-game-design-glossary.mjs",
   "quality-source-anchors.mjs",
   "resolve-quality-profile.mjs",
+  "retrieve-design-memory.mjs",
   "run-game-design-writing-polish.mjs",
   "run-image-asset-workflow.mjs",
   "stop-artifact-review.mjs",
   "validate-artifact.mjs",
+  "validate-design-memory.mjs",
+  "validate-game-design-writing-language.mjs",
   "validate-image-assets.mjs",
   "validate-image-config.mjs",
   "validate-quality-profile.mjs",
+  "validate-reference-intelligence.mjs",
   "validate-reference-preset.mjs",
   "validate-writing-revision.mjs",
 ];
@@ -442,8 +455,8 @@ test("release documentation ships the plugin license and third-party notices", a
 
 test("README exposes every shipped skill, role asset, stage, and canonical template", async () => {
   const readme = await readFile(readmePath, "utf8");
-  assert.match(readme, /15개 워크플로 스킬/u, "README states the direct product-skill count");
-  assert.match(readme, /설치 스킬(?:은|이) 21개/u, "README states the complete installed-skill count");
+  assert.match(readme, /제품 스킬 15개/u, "README states the direct product-skill count");
+  assert.match(readme, /설치 스킬(?:은|이) 23개/u, "README states the complete installed-skill count");
   assert.doesNotMatch(readme, /Skillstead `svg-infographic` 0\.8\.3/u, "README does not advertise the superseded Skillstead release");
   assert.deepEqual(tableIds(readme, "스킬 카탈로그"), skillIds);
   assert.deepEqual(tableIds(readme, "전문 역할 프롬프트"), roleIds);
@@ -619,9 +632,9 @@ test("README explains the source overlay and complete independent built-plugin s
     "products/game-design-career/plugin",
     "plugins/game-design-career",
     ".codex-plugin/plugin.json",
-    "skills/ (18개)",
+    "skills/ (23개)",
     "<15개 Career 제품 스킬>",
-    "skills/svg-infographic/",
+    "svg-infographic/",
     "agents/ (10개)",
     "hooks/hooks.json",
     "scripts/",
@@ -701,8 +714,12 @@ test("README distinguishes the low-level product build from the current suite sn
         .map((match) => match[1])
         .filter((target) => !target.startsWith("http") && !target.startsWith("#"));
       for (const target of links) {
-        assert.equal(path.isAbsolute(target), false, `${label} README link must be relative: ${target}`);
-        const resolved = path.resolve(root, target);
+      assert.equal(path.isAbsolute(target), false, `${label} README link must be relative: ${target}`);
+      if (label === "source" && sourceReferenceSkillLinks.has(target)) {
+        await access(path.resolve(root, target));
+        continue;
+      }
+      const resolved = path.resolve(root, target);
         assert.ok(resolved === root || resolved.startsWith(`${root}${path.sep}`), `${label} README link escapes package: ${target}`);
         await access(resolved);
       }
@@ -837,6 +854,10 @@ test("README binds Career entry users to canonical representative case routes wi
     .filter((target) => !target.startsWith("http") && !target.startsWith("#"));
   for (const target of localLinks) {
     assert.equal(path.isAbsolute(target), false, `README link must be package-relative: ${target}`);
+    if (sourceReferenceSkillLinks.has(target)) {
+      await access(path.resolve(pluginRoot, target));
+      continue;
+    }
     const resolved = path.resolve(pluginRoot, target);
     assert.ok(resolved === pluginRoot || resolved.startsWith(`${pluginRoot}${path.sep}`), `README link escapes package: ${target}`);
     await access(resolved);

@@ -2,7 +2,7 @@
 
 Game Design Career는 게임 기획 입문, 첫 취업, 주니어 성장, 이직 준비를 검증 가능한 산출물로 바꾸는 Codex 플러그인입니다. 진로를 단정하거나 합격을 보장하지 않고, 현재 자료와 제약에서 확인할 수 있는 근거·공백·다음 실험을 분리합니다.
 
-플러그인은 제품 스킬 15개, 전문 역할 10개, 15개 Canonical Artifact 템플릿과 문서·이미지·내보내기 계약을 하나의 독립 패키지에 포함합니다. 공통 스킬 6개는 Archify, humanize-korean, Skillstead `svg-infographic` 0.9.0과 프로젝트 기억 스킬 3개이며, 제품 스킬과 합친 설치 스킬은 21개입니다.
+플러그인은 제품 스킬 15개, 전문 역할 10개, 15개 Canonical Artifact 템플릿과 문서·이미지·내보내기 계약을 하나의 독립 패키지에 포함합니다. 공통 스킬 8개는 Archify, humanize-korean, Skillstead `svg-infographic` 0.9.0, 프로젝트 기억 스킬 3개, [레퍼런스 분석 스킬](../../../shared/reference-intelligence/skills/analyze-game-design-references/SKILL.md), [용어 사전 스킬](../../../shared/reference-intelligence/skills/maintain-game-design-glossary/SKILL.md)입니다. 제품 스킬과 합친 설치 스킬은 23개입니다.
 
 ## 대표 작업 경로
 
@@ -197,12 +197,14 @@ codex plugin marketplace remove game-design-suite
 ```text
 <staging>/game-design-career/
 ├── .codex-plugin/plugin.json
-├── skills/ (21개)
+├── skills/ (23개)
 │   ├── <15개 Career 제품 스킬>/
 │   │   └── scripts/                 # 필요한 스킬에만 있는 product helper
+│   ├── analyze-game-design-references/ # 근거를 분리해 레퍼런스를 분석
 │   ├── archify/                      # vendored Archify 2.13.0
 │   ├── capture-game-design-memory/   # 검증한 교훈을 후보로 기록
 │   ├── humanize-korean/              # vendored im-not-ai
+│   ├── maintain-game-design-glossary/ # 용어 후보와 사람 검토 결정 관리
 │   ├── maintain-game-design-memory/  # 후보와 승인 이력 관리
 │   ├── retrieve-approved-design-memory/ # 승인된 관련 기억 조회
 │   └── svg-infographic/              # vendored Skillstead 0.9.0
@@ -244,12 +246,13 @@ codex plugin marketplace remove game-design-suite
 
 경로 계약을 검색하기 쉽게 요약하면 `references/shared/knowledge/core/`는 검토된 Core 지식, `references/shared/knowledge/trends/`는 Current 근거와 갱신 정책, `references/source/docs/ (49개)`는 원문 provenance입니다. 내보내기 스키마는 `references/shared/export/schema/`에 있고, 문서 품질 계약은 `references/shared/document-quality/`와 `references/document-quality/template-profile-map.json`에 있으며, Career 전용 job·fact/inference·evidence schemas는 제품 references에 있습니다.
 
-`assets/templates/ (15개)`와 `assets/product-mark.svg`는 Career source overlay에서 옵니다. 최종 `skills/ (21개)`는 제품 스킬 15개와 공통 스킬 6개입니다. 공통 스킬은 `archify`, `humanize-korean`, `svg-infographic`, `retrieve-approved-design-memory`, `capture-game-design-memory`, `maintain-game-design-memory`이며, `agents/ (10개)`는 네이티브 발견 여부와 무관하게 오케스트레이터가 전달할 수 있는 전문 역할 프롬프트입니다.
+`assets/templates/ (15개)`와 `assets/product-mark.svg`는 Career source overlay에서 옵니다. 최종 `skills/ (23개)`는 제품 스킬 15개와 공통 스킬 8개입니다. 공통 스킬은 [레퍼런스 분석 스킬](../../../shared/reference-intelligence/skills/analyze-game-design-references/SKILL.md) `analyze-game-design-references`, `archify`, `humanize-korean`, `svg-infographic`, `retrieve-approved-design-memory`, `capture-game-design-memory`, `maintain-game-design-memory`, [용어 사전 스킬](../../../shared/reference-intelligence/skills/maintain-game-design-glossary/SKILL.md) `maintain-game-design-glossary`이며, `agents/ (10개)`는 네이티브 발견 여부와 무관하게 오케스트레이터가 전달할 수 있는 전문 역할 프롬프트입니다.
 
 ## 설치된 top-level scripts
 
 | 파일 | 역할 |
 | --- | --- |
+| `analyze-game-design-references.mjs` | 근거를 분리해 레퍼런스 분석 산출물을 검증 |
 | `build-image-asset-plan.mjs` | profile과 artifact에서 image asset plan 생성 |
 | `capability-probe.mjs` | 선택 renderer capability 점검 |
 | `capture-design-memory.mjs` | 검증한 작업의 교훈을 검토 대기 후보로 기록 |
@@ -258,6 +261,7 @@ codex plugin marketplace remove game-design-suite
 | `generate-openai-images.mjs` | OpenAI Images API bounded adapter |
 | `load-memory-config.mjs` | 프로젝트 기억 설정을 안전한 값으로 읽기 |
 | `maintain-design-memory.mjs` | 후보·사람 결정·충돌·복구 관리 |
+| `manage-game-design-glossary.mjs` | 용어 후보·오버레이·사람 결정 기록 관리 |
 | `quality-source-anchors.mjs` | canonical quality source byte·semantic anchor |
 | `resolve-quality-profile.mjs` | profile 선택·합성·manifest·상태 전이 |
 | `retrieve-design-memory.mjs` | 승인된 관련 기억과 적용·제외 기록 조회 |
@@ -266,13 +270,15 @@ codex plugin marketplace remove game-design-suite
 | `stop-artifact-review.mjs` | one-retry Stop artifact review |
 | `validate-artifact.mjs` | Canonical Artifact 검증 |
 | `validate-design-memory.mjs` | 기억 원본·상태 전이·출처 연결 검증 |
+| `validate-game-design-writing-language.mjs` | 게임 기획 문서의 용어·문체 검증 |
 | `validate-image-assets.mjs` | image manifest/lifecycle 검증 |
 | `validate-image-config.mjs` | redacted image configuration 검증 |
 | `validate-quality-profile.mjs` | closed Quality Profile 검증 |
+| `validate-reference-intelligence.mjs` | 레퍼런스 분석과 용어 사전 산출물의 경계 검증 |
 | `validate-reference-preset.mjs` | neutral reference preset 검증 |
 | `validate-writing-revision.mjs` | protected content와 bounded writing revision 검증 |
 
-이 표는 기존 16개와 기억 스크립트 5개를 합친 최상위 실행 스크립트 21개입니다. `scripts/lib/*.mjs`는 최상위 스크립트가 쓰는 내부 도구이며 직접 실행 목록에 포함하지 않습니다.
+이 표는 기존 16개와 기억 스크립트 5개, 레퍼런스 인텔리전스 스크립트 4개를 합친 최상위 실행 스크립트 25개입니다. `scripts/lib/*.mjs`는 최상위 스크립트가 쓰는 내부 도구이며 직접 실행 목록에 포함하지 않습니다.
 
 ## 프로젝트 기억
 

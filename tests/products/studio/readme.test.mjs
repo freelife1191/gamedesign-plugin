@@ -14,6 +14,10 @@ const pluginRoot = path.join(repoRoot, "products/game-design-studio/plugin");
 const readmePath = path.join(pluginRoot, "README.md");
 const temporaryDirectories = [];
 const canonicalSourceLinks = new Map([
+  ["README.md", new Map([
+    ["../../../shared/reference-intelligence/skills/analyze-game-design-references/SKILL.md", "reference-intelligence/skills/analyze-game-design-references/SKILL.md"],
+    ["../../../shared/reference-intelligence/skills/maintain-game-design-glossary/SKILL.md", "reference-intelligence/skills/maintain-game-design-glossary/SKILL.md"],
+  ])],
   ["skills/define-game-vision/SKILL.md", new Map([["../../../../../shared/responsible-design/gates.json", "responsible-design/gates.json"]])],
   ["skills/design-game-content/SKILL.md", new Map([["../../../../../shared/responsible-design/gates.json", "responsible-design/gates.json"]])],
   ["skills/design-game-economy-and-liveops/SKILL.md", new Map([["../../../../../shared/responsible-design/gates.json", "responsible-design/gates.json"]])],
@@ -117,20 +121,29 @@ const qualityProfileIds = [
 ];
 
 const topLevelScriptIds = [
+  "analyze-game-design-references.mjs",
   "build-image-asset-plan.mjs",
   "capability-probe.mjs",
+  "capture-design-memory.mjs",
   "compile-image-prompts.mjs",
   "data-only-snapshot.mjs",
   "generate-openai-images.mjs",
+  "load-memory-config.mjs",
+  "maintain-design-memory.mjs",
+  "manage-game-design-glossary.mjs",
   "quality-source-anchors.mjs",
   "resolve-quality-profile.mjs",
+  "retrieve-design-memory.mjs",
   "run-game-design-writing-polish.mjs",
   "run-image-asset-workflow.mjs",
   "stop-artifact-review.mjs",
   "validate-artifact.mjs",
+  "validate-design-memory.mjs",
+  "validate-game-design-writing-language.mjs",
   "validate-image-assets.mjs",
   "validate-image-config.mjs",
   "validate-quality-profile.mjs",
+  "validate-reference-intelligence.mjs",
   "validate-reference-preset.mjs",
   "validate-writing-revision.mjs",
 ];
@@ -511,7 +524,7 @@ test("release documentation ships the plugin license and third-party notices", a
 test("README exposes every shipped skill, role asset, profile, and canonical template", async () => {
   const readme = await readFile(readmePath, "utf8");
   assert.match(readme, /제품 스킬 15개/u, "README states the direct product-skill count");
-  assert.match(readme, /설치 스킬(?:은|이) 21개/u, "README states the complete installed-skill count");
+  assert.match(readme, /설치 스킬(?:은|이) 23개/u, "README states the complete installed-skill count");
   assert.doesNotMatch(readme, /Skillstead `svg-infographic` 0\.8\.3/u, "README does not advertise the superseded Skillstead release");
   assert.deepEqual(tableIds(readme, "스킬 카탈로그"), skillIds);
   assert.deepEqual(tableIds(readme, "전문 역할 프롬프트"), roleIds);
@@ -809,7 +822,11 @@ test("root README describes both packaged quality-profile catalogs without sourc
 test("README local links resolve inside the source plugin root", async () => {
   const links = localMarkdownLinks(await readFile(readmePath, "utf8"));
   assert.ok(links.length > 0, "README must link to inspectable local contracts");
-  for (const target of links) await assertContainedLink(pluginRoot, readmePath, target);
+  for (const target of links) {
+    const expectedCanonicalTarget = canonicalSourceLinks.get("README.md")?.get(target);
+    if (expectedCanonicalTarget) await assertCanonicalSourceLink(readmePath, target, expectedCanonicalTarget);
+    else await assertContainedLink(pluginRoot, readmePath, target);
+  }
 });
 
 test("source and clean-built Markdown links stay inside their own plugin roots", async () => {
@@ -913,9 +930,9 @@ test("README explains the source overlay and complete independent built-plugin s
     "products/game-design-studio/plugin",
     "plugins/game-design-studio",
     ".codex-plugin/plugin.json",
-    "skills/ (18개)",
+    "skills/ (23개)",
     "<15개 Studio 제품 스킬>",
-    "skills/svg-infographic/",
+    "svg-infographic/",
     "agents/ (12개)",
     "hooks/hooks.json",
     "scripts/",

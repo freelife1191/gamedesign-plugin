@@ -4,12 +4,16 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
+import { extractMarkdownLinks } from "../../tooling/lib/user-guides.mjs";
+
 const root = fileURLToPath(new URL("../..", import.meta.url));
 const products = ["game-design-studio", "game-design-career"];
 const commonSkillIds = [
+  "analyze-game-design-references",
   "archify",
   "capture-game-design-memory",
   "humanize-korean",
+  "maintain-game-design-glossary",
   "maintain-game-design-memory",
   "retrieve-approved-design-memory",
   "svg-infographic",
@@ -23,7 +27,7 @@ const productSkillIds = Object.freeze({
   ],
 });
 const topLevelScripts = [
-  "build-image-asset-plan.mjs", "capability-probe.mjs", "capture-design-memory.mjs", "compile-image-prompts.mjs", "data-only-snapshot.mjs", "generate-openai-images.mjs", "load-memory-config.mjs", "maintain-design-memory.mjs", "quality-source-anchors.mjs", "resolve-quality-profile.mjs", "retrieve-design-memory.mjs", "run-game-design-writing-polish.mjs", "run-image-asset-workflow.mjs", "stop-artifact-review.mjs", "validate-artifact.mjs", "validate-design-memory.mjs", "validate-image-assets.mjs", "validate-image-config.mjs", "validate-quality-profile.mjs", "validate-reference-preset.mjs", "validate-writing-revision.mjs",
+  "analyze-game-design-references.mjs", "build-image-asset-plan.mjs", "capability-probe.mjs", "capture-design-memory.mjs", "compile-image-prompts.mjs", "data-only-snapshot.mjs", "generate-openai-images.mjs", "load-memory-config.mjs", "maintain-design-memory.mjs", "manage-game-design-glossary.mjs", "quality-source-anchors.mjs", "resolve-quality-profile.mjs", "retrieve-design-memory.mjs", "run-game-design-writing-polish.mjs", "run-image-asset-workflow.mjs", "stop-artifact-review.mjs", "validate-artifact.mjs", "validate-design-memory.mjs", "validate-game-design-writing-language.mjs", "validate-image-assets.mjs", "validate-image-config.mjs", "validate-quality-profile.mjs", "validate-reference-intelligence.mjs", "validate-reference-preset.mjs", "validate-writing-revision.mjs",
 ];
 const memoryHeadings = [
   "어떤 기록을 기억하는가",
@@ -94,10 +98,10 @@ function assertExactInstallInventory({ product, actualProductSkillIds, actualCom
   assert.deepEqual(actualProductSkillIds, [...productSkillIds[product]].sort(), `${product}: source product skill IDs`);
   assert.deepEqual(actualCommonSkillIds, [...commonSkillIds].sort(), `${product}: source common skill IDs`);
   assert.deepEqual(actualScripts, [...topLevelScripts].sort(), `${product}: source top-level scripts`);
-  assert.equal(expectedSkills.length, 21, `${product}: expected installed skills`);
-  assert.equal(topLevelScripts.length, 21, `${product}: expected top-level scripts`);
-  assert.deepEqual(listedSkillIds(skillGuide), expectedSkills, `${product}: skill guide lists exactly the installed 21 IDs`);
-  assert.deepEqual(listedTopLevelScripts(productReadme), [...topLevelScripts].sort(), `${product}: README lists exactly the 21 top-level scripts`);
+  assert.equal(expectedSkills.length, 23, `${product}: expected installed skills`);
+  assert.equal(topLevelScripts.length, 25, `${product}: expected top-level scripts`);
+  assert.deepEqual(listedSkillIds(skillGuide), expectedSkills, `${product}: skill guide lists exactly the installed 23 IDs`);
+  assert.deepEqual(listedTopLevelScripts(productReadme), [...topLevelScripts].sort(), `${product}: README lists exactly the 25 top-level scripts`);
 }
 
 function assertKoreanMemoryContract(markdown, label, laneHeading) {
@@ -145,15 +149,16 @@ test("memory guides are Korean-first, local-only, human-approved, and fail-open"
   }
 });
 
-test("source inventories and product documentation list exactly the installed 21 skills and 21 scripts", async () => {
+test("source inventories and product documentation list exactly the installed 23 skills and 25 scripts", async () => {
   const buildSource = await readFile(path.join(root, "tooling/lib/build-product.mjs"), "utf8");
   for (const id of ["svg-infographic", "archify", "humanize-korean"]) {
     assert.match(buildSource, new RegExp(`skills/${id.replace(/-/gu, "\\-")}`), id);
   }
   assert.match(buildSource, /\["shared\/memory\/skills", "skills"\]/u);
+  assert.match(buildSource, /\["shared\/reference-intelligence\/skills", "skills"\]/u);
 
   const memoryIds = await directoryIds("shared/memory/skills");
-  const actualCommonSkillIds = ["archify", ...memoryIds, "humanize-korean", "svg-infographic"].sort();
+  const actualCommonSkillIds = ["analyze-game-design-references", "archify", ...memoryIds, "humanize-korean", "maintain-game-design-glossary", "svg-infographic"].sort();
 
   const scripts = (await readdir(path.join(root, "shared/scripts"), { withFileTypes: true }))
     .filter((entry) => entry.isFile() && entry.name.endsWith(".mjs"))
@@ -169,11 +174,18 @@ test("source inventories and product documentation list exactly the installed 21
     assertExactInstallInventory({ product, actualProductSkillIds, actualCommonSkillIds, actualScripts: scripts, skillGuide, productReadme });
     for (const markdown of [skillGuide, productReadme]) {
       assert.match(markdown, /제품 스킬 15개/u);
-      assert.match(markdown, /공통 스킬 6개/u);
-      assert.match(markdown, /설치 스킬(?:은)? 21개/u);
+      assert.match(markdown, /공통 스킬 8개/u);
+      assert.match(markdown, /설치 스킬(?:은)? 23개/u);
     }
-    assert.match(productReadme, /기존 16개와 기억 스크립트 5개/u);
-    assert.match(productReadme, /최상위 실행 스크립트 21개/u);
+    const visibleLinks = extractMarkdownLinks(productReadme);
+    for (const [label, target] of [
+      ["레퍼런스 분석 스킬", "../../../shared/reference-intelligence/skills/analyze-game-design-references/SKILL.md"],
+      ["용어 사전 스킬", "../../../shared/reference-intelligence/skills/maintain-game-design-glossary/SKILL.md"],
+    ]) {
+      assert.ok(visibleLinks.some((link) => link.label === label && link.target === target), `${product}: visible source link ${label}`);
+    }
+    assert.match(productReadme, /기존 16개와 기억 스크립트 5개, 레퍼런스 인텔리전스 스크립트 4개/u);
+    assert.match(productReadme, /최상위 실행 스크립트 25개/u);
     assert.match(productReadme, /`scripts\/lib\/\*\.mjs`.*내부 도구/u);
   }
 });
@@ -251,7 +263,7 @@ test("hostile documentation mutations are non-vacuously rejected", async () => {
     assert.throws(() => assertKoreanMemoryContract(mutated, `mutation ${index + 1}`, "Studio 전용 경계"));
   }
 
-  const actualCommonSkillIds = ["archify", ...(await directoryIds("shared/memory/skills")), "humanize-korean", "svg-infographic"].sort();
+  const actualCommonSkillIds = ["analyze-game-design-references", "archify", ...(await directoryIds("shared/memory/skills")), "humanize-korean", "maintain-game-design-glossary", "svg-infographic"].sort();
   const actualScripts = (await readdir(path.join(root, "shared/scripts"), { withFileTypes: true }))
     .filter((entry) => entry.isFile() && entry.name.endsWith(".mjs"))
     .map((entry) => entry.name)
@@ -269,6 +281,20 @@ test("hostile documentation mutations are non-vacuously rejected", async () => {
       const mutated = productReadme.replace("| `" + script + "` |", "| `" + script + "-mutated` |");
       assert.notEqual(mutated, productReadme, `${product}: script mutation changed ${script}`);
       assert.throws(() => assertExactInstallInventory({ product, actualProductSkillIds, actualCommonSkillIds, actualScripts, skillGuide, productReadme: mutated }), `${product}: script mutation rejects ${script}`);
+    }
+    for (const id of ["analyze-game-design-references", "maintain-game-design-glossary"]) {
+      const row = skillGuide.split("\n").find((line) => line.startsWith("| [`" + id + "`]("));
+      assert.ok(row, `${product}: source skill row exists for ${id}`);
+      const missing = skillGuide.replace(row + "\n", "");
+      assert.notEqual(missing, skillGuide, `${product}: missing skill mutation changed ${id}`);
+      assert.throws(() => assertExactInstallInventory({ product, actualProductSkillIds, actualCommonSkillIds, actualScripts, skillGuide: missing, productReadme }), `${product}: missing skill rejects ${id}`);
+    }
+    for (const script of ["analyze-game-design-references.mjs", "manage-game-design-glossary.mjs", "validate-game-design-writing-language.mjs", "validate-reference-intelligence.mjs"]) {
+      const row = productReadme.split("\n").find((line) => line.startsWith("| `" + script + "` |"));
+      assert.ok(row, `${product}: source script row exists for ${script}`);
+      const missing = productReadme.replace(row + "\n", "");
+      assert.notEqual(missing, productReadme, `${product}: missing script mutation changed ${script}`);
+      assert.throws(() => assertExactInstallInventory({ product, actualProductSkillIds, actualCommonSkillIds, actualScripts, skillGuide, productReadme: missing }), `${product}: missing script rejects ${script}`);
     }
   }
 });

@@ -47,8 +47,8 @@ test("codex exec uses the slow marketplace timeout through its runner seam", () 
   ]]);
 });
 
-test("marketplace smoke expects fifteen product skills plus six shared skills", () => {
-  assert.equal(PACKAGED_SKILL_COUNT, 21);
+test("marketplace smoke expects fifteen product skills plus eight shared skills", () => {
+  assert.equal(PACKAGED_SKILL_COUNT, 23);
 });
 
 test("marketplace smoke starts from an ordinary Korean request without naming a skill", () => {

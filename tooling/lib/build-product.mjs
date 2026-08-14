@@ -98,7 +98,29 @@ const sourceOnlySkillsteadFallbacks = Object.freeze({
   }),
 });
 const packageLinkProjections = Object.freeze({
+  "game-design-career": Object.freeze([
+    Object.freeze({
+      path: /^README\.md$/u,
+      source: "../../../shared/reference-intelligence/skills/analyze-game-design-references/SKILL.md",
+      package: "skills/analyze-game-design-references/SKILL.md",
+    }),
+    Object.freeze({
+      path: /^README\.md$/u,
+      source: "../../../shared/reference-intelligence/skills/maintain-game-design-glossary/SKILL.md",
+      package: "skills/maintain-game-design-glossary/SKILL.md",
+    }),
+  ]),
   "game-design-studio": Object.freeze([
+    Object.freeze({
+      path: /^README\.md$/u,
+      source: "../../../shared/reference-intelligence/skills/analyze-game-design-references/SKILL.md",
+      package: "skills/analyze-game-design-references/SKILL.md",
+    }),
+    Object.freeze({
+      path: /^README\.md$/u,
+      source: "../../../shared/reference-intelligence/skills/maintain-game-design-glossary/SKILL.md",
+      package: "skills/maintain-game-design-glossary/SKILL.md",
+    }),
     Object.freeze({
       path: /^skills\/[^/]+\/SKILL\.md$/u,
       source: "../../../../../shared/responsible-design/gates.json",

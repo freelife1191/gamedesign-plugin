@@ -1,7 +1,7 @@
 import { readFile, realpath } from "node:fs/promises";
 
 import { loadUseCaseManifest } from "./use-case-guides.mjs";
-import { collectProductInventory, SOURCE_BOUND_MEMORY_SKILL_IDS } from "./user-guides.mjs";
+import { collectProductInventory, SOURCE_BOUND_MEMORY_SKILL_IDS, SOURCE_BOUND_REFERENCE_INTELLIGENCE_SKILL_IDS } from "./user-guides.mjs";
 import {
   assertNoSymlinkPath,
   assertUniqueNormalizedPaths,
@@ -27,13 +27,14 @@ const PRODUCT_REPOSITORY_IDS = Object.freeze({
   studio: "game-design-studio",
   career: "game-design-career",
 });
-// These installed skills are documented by each product's memory.md instead of
-// one prompt-template-backed skill guide. They remain part of the package
-// inventory, but deliberately have no generated prompt-template entries.
+// These installed skills use source-bound product guides instead of the generic
+// prompt-template catalog. They remain part of the package inventory, but
+// deliberately have no generated prompt-template entries.
 const BUNDLED_DEPENDENCY_SKILL_IDS = new Set([
   "archify",
   "humanize-korean",
   ...SOURCE_BOUND_MEMORY_SKILL_IDS,
+  ...SOURCE_BOUND_REFERENCE_INTELLIGENCE_SKILL_IDS,
 ]);
 const ENTRY_KEYS = new Set([
   "id", "kind", "product", "title", "display_title", "sample_result_excerpt", "purpose", "audiences", "intents", "level",

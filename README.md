@@ -1897,7 +1897,7 @@ Skillstead 미리보기는 **Studio·Career의 결과 경계와 사람 승인·�
 
 ### Studio 설치 패키지 구조
 
-Studio 생성본 (snapshot)은 에이전트 12개, 설치 스킬 23개, 템플릿 15개와 최상위 실행 스크립트 21개를 포함합니다.
+Studio 생성본 (snapshot)은 에이전트 12개, 설치 스킬 23개, 템플릿 15개와 최상위 실행 스크립트 25개를 포함합니다.
 
 ```text
 plugins/game-design-studio/
@@ -1912,7 +1912,7 @@ plugins/game-design-studio/
 │   ├── methods/                # 기획 방법 reference
 │   ├── shared/                 # 공통 계약과 책임 설계
 │   └── source/                 # 근거 문서의 설치 snapshot
-├── scripts/ # 기존 16개와 기억 스크립트 5개, 모두 21개
+├── scripts/ # 기존 16개와 기억 스크립트 5개, 레퍼런스 인텔리전스 스크립트 4개, 모두 25개
 ├── hooks/hooks.json            # 중단·검토 hook
 ├── .env.example                # 이미지 생성 설정 예시
 ├── README.md
@@ -1924,7 +1924,7 @@ generated snapshot: plugins/game-design-studio/
 
 ### Career 설치 패키지 구조
 
-Career 생성본 (snapshot)은 에이전트 10개, 설치 스킬 23개, 템플릿 15개와 최상위 실행 스크립트 21개를 포함합니다.
+Career 생성본 (snapshot)은 에이전트 10개, 설치 스킬 23개, 템플릿 15개와 최상위 실행 스크립트 25개를 포함합니다.
 
 ```text
 plugins/game-design-career/
@@ -1939,7 +1939,7 @@ plugins/game-design-career/
 │   ├── methods/                # 학습·취업 방법 reference
 │   ├── shared/                 # 공통 계약과 책임 설계
 │   └── source/                 # 근거 문서의 설치 snapshot
-├── scripts/ # 기존 16개와 기억 스크립트 5개, 모두 21개
+├── scripts/ # 기존 16개와 기억 스크립트 5개, 레퍼런스 인텔리전스 스크립트 4개, 모두 25개
 ├── hooks/hooks.json            # 중단·검토 hook
 ├── .env.example                # 이미지 생성 설정 예시
 ├── README.md
@@ -1973,6 +1973,7 @@ generated snapshot: plugins/game-design-career/
 
 | 파일 | 하는 일 |
 | --- | --- |
+| `analyze-game-design-references.mjs` | 관찰 근거를 분리해 레퍼런스 분석 산출물을 검사합니다. |
 | `build-image-asset-plan.mjs` | 품질 기준과 기획 결과물에서 이미지 제작 계획을 만듭니다. |
 | `capability-probe.mjs` | 사용할 수 있는 문서·이미지 변환 기능을 확인합니다. |
 | `capture-design-memory.mjs` | 검증된 작업에서 재사용할 교훈을 검토 대기 후보로 기록합니다. |
@@ -1981,6 +1982,7 @@ generated snapshot: plugins/game-design-career/
 | `generate-openai-images.mjs` | 설정된 OpenAI Images API 호출을 제한된 범위에서 실행합니다. |
 | `load-memory-config.mjs` | 로컬 기억 사용 범위와 개수·기간·Git 모드를 안전한 값으로 읽습니다. |
 | `maintain-design-memory.mjs` | 후보 목록, 사람 승인·거부·폐기, 충돌과 색인 복구를 관리합니다. |
+| `manage-game-design-glossary.mjs` | 용어 후보, 오버레이와 사람 결정 기록을 관리합니다. |
 | `quality-source-anchors.mjs` | 문서 품질 원본의 바이트와 의미 기준점을 고정합니다. |
 | `resolve-quality-profile.mjs` | 문서 품질 기준을 선택·합성하고 상태 기록을 만듭니다. |
 | `retrieve-design-memory.mjs` | 승인된 관련 기억만 조회하고 적용·제외 기록을 남깁니다. |
@@ -1989,13 +1991,15 @@ generated snapshot: plugins/game-design-career/
 | `stop-artifact-review.mjs` | 완료 직전 결과물을 검토하고 한 번의 수정 재개를 관리합니다. |
 | `validate-artifact.mjs` | 기준 기획 결과물 폴더의 필수 파일과 상태를 검사합니다. |
 | `validate-design-memory.mjs` | 기억 원본, 상태 전이와 출처 연결을 검사합니다. |
+| `validate-game-design-writing-language.mjs` | 게임 기획 문서의 용어와 문체 경계를 검사합니다. |
 | `validate-image-assets.mjs` | 이미지 목록, 승인 단계와 파일 정합성을 검사합니다. |
 | `validate-image-config.mjs` | 비밀값을 노출하지 않고 이미지 생성 설정을 검사합니다. |
 | `validate-quality-profile.mjs` | 선택한 문서 품질 기준의 닫힌 계약을 검사합니다. |
+| `validate-reference-intelligence.mjs` | 레퍼런스 분석과 용어 사전 산출물의 경계를 검사합니다. |
 | `validate-reference-preset.mjs` | 중립 참고 사전 설정의 허용 범위를 검사합니다. |
 | `validate-writing-revision.mjs` | 글의 핵심 사실과 수치가 바뀌지 않았는지, 수정 기록이 빠지지 않았는지 검사합니다. |
 
-위 표는 기존 16개와 기억 스크립트 5개를 합친 최상위 실행 스크립트 21개입니다. `scripts/lib/*.mjs`는 이 스크립트들이 쓰는 내부 도구이며 직접 실행 목록에 포함하지 않습니다.
+위 표는 기존 16개와 기억 스크립트 5개, 레퍼런스 인텔리전스 스크립트 4개를 합친 최상위 실행 스크립트 25개입니다. `scripts/lib/*.mjs`는 이 스크립트들이 쓰는 내부 도구이며 직접 실행 목록에 포함하지 않습니다.
 
 ### 설치된 문서 품질 경로 (document-quality)
 
@@ -2139,7 +2143,7 @@ Source tree, build·release·검증 명령과 패키지 내부 계약은 기술 
 <details>
 <summary>패키지 기술 inventory</summary>
 
-표준 빌드는 Studio에 전문 에이전트 12개, Career에 10개, 각 제품에 설치 스킬 23개와 Canonical Artifact 템플릿 15개, 최상위 실행 스크립트 21개를 포함합니다. 공통 변경은 `shared/`, 제품 변경은 `products/<product>/plugin/`에서 작성합니다.
+표준 빌드는 Studio에 전문 에이전트 12개, Career에 10개, 각 제품에 설치 스킬 23개와 Canonical Artifact 템플릿 15개, 최상위 실행 스크립트 25개를 포함합니다. 공통 변경은 `shared/`, 제품 변경은 `products/<product>/plugin/`에서 작성합니다.
 
 | 기술 경로 | 역할 |
 | --- | --- |
