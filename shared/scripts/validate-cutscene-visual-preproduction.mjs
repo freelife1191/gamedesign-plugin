@@ -238,7 +238,30 @@ export function validateCutsceneContinuityReview(value) {
     const expectedBlockers = [];
     const findingDocuments = new Set();
     if (!Array.isArray(value?.findings)) issue("cutscene.findings_invalid", "/findings");
-    else value.findings.forEach((finding, index) => { const path = `/findings/${index}`; const document = canonicalCutsceneDocument(finding); if (findingDocuments.has(document)) issue("cutscene.findings_duplicate", path); findingDocuments.add(document); closed(finding, ["findingId", "code", "path", "sourceMasterIds", "affectedAssetIds", "blocking"], path, issue); const validFindingId = typeof finding?.findingId === "string" && RECORD_ID.test(finding.findingId); if (!validFindingId) issue("cutscene.finding_id_invalid", `${path}/findingId`); if (!isText(finding?.code)) issue("cutscene.finding_code_invalid", `${path}/code`); if (!isText(finding?.path)) issue("cutscene.finding_path_invalid", `${path}/path`); nonEmptySortedUnique(finding?.sourceMasterIds, `${path}/sourceMasterIds`, issue, { predicate: (id) => CUTSCENE_ID.test(id ?? "") }); nonEmptySortedUnique(finding?.affectedAssetIds, `${path}/affectedAssetIds`, issue, { predicate: (id) => CUTSCENE_ID.test(id ?? "") }); if (typeof finding?.blocking !== "boolean") issue("cutscene.finding_blocking_invalid", `${path}/blocking`); if (finding?.blocking === true && validFindingId) expectedBlockers.push(finding.findingId); });
+    else value.findings.forEach((finding, index) => {
+      const path = `/findings/${index}`;
+      const keys = ["findingId", "code", "path", "sourceMasterIds", "affectedAssetIds", "blocking"];
+      const findingObject = closed(finding, keys, path, issue);
+      const closedShape = findingObject && Reflect.ownKeys(finding).length === keys.length && keys.every((key) => Object.hasOwn(finding, key));
+      const validFindingId = typeof finding?.findingId === "string" && RECORD_ID.test(finding.findingId);
+      const validCode = isText(finding?.code);
+      const validPath = isText(finding?.path);
+      const sourceMasterIdsAreStrings = Array.isArray(finding?.sourceMasterIds) && finding.sourceMasterIds.every((id) => typeof id === "string");
+      const affectedAssetIdsAreStrings = Array.isArray(finding?.affectedAssetIds) && finding.affectedAssetIds.every((id) => typeof id === "string");
+      const validBlocking = typeof finding?.blocking === "boolean";
+      if (!validFindingId) issue("cutscene.finding_id_invalid", `${path}/findingId`);
+      if (!validCode) issue("cutscene.finding_code_invalid", `${path}/code`);
+      if (!validPath) issue("cutscene.finding_path_invalid", `${path}/path`);
+      nonEmptySortedUnique(finding?.sourceMasterIds, `${path}/sourceMasterIds`, issue, { predicate: (id) => CUTSCENE_ID.test(id ?? "") });
+      nonEmptySortedUnique(finding?.affectedAssetIds, `${path}/affectedAssetIds`, issue, { predicate: (id) => CUTSCENE_ID.test(id ?? "") });
+      if (!validBlocking) issue("cutscene.finding_blocking_invalid", `${path}/blocking`);
+      if (closedShape && typeof finding.findingId === "string" && typeof finding.code === "string" && typeof finding.path === "string" && sourceMasterIdsAreStrings && affectedAssetIdsAreStrings && validBlocking) {
+        const document = canonicalCutsceneDocument(finding);
+        if (findingDocuments.has(document)) issue("cutscene.findings_duplicate", path);
+        findingDocuments.add(document);
+      }
+      if (finding?.blocking === true && validFindingId) expectedBlockers.push(finding.findingId);
+    });
     if (!Array.isArray(value?.blockingFindingIds)) issue("cutscene.blockers_invalid", "/blockingFindingIds");
     else {
       value.blockingFindingIds.forEach((id, index) => { const previous = index > 0 ? value.blockingFindingIds[index - 1] : undefined; const valid = typeof id === "string" && RECORD_ID.test(id); if (!valid) issue("cutscene.id_invalid", `/blockingFindingIds/${index}`); if (index > 0 && typeof previous === "string" && RECORD_ID.test(previous) && valid && compareUtf8(previous, id) >= 0) issue("cutscene.ids_unsorted_or_duplicate", "/blockingFindingIds"); });

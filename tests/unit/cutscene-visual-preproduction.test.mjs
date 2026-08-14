@@ -415,6 +415,37 @@ test("continuity findings reject structural duplicates independent of object key
   assert.equal(schemaAccepts(review, byName.get("cutscene-continuity-review"), byFile), false);
 });
 
+test("continuity findings validate closed JSON-compatible shape before canonical duplicate keys", () => {
+  const malformedFindings = [
+    undefined,
+    null,
+    Symbol("finding"),
+    Number.NaN,
+    {},
+    { findingId: "non-blocking", code: Symbol("code"), path: "/shots/0", sourceMasterIds: ["cutscene-escape-style-master-01"], affectedAssetIds: ["cutscene-escape-style-master-01"], blocking: false },
+    { findingId: "non-blocking", code: "continuity.note", path: Number.NaN, sourceMasterIds: ["cutscene-escape-style-master-01"], affectedAssetIds: ["cutscene-escape-style-master-01"], blocking: false },
+    { findingId: "non-blocking", code: "continuity.note", path: "/shots/0", sourceMasterIds: [Symbol("master")], affectedAssetIds: ["cutscene-escape-style-master-01"], blocking: false },
+  ];
+  for (const finding of malformedFindings) {
+    const review = validContinuityReview({ findings: [finding] });
+    let result;
+    assert.doesNotThrow(() => { result = validateCutsceneContinuityReview(review); });
+    assert.equal(result.ok, false);
+    assert.deepEqual(validateCutsceneContinuityReview(review), result);
+  }
+});
+
+test("lifecycle fails closed when continuity findings contain safe malformed runtime values", () => {
+  const plan = completedPlan();
+  const base = { plan, manifest: approvedManifest(), waves: plan.cutsceneWorkflow.waves };
+  for (const finding of [undefined, null, Symbol("finding"), Number.NaN, { findingId: "incomplete" }]) {
+    const continuityReceipt = currentReceipt(plan, { findings: [finding] });
+    let result;
+    assert.doesNotThrow(() => { result = deriveCutsceneLifecycle({ ...base, continuityReceipt }); });
+    assert.deepEqual(result, { lifecycle: "completed", documentApproved: false, productionCandidate: false, blockerIds: [] });
+  }
+});
+
 test("every expressible ID, collection, closed-shape, and timestamp rule has schema/runtime parity", async () => {
   const { byName, byFile } = await cutsceneSchemas();
   const cases = [
