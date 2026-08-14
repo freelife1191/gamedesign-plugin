@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { mkdir, mkdtemp, readFile, rename, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -39,6 +40,23 @@ const taskTwoInput = (overrides = {}) => ({
   ...overrides,
 });
 
+const generalArtifact = () => ({ artifact_id: "general-artifact", image_needs: [{
+  slot_id: "cover", type: "story-storyboard", scene: "A general scene.", subject: "A general subject.", composition: "A wide readable frame.",
+  visual_style: "Original illustrative concept art.", readability: "Readable.", width: 1024, height: 1024,
+}] });
+const generalProfile = () => ({
+  profile_id: "general-profile", version: 1, artifact_types: ["design-document"], audiences: ["design"],
+  required_sections: [{ id: "visuals", title: "Visuals" }], required_tables: [{ id: "signals", section_id: "visuals", columns: ["Signal"] }],
+  required_diagrams: [{ id: "visual-flow", section_id: "visuals", purpose: "Explain flow.", alt_text: "Visual flow." }],
+  required_images: [{ id: "cover", section_id: "visuals", purpose: "Explain the artifact.", alt_text: "General cover." }], recommended_images: [],
+  length_guidance: { min_words: 1, max_words: 10 }, ppt_story_contract: {}, acceptance_criteria: ["Readable"], export_rules: { required_formats: ["md"], forbidden_formats: [] }, quality_checks: ["visual"],
+});
+
+async function patternCatalog() {
+  const names = ["base", "character", "skill-vfx", "environment", "ui-icon", "storyboard", "document-illustration"];
+  return Object.fromEntries(await Promise.all(names.map(async (name) => [name, JSON.parse(await readFile(new URL(`../../shared/image-assets/prompt-patterns/${name}.json`, import.meta.url), "utf8"))])));
+}
+
 const cutsceneManifestFixture = ({
   assetId = "cutscene-escape-style-master-style-01",
   promptSha256 = "2".repeat(64),
@@ -72,6 +90,13 @@ function validPng() {
   return Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk("IHDR", header), chunk("IDAT", deflateSync(Buffer.alloc(5))), chunk("IEND", Buffer.alloc(0))]);
 }
 
+function markMasterGenerated(planned) {
+  const manifest = structuredClone(planned.manifest);
+  const asset = manifest.assets[0];
+  asset.generation_state = "generated";
+  return { manifest, asset };
+}
+
 test("prompt-only has expected references but no invented hashes", () => {
   const { plan, manifest, templatePromptPackage } = planCutsceneVisualPreproduction(taskTwoInput());
   assert.equal(plan.mode, "prompt-only");
@@ -99,16 +124,64 @@ test("planImageAssetWorkflow preserves handed-off manifest bytes and skips gener
 test("binding reads current master bytes and invalidation retains unrelated state", async (t) => {
   const root = await cutsceneArtifactRoot(t);
   const planned = planCutsceneVisualPreproduction(taskTwoInput({ mode: "generate-after-approval" }));
+  const { manifest, asset } = markMasterGenerated(planned);
   const referenceBytes = validPng();
-  for (const reference of planned.templatePromptPackage.references) {
-    await mkdir(path.dirname(path.join(root, reference.expectedPath)), { recursive: true });
-    await writeFile(path.join(root, reference.expectedPath), referenceBytes);
-  }
-  const bound = await bindCutscenePromptPackage({ artifactRoot: root, plan: planned.plan, manifest: planned.manifest });
+  await mkdir(path.dirname(path.join(root, asset.output.path)), { recursive: true });
+  await writeFile(path.join(root, asset.output.path), referenceBytes);
+  const bound = await bindCutscenePromptPackage({ artifactRoot: root, plan: planned.plan, manifest });
   assert.equal(bound.kind, "generation-ready");
-  const impact = findCutsceneImpact({ plan: planned.plan, changedAssetIds: [planned.plan.cutsceneWorkflow.waves[0].assetIds[0]] });
-  const invalidated = invalidateCutsceneDependents({ plan: planned.plan, changedAssetIds: [planned.plan.cutsceneWorkflow.waves[0].assetIds[0]], reason: "master-changed" });
-  assert.deepEqual(invalidated.cutsceneWorkflow.waves.filter((wave) => !impact.waveIds.includes(wave.id)), planned.plan.cutsceneWorkflow.waves.filter((wave) => !impact.waveIds.includes(wave.id)));
+  assert.deepEqual(bound.references, [{ assetId: asset.asset_id, sha256: createHash("sha256").update(referenceBytes).digest("hex") }]);
+  const plan = structuredClone(planned.plan);
+  plan.cutsceneWorkflow.waves[0].attempts = [{ schemaVersion: 1, waveId: "style-master", assetId: plan.cutsceneWorkflow.waves[0].assetIds[0], attemptId: "attempt-01", providerRequestId: "request-01", inputTokens: 1, inputTextTokens: 1, inputImageTokens: 0, cachedTextTokens: 0, cachedImageTokens: 0, outputTokens: 1, totalTokens: 2 }];
+  const earlier = structuredClone(plan.cutsceneWorkflow.waves[0]);
+  const changed = plan.cutsceneWorkflow.waves[1].assetIds[0];
+  const impact = findCutsceneImpact({ plan, changedAssetIds: [changed] });
+  const invalidated = invalidateCutsceneDependents({ plan, changedAssetIds: [changed], reason: "master-changed" });
+  assert.deepEqual(impact.waveIds, ["reference-masters", "keyframes", "storyboard"]);
+  assert.deepEqual(invalidated.cutsceneWorkflow.waves[0], earlier);
+});
+
+test("binding rejects plan-derived manifest mutations before reference I/O", async (t) => {
+  const root = await cutsceneArtifactRoot(t);
+  const planned = planCutsceneVisualPreproduction(taskTwoInput({ mode: "generate-after-approval" }));
+  for (const mutate of [
+    (manifest) => { manifest.assets[0].prompt_sha256 = "0".repeat(64); },
+    (manifest) => { manifest.cutsceneWorkflow.dagSha256 = "0".repeat(64); },
+    (manifest) => { manifest.cutsceneWorkflow.waves[0].assetIds = ["cutscene-escape-missing"]; },
+    (manifest) => { manifest.assets[0].approval_binding_sha256 = "0".repeat(64); },
+  ]) {
+    const manifest = structuredClone(planned.manifest);
+    mutate(manifest);
+    await assert.rejects(() => bindCutscenePromptPackage({ artifactRoot: root, plan: planned.plan, manifest }), /Invalid cutscene manifest handoff|plan-derived binding/i);
+  }
+});
+
+test("binding rejects symlink and identity-swapped master bytes", async (t) => {
+  const root = await cutsceneArtifactRoot(t);
+  const planned = planCutsceneVisualPreproduction(taskTwoInput({ mode: "generate-after-approval" }));
+  const { manifest, asset } = markMasterGenerated(planned);
+  const destination = path.join(root, asset.output.path);
+  const outside = path.join(root, "outside.png");
+  await mkdir(path.dirname(destination), { recursive: true });
+  await writeFile(outside, validPng());
+  await symlink(outside, destination);
+  await assert.rejects(() => bindCutscenePromptPackage({ artifactRoot: root, plan: planned.plan, manifest }), /unsafe reference/i);
+  await rm(destination);
+  await writeFile(destination, validPng());
+  const replacement = path.join(root, "replacement.png");
+  await writeFile(replacement, validPng());
+  await assert.rejects(() => bindCutscenePromptPackage({ artifactRoot: root, plan: planned.plan, manifest, beforeReferenceVerification: async () => rename(replacement, destination) }), /reference identity changed/i);
+});
+
+test("general image planning remains byte-stable without a cutscene manifest", async (t) => {
+  const root = await cutsceneArtifactRoot(t);
+  const catalog = await patternCatalog();
+  const first = await planImageAssetWorkflow({ artifactRoot: root, artifact: generalArtifact(), qualityProfile: generalProfile(), patternCatalog: catalog });
+  const firstPrompts = await Promise.all([readFile(path.join(root, "assets/prompts/image-prompts.md"), "utf8"), readFile(path.join(root, "assets/prompts/image-prompts.json"), "utf8")]);
+  const second = await planImageAssetWorkflow({ artifactRoot: root, artifact: generalArtifact(), qualityProfile: generalProfile(), existingManifest: first.manifest, patternCatalog: catalog });
+  assert.deepEqual(second.manifest, first.manifest);
+  assert.deepEqual(second.summary, first.summary);
+  assert.deepEqual(await Promise.all([readFile(path.join(root, "assets/prompts/image-prompts.md"), "utf8"), readFile(path.join(root, "assets/prompts/image-prompts.json"), "utf8")]), firstPrompts);
 });
 
 const validCutscenePlan = () => ({

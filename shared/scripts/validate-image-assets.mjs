@@ -31,6 +31,7 @@ const safeIdentifierPattern = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u;
 const sourceSectionPattern = /^content\.md#[a-z][a-z0-9-]*$/u;
 const digestPattern = /^[a-f0-9]{64}$/u;
 const lineageFields = ["asset_set_id", "derivative_of", "reference_images", "consistency_profile", "prompt_lineage"];
+const WAVE_IDS = new Set(["style-master", "reference-masters", "keyframes", "storyboard"]);
 
 function error(code, pathName, message) {
   return { code, path: pathName, message };
@@ -449,6 +450,32 @@ function validateAsset(asset, index, artifactRoot) {
   return errors;
 }
 
+function validateCutsceneWorkflow(errors, workflow) {
+  if (!isObject(workflow)) {
+    errors.push(error("invalid_cutscene_workflow", "cutsceneWorkflow", "Cutscene workflow must be a closed object."));
+    return;
+  }
+  rejectUnknownProperties(errors, workflow, new Set(["schemaVersion", "dagSha256", "waves"]), "cutsceneWorkflow");
+  if (workflow.schemaVersion !== 1) errors.push(error("invalid_cutscene_workflow_version", "cutsceneWorkflow.schemaVersion", "Cutscene workflow schema version 1 is required."));
+  if (!digestPattern.test(workflow.dagSha256 ?? "")) errors.push(error("invalid_cutscene_dag_digest", "cutsceneWorkflow.dagSha256", "Cutscene workflow DAG binding must be SHA-256."));
+  if (!Array.isArray(workflow.waves)) {
+    errors.push(error("invalid_cutscene_waves", "cutsceneWorkflow.waves", "Cutscene waves must be an array."));
+    return;
+  }
+  workflow.waves.forEach((wave, index) => {
+    const wavePath = `cutsceneWorkflow.waves[${index}]`;
+    if (!isObject(wave)) {
+      errors.push(error("invalid_cutscene_wave", wavePath, "Cutscene wave must be a closed object."));
+      return;
+    }
+    rejectUnknownProperties(errors, wave, new Set(["id", "assetIds"]), wavePath);
+    if (!WAVE_IDS.has(wave.id)) errors.push(error("invalid_cutscene_wave_id", `${wavePath}.id`, "Cutscene wave ID is not approved."));
+    if (!Array.isArray(wave.assetIds) || new Set(wave.assetIds).size !== wave.assetIds.length || !wave.assetIds.every((assetId) => assetIdPattern.test(assetId))) {
+      errors.push(error("invalid_cutscene_wave_asset_ids", `${wavePath}.assetIds`, "Cutscene wave asset IDs must be unique stable IDs."));
+    }
+  });
+}
+
 export function validateImageAssetManifest(value, { artifactRoot } = {}) {
   const errors = [];
   const warnings = [];
@@ -458,6 +485,7 @@ export function validateImageAssetManifest(value, { artifactRoot } = {}) {
   rejectUnknownProperties(errors, value, new Set(["schema_version", "assets", "cutsceneWorkflow"]), "");
   if (value.schema_version !== 1) errors.push(error("invalid_schema_version", "schema_version", "Schema version 1 is required."));
   if (!Array.isArray(value.assets)) errors.push(error("invalid_assets", "assets", "Assets must be an array."));
+  if (value.cutsceneWorkflow !== undefined) validateCutsceneWorkflow(errors, value.cutsceneWorkflow);
   const assets = Array.isArray(value.assets) ? value.assets : [];
   const ids = new Set();
   const generation = {};

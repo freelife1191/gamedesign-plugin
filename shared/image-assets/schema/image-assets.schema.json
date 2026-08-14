@@ -14,7 +14,22 @@
       "properties": {
         "schemaVersion": { "const": 1 },
         "dagSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
-        "waves": { "type": "array" }
+        "waves": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "assetIds"],
+            "properties": {
+              "id": { "enum": ["style-master", "reference-masters", "keyframes", "storyboard"] },
+              "assetIds": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" }
+              }
+            }
+          }
+        }
       }
     },
     "assets": {

@@ -128,6 +128,35 @@ function templatePackage(plan, manifest) {
   };
 }
 
+function derivedBindings(plan) {
+  const assetIds = plan.cutsceneWorkflow.waves.flatMap((wave) => wave.assetIds);
+  const general = buildImageAssetPlan({ artifact: cutsceneArtifact(plan.cutsceneId, assetIds), qualityProfile: cutsceneProfile(assetIds) });
+  const dagSha256 = hash(plan.cutsceneWorkflow.downstream);
+  const planSha256 = cutsceneDocumentSha256(plan);
+  return {
+    dagSha256,
+    waves: plan.cutsceneWorkflow.waves.map(({ id, assetIds: waveAssetIds }) => ({ id, assetIds: [...waveAssetIds] })),
+    assets: general.manifest.assets.map((asset) => {
+      const prompt = promptFor(asset);
+      const promptSha256 = hash(prompt);
+      return { assetId: asset.asset_id, prompt, promptSha256, approvalBindingSha256: hash({ assetId: asset.asset_id, dagSha256, planSha256, promptSha256 }) };
+    }),
+  };
+}
+
+function assertPlanDerivedBindings(plan, manifest) {
+  const expected = derivedBindings(plan);
+  if (manifest.cutsceneWorkflow.dagSha256 !== expected.dagSha256
+    || JSON.stringify(manifest.cutsceneWorkflow.waves) !== JSON.stringify(expected.waves)
+    || manifest.assets.length !== expected.assets.length) throw new Error("Cutscene plan-derived binding mismatch.");
+  const actual = new Map(manifest.assets.map((asset) => [asset.asset_id, asset]));
+  for (const binding of expected.assets) {
+    const asset = actual.get(binding.assetId);
+    if (!asset || asset.prompt !== binding.prompt || asset.prompt_sha256 !== binding.promptSha256
+      || asset.approval_binding_sha256 !== binding.approvalBindingSha256) throw new Error("Cutscene plan-derived binding mismatch.");
+  }
+}
+
 export function validateCutsceneManifestHandoff({ manifest } = {}) {
   try {
     if (!exact(manifest, ["schema_version", "assets", "cutsceneWorkflow"]) || manifest.schema_version !== 1 || !Array.isArray(manifest.assets) || manifest.assets.length === 0) fail("root shape");
@@ -183,19 +212,26 @@ export function planCutsceneVisualPreproduction(input = {}) {
   return { plan, manifest, templatePromptPackage: templatePackage(plan, manifest) };
 }
 
-export async function bindCutscenePromptPackage({ artifactRoot, plan, manifest } = {}) {
+export async function bindCutscenePromptPackage({ artifactRoot, plan, manifest, beforeReferenceVerification } = {}) {
   const planned = validateCutsceneVisualPlan(plan);
   if (!planned.ok) throw new Error("Cannot bind an invalid cutscene plan.");
-  const handoff = validateCutsceneManifestHandoff({ manifest: {
-    schema_version: manifest?.schema_version,
-    assets: manifest?.assets?.map(({ asset_id, prompt_sha256, approval_binding_sha256 }) => ({ asset_id, prompt_sha256, approval_binding_sha256 })),
-    cutsceneWorkflow: manifest?.cutsceneWorkflow,
-  } });
+  const handoff = validateCutsceneManifestHandoff({ manifest });
+  if (!validateImageAssetManifest(manifest).ok) throw new Error("Cannot bind an invalid cutscene image manifest.");
+  assertPlanDerivedBindings(plan, manifest);
   const bound = [];
-  for (const asset of manifest.assets) {
-    const reference = await readSecureReferenceFile({ artifactRoot, path: asset.output.path });
-    bound.push({ assetId: asset.asset_id, sha256: reference.digest });
+  const sources = manifest.assets.filter((asset) => asset.generation_state === "generated");
+  const loaded = [];
+  for (const asset of sources) {
+    try {
+      const reference = await readSecureReferenceFile({ artifactRoot, path: asset.output.path });
+      loaded.push({ asset, reference });
+    } catch (error) {
+      if (error?.message === "reference identity changed") throw error;
+      throw new Error("unsafe reference input");
+    }
   }
+  if (typeof beforeReferenceVerification === "function") await beforeReferenceVerification();
+  for (const { asset, reference } of loaded) { await reference.verify(); bound.push({ assetId: asset.asset_id, sha256: reference.digest }); }
   const result = {
     kind: "generation-ready", cutsceneId: plan.cutsceneId, planSha256: cutsceneDocumentSha256(plan), dagSha256: handoff.cutsceneWorkflow.dagSha256,
     references: bound,
