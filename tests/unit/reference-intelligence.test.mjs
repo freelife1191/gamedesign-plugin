@@ -56,6 +56,7 @@ function validReferenceAnalysis() {
       claimKind: "observation",
       claim: "The player receives a movement choice after the reveal.",
     }],
+    claims: [],
     atlasSelection: [{ systemId: "system-reveal-loop", rationale: "Supports the decision question." }],
     systemInventory: [{
       systemId: "system-reveal-loop",
@@ -748,6 +749,39 @@ test("analysis stages preserve evidence and never auto-approve transfer", async 
   assert.match(written.analysisSha256, /^[a-f0-9]{64}$/u);
   assert.equal(written.files.includes("reference-intelligence/system-maps/map-core-play-loop.json"), true);
   assert.equal(written.files.includes("reference-intelligence/deep-dives/core-play.md"), true);
+});
+
+test("analysis persists exact claim-to-evidence bindings in the evidence register", async (t) => {
+  const claim = { claimId: "claim-core-loop", systemIds: ["core-play"], evidenceIds: ["ev-alpha-loop"], kind: "observation", category: "general", causal: false };
+  const analysis = buildReferenceAnalysis(await analysisInputFixture({ claims: [claim] }));
+  const root = await analysisArtifactRoot(t);
+  await writeReferenceAnalysisWorkspace({ artifactRoot: root, analysis });
+  const persisted = JSON.parse(await readFile(join(root, "reference-intelligence", "evidence-register.yml"), "utf8"));
+  assert.deepEqual(analysis.claims, [claim]);
+  assert.deepEqual(persisted.claims, [claim]);
+});
+
+test("reference analysis schema and runtime close persisted claim bindings", async () => {
+  const schema = JSON.parse(await readFile(new URL("../../shared/reference-intelligence/schema/reference-analysis.schema.json", import.meta.url), "utf8"));
+  const value = validReferenceAnalysis();
+  value.claims = [{ claimId: "claim-cinematic-loop", systemIds: ["system-reveal-loop"], evidenceIds: ["evidence-cinematic-loop"], kind: "observation", category: "general", causal: false }];
+  assert.deepEqual([schemaAccepts(value, schema, schema), validateReferenceAnalysis(value).ok], [true, true]);
+  for (const mutate of [
+    (candidate) => { candidate.claims[0].claimId = "claim drift"; },
+    (candidate) => { candidate.claims[0].extra = true; },
+  ]) {
+    const candidate = structuredClone(value);
+    mutate(candidate);
+    assert.deepEqual([schemaAccepts(candidate, schema, schema), validateReferenceAnalysis(candidate).ok], [false, false]);
+  }
+  for (const mutate of [
+    (candidate) => { candidate.claims[0].evidenceIds = ["evidence-missing"]; },
+    (candidate) => { candidate.claims[0].systemIds = ["system-missing"]; },
+  ]) {
+    const candidate = structuredClone(value);
+    mutate(candidate);
+    assert.deepEqual([schemaAccepts(candidate, schema, schema), validateReferenceAnalysis(candidate).ok], [true, false]);
+  }
 });
 
 test("analysis holds comparison and transfer decisions for a single unique reference", async () => {

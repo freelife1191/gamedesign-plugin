@@ -13,5 +13,13 @@
     "sourceType": "direct-play",
     "systemIds": ["core-play"],
     "verificationQuestion": null
+  }],
+  "claims": [{
+    "category": "general",
+    "causal": false,
+    "claimId": "claim-id",
+    "evidenceIds": ["evidence-id"],
+    "kind": "observation",
+    "systemIds": ["core-play"]
   }]
 }

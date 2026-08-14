@@ -1,6 +1,6 @@
 import { canonicalJson, sha256Canonical } from "./lib/reference-intelligence-canonical.mjs";
 import { evidenceSourceTypes, tierForSourceType } from "./lib/reference-evidence-contract.mjs";
-import { deriveAvailableClaimKind } from "./lib/reference-evidence.mjs";
+import { deriveAvailableClaimKind, validateClaimAgainstEvidence } from "./lib/reference-evidence.mjs";
 import { validateReferenceSystemMaps } from "./lib/reference-system-maps.mjs";
 import { comparePriorityEntries, deriveComparisonPresentation, evidenceVerificationId, systemVerificationId, systemVerificationQuestion } from "./lib/reference-analysis-derivations.mjs";
 import { evaluateGameDesignGlossarySchema } from "./lib/game-design-glossary-schema-evaluator.mjs";
@@ -82,7 +82,7 @@ function validateReceiptShape(value, path, issue, { includeSchemaVersion = false
 
 export function validateReferenceAnalysis(value) {
   return resultOf((issue) => {
-    const rootKeys = ["schemaVersion", "analysisId", "brief", "referenceSet", "referenceContexts", "evidence", "atlasSelection", "systemInventory", "systemMaps", "priority", "deepDives", "comparison", "transferDecisions", "verificationQueue"];
+    const rootKeys = ["schemaVersion", "analysisId", "brief", "referenceSet", "referenceContexts", "evidence", "claims", "atlasSelection", "systemInventory", "systemMaps", "priority", "deepDives", "comparison", "transferDecisions", "verificationQueue"];
     closedObject(value, rootKeys, "", issue);
     if (value?.schemaVersion !== 1) issue("/schemaVersion", "schema-version.invalid");
     safeId(value?.analysisId, "/analysisId", issue);
@@ -115,6 +115,12 @@ export function validateReferenceAnalysis(value) {
       enumValue(record?.claimKind, ["observation", "inference", "hypothesis", "unknown"], `${path}/claimKind`, add);
       nonEmptyText(record?.claim, `${path}/claim`, add);
     });
+    sortedRecords(value?.claims, "/claims", issue, "claimId", (record, path, add) => {
+      closedObject(record, ["claimId", "systemIds", "evidenceIds", "kind", "category", "causal"], path, add);
+      safeId(record?.claimId, `${path}/claimId`, add); sortedUnique(record?.systemIds, `${path}/systemIds`, add, isId); sortedUnique(record?.evidenceIds, `${path}/evidenceIds`, add, isId);
+      enumValue(record?.kind, ["observation", "inference", "hypothesis", "unknown"], `${path}/kind`, add); enumValue(record?.category, ["general", "monetization", "retention", "performance"], `${path}/category`, add);
+      if (typeof record?.causal !== "boolean") add(`${path}/causal`, "schema.type");
+    }, { allowEmpty: true });
     sortedRecords(value?.atlasSelection, "/atlasSelection", issue, "systemId", (record, path, add) => {
       closedObject(record, ["systemId", "rationale"], path, add); safeId(record?.systemId, `${path}/systemId`, add); nonEmptyText(record?.rationale, `${path}/rationale`, add);
     });
@@ -169,11 +175,14 @@ export function validateReferenceAnalysis(value) {
     requireKnownRecordIds(value?.priority, "/priority", issue, systemIds, "systemId");
     requireKnownRecordIds(value?.deepDives, "/deepDives", issue, systemIds, "systemId");
     requireKnownIds(value?.deepDives, "/deepDives", issue, evidenceIds);
+    requireKnownIds(value?.claims, "/claims", issue, evidenceIds);
+    requireKnownIds(value?.claims, "/claims", issue, systemIds, "systemIds");
     requireKnownRecordIds(value?.comparison, "/comparison", issue, systemIds, "sourceSystemId"); requireKnownIds(value?.comparison, "/comparison", issue, evidenceIds);
     requireKnownRecordIds(value?.transferDecisions, "/transferDecisions", issue, systemIds, "sourceSystemId");
     requireKnownIds(value?.transferDecisions, "/transferDecisions", issue, evidenceIds);
     requireKnownIds(value?.verificationQueue, "/verificationQueue", issue, evidenceIds);
     const evidenceById = new Map((value?.evidence ?? []).map((record) => [record.evidenceId, record]));
+    for (const [index, claim] of (value?.claims ?? []).entries()) if (!validateClaimAgainstEvidence({ claim, evidenceById }).ok) issue(`/claims/${index}`, "claim.unsupported");
     for (const { collectionName, collection, systemField } of [{ collectionName: "deepDives", collection: value?.deepDives, systemField: "systemId" }, { collectionName: "comparison", collection: value?.comparison, systemField: "sourceSystemId" }, { collectionName: "transferDecisions", collection: value?.transferDecisions, systemField: "sourceSystemId" }]) for (const [index, record] of (collection ?? []).entries()) {
       const linked = (record?.evidenceIds ?? []).map((evidenceId) => evidenceById.get(evidenceId)); const systemId = systemField ? record?.[systemField] : undefined;
       if (linked.some((evidence) => !evidence || systemId && !evidence.systemIds.includes(systemId))) { issue(`/${collectionName}/${index}/evidenceIds`, "reference.dangling"); continue; }

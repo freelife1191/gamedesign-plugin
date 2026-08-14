@@ -58,12 +58,16 @@ function atlasNames(selection) {
 }
 
 function validateClaims(claims, evidence) {
-  if (!Array.isArray(claims)) fail("invalid-claim");
+  const values = copy(claims);
+  if (!Array.isArray(values)) fail("invalid-claim");
   const byId = new Map(evidence.map((record) => [record.evidenceId, record]));
-  for (const claim of claims) {
+  const claimIds = new Set();
+  for (const claim of values) {
     const result = validateClaimAgainstEvidence({ claim, evidenceById: byId });
-    if (!result.ok) fail(result.code === "unsupported_claim_kind" ? "claim-kind-upgrade" : "invalid-claim");
+    if (!result.ok || claimIds.has(claim.claimId)) fail(result.code === "unsupported_claim_kind" ? "claim-kind-upgrade" : "invalid-claim");
+    claimIds.add(claim.claimId);
   }
+  return freeze(values.sort((left, right) => compare(left.claimId, right.claimId)));
 }
 
 /** Stage 4: records only the available evidence explicitly bound to each selected system. */
@@ -161,11 +165,11 @@ export function buildReferenceAnalysis(input = {}) {
   const value = copy(input); const analysisId = value.brief?.analysisId; const brief = buildReferenceBrief(value.brief); const referenceSet = normalizeReferences(value.referenceSet); const referenceContexts = normalizeContexts(value.referenceContexts, referenceSet);
   const atlasQuestions = mergeSystemAtlas(value.atlas); const atlasSelection = compactAtlas(atlasQuestions); const evidence = registerReferenceEvidence({ records: value.evidence });
   validateEvidenceBindings({ evidence, contexts: referenceContexts, systemIds: atlasSelection.map(({ systemId }) => systemId) });
-  validateClaims(value.claims ?? [], evidence);
-  const names = atlasNames(value.atlas); const systemInventory = inventoryReferenceSystems({ brief, atlas: atlasQuestions, evidence, claims: value.claims ?? [] }).map((item) => ({ ...item, name: names.get(item.systemId) ?? item.name }));
+  const claims = validateClaims(value.claims ?? [], evidence);
+  const names = atlasNames(value.atlas); const systemInventory = inventoryReferenceSystems({ brief, atlas: atlasQuestions, evidence, claims }).map((item) => ({ ...item, name: names.get(item.systemId) ?? item.name }));
   const systemMaps = buildSystemMaps({ inventory: systemInventory, edges: value.edges, loops: value.loops ?? [] }); const priority = rankDeepDiveCandidates({ inventory: systemInventory, maps: systemMaps, questions: value.priorities ?? {} }); if (priority.length === 0) fail("unscored-priority");
   const deepDiveValues = deepDives(priority, systemInventory, evidence); const comparisonValues = comparison(deepDiveValues); const transfers = buildDesignTransfers({ deepDives: deepDiveValues, projectConstraints: value.projectConstraints, evidence, referenceContexts, referenceSet }); const queue = verificationQueue(evidence, deepDiveValues);
-  const analysis = { schemaVersion: 1, analysisId, brief, referenceSet, referenceContexts, evidence, atlasSelection, systemInventory, systemMaps, priority, deepDives: deepDiveValues, comparison: comparisonValues, transferDecisions: transfers, verificationQueue: queue };
+  const analysis = { schemaVersion: 1, analysisId, brief, referenceSet, referenceContexts, evidence, claims, atlasSelection, systemInventory, systemMaps, priority, deepDives: deepDiveValues, comparison: comparisonValues, transferDecisions: transfers, verificationQueue: queue };
   if (!validateReferenceAnalysis(analysis).ok) fail("invalid-output");
   return freeze(JSON.parse(canonicalReferenceAnalysis(analysis)));
 }
@@ -180,7 +184,7 @@ export async function writeReferenceAnalysisWorkspace({ artifactRoot, analysis, 
   const outputs = new Map([
     [artifactFiles[0], markdown("Reference brief", ["objective", "decisionQuestions"], [{ objective: safeAnalysis.brief.objective, decisionQuestions: safeAnalysis.brief.decisionQuestions.join("; ") }])],
     [artifactFiles[1], canonicalJson(safeAnalysis.referenceSet)],
-    [artifactFiles[2], canonicalJson({ referenceContexts: safeAnalysis.referenceContexts, evidence: safeAnalysis.evidence })],
+    [artifactFiles[2], canonicalJson({ referenceContexts: safeAnalysis.referenceContexts, evidence: safeAnalysis.evidence, claims: safeAnalysis.claims })],
     [artifactFiles[3], canonicalJson(safeAnalysis.systemInventory)],
     [artifactFiles[4], markdown("Analysis priority", ["rank", "systemId", ...dimensions, "rationale"], safeAnalysis.priority)],
     [artifactFiles[5], markdown("Comparison matrix", ["comparisonId", "sourceSystemId", "state", "subject", "claimKind", "coverageCount", "referenceIds", "contextIds", "finding", "evidenceIds"], safeAnalysis.comparison.map((item) => ({ ...item, evidenceIds: item.evidenceIds.join(", "), referenceIds: item.referenceIds.join(", "), contextIds: item.contextIds.join(", ") })))],

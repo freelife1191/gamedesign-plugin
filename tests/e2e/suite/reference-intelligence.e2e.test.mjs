@@ -4,7 +4,7 @@ import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promis
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
   buildReferenceAnalysis,
@@ -165,6 +165,26 @@ function humanDecisionInput(glossary = proposedGlossary()) {
   };
 }
 
+function projectedClaimBindings(projection) {
+  assert.ok(Array.isArray(projection?.claims), "persisted projection omits claim bindings");
+  return projection.claims.map(({ claimId, evidenceIds }) => ({ claimId, evidenceIds }));
+}
+
+function assertProductProjectionParity({
+  studioProjection,
+  careerProjection,
+  expectedBindings,
+  studioSkillBytes,
+  careerSkillBytes,
+  studioRuntimeBytes,
+  careerRuntimeBytes,
+}) {
+  assert.deepEqual(projectedClaimBindings(studioProjection), expectedBindings, "Studio persisted claim bindings drifted");
+  assert.deepEqual(projectedClaimBindings(careerProjection), expectedBindings, "Career persisted claim bindings drifted");
+  assert.deepEqual(studioSkillBytes, careerSkillBytes, "packaged analysis skill bytes drifted");
+  assert.deepEqual(studioRuntimeBytes, careerRuntimeBytes, "packaged analysis runtime bytes drifted");
+}
+
 test("three-role reference set produces one evidence-bound analysis", async (t) => {
   const artifactRoot = await temporaryArtifactRoot(t, "ri-e2e-three-role-");
   const catalog = await loadBundledReferenceCatalog();
@@ -256,27 +276,62 @@ test("unsupported retention and monetization causality is rejected", async (t) =
 });
 
 test("Studio and Career projections preserve claim and evidence IDs", async (t) => {
-  const artifactRoot = await temporaryArtifactRoot(t, "ri-e2e-product-projection-");
-  const [studioRouting, careerRouting, skillBytes, catalog] = await Promise.all([
-    readFile(path.join(repoRoot, "products/game-design-studio/plugin/references/routing.json"), "utf8").then(JSON.parse),
-    readFile(path.join(repoRoot, "products/game-design-career/plugin/references/routing.json"), "utf8").then(JSON.parse),
-    readFile(path.join(repoRoot, "shared/reference-intelligence/skills/analyze-game-design-references/SKILL.md")),
-    loadBundledReferenceCatalog(),
+  const [studioArtifactRoot, careerArtifactRoot] = await Promise.all([
+    temporaryArtifactRoot(t, "ri-e2e-product-studio-"),
+    temporaryArtifactRoot(t, "ri-e2e-product-career-"),
   ]);
-  const input = analysisInput(catalog.atlas, { claims: [{ claimId: "claim-core-loop", systemIds: ["core-play"], evidenceIds: ["ev-alpha"], kind: "observation", category: "general", causal: false }] });
-  const studio = buildReferenceAnalysis(structuredClone(input));
-  const career = buildReferenceAnalysis(structuredClone(input));
+  const products = Object.fromEntries(["studio", "career"].map((product) => [product, path.join(repoRoot, "plugins", `game-design-${product}`)]));
+  const paths = Object.fromEntries(Object.entries(products).map(([product, root]) => [product, {
+    runtime: path.join(root, "scripts/analyze-game-design-references.mjs"),
+    catalog: path.join(root, "scripts/lib/system-atlas.mjs"),
+    skill: path.join(root, "skills/analyze-game-design-references/SKILL.md"),
+  }]));
+  const [studioApi, careerApi, studioCatalogApi, careerCatalogApi, studioSkillBytes, careerSkillBytes, studioRuntimeBytes, careerRuntimeBytes] = await Promise.all([
+    import(`${pathToFileURL(paths.studio.runtime).href}?ri-e2e-07=studio`),
+    import(`${pathToFileURL(paths.career.runtime).href}?ri-e2e-07=career`),
+    import(`${pathToFileURL(paths.studio.catalog).href}?ri-e2e-07=studio`),
+    import(`${pathToFileURL(paths.career.catalog).href}?ri-e2e-07=career`),
+    readFile(paths.studio.skill),
+    readFile(paths.career.skill),
+    readFile(paths.studio.runtime),
+    readFile(paths.career.runtime),
+  ]);
+  const [studioCatalog, careerCatalog] = await Promise.all([
+    studioCatalogApi.loadBundledReferenceCatalog({ moduleRoot: path.join(products.studio, "references/shared/reference-intelligence") }),
+    careerCatalogApi.loadBundledReferenceCatalog({ moduleRoot: path.join(products.career, "references/shared/reference-intelligence") }),
+  ]);
+  const claim = { claimId: "claim-core-loop", systemIds: ["core-play"], evidenceIds: ["ev-alpha"], kind: "observation", category: "general", causal: false };
+  const studioAnalysis = studioApi.buildReferenceAnalysis(analysisInput(studioCatalog.atlas, { claims: [claim] }));
+  const careerAnalysis = careerApi.buildReferenceAnalysis(analysisInput(careerCatalog.atlas, { claims: [claim] }));
   await Promise.all([
-    writeFile(path.join(artifactRoot, "studio-skill.md"), skillBytes),
-    writeFile(path.join(artifactRoot, "career-skill.md"), skillBytes),
+    studioApi.writeReferenceAnalysisWorkspace({ artifactRoot: studioArtifactRoot, analysis: studioAnalysis }),
+    careerApi.writeReferenceAnalysisWorkspace({ artifactRoot: careerArtifactRoot, analysis: careerAnalysis }),
   ]);
-  assert.equal(studioRouting.referenceIntelligenceWorkflow.analysisSkill, "analyze-game-design-references");
-  assert.equal(careerRouting.referenceIntelligenceWorkflow.analysisSkill, "analyze-game-design-references");
-  assert.deepEqual(studio.evidence.map(({ evidenceId }) => evidenceId), career.evidence.map(({ evidenceId }) => evidenceId));
-  assert.deepEqual(input.claims.map(({ claimId, evidenceIds }) => ({ claimId, evidenceIds })), [{ claimId: "claim-core-loop", evidenceIds: ["ev-alpha"] }]);
-  assert.deepEqual(await treeSnapshot(artifactRoot), {
-    "career-skill.md": createHash("sha256").update(skillBytes).digest("hex"),
-    "studio-skill.md": createHash("sha256").update(skillBytes).digest("hex"),
+  const [studioProjection, careerProjection] = await Promise.all([
+    readFile(path.join(studioArtifactRoot, "reference-intelligence/evidence-register.yml"), "utf8").then(JSON.parse),
+    readFile(path.join(careerArtifactRoot, "reference-intelligence/evidence-register.yml"), "utf8").then(JSON.parse),
+  ]);
+  const parity = {
+    studioProjection,
+    careerProjection,
+    expectedBindings: [{ claimId: "claim-core-loop", evidenceIds: ["ev-alpha"] }],
+    studioSkillBytes,
+    careerSkillBytes,
+    studioRuntimeBytes,
+    careerRuntimeBytes,
+  };
+  assertProductProjectionParity(parity);
+  assert.throws(() => assertProductProjectionParity({ ...parity, careerRuntimeBytes: Buffer.concat([careerRuntimeBytes, Buffer.from("\n")]) }), /packaged analysis runtime bytes drifted/u);
+  const driftedCareerProjection = structuredClone(careerProjection);
+  driftedCareerProjection.claims[0].evidenceIds = ["ev-beta"];
+  assert.throws(() => assertProductProjectionParity({ ...parity, careerProjection: driftedCareerProjection }), /Career persisted claim bindings drifted/u);
+  assert.deepEqual(await treeSnapshot(studioArtifactRoot), await treeSnapshot(careerArtifactRoot), "product artifact trees drifted");
+  assert.deepEqual({
+    studio: projectedClaimBindings(studioAnalysis),
+    career: projectedClaimBindings(careerAnalysis),
+  }, {
+    studio: parity.expectedBindings,
+    career: parity.expectedBindings,
   });
 });
 

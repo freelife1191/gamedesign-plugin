@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "43ab77ef4768a84f2b25d3232c0fe49b70e867a79d4200cad259b8342118cda2",
+  "treeSha256": "deed6f11e1accf25d4645afdb50ef833666e6fa93280a19b885c52473383bbcf",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -1146,8 +1146,8 @@
     },
     {
       "path": "references/shared/reference-intelligence/references/reference-analysis-flow.md",
-      "sha256": "a2b0fabf957190013f44e8afdb40a53095be024a1032160e38d4d66b8fac8f43",
-      "size": 3588
+      "sha256": "1ae55ad985ffc06ed6aa8d050f86c5080d8a3fcf5be2336664d3add58a2d88a0",
+      "size": 3632
     },
     {
       "path": "references/shared/reference-intelligence/schema/game-design-glossary.schema.json",
@@ -1161,8 +1161,8 @@
     },
     {
       "path": "references/shared/reference-intelligence/schema/reference-analysis.schema.json",
-      "sha256": "5c5bead1d8c023c5090f6940b4b99946d782abc8b2715d9fa29ef44c88e4bead",
-      "size": 12301
+      "sha256": "bb02faeb119d0d582643d02e0a3f089721bf8d3a338c35efd61616941c0e5baa",
+      "size": 12886
     },
     {
       "path": "references/shared/reference-intelligence/templates/analysis-priority.md",
@@ -1181,8 +1181,8 @@
     },
     {
       "path": "references/shared/reference-intelligence/templates/evidence-register.yml",
-      "sha256": "7c48bd3b63bfa73ba8f270b82a918b1eea34d23ce67e329b453fd19db8336f27",
-      "size": 504
+      "sha256": "33c19965b92eef62cc039b4dfb6e21df9fe53a3f7be2b990e44801533ef11aed",
+      "size": 694
     },
     {
       "path": "references/shared/reference-intelligence/templates/reference-set.yml",
@@ -1486,8 +1486,8 @@
     },
     {
       "path": "scripts/analyze-game-design-references.mjs",
-      "sha256": "78ab257ad236b2d18a2bd3fba9aab3d533eda08d7fa38075e304f6b27fcb0ce9",
-      "size": 21978
+      "sha256": "a2f2a70a73dcf6989624296ae64554ba9caed2fbe0400b964d587afe337d3805",
+      "size": 22220
     },
     {
       "path": "scripts/build-image-asset-plan.mjs",
@@ -1696,8 +1696,8 @@
     },
     {
       "path": "scripts/validate-reference-intelligence.mjs",
-      "sha256": "48eeac502a3c21f7fbbbca0861a32a660e6fb486131c67e627d34cb83f166ccc",
-      "size": 29353
+      "sha256": "04406ac96c25b5df18f4e1064f10aa4b882454fa662446eae90e2e75e25af8e7",
+      "size": 30434
     },
     {
       "path": "scripts/validate-reference-preset.mjs",
