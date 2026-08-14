@@ -2141,6 +2141,66 @@
     }
   },
   {
+    "id": "st-s16",
+    "scope": "game-design-studio-skill",
+    "title": "컷씬 비주얼 프리프로덕션 직접 호출",
+    "description": "컷씬 wave의 비용·실시간 승인·연속성 경계를 생성 전에 고정합니다.",
+    "alt": "컷씬 비주얼 프리프로덕션 직접 호출 흐름",
+    "type": "skill-flow",
+    "eyebrow": "ST-S16 · SKILL",
+    "conclusion": "컷씬 패키지는 현재 estimate와 이름 있는 실시간 승인이 확인된 wave만 다음 작업으로 보냅니다.",
+    "steps": [
+      {
+        "stage": "trigger",
+        "label": "컷씬 trigger",
+        "detail": "컷씬 brief를 받습니다."
+      },
+      {
+        "stage": "필수 입력",
+        "label": "컷씬 brief·복귀 상태",
+        "detail": "필수 값을 둡니다."
+      },
+      {
+        "stage": "skill-owned work",
+        "label": "컷씬 프리프로덕션",
+        "detail": "작업 경계를 수행합니다."
+      },
+      {
+        "stage": "output",
+        "label": "컷씬 패키지",
+        "detail": "정확한 ID를 남깁니다."
+      },
+      {
+        "stage": "next route",
+        "label": "wave dispatch",
+        "detail": "조건부 handoff입니다."
+      }
+    ],
+    "source_paths": [
+      "guides/game-design-studio/skills/design-cutscene-visual-preproduction.md"
+    ],
+    "used_by": [
+      "guides/game-design-studio/skills/design-cutscene-visual-preproduction.md"
+    ],
+    "semantic": {
+      "skill": "design-cutscene-visual-preproduction",
+      "outputs": [
+        "cutscene-brief",
+        "cutscene-shot-package",
+        "cutscene-prompt-package",
+        "cutscene-cost-estimate",
+        "cutscene-continuity-review"
+      ],
+      "next_routes": [
+        "plan-image-assets",
+        "generate-image-assets",
+        "review-image-assets"
+      ],
+      "required_input": "cutscene brief + game-state return",
+      "next_condition": "current estimate + named live approval → wave dispatch"
+    }
+  },
+  {
     "id": "ca-c01",
     "anchor": "ca-c01-기획-직무와-전문-분야-탐색",
     "scope": "game-design-career-use-case",

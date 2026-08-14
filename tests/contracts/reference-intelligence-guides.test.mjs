@@ -81,11 +81,11 @@ const referenceGuideCatalogRecords = [
 ];
 
 function assertActiveInventoryStatements({ guideIndex, studioUseCases, marketplaceSmoke, archifyCatalog, careerWorkbench }) {
-  assert.match(guideIndex, /각 제품 인덱스는 23개 설치 스킬, 15개 템플릿, 6개 목적별 레시피/u);
-  for (const product of ["Studio", "Career"]) {
-    assert.match(guideIndex, new RegExp(`\\[스킬 23개\\]\\(game-design-${product.toLowerCase()}/skills/README\\.md\\)`, "u"));
+  assert.match(guideIndex, /Studio 인덱스는 설치 스킬 24개, Career 인덱스는 설치 스킬 23개/u);
+  for (const [product, count] of [["Studio", 24], ["Career", 23]]) {
+    assert.match(guideIndex, new RegExp(`\\[스킬 ${count}개\\]\\(game-design-${product.toLowerCase()}/skills/README\\.md\\)`, "u"));
   }
-  assert.match(studioUseCases, /설치된 Studio 스킬 23개의 직접 호출 신호/u);
+  assert.match(studioUseCases, /설치된 Studio 스킬 24개의 직접 호출 신호/u);
   assert.match(marketplaceSmoke, /플러그인마다 스킬 23개와 공식 플러그인 검증기/u);
   assert.equal((marketplaceSmoke.match(/"skills": 23,/gu) ?? []).length, 2, "marketplace success examples use the packaged 23-skill count");
 
@@ -182,11 +182,11 @@ test("reference guides are linked from root and product discovery pages", async 
     ];
     const visibleSkillLinks = extractMarkdownLinks(skillReadme).filter((link) => expectedSkillLinks.some(({ label, target }) => link.label === label && link.target === target)).map(({ label, target }) => ({ label, target }));
     assert.deepEqual(visibleSkillLinks, expectedSkillLinks, `${product}: source-bound skill discovery`);
-    assert.match(skillReadme, /설치 스킬 23개/u, `${product}: skill inventory count`);
+    assert.match(skillReadme, product === "game-design-studio" ? /설치 스킬 24개/u : /설치 스킬 23개/u, `${product}: skill inventory count`);
   }
 });
 
-test("active user documentation keeps the installed 23-skill inventory synchronized", async () => {
+test("active user documentation keeps the installed Studio 24 and Career 23 skill inventories synchronized", async () => {
   const [guideIndex, studioUseCases, marketplaceSmoke, catalogText, careerWorkbench] = await Promise.all([
     readFile(path.join(repoRoot, "guides/README.md"), "utf8"),
     readFile(path.join(repoRoot, "guides/game-design-studio/use-cases/README.md"), "utf8"),
@@ -197,7 +197,7 @@ test("active user documentation keeps the installed 23-skill inventory synchroni
   const archifyCatalog = JSON.parse(catalogText);
   assertActiveInventoryStatements({ guideIndex, studioUseCases, marketplaceSmoke, archifyCatalog, careerWorkbench });
 
-  const staleGuideIndex = guideIndex.replace("각 제품 인덱스는 23개 설치 스킬", "각 제품 인덱스는 21개 설치 스킬");
+  const staleGuideIndex = guideIndex.replace("Studio 인덱스는 설치 스킬 24개", "Studio 인덱스는 설치 스킬 21개");
   assert.notEqual(staleGuideIndex, guideIndex, "guide-index mutation changes the active statement");
   assert.throws(() => assertActiveInventoryStatements({
     guideIndex: staleGuideIndex,
@@ -205,7 +205,7 @@ test("active user documentation keeps the installed 23-skill inventory synchroni
     marketplaceSmoke,
     archifyCatalog,
     careerWorkbench,
-  }), /23개 설치 스킬/u, "stale guide-index inventory is rejected");
+  }), /Studio 인덱스는 설치 스킬 24개/u, "stale guide-index inventory is rejected");
   const staleMarketplaceExample = marketplaceSmoke.replace('"skills": 23,', '"skills": 21,');
   assert.notEqual(staleMarketplaceExample, marketplaceSmoke, "marketplace mutation changes the active statement");
   assert.throws(() => assertActiveInventoryStatements({

@@ -230,6 +230,7 @@ const STUDIO_FAQ_CONTRACT = Object.freeze([
   ["학생 과제에서 결과를 그대로 제출해도 되는가?", ["학생 과제", "그대로", "제출"], ["답안 대행", "AI 정책", "출처 표기"], ["contribution", "evidence"], ["ST-C01", "ST-C08", "`game-design-review`"], ["학교 정책", "승인"]],
   ["서로 다른 장르 사례를 내 아이디어에 어떻게 적용하는가?", ["서로 다른 장르", "아이디어", "적용"], ["player context", "입력 장치", "사회적 위험"], ["assumption", "validation"], ["ST-G01", "ST-G10", "`game-design-brief`"], ["일반화", "사람"]],
   ["이전 프로젝트 교훈을 다음 기획에 어떻게 안전하게 쓰는가?", ["이름이 확인된", "승인", "자동 승인되지"], ["출처 파일", "적용·제외", "충돌", "기억 없이"], [], [], []],
+  ["컷씬 이미지는 언제 생성하고, 비용을 어떻게 통제하는가?", ["style-master", "실시간 승인", "costStatus"], ["unavailable", "provider 호출 0회", "retryable stable ID"], ["cutscene-brief", "cutscene-shot-package", "cutscene-cost-estimate"], ["ST-S16", "`design-cutscene-visual-preproduction`", "`cutscene-visual-preproduction`"], ["이전 승인", "자동 승인", "사람"]],
 ].map(([question, conclusion, reason, result, related, safety], index) => ({
   heading: `Q${String(index + 1).padStart(2, "0")}. ${question}`,
   conclusion,
@@ -935,6 +936,7 @@ const STUDIO_CASE_CONTRACT = Object.freeze([
 const STUDIO_SKILL_CASE_CONTRACT = Object.freeze([
   ["ST-S01", "apply-document-quality-profile", ["selection-record", "quality-checklist", "requirement-manifest"], ["define-game-vision", "design-game-systems", "design-game-content", "design-player-experience", "design-game-economy-and-liveops", "plan-game-production", "review-game-design", "visualize-game-design", "export-game-design-documents"], "문서 품질 프로필 직접 호출 흐름"],
   ["ST-S02", "define-game-vision", ["vision-pillars", "core-motivation-loop"], ["design-game-systems"], "게임 비전 직접 호출 흐름"],
+  ["ST-S16", "design-cutscene-visual-preproduction", ["cutscene-brief", "cutscene-shot-package", "cutscene-prompt-package", "cutscene-cost-estimate", "cutscene-continuity-review"], ["plan-image-assets", "generate-image-assets", "review-image-assets"], "컷씬 비주얼 프리프로덕션 직접 호출 흐름"],
   ["ST-S03", "design-game-content", ["narrative-quest-npc", "character-skill-combat-monster"], ["review-game-design"], "게임 콘텐츠 직접 호출 흐름"],
   ["ST-S04", "design-game-economy-and-liveops", ["economy-balance", "liveops-experiment-event"], ["review-game-design"], "게임 경제와 LiveOps 직접 호출 흐름"],
   ["ST-S05", "design-game-systems", ["system-specification", "rule-exception-matrix", "data-schema-table-contract"], ["review-game-design"], "게임 시스템 직접 호출 흐름"],
@@ -1757,7 +1759,7 @@ function assertStudioFaq(markdown) {
   for (const [index, answer] of answers.entries()) {
     const contract = STUDIO_FAQ_CONTRACT[index];
     const fields = inlineFields(answer.body);
-    if (index === STUDIO_FAQ_CONTRACT.length - 1) {
+    if (contract.heading === "Q19. 이전 프로젝트 교훈을 다음 기획에 어떻게 안전하게 쓰는가?") {
       assert.deepEqual(inlineFieldLabels(answer.body), ["결론", "이유와 경계", "실행 요청", "비활성화와 관련 문서"], `${answer.heading} shared-memory answer shape`);
       const byLabel = new Map(fields.map((field) => [field.label, field.value]));
       for (const term of contract.conclusion) assert.ok(byLabel.get("결론").includes(term), `${answer.heading} conclusion term: ${term}`);
@@ -2007,9 +2009,9 @@ test("complete use-case validation reports the exact production coverage includi
     audiencePaths: 6,
     studioCases: 18,
     careerCases: 18,
-    studioSkillCases: 15,
+    studioSkillCases: 16,
     careerSkillCases: 15,
-    faq: 50,
+    faq: 51,
   });
 });
 
@@ -2018,15 +2020,15 @@ test("complete aggregate guide validation composes the production use-case cover
 
   assert.equal(result.ok, true, result.errors.join("\n"));
   assert.deepEqual(result.counts, {
-    guides: 154,
-    skillGuides: 46,
+    guides: 157,
+    skillGuides: 47,
     templates: 30,
-    svg: 90,
-    png: 90,
+    svg: 91,
+    png: 91,
     audiencePaths: 6,
     useCases: 36,
-    skillCases: 30,
-    faq: 50,
+    skillCases: 31,
+    faq: 51,
   });
 });
 
@@ -2043,15 +2045,15 @@ test("production diagram manifest keeps the exact complete scope inventory", asy
     "game-design-career-skill",
   ].map((scope) => [scope, manifest.diagrams.filter((diagram) => diagram.scope === scope).length]));
 
-  assert.equal(manifest.diagrams.length, 90);
-  assert.equal(new Set(manifest.diagrams.map(({ id }) => id)).size, 90);
+  assert.equal(manifest.diagrams.length, 91);
+  assert.equal(new Set(manifest.diagrams.map(({ id }) => id)).size, 91);
   assert.deepEqual(scopeCounts, {
     shared: 6,
     "game-design-studio": 6,
     "game-design-career": 6,
     "use-case-audience": 6,
     "game-design-studio-use-case": 18,
-    "game-design-studio-skill": 15,
+    "game-design-studio-skill": 16,
     "game-design-career-use-case": 18,
     "game-design-career-skill": 15,
   });
@@ -2087,7 +2089,7 @@ test("complete validation reads production document anchors and App/CLI request 
     }, /App request marker/u],
     ["missing FAQ heading", async () => {
       await writeFile(faqDocument, canonicalDocuments.get(faqDocument).replace("### Q01.", "### FAQ01."));
-    }, /faq>=50/u],
+    }, /faq>=51/u],
   ];
 
   for (const [label, mutate, expected] of mutations) {
@@ -2660,7 +2662,7 @@ test("Studio manifest declares the ordered case and installed-skill coverage wit
     "ST-G01", "ST-G02", "ST-G03", "ST-G04", "ST-G05",
     "ST-G06", "ST-G07", "ST-G08", "ST-G09", "ST-G10",
   ]);
-  assert.equal(studioSkillCases.length, 15);
+  assert.equal(studioSkillCases.length, 16);
   const projectCase = ({ id, product, view, document, anchor, audiences, level, skills, templates, outputs, diagram }) => ({
     id, product, view, document, anchor, audiences, level, skills, templates, outputs,
     diagram: { svg: diagram.svg, png: diagram.png, alt: diagram.alt },
@@ -2685,7 +2687,7 @@ test("Studio manifest declares the ordered case and installed-skill coverage wit
   assert.equal(result.targetValidation, "deferred");
   assert.equal(
     result.deferredTargetPaths.filter((target) => target.startsWith("guides/game-design-studio/") || target.startsWith("guides/assets/game-design-studio/")).length,
-    99,
+    102,
   );
   assert.ok(result.deferredTargetPaths.includes("guides/game-design-studio/use-cases/competency-paths.md"));
   assert.ok(result.deferredTargetPaths.includes("guides/game-design-studio/use-cases/concept-scenarios.md"));
@@ -3110,7 +3112,7 @@ test("each common FAQ answer provides the six executable and evidence fields", a
   }
 });
 
-test("Studio FAQ contains all nineteen approved questions with executable, bounded answers", async () => {
+test("Studio FAQ contains all twenty approved questions with executable, bounded answers", async () => {
   const faqPath = path.join(repoRoot, "guides", "game-design-studio", "faq.md");
   const stat = await lstat(faqPath);
   assert.ok(stat.isFile() && !stat.isSymbolicLink(), "Studio FAQ must be a regular file");
@@ -3144,6 +3146,23 @@ test("Studio FAQ contract rejects missing requests, swapped answers, and wrong q
   assert.throws(
     () => assertStudioFaq(wrongQuestion),
     /Studio FAQ approved question headings/,
+  );
+
+  const q20 = answers.find(({ heading }) => heading === "Q20. 컷씬 이미지는 언제 생성하고, 비용을 어떻게 통제하는가?");
+  assert.ok(q20, "Q20 fixture");
+  for (const { label, value } of inlineFields(q20.body)) {
+    const mutated = markdown.replace(value, "TODO");
+    assert.throws(
+      () => assertStudioFaq(mutated),
+      new RegExp(`Q20\\. .* ${label} substantive content`),
+      `Q20 rejects ${label} mutation`,
+    );
+  }
+  const q20WrongQuestion = markdown.replace(q20.heading, "Q20. 승인되지 않은 다른 질문");
+  assert.throws(
+    () => assertStudioFaq(q20WrongQuestion),
+    /Studio FAQ approved question headings/,
+    "Q20 rejects question mutation",
   );
 
   const injectedH2 = markdown.replace("**예상 결과:**", "## 다른 섹션\n\n**예상 결과:**");
@@ -3507,9 +3526,9 @@ test("Studio case and direct-skill diagrams are source-linked, rendered, and emb
   };
 
   assert.equal(caseSources.length, 18, "Studio case diagram source count");
-  assert.equal(skillSources.length, 15, "Studio direct-skill diagram source count");
+  assert.equal(skillSources.length, 16, "Studio direct-skill diagram source count");
   assert.equal(caseDiagrams.length, 18, "Studio case diagram manifest count");
-  assert.equal(skillDiagrams.length, 15, "Studio direct-skill diagram manifest count");
+  assert.equal(skillDiagrams.length, 16, "Studio direct-skill diagram manifest count");
 
   const expectedEntries = [
     ...studioCases.map((entry) => ({ entry, type: entry.view === "competency" ? "design-pipeline" : "decision-flow", kind: "use-cases" })),
@@ -3568,7 +3587,7 @@ test("Studio case and direct-skill diagrams are source-linked, rendered, and emb
   }
 
   const result = await buildUseCaseDiagrams({ repoRoot, ids: expectedEntries.map(({ entry }) => entry.id.toLowerCase()), check: true });
-  assert.deepEqual(result, { svg: 33, png: 33 }, "Studio diagrams pass Skillstead lint and generated-file check");
+  assert.deepEqual(result, { svg: 34, png: 34 }, "Studio diagrams pass Skillstead lint and generated-file check");
 });
 
 test("Studio diagram semantic bindings reject wrong-valid skills, outputs, next routes, and removed branches", async () => {
@@ -3766,6 +3785,7 @@ const STUDIO_DIAGRAM_PRODUCTION_EXPECTED = Object.freeze({
   "st-s13": { kind: "skill", skill: "review-image-assets", trigger: ["검토 trigger", "draft receipt를 받습니다."], requiredInput: "draft receipt + lifecycle state", outputs: ["image-asset-review", "lifecycle-receipt"], nextRoutes: ["export-game-design-documents"], nextCondition: null, routeIds: [] },
   "st-s14": { kind: "skill", skill: "svg-infographic", trigger: ["SVG trigger", "구조 관계를 받습니다."], requiredInput: "relationship structure + evidence", outputs: ["editable-svg", "png-2x", "render-evidence"], nextRoutes: ["visualize-game-design"], nextCondition: null, routeIds: [] },
   "st-s15": { kind: "skill", skill: "visualize-game-design", trigger: ["시각화 trigger", "관계 질문을 받습니다."], requiredInput: "relationship question + source data", outputs: ["editable-svg", "png-2x", "visualization-evidence"], nextRoutes: ["review-game-design", "export-game-design-documents"], nextCondition: null, routeIds: ["visualization"] },
+  "st-s16": { kind: "skill", skill: "design-cutscene-visual-preproduction", trigger: ["컷씬 trigger", "컷씬 brief를 받습니다."], requiredInput: "cutscene brief + game-state return", outputs: ["cutscene-brief", "cutscene-shot-package", "cutscene-prompt-package", "cutscene-cost-estimate", "cutscene-continuity-review"], nextRoutes: ["plan-image-assets", "generate-image-assets", "review-image-assets"], nextCondition: "current estimate + named live approval → wave dispatch", routeIds: ["cutscene-visual-preproduction"] },
 });
 
 const STUDIO_CANONICAL_ROUTE_EXPECTED = Object.freeze({
@@ -3773,6 +3793,7 @@ const STUDIO_CANONICAL_ROUTE_EXPECTED = Object.freeze({
   vision: { triggerIntents: ["game vision", "design pillars", "core fun", "motivation loop"], skill: "define-game-vision", requiredInputs: ["target player", "desired emotion", "experience intent", "constraints"], artifactType: "vision-pillars" },
   systems: { triggerIntents: ["game system", "rules", "state transitions", "data schema"], skill: "design-game-systems", requiredInputs: ["system purpose", "inputs", "constraints", "failure expectations"], artifactType: "system-specification" },
   content: { triggerIntents: ["quest", "level content", "narrative", "character", "enemy", "combat", "boss", "encounter", "puzzle", "level design", "soft lock", "secret route", "reset", "retry"], skill: "design-game-content", requiredInputs: ["content purpose", "supporting systems", "production budget", "repeatability target"], artifactType: "narrative-quest-npc" },
+  "cutscene-visual-preproduction": { triggerIntents: ["컷씬 기획", "스토리보드", "시네마틱 이미지", "마스터 이미지", "컷씬 프롬프트"], skill: "design-cutscene-visual-preproduction", requiredInputs: ["cutscene brief", "game-state return"], artifactType: "cutscene-visual-preproduction" },
   "player-experience": { triggerIntents: ["player experience", "UX flow", "tutorial", "accessibility", "input"], skill: "design-player-experience", requiredInputs: ["critical actions", "platform", "input methods", "first-session goal"], artifactType: "ui-ux-flow-state" },
   economy: { triggerIntents: ["game economy", "monetization", "currency balance", "shop balance"], skill: "design-game-economy-and-liveops", requiredInputs: ["business model", "currencies", "progression target", "target inventory", "real-price policy"], artifactType: "economy-balance" },
   liveops: { triggerIntents: ["LiveOps", "event plan", "experiment", "segment rollout"], skill: "design-game-economy-and-liveops", requiredInputs: ["event goal", "experiment hypothesis", "control", "sample and duration", "protection metrics"], artifactType: "liveops-experiment-event" },

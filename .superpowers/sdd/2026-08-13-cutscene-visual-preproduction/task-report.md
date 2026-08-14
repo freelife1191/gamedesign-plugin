@@ -106,3 +106,52 @@ Exact mutation names: `approval-authority`, `approval-binding`,
 
 - Task 8 is not marked final-complete here. Independent contract review remains
   the required final lane.
+
+## Task 8 — Cutscene guide/use-case/diagram contract closure
+
+### RED
+
+- `node --test tests/contracts/user-guide-use-case-manifest.test.mjs` began at
+  **47/58 pass, 11 fail**. The failures exposed the absent Studio direct-use
+  entry/source (`ST-S16`/`st-s16`), the omitted canonical
+  `cutscene-visual-preproduction` route from the production validator, an
+  incomplete Q20 FAQ answer, and stale 15/90/50 inventory expectations.
+
+### GREEN
+
+- Q20 now has the standard six FAQ fields and preserves named real-time
+  approval, unavailable-cost provider-0 stop, and stable-ID retry/recovery
+  boundaries. Q19's shared-memory shape is selected by its exact heading, not
+  by its array index. The contract rejects mutations of every Q20 field and
+  its question heading.
+- Studio now has exact direct-use `ST-S16`, five skill-owned cutscene outputs,
+  and ordered `plan-image-assets` → `generate-image-assets` →
+  `review-image-assets` handoff. `st-s16` is source-linked to one embedded
+  SVG-wrapped PNG and has the matching independent production oracle.
+- The exact canonical route and exact inventory now cover 16 Studio skill
+  cases, 91 diagrams, 31 total skill cases, and 51 FAQ headings. No runtime,
+  provider, E2E harness, or generated plugin runtime file was changed.
+
+### Validation
+
+- Focused manifest contract: `node --test tests/contracts/user-guide-use-case-manifest.test.mjs` — **58/58 pass** after the RED baseline.
+- Contract slices: complete counts, Studio manifest/routing, Q20 mutation
+  matrix, and independent production route/source oracle — **7/7 pass**.
+- Archify/document-quality contract:
+  `node --test tests/contracts/reference-intelligence-guides.test.mjs` —
+  **6/6 pass**; only the exact stale catalog digests were refreshed.
+- Related Studio/Career diagram geometry contracts:
+  `node --test tests/contracts/user-guide-studio-diagrams.test.mjs tests/contracts/user-guide-career-diagrams.test.mjs` —
+  **16/16 pass**.
+- Diagram generation/check: `npm run build:guide-diagrams` and
+  `npm run check:guide-diagrams` completed for the 91-diagram inventory;
+  `node tooling/build-use-case-diagrams.mjs --id st-s16 --check` — **1 SVG,
+  1 PNG checked**.
+- Guide validation: `npm run validate:guides` — PASS
+  `{guides:157, skillGuides:47, svg:91, png:91, audiencePaths:6,
+  useCases:36, skillCases:31, faq:51}`.
+
+### Remaining lane
+
+- Task 8 remains **not final-approved**. This closure supplies the contract
+  evidence required for independent review only.

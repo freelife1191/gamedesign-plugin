@@ -186,6 +186,24 @@ Task self-consistency:
 - Task 8 Fix4 remains pending independent contract review; do not mark final
   complete from this report update.
 
+- Task 8 contract-closure RED: `user-guide-use-case-manifest` was 47/58 pass
+  with 11 failures: Q20 lacked the six-field Studio FAQ shape, Q19's special
+  handling depended on its final array index, Studio direct-use omitted the
+  installed cutscene skill, and the source/route/diagram inventories remained
+  at the pre-cutscene 15/90/50 values.
+- Task 8 contract-closure GREEN: Q20 is now six-field and mutation-tested;
+  Q19 is identified by exact heading; `ST-S16`/`st-s16`, its five outputs and
+  ordered plan/generate/review handoff, plus the exact canonical cutscene
+  route are bound in independent production contracts. The generated,
+  exactly-once diagram inventory is 91, Studio direct-use is 16, total FAQ is
+  51, and guide validation reports 157 guides/47 skill guides/31 skill cases.
+- Task 8 contract-closure validation: focused contract **58/58**, Archify
+  document-quality **6/6**, Studio/Career diagram geometry **16/16**,
+  `npm run build:guide-diagrams`,
+  `npm run check:guide-diagrams`, and `npm run validate:guides` pass; no live
+  provider/network call, runtime, E2E harness, or plugin runtime edit. Final
+  approval remains pending independent review.
+
 ## Task 6 completion evidence
 
 - RED: Studio routing was 13 routes / 22 routed skills and lacked the cutscene

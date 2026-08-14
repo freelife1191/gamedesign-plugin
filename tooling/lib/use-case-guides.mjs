@@ -9,10 +9,10 @@ export const USE_CASE_EXPECTED_COUNTS = Object.freeze({
   audiencePaths: 6,
   studioCases: 18,
   careerCases: 18,
-  studioSkillCases: 15,
+  studioSkillCases: 16,
   careerSkillCases: 15,
 });
-const MINIMUM_FAQ_COUNT = 50;
+const MINIMUM_FAQ_COUNT = 51;
 const FAQ_PATHS = Object.freeze([
   "guides/use-cases/README.md",
   "guides/game-design-studio/faq.md",
@@ -24,7 +24,7 @@ const DIAGRAM_EXPECTED_SCOPE_COUNTS = Object.freeze({
   "game-design-career": 6,
   "use-case-audience": 6,
   "game-design-studio-use-case": 18,
-  "game-design-studio-skill": 15,
+  "game-design-studio-skill": 16,
   "game-design-career-use-case": 18,
   "game-design-career-skill": 15,
 });

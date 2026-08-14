@@ -344,10 +344,16 @@ Studio의 사례·스킬·템플릿을 선택할 때 자주 생기는 질문입�
 
 **결론:** 컷씬은 prompt 작성, 비용 산정, 생성, 연속성 검토를 분리합니다. `style-master → reference-masters → keyframes → storyboard` 순서로만 진행하며, 각 wave는 count, model, quality, size, USD 범위, cap, retryReserve, pricing time과 `costStatus`를 공개한 뒤 이름을 기록한 실시간 승인을 받아야 합니다.
 
-**이유와 경계:** host 비용이 `unavailable`이면 무료로 간주하지 않고 provider 호출 0회로 멈춥니다. 이전 승인이나 포괄 승인은 재사용하지 않습니다. 대사만 바뀌는 variant에는 이미지를 만들지 않으며, visual variant는 새 derivative ID와 별도 비용·승인을 사용합니다. 실패 재시도는 현재 full-wave estimate와 남은 retryReserve가 그대로일 때 최신 실패 stable ID에만 허용합니다.
+**이유와 경계:** host 비용이 `unavailable`이면 무료로 간주하지 않고 provider 호출 0회로 멈춥니다. 이전 승인이나 포괄 승인은 재사용하지 않습니다. 대사만 바뀌는 variant에는 이미지를 만들지 않으며, visual variant는 새 derivative ID와 별도 비용·승인을 사용합니다. 실패 재시도는 현재 full-wave estimate와 남은 retryReserve가 그대로일 때 최신 retryable stable ID에만 허용합니다.
+
+**실행 요청:**
 
 ```text
-컷씬 brief와 beat만 작성
+@Game Design Studio $game-design-studio:design-cutscene-visual-preproduction으로 컷씬 brief와 beat, wave별 비용·승인 계획만 작성해. host 비용이 unavailable이면 provider를 호출하지 말고, 실패한 stable ID 재개 조건도 보존해.
 ```
 
-**관련 가이드:** [컷씬 비주얼 프리프로덕션](cutscene-visual-preproduction.md), [이미지 자산](image-assets.md), [이미지 생성 스킬](skills/generate-image-assets.md), [이미지 검토 스킬](skills/review-image-assets.md)을 참조합니다.
+**예상 결과:** `cutscene-brief`, `cutscene-shot-package`, `cutscene-prompt-package`, `cutscene-cost-estimate`, `cutscene-continuity-review`와 각 wave의 stable ID·비용 상태·승인 경계를 남깁니다.
+
+**관련 사례·스킬·템플릿:** [ST-C05](use-cases/competency-paths.md#st-c05-콘텐츠내러티브퀘스트npc), [ST-S16 직접 호출 흐름](skills/design-cutscene-visual-preproduction.md#직접-호출-활용-design-cutscene-visual-preproduction), [컷씬 비주얼 프리프로덕션](cutscene-visual-preproduction.md), [`design-cutscene-visual-preproduction`](skills/design-cutscene-visual-preproduction.md), 템플릿 `cutscene-visual-preproduction`을 함께 사용합니다.
+
+**안전·근거·승인:** 이전 승인·포괄 승인은 자동 승인으로 쓰지 않고, 사람의 이름 있는 실시간 승인을 현재 estimate·pricing snapshot·request schedule에 묶습니다. provider 실패 뒤에는 성공 asset·receipt와 terminal 결과를 보존하고, 같은 current full-wave estimate와 retryReserve가 확인된 최신 retryable stable ID에서만 재개합니다.

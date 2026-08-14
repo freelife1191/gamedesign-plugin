@@ -9,7 +9,9 @@
 - 컷씬의 감정 변화와 조작 반환 지점을 shot 단위로 고정할 때
 - 이미지 생성 전에 연속성, 수량, 비용과 승인 범위를 명확히 할 때
 
-### 직접 호출 활용 design-cutscene-visual-preproduction
+### 직접 호출 활용 — design-cutscene-visual-preproduction
+
+[![컷씬 비주얼 프리프로덕션 직접 호출 흐름](../../assets/game-design-studio/skills/design-cutscene-visual-preproduction.png)](../../assets/game-design-studio/skills/design-cutscene-visual-preproduction.svg)
 
 컷씬 범위와 wave별 검토 경계가 한 작업으로 분명할 때 직접 호출합니다. 시스템·콘텐츠·제작 범위가 함께 불명확하면 `orchestrate-game-design-project`에서 route를 먼저 고릅니다.
 

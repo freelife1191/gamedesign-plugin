@@ -658,6 +658,20 @@
       }
     },
     {
+      "id": "ST-S16",
+      "product": "game-design-studio",
+      "skill": "design-cutscene-visual-preproduction",
+      "document": "guides/game-design-studio/skills/design-cutscene-visual-preproduction.md",
+      "anchor": "직접-호출-활용-design-cutscene-visual-preproduction",
+      "outputs": ["cutscene-brief", "cutscene-shot-package", "cutscene-prompt-package", "cutscene-cost-estimate", "cutscene-continuity-review"],
+      "next_skills": ["plan-image-assets", "generate-image-assets", "review-image-assets"],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/skills/design-cutscene-visual-preproduction.svg",
+        "png": "guides/assets/game-design-studio/skills/design-cutscene-visual-preproduction.png",
+        "alt": "컷씬 비주얼 프리프로덕션 직접 호출 흐름"
+      }
+    },
+    {
       "id": "ST-S03",
       "product": "game-design-studio",
       "skill": "design-game-content",
