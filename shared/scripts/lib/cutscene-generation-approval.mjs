@@ -1,6 +1,6 @@
 import { types } from "node:util";
 
-import { assertClosedPricingSnapshot, assertCurrentCutsceneEstimate, resolveCutsceneGenerationAuthority } from "../estimate-cutscene-image-cost.mjs";
+import { assertClosedPricingSnapshot, assertCurrentCutsceneEstimate, buildCutsceneDispatchSnapshot, resolveCutsceneGenerationAuthority } from "../estimate-cutscene-image-cost.mjs";
 import { isRfc3339DateTime } from "./rfc3339.mjs";
 import { validateCutsceneVisualPlan } from "../validate-cutscene-visual-preproduction.mjs";
 
@@ -38,10 +38,15 @@ function sortedReferences(references, path = "/referenceBindings") {
   return normalized.sort((left, right) => compareUtf8(left.assetId, right.assetId));
 }
 
-function bindingFromCurrent({ plan, promptPackage, pricingSnapshot, estimate }) {
+function bindingFromCurrent({ plan, promptPackage, manifest, pricingSnapshot, estimate }) {
   const authority = resolveCutsceneGenerationAuthority({ plan, promptPackage });
   const pricing = assertClosedPricingSnapshot(pricingSnapshot).pricingSnapshot;
   const currentEstimate = assertCurrentCutsceneEstimate({ estimate, authority, pricingSnapshot: pricing });
+  if (currentEstimate.costStatus !== "available") throw coded("cutscene.cost_estimate_unavailable", "/estimate/costStatus");
+  const dispatch = buildCutsceneDispatchSnapshot({ plan, promptPackage, manifest, waveId: currentEstimate.waveId, pricingSnapshot });
+  for (const [index, request] of dispatch.requests.entries()) {
+    if (currentEstimate.attemptCeilings[index]?.assetId !== request.assetId || currentEstimate.attemptCeilings[index]?.requestSha256 !== request.requestSha256) throw coded("cutscene.cost_estimate_stale", `/estimate/attemptCeilings/${index}/requestSha256`);
+  }
   return {
     waveId: currentEstimate.waveId,
     assetIds: sortedAssetIds(currentEstimate.assetIds),
@@ -68,15 +73,15 @@ export function cutsceneApprovalBinding(input = {}) { return bindingFromCurrent(
 
 export function issueCutsceneHumanApproval(input = {}) {
   if (Object.hasOwn(input, "context")) throw coded("cutscene.approval_context_forbidden", "/context");
-  const { eventId, actor, reviewer, decision, decidedAt, plan, promptPackage, pricingSnapshot, estimate } = input;
+  const { eventId, actor, reviewer, decision, decidedAt, plan, promptPackage, manifest, pricingSnapshot, estimate } = input;
   const actorName = humanName(actor, "/actor", "cutscene.actor_role_like");
   const reviewerName = humanName(reviewer, "/reviewer", "cutscene.reviewer_role_like");
   if (actorName !== reviewerName) throw coded("cutscene.approval_actor_mismatch", "/actor");
   if (decision !== "approved") throw coded("cutscene.approval_decision_invalid", "/decision");
   if (typeof eventId !== "string" || !eventId) throw coded("cutscene.approval_event_required", "/eventId");
   if (!isRfc3339DateTime(decidedAt)) throw coded("cutscene.timestamp_invalid", "/decidedAt");
-  const binding = bindingFromCurrent({ plan, promptPackage, pricingSnapshot, estimate });
-  const receipt = Object.freeze({ schemaVersion: 1, eventId, actor: actorName, reviewer: reviewerName, decision, decidedAt, waveId: binding.waveId, assetIds: Object.freeze(binding.assetIds), maximumApprovedUsd: binding.maximumApprovedUsd, retryReserve: binding.retryReserve, planSha256: binding.planSha256, promptPackageSha256: binding.promptPackageSha256, referenceBindings: Object.freeze(binding.referenceBindings.map((reference) => Object.freeze(reference))), pricingSnapshotSha256: binding.pricingSnapshotSha256, costEstimateSha256: binding.costEstimateSha256 });
+  const binding = bindingFromCurrent({ plan, promptPackage, manifest, pricingSnapshot, estimate });
+  const receipt = Object.freeze({ schemaVersion: 2, eventId, actor: actorName, reviewer: reviewerName, decision, decidedAt, waveId: binding.waveId, assetIds: Object.freeze(binding.assetIds), maximumApprovedUsd: binding.maximumApprovedUsd, retryReserve: binding.retryReserve, planSha256: binding.planSha256, promptPackageSha256: binding.promptPackageSha256, referenceBindings: Object.freeze(binding.referenceBindings.map((reference) => Object.freeze(reference))), pricingSnapshotSha256: binding.pricingSnapshotSha256, costEstimateSha256: binding.costEstimateSha256 });
   const capability = Object.freeze(Object.create(null));
   liveApprovals.set(capability, receipt);
   return Object.freeze({ receipt, capability });
@@ -85,6 +90,7 @@ export function issueCutsceneHumanApproval(input = {}) {
 export function assertCutsceneHumanApproval({ receipt, capability, context } = {}) {
   if (!receipt) throw coded("cutscene.approval_required", "/receipt");
   if (!capability || types.isProxy(receipt) || types.isProxy(capability) || liveApprovals.get(capability) !== receipt) throw coded("cutscene.approval_capability_invalid", "/capability");
+  if (receipt.schemaVersion !== 2) throw coded("cutscene.approval_schema_invalid", "/schemaVersion");
   if (context?.eventId !== receipt.eventId) throw coded("cutscene.approval_event_mismatch", "/eventId");
   if (humanName(context?.actor, "/actor", "cutscene.approval_actor_mismatch") !== receipt.actor) throw coded("cutscene.approval_actor_mismatch", "/actor");
   if (humanName(context?.reviewer, "/reviewer", "cutscene.approval_reviewer_mismatch") !== receipt.reviewer) throw coded("cutscene.approval_reviewer_mismatch", "/reviewer");
@@ -110,12 +116,12 @@ function currentWaveIndex(plan, waveId) {
   return plan.cutsceneWorkflow.waves.findIndex((wave) => wave.id === waveId);
 }
 
-export function validateHostCutsceneApproval({ receipt, capability, approvalEvent, plan, promptPackage, pricingSnapshot, estimate, now } = {}) {
+export function validateHostCutsceneApproval({ receipt, capability, approvalEvent, plan, promptPackage, manifest, pricingSnapshot, estimate, now } = {}) {
   if (!receipt && !capability) {
     const index = currentWaveIndex(plan, estimate?.waveId);
     if (index >= 0) throw coded("cutscene.approval_required", `/cutsceneWorkflow/waves/${index}/approval`);
   }
-  const current = bindingFromCurrent({ plan, promptPackage, pricingSnapshot, estimate });
+  const current = bindingFromCurrent({ plan, promptPackage, manifest, pricingSnapshot, estimate });
   const approved = assertCutsceneHumanApproval({ receipt, capability, context: { eventId: approvalEvent?.eventId, actor: approvalEvent?.actor, reviewer: approvalEvent?.reviewer, decidedAt: approvalEvent?.decidedAt, now, ...current } });
   if (!isRfc3339DateTime(pricingSnapshot?.retrievedAt)) throw coded("cutscene.timestamp_invalid", "/retrievedAt");
   const age = Date.parse(now) - Date.parse(pricingSnapshot.retrievedAt);
@@ -123,10 +129,10 @@ export function validateHostCutsceneApproval({ receipt, capability, approvalEven
   return approved;
 }
 
-export function requiresCutsceneReapproval({ receipt, plan, promptPackage, pricingSnapshot, estimate } = {}) {
-  if (!receipt) return true;
+export function requiresCutsceneReapproval({ receipt, plan, promptPackage, manifest, pricingSnapshot, estimate } = {}) {
+  if (!receipt || receipt.schemaVersion !== 2) return true;
   try {
-    const current = bindingFromCurrent({ plan, promptPackage, pricingSnapshot, estimate });
+    const current = bindingFromCurrent({ plan, promptPackage, manifest, pricingSnapshot, estimate });
     return receipt.waveId !== current.waveId || !sameJson(receipt.assetIds, current.assetIds) || receipt.maximumApprovedUsd !== current.maximumApprovedUsd || receipt.retryReserve !== current.retryReserve || receipt.planSha256 !== current.planSha256 || receipt.promptPackageSha256 !== current.promptPackageSha256 || referenceMismatchPath(receipt.referenceBindings, current.referenceBindings) !== null || receipt.pricingSnapshotSha256 !== current.pricingSnapshotSha256 || receipt.costEstimateSha256 !== current.costEstimateSha256;
   } catch { return true; }
 }

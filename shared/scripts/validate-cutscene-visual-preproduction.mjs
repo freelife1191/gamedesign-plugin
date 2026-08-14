@@ -9,6 +9,7 @@ const MODES = ["prompt-only", "estimate-only", "generate-after-approval"];
 const SHA256 = /^[a-f0-9]{64}$/u;
 const CUTSCENE_ID = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
 const RECORD_ID = /^[A-Za-z][A-Za-z0-9._:-]*$/u;
+const OPAQUE_ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u;
 const DISPATCH_STATES = new Set(["dispatching", "completed"]);
 const MODE_STATES = Object.freeze({
   "prompt-only": new Set(["planned", "template-ready", "blocked", "invalidated"]),
@@ -183,14 +184,32 @@ export function validateCutsceneVisualPlan(value) {
 }
 
 function validateCost(value, issue) {
-  closed(value, ["schemaVersion", "sha256", "waveId", "assetIds", "planSha256", "pricingSnapshotSha256", "retryReserve", "minimumUsd", "expectedUsd", "maximumUsd"], "", issue);
-  if (value?.schemaVersion !== 1) issue("cutscene.schema_version_invalid", "/schemaVersion");
+  closed(value, ["schemaVersion", "sha256", "waveId", "assetIds", "planSha256", "pricingSnapshotSha256", "retryReserve", "costStatus", "attemptCeilings", "minimumUsd", "expectedUsd", "maximumUsd"], "", issue);
+  if (value?.schemaVersion !== 2) issue("cutscene.schema_version_invalid", "/schemaVersion");
   for (const field of ["sha256", "planSha256", "pricingSnapshotSha256"]) if (!isHash(value?.[field])) issue("cutscene.hash_invalid", `/${field}`);
   if (!WAVE_IDS.includes(value?.waveId)) issue("cutscene.wave_id_invalid", "/waveId");
   nonEmptySortedUnique(value?.assetIds, "/assetIds", issue, { emptyCode: "cutscene.asset_ids_empty", predicate: (id) => CUTSCENE_ID.test(id ?? "") });
   if (!Number.isInteger(value?.retryReserve) || value.retryReserve < 0) issue("cutscene.retry_reserve_invalid", "/retryReserve");
-  for (const field of ["minimumUsd", "expectedUsd", "maximumUsd"]) if (typeof value?.[field] !== "number" || !Number.isFinite(value[field]) || value[field] < 0) issue("cutscene.cost_invalid", `/${field}`);
-  if (value?.minimumUsd > value?.expectedUsd || value?.expectedUsd > value?.maximumUsd) issue("cutscene.cost_range_invalid", "/maximumUsd");
+  if (!["available", "unavailable"].includes(value?.costStatus)) issue("cutscene.cost_status_invalid", "/costStatus");
+  if (!Array.isArray(value?.attemptCeilings) || value.attemptCeilings.length !== value?.assetIds?.length) issue("cutscene.attempt_ceilings_invalid", "/attemptCeilings");
+  else value.attemptCeilings.forEach((ceiling, index) => {
+    closed(ceiling, ["assetId", "requestSha256", "maximumUsd"], `/attemptCeilings/${index}`, issue);
+    if (ceiling?.assetId !== value.assetIds[index]) issue("cutscene.attempt_ceiling_asset_mismatch", `/attemptCeilings/${index}/assetId`);
+    if (!isHash(ceiling?.requestSha256)) issue("cutscene.hash_invalid", `/attemptCeilings/${index}/requestSha256`);
+    if (!(ceiling?.maximumUsd === null || typeof ceiling.maximumUsd === "number" && Number.isFinite(ceiling.maximumUsd) && ceiling.maximumUsd > 0)) issue("cutscene.cost_invalid", `/attemptCeilings/${index}/maximumUsd`);
+  });
+  if (value?.costStatus === "available") {
+    for (const field of ["minimumUsd", "expectedUsd", "maximumUsd"]) if (typeof value?.[field] !== "number" || !Number.isFinite(value[field]) || value[field] <= 0) issue("cutscene.cost_invalid", `/${field}`);
+    if (value?.attemptCeilings?.some(({ maximumUsd }) => maximumUsd === null)) issue("cutscene.cost_status_invalid", "/costStatus");
+    if (Array.isArray(value?.attemptCeilings) && value.attemptCeilings.length > 0 && value.attemptCeilings.every(({ maximumUsd }) => typeof maximumUsd === "number" && Number.isFinite(maximumUsd) && maximumUsd > 0)) {
+      const baseline = value.attemptCeilings.reduce((total, { maximumUsd }) => total + maximumUsd, 0);
+      const maximum = baseline + value.retryReserve * Math.max(...value.attemptCeilings.map(({ maximumUsd }) => maximumUsd));
+      if (value.minimumUsd !== baseline || value.expectedUsd !== baseline || value.maximumUsd !== maximum) issue("cutscene.cost_range_invalid", "/maximumUsd");
+    }
+  } else if (value?.costStatus === "unavailable") {
+    for (const field of ["minimumUsd", "expectedUsd", "maximumUsd"]) if (value?.[field] !== null) issue("cutscene.cost_invalid", `/${field}`);
+    if (Array.isArray(value?.attemptCeilings) && !value.attemptCeilings.some(({ maximumUsd }) => maximumUsd === null)) issue("cutscene.cost_status_invalid", "/costStatus");
+  }
 }
 
 export function validateCutsceneCostEstimate(value) { return resultOf(value, (issue) => validateCost(value, issue)); }
@@ -198,13 +217,13 @@ export function validateCutsceneCostEstimate(value) { return resultOf(value, (is
 export function validateCutsceneGenerationApproval(value) {
   return resultOf(value, (issue) => {
     closed(value, ["schemaVersion", "eventId", "actor", "reviewer", "decision", "decidedAt", "waveId", "assetIds", "maximumApprovedUsd", "retryReserve", "planSha256", "promptPackageSha256", "referenceBindings", "pricingSnapshotSha256", "costEstimateSha256"], "", issue);
-    if (value?.schemaVersion !== 1) issue("cutscene.schema_version_invalid", "/schemaVersion");
+    if (value?.schemaVersion !== 2) issue("cutscene.schema_version_invalid", "/schemaVersion");
     for (const field of ["eventId", "actor", "reviewer"]) if (!isText(value?.[field])) issue("cutscene.text_invalid", `/${field}`);
     if (value?.decision !== "approved") issue("cutscene.approval_decision_invalid", "/decision");
     if (!isRfc3339DateTime(value?.decidedAt)) issue("cutscene.timestamp_invalid", "/decidedAt");
     if (!WAVE_IDS.includes(value?.waveId)) issue("cutscene.wave_id_invalid", "/waveId");
     nonEmptySortedUnique(value?.assetIds, "/assetIds", issue, { emptyCode: "cutscene.asset_ids_empty", predicate: (id) => CUTSCENE_ID.test(id ?? "") });
-    if (typeof value?.maximumApprovedUsd !== "number" || !Number.isFinite(value.maximumApprovedUsd) || value.maximumApprovedUsd < 0) issue("cutscene.maximum_approved_usd_invalid", "/maximumApprovedUsd");
+    if (typeof value?.maximumApprovedUsd !== "number" || !Number.isFinite(value.maximumApprovedUsd) || value.maximumApprovedUsd <= 0) issue("cutscene.maximum_approved_usd_invalid", "/maximumApprovedUsd");
     if (!Number.isInteger(value?.retryReserve) || value.retryReserve < 0) issue("cutscene.retry_reserve_invalid", "/retryReserve");
     for (const field of ["planSha256", "promptPackageSha256", "pricingSnapshotSha256", "costEstimateSha256"]) if (!isHash(value?.[field])) issue("cutscene.hash_invalid", `/${field}`);
     if (!Array.isArray(value?.referenceBindings) || value.referenceBindings.length === 0) issue("cutscene.reference_bindings_empty", "/referenceBindings");
@@ -214,17 +233,56 @@ export function validateCutsceneGenerationApproval(value) {
 
 export function validateCutsceneGenerationUsage(value) {
   return resultOf(value, (issue) => {
-    closed(value, ["schemaVersion", "waveId", "assetId", "attemptId", "providerRequestId", "inputTokens", "inputTextTokens", "inputImageTokens", "cachedTextTokens", "cachedImageTokens", "outputTokens", "totalTokens"], "", issue);
-    if (value?.schemaVersion !== 1) issue("cutscene.schema_version_invalid", "/schemaVersion");
+    const authorization = value?.kind === "authorization";
+    const keys = authorization
+      ? ["schemaVersion", "kind", "waveId", "assetId", "attemptId", "attemptSequence", "assetAttemptOrdinal", "requestSha256", "pricingSnapshotSha256", "costEstimateSha256", "authorizedMaximumUsd", "authorizedAt", "sha256"]
+      : ["schemaVersion", "kind", "waveId", "assetId", "attemptId", "attemptSequence", "assetAttemptOrdinal", "authorizationSha256", "providerRequestId", "providerOutcome", "assetOutcome", "retryDisposition", "usage", "actualCost", "completedAt", "sha256"];
+    closed(value, keys, "", issue);
+    if (value?.schemaVersion !== 2) issue("cutscene.schema_version_invalid", "/schemaVersion");
+    if (!authorization && value?.kind !== "outcome") issue("cutscene.journal_kind_invalid", "/kind");
     if (!WAVE_IDS.includes(value?.waveId)) issue("cutscene.wave_id_invalid", "/waveId");
     if (!CUTSCENE_ID.test(value?.assetId ?? "")) issue("cutscene.asset_id_invalid", "/assetId");
-    for (const field of ["attemptId", "providerRequestId"]) if (!isText(value?.[field])) issue("cutscene.text_invalid", `/${field}`);
-    const fields = ["inputTokens", "inputTextTokens", "inputImageTokens", "cachedTextTokens", "cachedImageTokens", "outputTokens", "totalTokens"];
-    for (const field of fields) if (!Number.isInteger(value?.[field]) || value[field] < 0) issue("cutscene.usage_token_invalid", `/${field}`);
-    if (value?.inputTokens !== value?.inputTextTokens + value?.inputImageTokens) issue("cutscene.usage_input_mismatch", "/inputTokens");
-    if (value?.totalTokens !== value?.inputTokens + value?.outputTokens) issue("cutscene.usage_total_mismatch", "/totalTokens");
-    if (value?.cachedTextTokens > value?.inputTextTokens) issue("cutscene.cached_text_exceeds_input", "/cachedTextTokens");
-    if (value?.cachedImageTokens > value?.inputImageTokens) issue("cutscene.cached_image_exceeds_input", "/cachedImageTokens");
+    if (!OPAQUE_ID.test(value?.attemptId ?? "")) issue("cutscene.text_invalid", "/attemptId");
+    for (const field of ["attemptSequence", "assetAttemptOrdinal"]) if (!Number.isInteger(value?.[field]) || value[field] < 1) issue("cutscene.attempt_ordinal_invalid", `/${field}`);
+    if (!isHash(value?.sha256) || value?.sha256 !== cutsceneDocumentSha256(Object.fromEntries(Object.entries(value ?? {}).filter(([key]) => key !== "sha256")))) issue("cutscene.hash_invalid", "/sha256");
+    if (authorization) {
+      for (const field of ["requestSha256", "pricingSnapshotSha256", "costEstimateSha256"]) if (!isHash(value?.[field])) issue("cutscene.hash_invalid", `/${field}`);
+      if (typeof value?.authorizedMaximumUsd !== "number" || !Number.isFinite(value.authorizedMaximumUsd) || value.authorizedMaximumUsd <= 0) issue("cutscene.cost_invalid", "/authorizedMaximumUsd");
+      if (!isRfc3339DateTime(value?.authorizedAt)) issue("cutscene.timestamp_invalid", "/authorizedAt");
+      return;
+    }
+    if (!isHash(value?.authorizationSha256)) issue("cutscene.hash_invalid", "/authorizationSha256");
+    if (!OPAQUE_ID.test(value?.providerRequestId ?? "")) issue("cutscene.text_invalid", "/providerRequestId");
+    if (!["success", "provider-failure", "transport-failure", "not-called"].includes(value?.providerOutcome)) issue("cutscene.provider_outcome_invalid", "/providerOutcome");
+    if (!["success", "retryable-failure", "terminal-failure", "not-attempted"].includes(value?.assetOutcome)) issue("cutscene.asset_outcome_invalid", "/assetOutcome");
+    if (!["retryable", "none"].includes(value?.retryDisposition)) issue("cutscene.retry_disposition_invalid", "/retryDisposition");
+    if ((value?.providerOutcome === "not-called") !== (value?.assetOutcome === "not-attempted")) issue("cutscene.provider_asset_outcome_mismatch", "/assetOutcome");
+    if ((value?.assetOutcome === "retryable-failure") !== (value?.retryDisposition === "retryable")) issue("cutscene.retry_disposition_mismatch", "/retryDisposition");
+    if (!plainObject(value?.usage)) issue("cutscene.usage_invalid", "/usage");
+    else if (value.usage.status === "unavailable") {
+      closed(value.usage, ["status", "reason"], "/usage", issue);
+      if (!isText(value.usage.reason)) issue("cutscene.usage_invalid", "/usage/reason");
+    } else {
+      const required = ["inputTokens", "inputTextTokens", "inputImageTokens", "outputTokens", "totalTokens"];
+      const optional = ["cachedTextTokens", "cachedImageTokens"];
+      for (const key of Reflect.ownKeys(value.usage)) if (typeof key !== "string" || ![...required, ...optional].includes(key)) issue("cutscene.unknown_key", `/usage/${String(key)}`);
+      for (const field of required) if (!Number.isInteger(value.usage[field]) || value.usage[field] < 0) issue("cutscene.usage_token_invalid", `/usage/${field}`);
+      for (const field of optional) if (value.usage[field] !== undefined && (!Number.isInteger(value.usage[field]) || value.usage[field] < 0)) issue("cutscene.usage_token_invalid", `/usage/${field}`);
+      if (value.usage.inputTokens !== value.usage.inputTextTokens + value.usage.inputImageTokens) issue("cutscene.usage_input_mismatch", "/usage/inputTokens");
+      if (value.usage.totalTokens !== value.usage.inputTokens + value.usage.outputTokens) issue("cutscene.usage_total_mismatch", "/usage/totalTokens");
+      if (value.usage.cachedTextTokens > value.usage.inputTextTokens) issue("cutscene.cached_text_exceeds_input", "/usage/cachedTextTokens");
+      if (value.usage.cachedImageTokens > value.usage.inputImageTokens) issue("cutscene.cached_image_exceeds_input", "/usage/cachedImageTokens");
+    }
+    if (!plainObject(value?.actualCost) || !["known", "unavailable"].includes(value.actualCost.status)) issue("cutscene.cost_invalid", "/actualCost");
+    else if (value.actualCost.status === "known") {
+      closed(value.actualCost, ["status", "usd"], "/actualCost", issue);
+      if (typeof value.actualCost.usd !== "number" || !Number.isFinite(value.actualCost.usd) || value.actualCost.usd < 0) issue("cutscene.cost_invalid", "/actualCost/usd");
+    } else {
+      closed(value.actualCost, ["status", "reason"], "/actualCost", issue);
+      if (!isText(value.actualCost.reason)) issue("cutscene.cost_invalid", "/actualCost/reason");
+    }
+    if (value?.providerOutcome === "not-called" && (value?.actualCost?.status !== "known" || value.actualCost.usd !== 0)) issue("cutscene.not_called_cost_invalid", "/actualCost");
+    if (!isRfc3339DateTime(value?.completedAt)) issue("cutscene.timestamp_invalid", "/completedAt");
   });
 }
 

@@ -133,7 +133,7 @@ test("binding reads current master bytes and invalidation retains unrelated stat
   assert.equal(bound.kind, "generation-ready");
   assert.deepEqual(bound.references, [{ assetId: asset.asset_id, sha256: createHash("sha256").update(referenceBytes).digest("hex") }]);
   const plan = structuredClone(planned.plan);
-  plan.cutsceneWorkflow.waves[0].attempts = [{ schemaVersion: 1, waveId: "style-master", assetId: plan.cutsceneWorkflow.waves[0].assetIds[0], attemptId: "attempt-01", providerRequestId: "request-01", inputTokens: 1, inputTextTokens: 1, inputImageTokens: 0, cachedTextTokens: 0, cachedImageTokens: 0, outputTokens: 1, totalTokens: 2 }];
+  plan.cutsceneWorkflow.waves[0].attempts = [validUsage({ assetId: plan.cutsceneWorkflow.waves[0].assetIds[0] })];
   const earlier = structuredClone(plan.cutsceneWorkflow.waves[0]);
   const changed = plan.cutsceneWorkflow.waves[1].assetIds[0];
   const impact = findCutsceneImpact({ plan, changedAssetIds: [changed] });
@@ -234,20 +234,22 @@ const validCutscenePlan = () => ({
 });
 
 const validEstimate = () => ({
-  schemaVersion: 1,
+  schemaVersion: 2,
   sha256: SHA,
   waveId: "style-master",
   assetIds: ["cutscene-escape-style-master-01"],
   planSha256: SHA,
   pricingSnapshotSha256: SHA,
   retryReserve: 1,
+  costStatus: "available",
+  attemptCeilings: [{ assetId: "cutscene-escape-style-master-01", requestSha256: SHA, maximumUsd: 0.25 }],
   minimumUsd: 0.25,
-  expectedUsd: 0.5,
-  maximumUsd: 0.75,
+  expectedUsd: 0.25,
+  maximumUsd: 0.5,
 });
 
 const validApproval = () => ({
-  schemaVersion: 1,
+  schemaVersion: 2,
   eventId: "approve-style-01",
   actor: "Kim",
   reviewer: "Kim",
@@ -255,7 +257,7 @@ const validApproval = () => ({
   decidedAt: "2026-08-13T00:00:00.000Z",
   waveId: "style-master",
   assetIds: ["cutscene-escape-style-master-01"],
-  maximumApprovedUsd: 0.75,
+  maximumApprovedUsd: 0.5,
   retryReserve: 1,
   planSha256: SHA,
   promptPackageSha256: SHA,
@@ -264,20 +266,27 @@ const validApproval = () => ({
   costEstimateSha256: SHA,
 });
 
-const validUsage = () => ({
-  schemaVersion: 1,
+const validUsage = (overrides = {}) => {
+  const record = {
+  schemaVersion: 2,
+  kind: "outcome",
   waveId: "style-master",
   assetId: "cutscene-escape-style-master-01",
   attemptId: "attempt-01",
+  attemptSequence: 1,
+  assetAttemptOrdinal: 1,
+  authorizationSha256: SHA,
   providerRequestId: "request-01",
-  inputTokens: 10,
-  inputTextTokens: 6,
-  inputImageTokens: 4,
-  cachedTextTokens: 1,
-  cachedImageTokens: 2,
-  outputTokens: 8,
-  totalTokens: 18,
-});
+  providerOutcome: "success",
+  assetOutcome: "success",
+  retryDisposition: "none",
+  usage: { inputTokens: 10, inputTextTokens: 6, inputImageTokens: 4, cachedTextTokens: 1, cachedImageTokens: 2, outputTokens: 8, totalTokens: 18 },
+  actualCost: { status: "known", usd: 0.25 },
+  completedAt: "2026-08-13T00:01:00.000Z",
+  ...overrides,
+  };
+  return { ...record, sha256: cutsceneDocumentSha256(record) };
+};
 
 const validContinuityReview = (overrides = {}) => ({
   schemaVersion: 1,
@@ -320,7 +329,7 @@ function approvedManifest() {
   };
 }
 
-const schemaKeywords = new Set(["$schema", "$id", "$defs", "$ref", "type", "const", "enum", "required", "additionalProperties", "properties", "items", "pattern", "minLength", "minItems", "maxItems", "uniqueItems", "minimum", "maximum", "allOf", "anyOf", "oneOf", "not", "if", "then", "else", "format"]);
+const schemaKeywords = new Set(["$schema", "$id", "$defs", "$ref", "type", "const", "enum", "required", "additionalProperties", "properties", "items", "pattern", "minLength", "minItems", "maxItems", "uniqueItems", "minimum", "exclusiveMinimum", "maximum", "allOf", "anyOf", "oneOf", "not", "if", "then", "else", "format"]);
 const schemaType = (value, type) => type === "null" ? value === null : type === "object" ? value !== null && typeof value === "object" && !Array.isArray(value) : type === "array" ? Array.isArray(value) : type === "string" ? typeof value === "string" : type === "integer" ? Number.isInteger(value) : type === "number" ? typeof value === "number" && Number.isFinite(value) : type === "boolean" ? typeof value === "boolean" : false;
 const schemaStructuralJson = (value) => value === null || typeof value !== "object" ? JSON.stringify(value) : Array.isArray(value) ? `[${value.map(schemaStructuralJson).join(",")}]` : `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${schemaStructuralJson(value[key])}`).join(",")}}`;
 
@@ -360,8 +369,9 @@ function schemaAccepts(value, rootSchema, schemas, schema = rootSchema, prefligh
   if (Object.hasOwn(schema, "const") && !Object.is(value, schema.const)) return false;
   if (schema.enum && (!Array.isArray(schema.enum) || !schema.enum.some((candidate) => Object.is(candidate, value)))) return false;
   if (schema.type !== undefined) { const types = Array.isArray(schema.type) ? schema.type : [schema.type]; if (!types.some((type) => schemaType(value, type))) return false; }
-  if (schema.minimum !== undefined && (typeof value !== "number" || value < schema.minimum)) return false;
-  if (schema.maximum !== undefined && (typeof value !== "number" || value > schema.maximum)) return false;
+  if (schema.minimum !== undefined && typeof value === "number" && value < schema.minimum) return false;
+  if (schema.exclusiveMinimum !== undefined && typeof value === "number" && value <= schema.exclusiveMinimum) return false;
+  if (schema.maximum !== undefined && typeof value === "number" && value > schema.maximum) return false;
   if (schema.minLength !== undefined && (typeof value !== "string" || value.length < schema.minLength)) return false;
   if (schema.pattern !== undefined && (typeof value !== "string" || !new RegExp(schema.pattern, "u").test(value))) return false;
   if (schema.format !== undefined && (schema.format !== "date-time" || !isRfc3339DateTime(value))) return false;
@@ -462,8 +472,8 @@ test("five closed document contracts reject malformed derived binding and usage 
   const approval = validApproval(); approval.referenceBindings = [];
   assert.deepEqual(firstError(validateCutsceneGenerationApproval(approval)), { code: "cutscene.reference_bindings_empty", path: "/referenceBindings" });
   assert.equal(validateCutsceneGenerationUsage(validUsage()).ok, true);
-  const usage = validUsage(); usage.inputTokens = 9;
-  assert.deepEqual(firstError(validateCutsceneGenerationUsage(usage)), { code: "cutscene.usage_input_mismatch", path: "/inputTokens" });
+  const usage = validUsage(); usage.usage.inputTokens = 9; usage.sha256 = cutsceneDocumentSha256(Object.fromEntries(Object.entries(usage).filter(([key]) => key !== "sha256")));
+  assert.deepEqual(firstError(validateCutsceneGenerationUsage(usage)), { code: "cutscene.usage_input_mismatch", path: "/usage/inputTokens" });
   assert.equal(validateCutsceneContinuityReview(validContinuityReview()).ok, true);
   const review = validContinuityReview(); review.blockingFindingIds = ["missing-finding"];
   assert.deepEqual(firstError(validateCutsceneContinuityReview(review)), { code: "cutscene.blocker_set_mismatch", path: "/blockingFindingIds" });
@@ -564,6 +574,13 @@ test("runtime and packaged JSON Schema agree on valid and rejected closed fixtur
     ["cutscene-generation-usage", validUsage(), validateCutsceneGenerationUsage, true],
     ["cutscene-continuity-review", validContinuityReview(), validateCutsceneContinuityReview, true],
   ];
+  const unavailableEstimate = validEstimate();
+  unavailableEstimate.costStatus = "unavailable";
+  unavailableEstimate.attemptCeilings[0].maximumUsd = null;
+  unavailableEstimate.minimumUsd = null;
+  unavailableEstimate.expectedUsd = null;
+  unavailableEstimate.maximumUsd = null;
+  cases.push(["cutscene-cost-estimate", unavailableEstimate, validateCutsceneCostEstimate, true]);
   const invalidPlan = structuredClone(templatePlan); invalidPlan.cutsceneWorkflow.derived = { documentApproved: true };
   cases.push(["cutscene-visual-plan", invalidPlan, validateCutsceneVisualPlan, false]);
   const incompatibleCompletion = structuredClone(templatePlan); incompatibleCompletion.cutsceneWorkflow.waves[0].state = "planned";
@@ -572,6 +589,10 @@ test("runtime and packaged JSON Schema agree on valid and rejected closed fixtur
   cases.push(["cutscene-visual-plan", illegalModeDispatch, validateCutsceneVisualPlan, false]);
   const invalidUsage = validUsage(); invalidUsage.unknown = true;
   cases.push(["cutscene-generation-usage", invalidUsage, validateCutsceneGenerationUsage, false]);
+  const availableWithoutCeiling = validEstimate(); availableWithoutCeiling.attemptCeilings[0].maximumUsd = null;
+  cases.push(["cutscene-cost-estimate", availableWithoutCeiling, validateCutsceneCostEstimate, false]);
+  const contradictoryOutcome = validUsage({ providerOutcome: "not-called" });
+  cases.push(["cutscene-generation-usage", contradictoryOutcome, validateCutsceneGenerationUsage, false]);
   for (const [name, value, validate, expected] of cases) {
     assert.equal(validate(value).ok, expected, `${name} runtime`);
     assert.equal(schemaAccepts(value, byName.get(name), byFile), expected, `${name} schema`);
@@ -643,6 +664,7 @@ test("every expressible ID, collection, closed-shape, and timestamp rule has sch
     ["cutscene-generation-approval", () => { const value = validApproval(); value.assetIds = ["UPPER"]; return value; }, validateCutsceneGenerationApproval],
     ["cutscene-generation-approval", () => { const value = validApproval(); value.decidedAt = "not-a-date"; return value; }, validateCutsceneGenerationApproval],
     ["cutscene-generation-usage", () => { const value = validUsage(); value.assetId = "UPPER"; return value; }, validateCutsceneGenerationUsage],
+    ["cutscene-generation-usage", () => validUsage({ attemptId: "invalid attempt" }), validateCutsceneGenerationUsage],
     ["cutscene-generation-usage", () => { const value = validUsage(); value.providerRequestId = ""; return value; }, validateCutsceneGenerationUsage],
     ["cutscene-continuity-review", () => { const value = validContinuityReview(); value.reviewedAt = "2026-02-30T00:00:00.000Z"; return value; }, validateCutsceneContinuityReview],
     ["cutscene-continuity-review", () => { const value = validContinuityReview(); value.unknown = true; return value; }, validateCutsceneContinuityReview],

@@ -354,6 +354,30 @@ test("Studio rechecks pinned parent identities after a deterministic rename-away
   assert.deepEqual(result.providerResult.failures.map(({ asset_id, reason }) => ({ asset_id, reason })), [{ asset_id: character.asset_id, reason: "host-callback-failed" }]);
 });
 
+test("Studio closes earlier host authorizations as not-called when a later batch authorization fails", async (t) => {
+  const { root, manifest, master, character, ui } = await masterDerivativeFixture(t);
+  master.generation_state = "generated";
+  const outcomes = [];
+  let authorizations = 0;
+  let hostCalls = 0;
+  await assert.rejects(() => generateImageAssetWorkflow({
+    artifactRoot: root, manifest,
+    config: { mode: "select", model: "gpt-image-2", quality: "low", apiKeyPresent: false }, codexCapability: { status: "available" },
+    selectedAssetIds: [character.asset_id, ui.asset_id],
+    selectionReceipt: { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-host-batch-auth", asset_ids: [character.asset_id, ui.asset_id] },
+    beforeProvider: async ({ asset_id }) => {
+      authorizations += 1;
+      if (authorizations === 2) throw new Error("second-authorization-rejected");
+      return { assetId: asset_id, authorization: "first" };
+    },
+    afterProvider: async (outcome) => outcomes.push(outcome),
+    hostGenerate: async () => { hostCalls += 1; return { results: [], failures: [] }; },
+  }), /second-authorization-rejected/u);
+  assert.equal(hostCalls, 0);
+  assert.equal(authorizations, 2);
+  assert.deepEqual(outcomes.map(({ assetId, providerOutcome, assetOutcome, retryDisposition }) => ({ assetId, providerOutcome, assetOutcome, retryDisposition })), [{ assetId: character.asset_id, providerOutcome: "not-called", assetOutcome: "not-attempted", retryDisposition: "none" }]);
+});
+
 test("Studio rejects an image that names itself as its master or reference", async (t) => {
   const { root, manifest, character } = await masterDerivativeFixture(t);
   character.derivative_of = character.asset_id;

@@ -142,6 +142,40 @@ test("generateOpenAIImages authorizes every retried provider attempt immediately
   assert.equal(result.results[0].asset_id, "hero-image");
 });
 
+test("OpenAI outcomes distinguish provider response from final publication for retries, transport, malformed 2xx, corrupt PNG, and success", async (t) => {
+  const cases = [
+    {
+      name: "500-then-success",
+      fetches: [response({ status: 500, body: { error: { type: "server_error" } }, requestId: "req-500" }), successResponse()],
+      expected: [["provider-failure", "retryable-failure", "retryable"], ["success", "success", "none"]],
+    },
+    { name: "transport", throws: true, expected: [["transport-failure", "retryable-failure", "retryable"]] },
+    { name: "malformed", fetches: [response({ status: 200, body: { data: [] }, requestId: "req-malformed" })], expected: [["provider-failure", "terminal-failure", "none"]] },
+    { name: "corrupt", fetches: [response({ status: 200, body: { data: [{ b64_json: Buffer.from("not-png").toString("base64") }] }, requestId: "req-corrupt" })], expected: [["success", "terminal-failure", "none"]] },
+    { name: "success", fetches: [successResponse()], expected: [["success", "success", "none"]] },
+  ];
+  for (const fixture of cases) {
+    const root = await staging(t);
+    const assetId = `case-${fixture.name}`;
+    const outcomes = [];
+    let call = 0;
+    await generateOpenAIImages({
+      jobs: [job({ asset_id: assetId, output: { path: `assets/generated/${assetId}.png`, width: 1024, height: 1024, format: "png" } })],
+      apiKey: key, model: "gpt-image-2", quality: "low", now, stagingRoot: root, sleepFn: async () => {},
+      beforeProvider: ({ attempt_ordinal }) => ({ attempt_ordinal }),
+      afterProvider: async ({ providerOutcome, assetOutcome, retryDisposition }) => {
+        if (assetOutcome === "success") assert.equal((await lstat(path.join(root, "assets", "generated", `${assetId}.png`))).isFile(), true);
+        outcomes.push([providerOutcome, assetOutcome, retryDisposition]);
+      },
+      fetchFn: async () => {
+        if (fixture.throws) throw new Error("transport");
+        const next = fixture.fetches[call]; call += 1; return next;
+      },
+    });
+    assert.deepEqual(outcomes, fixture.expected, fixture.name);
+  }
+});
+
 test("promoteValidatedPng rejects truncated, corrupt, and incomplete PNG structures before publishing", async (t) => {
   const root = await staging(t);
   const valid = png();

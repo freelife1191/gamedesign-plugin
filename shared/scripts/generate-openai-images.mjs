@@ -255,6 +255,7 @@ async function requestImage({ job, apiKey, model, quality, fetchFn, sleepFn, now
     try {
       await referenceVerifier?.();
     } catch {
+      await afterProvider?.({ ...dispatch, asset_id: job.asset_id, providerRequestId: "no-request-id", providerOutcome: "not-called", assetOutcome: "not-attempted", retryDisposition: "none", usage: undefined });
       return { ok: false, attempts, generationState: "qa-failed", reason: "invalid-generation-reference" };
     }
     attempts += 1;
@@ -275,7 +276,7 @@ async function requestImage({ job, apiKey, model, quality, fetchFn, sleepFn, now
       });
     } catch {
       clearTimeout(timeout);
-      await afterProvider?.({ ...dispatch, asset_id: job.asset_id, attempt_ordinal: attempts, providerRequestId: "no-request-id", outcome: "transport-failure", usage: undefined });
+      await afterProvider?.({ ...dispatch, asset_id: job.asset_id, providerRequestId: "no-request-id", providerOutcome: "transport-failure", assetOutcome: "retryable-failure", retryDisposition: "retryable", usage: undefined });
       if (timedOut) return { ok: false, attempts, generationState: "generation-failed", reason: "provider-timeout" };
       return { ok: false, attempts, generationState: "generation-failed", reason: "provider-request-failed" };
     }
@@ -283,27 +284,31 @@ async function requestImage({ job, apiKey, model, quality, fetchFn, sleepFn, now
     clearTimeout(timeout);
     const providerRequestId = headerValue(response, "x-request-id");
     const safeProviderRequestId = providerRequestId && safeRequestId.test(providerRequestId) ? providerRequestId : "no-request-id";
-    const validImageResponse = parsed.ok && Array.isArray(parsed.value.data) && parsed.value.data.length === 1 && typeof parsed.value.data[0]?.b64_json === "string";
-    await afterProvider?.({ ...dispatch, asset_id: job.asset_id, attempt_ordinal: attempts, providerRequestId: safeProviderRequestId, outcome: response?.status >= 200 && response.status < 300 && validImageResponse ? "success" : "provider-failure", usage: parsed.ok ? openAiUsage(parsed.value) : undefined });
-    if (timedOut) return { ok: false, attempts, generationState: "generation-failed", reason: "provider-timeout" };
+    if (timedOut) {
+      await afterProvider?.({ ...dispatch, asset_id: job.asset_id, providerRequestId: safeProviderRequestId, providerOutcome: "transport-failure", assetOutcome: "retryable-failure", retryDisposition: "retryable", usage: undefined });
+      return { ok: false, attempts, generationState: "generation-failed", reason: "provider-timeout" };
+    }
     if (!parsed.ok) {
-      if (response?.status >= 500 && attempts < maximumAttempts) {
-        await sleepFn(retryDelay(response, attempts, now));
-        continue;
-      }
+      await afterProvider?.({ ...dispatch, asset_id: job.asset_id, providerRequestId: safeProviderRequestId, providerOutcome: "provider-failure", assetOutcome: "terminal-failure", retryDisposition: "none", usage: undefined });
       return { ok: false, attempts, generationState: "qa-failed", reason: "invalid-provider-response" };
     }
     if (response?.status >= 200 && response.status < 300) {
       if (!Array.isArray(parsed.value.data) || parsed.value.data.length !== 1 || typeof parsed.value.data[0]?.b64_json !== "string") {
+        await afterProvider?.({ ...dispatch, asset_id: job.asset_id, providerRequestId: safeProviderRequestId, providerOutcome: "provider-failure", assetOutcome: "terminal-failure", retryDisposition: "none", usage: openAiUsage(parsed.value) });
         return { ok: false, attempts, generationState: "qa-failed", reason: "invalid-provider-response" };
       }
-      return { ok: true, attempts, b64: parsed.value.data[0].b64_json, requestId: safeProviderRequestId === "no-request-id" ? undefined : safeProviderRequestId };
+      return { ok: true, attempts, b64: parsed.value.data[0].b64_json, requestId: safeProviderRequestId === "no-request-id" ? undefined : safeProviderRequestId, dispatch, usage: openAiUsage(parsed.value), afterProvider };
     }
     const classified = providerErrorClass(parsed.value);
-    if (classified.policy) return { ok: false, attempts, generationState: "policy-blocked", reason: "policy-blocked" };
+    if (classified.policy) {
+      await afterProvider?.({ ...dispatch, asset_id: job.asset_id, providerRequestId: safeProviderRequestId, providerOutcome: "provider-failure", assetOutcome: "terminal-failure", retryDisposition: "none", usage: openAiUsage(parsed.value) });
+      return { ok: false, attempts, generationState: "policy-blocked", reason: "policy-blocked" };
+    }
     if (classified.noRetry || ![429].includes(response?.status) && !(response?.status >= 500)) {
+      await afterProvider?.({ ...dispatch, asset_id: job.asset_id, providerRequestId: safeProviderRequestId, providerOutcome: "provider-failure", assetOutcome: "terminal-failure", retryDisposition: "none", usage: openAiUsage(parsed.value) });
       return { ok: false, attempts, generationState: "generation-failed", reason: "provider-request-failed" };
     }
+    await afterProvider?.({ ...dispatch, asset_id: job.asset_id, providerRequestId: safeProviderRequestId, providerOutcome: "provider-failure", assetOutcome: "retryable-failure", retryDisposition: "retryable", usage: openAiUsage(parsed.value) });
     if (attempts < maximumAttempts) {
       await sleepFn(retryDelay(response, attempts, now));
       continue;
@@ -364,21 +369,25 @@ export async function generateOpenAIImages({
       failures.push(failure(job.asset_id, requested.generationState, requested.reason, requested.attempts));
       continue;
     }
+    let image;
     try {
-      const image = await promoteValidatedPng({ prepared, bytes: decodeOpenAIImage(requested.b64) });
-      const output = { ...prepared.output, bytes: image.bytes, digest: image.digest };
-      results.push({
-        asset_id: job.asset_id,
-        generation_state: "generated",
-        output,
-        provenance: {
-          provider: "openai", model, quality, request_id: requested.requestId,
-          generated_at: timestamp(now), prompt_digest: digest(job.prompt), output_digest: image.digest,
-        },
-      });
+      image = await promoteValidatedPng({ prepared, bytes: decodeOpenAIImage(requested.b64) });
     } catch {
+      await requested.afterProvider?.({ ...requested.dispatch, asset_id: job.asset_id, providerRequestId: requested.requestId ?? "no-request-id", providerOutcome: "success", assetOutcome: "terminal-failure", retryDisposition: "none", usage: requested.usage });
       failures.push(failure(job.asset_id, "qa-failed", "invalid-image-output", requested.attempts));
+      continue;
     }
+    const output = { ...prepared.output, bytes: image.bytes, digest: image.digest };
+    await requested.afterProvider?.({ ...requested.dispatch, asset_id: job.asset_id, providerRequestId: requested.requestId ?? "no-request-id", providerOutcome: "success", assetOutcome: "success", retryDisposition: "none", usage: requested.usage });
+    results.push({
+      asset_id: job.asset_id,
+      generation_state: "generated",
+      output,
+      provenance: {
+        provider: "openai", model, quality, request_id: requested.requestId,
+        generated_at: timestamp(now), prompt_digest: digest(job.prompt), output_digest: image.digest,
+      },
+    });
   }
   return { provider: "openai", results, failures };
 }

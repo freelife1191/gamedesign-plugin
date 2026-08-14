@@ -363,7 +363,7 @@ function normalizeHostFailure(value, selected) {
     || typeof value.reason !== "string" || value.reason.length > 128 || !/^[a-z][a-z0-9-]*$/u.test(value.reason)) {
     throw new Error("Host generation returned an invalid failure record.");
   }
-  return { asset_id: value.asset_id, generation_state: value.generation_state, reason: "host-reported-failure", provenance: normalizeHostProvenance(value.provenance, { success: false }) };
+  return { asset_id: value.asset_id, generation_state: value.generation_state, reason: value.reason === "transient-provider-failure" ? "transient-provider-failure" : "host-reported-failure", provenance: normalizeHostProvenance(value.provenance, { success: false }) };
 }
 
 function normalizeHostSuccess(value, selected) {
@@ -471,27 +471,62 @@ async function publishHostOutputs(value, jobs, prepared) {
 }
 
 async function generateHostWithRetries({ root, jobs, prepared, hostGenerate, beforeProvider, afterProvider }) {
-  let outcome;
+  const results = [];
+  const failures = [];
+  let pending = [...jobs];
   for (let attempt = 1; attempt <= 3; attempt += 1) {
-    let dispatches = [];
-    let physicalDispatch = false;
+    let callback;
     try {
-      const callback = await hostJobsForCallback(root, jobs);
-      dispatches = await Promise.all(jobs.map((job) => beforeProvider?.({ asset_id: job.asset_id, attempt_ordinal: attempt })));
-      await callback.verify();
-      physicalDispatch = true;
-      const hostResult = await hostGenerate({ jobs: callback.jobs });
-      outcome = await publishHostOutputs(validateHostResult(hostResult, jobs), jobs, prepared);
-      await Promise.all(jobs.map((job, index) => afterProvider?.({ ...dispatches[index], asset_id: job.asset_id, attempt_ordinal: attempt, providerRequestId: "no-request-id", outcome: outcome.results.some(({ asset_id }) => asset_id === job.asset_id) ? "success" : "provider-failure", usage: undefined })));
-    } catch (error) {
-      if (physicalDispatch) await Promise.all(jobs.map((job, index) => afterProvider?.({ ...dispatches[index], asset_id: job.asset_id, attempt_ordinal: attempt, providerRequestId: "no-request-id", outcome: "provider-failure", usage: undefined })));
-      if (error?.code) throw error;
-      if (physicalDispatch) throw error;
-      outcome = { results: [], failures: jobs.map(({ asset_id }) => ({ asset_id, generation_state: "generation-failed", reason: "host-callback-failed", provenance: { provider: "codex-host" } })) };
+      callback = await hostJobsForCallback(root, pending);
+    } catch {
+      failures.push(...pending.map(({ asset_id }) => ({ asset_id, generation_state: "generation-failed", reason: "host-callback-failed", provenance: { provider: "codex-host" } })));
+      break;
     }
-    if (outcome.results.length > 0 || outcome.failures.some(({ generation_state }) => generation_state !== "generation-failed") || attempt === 3) return outcome;
+    const dispatches = [];
+    try {
+      for (const job of pending) dispatches.push(await beforeProvider?.({ asset_id: job.asset_id, attempt_ordinal: attempt }));
+    } catch (error) {
+      await Promise.all(dispatches.map((dispatch, index) => afterProvider?.({ ...dispatch, asset_id: pending[index].asset_id, providerRequestId: "no-request-id", providerOutcome: "not-called", assetOutcome: "not-attempted", retryDisposition: "none", usage: undefined })));
+      throw error;
+    }
+    try {
+      await callback.verify();
+    } catch {
+      await Promise.all(pending.map((job, index) => afterProvider?.({ ...dispatches[index], asset_id: job.asset_id, providerRequestId: "no-request-id", providerOutcome: "not-called", assetOutcome: "not-attempted", retryDisposition: "none", usage: undefined })));
+      failures.push(...pending.map(({ asset_id }) => ({ asset_id, generation_state: "generation-failed", reason: "host-callback-failed", provenance: { provider: "codex-host" } })));
+      break;
+    }
+    let hostResult;
+    try {
+      hostResult = await hostGenerate({ jobs: callback.jobs });
+    } catch (error) {
+      await Promise.all(pending.map((job, index) => afterProvider?.({ ...dispatches[index], asset_id: job.asset_id, providerRequestId: "no-request-id", providerOutcome: "transport-failure", assetOutcome: "terminal-failure", retryDisposition: "none", usage: undefined })));
+      throw error;
+    }
+    let validated;
+    try {
+      validated = validateHostResult(hostResult, pending);
+    } catch (error) {
+      await Promise.all(pending.map((job, index) => afterProvider?.({ ...dispatches[index], asset_id: job.asset_id, providerRequestId: "no-request-id", providerOutcome: "provider-failure", assetOutcome: "terminal-failure", retryDisposition: "none", usage: undefined })));
+      throw error;
+    }
+    const published = await publishHostOutputs(validated, pending, prepared);
+    const validatedResults = new Set(validated.results.map(({ asset_id }) => asset_id));
+    const publishedResults = new Set(published.results.map(({ asset_id }) => asset_id));
+    const transient = new Set(validated.failures.filter(({ reason }) => reason === "transient-provider-failure").map(({ asset_id }) => asset_id));
+    await Promise.all(pending.map((job, index) => {
+      const providerSucceeded = validatedResults.has(job.asset_id);
+      const assetSucceeded = publishedResults.has(job.asset_id);
+      const retryable = transient.has(job.asset_id);
+      return afterProvider?.({ ...dispatches[index], asset_id: job.asset_id, providerRequestId: "no-request-id", providerOutcome: providerSucceeded ? "success" : "provider-failure", assetOutcome: assetSucceeded ? "success" : retryable ? "retryable-failure" : "terminal-failure", retryDisposition: retryable ? "retryable" : "none", usage: undefined });
+    }));
+    results.push(...published.results);
+    const retryIds = new Set(attempt < 3 ? transient : []);
+    failures.push(...published.failures.filter(({ asset_id }) => !retryIds.has(asset_id)));
+    pending = pending.filter(({ asset_id }) => retryIds.has(asset_id));
+    if (pending.length === 0) break;
   }
-  return outcome;
+  return { results, failures };
 }
 
 export async function runImageAssetWorkflow(options = {}) {
@@ -509,16 +544,20 @@ export async function runConfiguredImageAssetWorkflow({ workspaceRoot, env, ...o
 // Cutscene dispatch has already established its own closed human approval.
 // It must not manufacture a second host-user selection receipt merely to use
 // the shared provider adapter.
-export async function runConfiguredSelectedImageAssetWorkflow({ workspaceRoot, env, manifest, selectedAssetIds, provider, apiKey, fetchFn, hostGenerate, beforeProvider, afterProvider, artifactRoot, now, sleepFn } = {}) {
-  const loaded = await loadImageConfig({ workspaceRoot, env });
-  if (!['openai', 'codex-host'].includes(provider)) throw new Error("Cutscene provider is not allowed.");
+export async function runConfiguredSelectedImageAssetWorkflow({ dispatchSnapshot, apiKey, fetchFn, hostGenerate, beforeProvider, afterProvider, artifactRoot, now, sleepFn } = {}) {
+  if (!dispatchSnapshot || dispatchSnapshot.schemaVersion !== 1 || !Object.isFrozen(dispatchSnapshot) || !Object.isFrozen(dispatchSnapshot.manifest)
+    || !["openai", "codex-host"].includes(dispatchSnapshot.provider) || !Array.isArray(dispatchSnapshot.assetIds) || dispatchSnapshot.assetIds.length === 0) {
+    throw new Error("A frozen cutscene dispatch snapshot is required.");
+  }
   const config = {
-    ...loaded,
     mode: "select",
-    apiKey: provider === "openai" ? apiKey : undefined,
-    apiKeyPresent: provider === "openai",
+    model: dispatchSnapshot.model,
+    quality: dispatchSnapshot.quality,
+    requestTimeoutMs: 30_000,
+    apiKey: dispatchSnapshot.provider === "openai" ? apiKey : undefined,
+    apiKeyPresent: dispatchSnapshot.provider === "openai",
   };
-  return generateImageAssetWorkflow({ artifactRoot, manifest, config, selectedAssetIds, fetchFn, hostGenerate, beforeProvider, afterProvider, now, sleepFn, codexCapability: provider === "codex-host" ? true : undefined, internalSelection: true });
+  return generateImageAssetWorkflow({ artifactRoot, manifest: dispatchSnapshot.manifest, config, selectedAssetIds: dispatchSnapshot.assetIds, fetchFn, hostGenerate, beforeProvider, afterProvider, now, sleepFn, codexCapability: dispatchSnapshot.provider === "codex-host" ? true : undefined, internalSelection: true });
 }
 
 export async function planImageAssetWorkflow({ artifactRoot, artifact, qualityProfile, existingManifest = null, patternCatalog, cutsceneManifest } = {}) {
