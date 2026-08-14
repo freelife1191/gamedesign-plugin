@@ -1,16 +1,51 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://local.game-design-plugin/shared/image-assets/schema/cutscene-visual-plan.schema.json",
-  "title": "Cutscene visual preproduction plan",
-  "type": "object",
-  "additionalProperties": false,
+  "type": "object", "additionalProperties": false,
   "required": ["schemaVersion", "cutsceneId", "mode", "beats", "shots", "cutsceneWorkflow"],
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"},
+    "waveId": {"enum": ["style-master", "reference-masters", "keyframes", "storyboard"]},
+    "templateReference": {"type": "object", "additionalProperties": false, "required": ["assetId", "expectedPath"], "properties": {"assetId": {"$ref": "#/$defs/id"}, "expectedPath": {"type": "string", "pattern": "^assets/"}}},
+    "boundReference": {"type": "object", "additionalProperties": false, "required": ["assetId", "sha256"], "properties": {"assetId": {"$ref": "#/$defs/id"}, "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}},
+    "templateCompletion": {"type": "object", "additionalProperties": false, "required": ["kind", "references"], "properties": {"kind": {"const": "template-ready"}, "references": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/templateReference"}}}},
+    "generationCompletion": {"type": "object", "additionalProperties": false, "required": ["kind", "references"], "properties": {"kind": {"const": "generation-ready"}, "references": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/boundReference"}}}},
+    "completedCompletion": {"type": "object", "additionalProperties": false, "required": ["kind", "assetIds"], "properties": {"kind": {"const": "completed"}, "assetIds": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/id"}}}},
+    "invalidation": {"type": "object", "additionalProperties": false, "required": ["fromState", "toState", "reason", "affectedAssetIds"], "properties": {"fromState": {"enum": ["planned", "template-ready", "generation-ready", "cost-estimated", "approval-pending", "approved", "dispatching", "completed", "blocked", "invalidated"]}, "toState": {"enum": ["planned", "template-ready", "generation-ready", "cost-estimated", "approval-pending", "approved", "dispatching", "completed", "blocked", "invalidated"]}, "reason": {"type": "string", "minLength": 1}, "affectedAssetIds": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/id"}}}, "anyOf": [{"properties": {"fromState": {"const": "invalidated"}, "toState": {"const": "cost-estimated"}}}, {"properties": {"toState": {"const": "invalidated"}, "fromState": {"not": {"const": "invalidated"}}}}]}
+  },
   "properties": {
-    "schemaVersion": {"const": 1},
-    "cutsceneId": {"type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"},
-    "mode": {"enum": ["prompt-only", "estimate-only", "generate-after-approval"]},
-    "beats": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["beatId"], "properties": {"beatId": {"type": "string", "minLength": 1}}}},
-    "shots": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["shotId", "beatId"], "properties": {"shotId": {"type": "string", "minLength": 1}, "beatId": {"type": "string", "minLength": 1}}}},
-    "cutsceneWorkflow": {"type": "object", "additionalProperties": false, "required": ["schemaVersion", "waves", "downstream", "derived"], "properties": {"schemaVersion": {"const": 1}, "waves": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"type": "object", "additionalProperties": false, "required": ["id", "state", "assetIds", "estimate", "approval", "attempts", "completion", "invalidation"], "properties": {"id": {"enum": ["style-master", "reference-masters", "keyframes", "storyboard"]}, "state": {"enum": ["planned", "template-ready", "generation-ready", "cost-estimated", "approval-pending", "approved", "dispatching", "completed", "blocked", "invalidated"]}, "assetIds": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"}}, "estimate": {"type": ["object", "null"]}, "approval": {"type": ["object", "null"]}, "attempts": {"type": "array"}, "completion": {"type": ["object", "null"]}, "invalidation": {"type": ["object", "null"]}}}}, "downstream": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["fromWaveId", "toWaveId"], "properties": {"fromWaveId": {"enum": ["style-master", "reference-masters", "keyframes", "storyboard"]}, "toWaveId": {"enum": ["style-master", "reference-masters", "keyframes", "storyboard"]}}}}, "derived": {"type": "object"}}}
-  }
+    "schemaVersion": {"const": 1}, "cutsceneId": {"$ref": "#/$defs/id"}, "mode": {"enum": ["prompt-only", "estimate-only", "generate-after-approval"]},
+    "beats": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["beatId"], "properties": {"beatId": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9._:-]*$"}}}},
+    "shots": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["shotId", "beatId"], "properties": {"shotId": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9._:-]*$"}, "beatId": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9._:-]*$"}}}},
+    "cutsceneWorkflow": {"type": "object", "additionalProperties": false, "required": ["schemaVersion", "waves", "downstream", "derived"], "properties": {
+      "schemaVersion": {"const": 1},
+      "waves": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"type": "object", "additionalProperties": false, "required": ["id", "state", "assetIds", "estimate", "approval", "attempts", "completion", "invalidation"], "properties": {
+        "id": {"$ref": "#/$defs/waveId"}, "state": {"enum": ["planned", "template-ready", "generation-ready", "cost-estimated", "approval-pending", "approved", "dispatching", "completed", "blocked", "invalidated"]}, "assetIds": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+        "estimate": {"anyOf": [{"type": "null"}, {"$ref": "cutscene-cost-estimate.schema.json"}]}, "approval": {"anyOf": [{"type": "null"}, {"$ref": "cutscene-generation-approval.schema.json"}]}, "attempts": {"type": "array", "items": {"$ref": "cutscene-generation-usage.schema.json"}}, "completion": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/templateCompletion"}, {"$ref": "#/$defs/generationCompletion"}, {"$ref": "#/$defs/completedCompletion"}]}, "invalidation": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/invalidation"}]}
+      }, "allOf": [
+        {"if": {"properties": {"state": {"const": "template-ready"}}, "required": ["state"]}, "then": {"properties": {"completion": {"$ref": "#/$defs/templateCompletion"}}}},
+        {"if": {"properties": {"state": {"const": "generation-ready"}}, "required": ["state"]}, "then": {"properties": {"completion": {"$ref": "#/$defs/generationCompletion"}}}},
+        {"if": {"properties": {"state": {"const": "completed"}}, "required": ["state"]}, "then": {"properties": {"completion": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/completedCompletion"}]}}}},
+        {"if": {"properties": {"state": {"enum": ["planned", "cost-estimated", "approval-pending", "approved", "dispatching", "blocked", "invalidated"]}}, "required": ["state"]}, "then": {"properties": {"completion": {"type": "null"}}}},
+        {"if": {"properties": {"state": {"const": "invalidated"}}, "required": ["state"]}, "then": {"properties": {"invalidation": {"$ref": "#/$defs/invalidation"}}}}
+      ]}},
+      "downstream": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["fromWaveId", "toWaveId"], "properties": {"fromWaveId": {"$ref": "#/$defs/waveId"}, "toWaveId": {"$ref": "#/$defs/waveId"}}}}, "derived": {"type": "object", "additionalProperties": false}
+    }}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"mode": {"const": "prompt-only"}}, "required": ["mode"]},
+      "then": {"properties": {"cutsceneWorkflow": {"properties": {"waves": {"items": {"allOf": [
+        {"properties": {"state": {"not": {"enum": ["generation-ready", "cost-estimated", "approval-pending", "approved", "dispatching", "completed"]}}}},
+        {"properties": {"estimate": {"type": "null"}, "approval": {"type": "null"}, "attempts": {"type": "array", "maxItems": 0}}}
+      ]}}}}}}
+    },
+    {
+      "if": {"properties": {"mode": {"const": "estimate-only"}}, "required": ["mode"]},
+      "then": {"properties": {"cutsceneWorkflow": {"properties": {"waves": {"items": {"allOf": [
+        {"properties": {"state": {"not": {"enum": ["approved", "dispatching", "completed"]}}}},
+        {"properties": {"approval": {"type": "null"}, "attempts": {"type": "array", "maxItems": 0}}}
+      ]}}}}}}
+    }
+  ]
 }

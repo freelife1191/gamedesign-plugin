@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { test } from "node:test";
+
+import { validateImageAssetManifest } from "../../shared/scripts/validate-image-assets.mjs";
 
 import {
   canonicalCutsceneDocument,
@@ -30,7 +33,7 @@ const validCutscenePlan = () => ({
       estimate: null,
       approval: null,
       attempts: [],
-      completion: null,
+      completion: index === 0 ? { kind: "template-ready", references: [{ assetId: "cutscene-escape-reference-01", expectedPath: "assets/generated/reference-01.png" }] } : null,
       invalidation: null,
     })),
     downstream: [],
@@ -93,6 +96,64 @@ const validContinuityReview = () => ({
   blockingFindingIds: [],
 });
 
+const currentPlan = () => ({ sha256: SHA });
+
+function approvedManifest() {
+  return {
+    schema_version: 1,
+    assets: [{
+      asset_id: "cutscene-escape-style-master-01", type: "story-storyboard", requirement: "required", generation_state: "generated", approval_state: "production-candidate",
+      planning: { upstream_slot_id: "cutscene-escape", disposition: "active", target_output: { path: "assets/generated/cutscene-escape-style-master-01.png", width: 1024, height: 1024, aspect_ratio: "1:1", format: "png", background: "opaque" } },
+      purpose: "Locks the cutscene visual style.", placement: { document_slot: "section", source_section: "content.md#cutscene" }, alt_text: "A cutscene style master.", readability: "Clear at storyboard size.",
+      art_brief: { subject: "Escaping heroes.", visual_style: "Painterly fantasy.", composition: "Wide shot.", preserve: ["silhouette"], exclude: ["text"] }, prompt: "Painterly fantasy cutscene style master.",
+      output: { path: "assets/generated/cutscene-escape-style-master-01.png", width: 1024, height: 1024, aspect_ratio: "1:1", format: "png", background: "opaque" }, provider: { name: "openai-images", model: "gpt-image-2", quality: "low" },
+      rights: { provenance: "AI-generated.", rights_holder: "Game Design Team", license: "internal-production-use", effective_status: "active" },
+      reviews: [
+        { state: "document-approved", reviewer: "Minji Kim", reviewer_kind: "human", reviewer_role: "visual-reviewer", review_scope: "document-visual", reviewed_at: "2026-08-13T00:00:00.000Z", evidence_paths: ["evidence.yml"], rights_decision: "approved" },
+        { state: "production-candidate", reviewer: "Jae Park", reviewer_kind: "human", reviewer_role: "rights-provenance-reviewer", review_scope: "production-rights-provenance", reviewed_at: "2026-08-13T00:01:00.000Z", evidence_paths: ["evidence.yml"], rights_decision: "approved" },
+      ], technical_fit: "Fits the storyboard package.", gameplay_readability: "The focal action remains legible.",
+    }],
+  };
+}
+
+function schemaAccepts(value, rootSchema, schemas, schema = rootSchema) {
+  if (schema.$ref) return schemaAccepts(value, rootSchema, schemas, schema.$ref.startsWith("#/")
+    ? schema.$ref.slice(2).split("/").reduce((current, key) => current[key], rootSchema)
+    : schemas.get(schema.$ref));
+  if (Object.hasOwn(schema, "const") && value !== schema.const) return false;
+  if (schema.enum && !schema.enum.includes(value)) return false;
+  if (schema.not && schemaAccepts(value, rootSchema, schemas, schema.not)) return false;
+  if (schema.allOf && !schema.allOf.every((part) => schemaAccepts(value, rootSchema, schemas, part))) return false;
+  if (schema.anyOf && !schema.anyOf.some((part) => schemaAccepts(value, rootSchema, schemas, part))) return false;
+  if (schema.oneOf && schema.oneOf.filter((part) => schemaAccepts(value, rootSchema, schemas, part)).length !== 1) return false;
+  if (schema.if && schemaAccepts(value, rootSchema, schemas, schema.if) && schema.then && !schemaAccepts(value, rootSchema, schemas, schema.then)) return false;
+  const types = schema.type === undefined ? undefined : Array.isArray(schema.type) ? schema.type : [schema.type];
+  if (types?.includes("object") || schema.properties || schema.required || schema.additionalProperties !== undefined) {
+    if (value === null || typeof value !== "object" || Array.isArray(value) || (types && !types.includes("object"))) return false;
+    if ((schema.required ?? []).some((key) => !Object.hasOwn(value, key))) return false;
+    if (schema.additionalProperties === false && Object.keys(value).some((key) => !Object.hasOwn(schema.properties ?? {}, key))) return false;
+    return Object.entries(value).every(([key, child]) => !schema.properties?.[key] || schemaAccepts(child, rootSchema, schemas, schema.properties[key]));
+  }
+  if (types?.includes("array") || schema.items || schema.minItems !== undefined) {
+    if (!Array.isArray(value) || value.length < (schema.minItems ?? 0) || (schema.maxItems !== undefined && value.length > schema.maxItems)) return false;
+    if (schema.uniqueItems && new Set(value.map((item) => JSON.stringify(item))).size !== value.length) return false;
+    return !schema.items || value.every((item) => schemaAccepts(item, rootSchema, schemas, schema.items));
+  }
+  if (types?.includes("string")) return typeof value === "string" && value.length >= (schema.minLength ?? 0) && (!schema.pattern || new RegExp(schema.pattern, "u").test(value));
+  if (types?.includes("integer")) return Number.isInteger(value) && value >= (schema.minimum ?? Number.NEGATIVE_INFINITY);
+  if (types?.includes("number")) return typeof value === "number" && Number.isFinite(value) && value >= (schema.minimum ?? Number.NEGATIVE_INFINITY);
+  if (types?.includes("boolean")) return typeof value === "boolean";
+  if (types?.includes("null")) return value === null;
+  return true;
+}
+
+async function cutsceneSchemas() {
+  const names = ["cutscene-visual-plan", "cutscene-cost-estimate", "cutscene-generation-approval", "cutscene-generation-usage", "cutscene-continuity-review"];
+  const entries = await Promise.all(names.map(async (name) => [name, JSON.parse(await readFile(new URL(`../../shared/image-assets/schema/${name}.schema.json`, import.meta.url), "utf8"))]));
+  const byFile = new Map(entries.map(([, schema]) => [schema.$id.split("/").at(-1), schema]));
+  return { byName: new Map(entries), byFile };
+}
+
 function firstError(result) {
   return result.errors[0];
 }
@@ -145,6 +206,7 @@ test("prompt bindings distinguish templates without hashes from generation-ready
   invented.cutsceneWorkflow.waves[0].completion.references[0].sha256 = SHA;
   assert.deepEqual(firstError(validateCutsceneVisualPlan(invented)), { code: "cutscene.template_hash_forbidden", path: "/cutsceneWorkflow/waves/0/completion/references/0/sha256" });
   const bound = validCutscenePlan();
+  bound.mode = "estimate-only";
   bound.cutsceneWorkflow.waves[0].state = "generation-ready";
   bound.cutsceneWorkflow.waves[0].completion = { kind: "generation-ready", references: [{ assetId: "cutscene-escape-reference-01", sha256: SHA }] };
   assert.equal(validateCutsceneVisualPlan(bound).ok, true);
@@ -164,7 +226,7 @@ test("five closed document contracts reject malformed derived binding and usage 
   assert.deepEqual(firstError(validateCutsceneGenerationUsage(usage)), { code: "cutscene.usage_input_mismatch", path: "/inputTokens" });
   assert.equal(validateCutsceneContinuityReview(validContinuityReview()).ok, true);
   const review = validContinuityReview(); review.blockingFindingIds = ["missing-finding"];
-  assert.deepEqual(firstError(validateCutsceneContinuityReview(review)), { code: "cutscene.blocker_finding_unknown", path: "/blockingFindingIds/0" });
+  assert.deepEqual(firstError(validateCutsceneContinuityReview(review)), { code: "cutscene.blocker_set_mismatch", path: "/blockingFindingIds" });
 });
 
 test("canonical cutscene documents are deterministic and reject non-plain hidden state", () => {
@@ -177,9 +239,9 @@ test("canonical cutscene documents are deterministic and reject non-plain hidden
 
 test("derived root approval uses existing asset lifecycle, current receipt, and blockers only", () => {
   const candidate = {
-    manifest: { assets: [{ approval_state: "production-candidate" }] },
+    plan: currentPlan(), manifest: approvedManifest(),
     waves: [{ id: "storyboard", state: "completed" }],
-    continuityReceipt: { current: true, blockingFindingIds: [] },
+    continuityReceipt: validContinuityReview(),
   };
   assert.deepEqual(deriveCutsceneLifecycle(candidate), {
     lifecycle: "completed",
@@ -190,17 +252,95 @@ test("derived root approval uses existing asset lifecycle, current receipt, and 
   const blocked = structuredClone(candidate);
   blocked.continuityReceipt.blockingFindingIds = ["screen-direction"];
   assert.deepEqual(deriveCutsceneLifecycle(blocked), {
-    lifecycle: "blocked",
+    lifecycle: "completed",
     documentApproved: false,
     productionCandidate: false,
-    blockerIds: ["screen-direction"],
+    blockerIds: [],
   });
   const noReceipt = structuredClone(candidate);
-  noReceipt.continuityReceipt.current = false;
+  noReceipt.continuityReceipt.planSha256 = "b".repeat(64);
   assert.deepEqual(deriveCutsceneLifecycle(noReceipt), {
     lifecycle: "completed",
     documentApproved: false,
     productionCandidate: false,
     blockerIds: [],
   });
+});
+
+test("lifecycle fails closed for incomplete image manifests, stale receipts, and blocker-set mismatch", () => {
+  const input = { plan: currentPlan(), manifest: approvedManifest(), waves: [], continuityReceipt: validContinuityReview() };
+  assert.equal(validateImageAssetManifest(input.manifest).ok, true);
+  assert.equal(deriveCutsceneLifecycle(input).documentApproved, true);
+  const incompleteManifest = structuredClone(input); incompleteManifest.manifest.assets[0].reviews = [];
+  assert.equal(deriveCutsceneLifecycle(incompleteManifest).documentApproved, false);
+  const staleReceipt = structuredClone(input); staleReceipt.continuityReceipt.planSha256 = "b".repeat(64);
+  assert.equal(deriveCutsceneLifecycle(staleReceipt).productionCandidate, false);
+  const mismatch = structuredClone(input); mismatch.continuityReceipt.findings = [{ findingId: "screen-direction", code: "continuity.break", path: "/shots/0", sourceMasterIds: ["cutscene-escape-style-master-01"], affectedAssetIds: ["cutscene-escape-style-master-01"], blocking: true }];
+  assert.equal(deriveCutsceneLifecycle(mismatch).documentApproved, false);
+});
+
+test("state evidence is closed, mode-bound, and records only permitted invalidated-to-cost re-entry", () => {
+  const missingTemplate = validCutscenePlan();
+  missingTemplate.cutsceneWorkflow.waves[0].completion = null;
+  assert.deepEqual(firstError(validateCutsceneVisualPlan(missingTemplate)), { code: "cutscene.completion_required", path: "/cutsceneWorkflow/waves/0/completion" });
+  const illegalDispatch = validCutscenePlan();
+  illegalDispatch.cutsceneWorkflow.waves[0].state = "dispatching";
+  illegalDispatch.cutsceneWorkflow.waves[0].attempts = [validUsage()];
+  assert.deepEqual(firstError(validateCutsceneVisualPlan(illegalDispatch)), { code: "cutscene.mode_state_forbidden", path: "/cutsceneWorkflow/waves/0/state" });
+  const nestedUnknown = validCutscenePlan();
+  nestedUnknown.cutsceneWorkflow.waves[0].completion = { kind: "template-ready", references: [{ assetId: "cutscene-escape-reference-01", expectedPath: "assets/generated/reference-01.png", injected: true }] };
+  assert.deepEqual(firstError(validateCutsceneVisualPlan(nestedUnknown)), { code: "cutscene.template_reference_unknown_key", path: "/cutsceneWorkflow/waves/0/completion/references/0/injected" });
+  const reentry = validCutscenePlan();
+  reentry.mode = "estimate-only";
+  reentry.cutsceneWorkflow.waves[0].state = "cost-estimated";
+  reentry.cutsceneWorkflow.waves[0].estimate = validEstimate();
+  reentry.cutsceneWorkflow.waves[0].completion = null;
+  reentry.cutsceneWorkflow.waves[0].invalidation = { fromState: "invalidated", toState: "cost-estimated", reason: "master-changed", affectedAssetIds: ["cutscene-escape-style-master-01"] };
+  assert.equal(validateCutsceneVisualPlan(reentry).ok, true);
+  reentry.cutsceneWorkflow.waves[0].invalidation.toState = "approved";
+  assert.deepEqual(firstError(validateCutsceneVisualPlan(reentry)), { code: "cutscene.transition_invalid", path: "/cutsceneWorkflow/waves/0/invalidation/toState" });
+});
+
+test("runtime and packaged JSON Schema agree on valid and rejected closed fixtures", async () => {
+  const { byName, byFile } = await cutsceneSchemas();
+  const templatePlan = validCutscenePlan();
+  templatePlan.cutsceneWorkflow.waves[0].completion = { kind: "template-ready", references: [{ assetId: "cutscene-escape-reference-01", expectedPath: "assets/generated/reference-01.png" }] };
+  const cases = [
+    ["cutscene-visual-plan", templatePlan, validateCutsceneVisualPlan, true],
+    ["cutscene-cost-estimate", validEstimate(), validateCutsceneCostEstimate, true],
+    ["cutscene-generation-approval", validApproval(), validateCutsceneGenerationApproval, true],
+    ["cutscene-generation-usage", validUsage(), validateCutsceneGenerationUsage, true],
+    ["cutscene-continuity-review", validContinuityReview(), validateCutsceneContinuityReview, true],
+  ];
+  const invalidPlan = structuredClone(templatePlan); invalidPlan.cutsceneWorkflow.derived = { documentApproved: true };
+  cases.push(["cutscene-visual-plan", invalidPlan, validateCutsceneVisualPlan, false]);
+  const incompatibleCompletion = structuredClone(templatePlan); incompatibleCompletion.cutsceneWorkflow.waves[0].state = "planned";
+  cases.push(["cutscene-visual-plan", incompatibleCompletion, validateCutsceneVisualPlan, false]);
+  const illegalModeDispatch = structuredClone(templatePlan); illegalModeDispatch.cutsceneWorkflow.waves[0].state = "dispatching"; illegalModeDispatch.cutsceneWorkflow.waves[0].completion = null;
+  cases.push(["cutscene-visual-plan", illegalModeDispatch, validateCutsceneVisualPlan, false]);
+  const invalidUsage = validUsage(); invalidUsage.unknown = true;
+  cases.push(["cutscene-generation-usage", invalidUsage, validateCutsceneGenerationUsage, false]);
+  for (const [name, value, validate, expected] of cases) {
+    assert.equal(validate(value).ok, expected, `${name} runtime`);
+    assert.equal(schemaAccepts(value, byName.get(name), byFile), expected, `${name} schema`);
+  }
+  const crossArrayOnly = validContinuityReview(); crossArrayOnly.findings = [{ findingId: "screen-direction", code: "continuity.break", path: "/shots/0", sourceMasterIds: ["cutscene-escape-style-master-01"], affectedAssetIds: ["cutscene-escape-style-master-01"], blocking: true }];
+  assert.equal(validateCutsceneContinuityReview(crossArrayOnly).ok, false, "runtime enforces blocker-set identity beyond JSON Schema vocabulary");
+  assert.equal(schemaAccepts(crossArrayOnly, byName.get("cutscene-continuity-review"), byFile), true, "packaged JSON Schema still validates its expressible structural contract");
+});
+
+test("canonical documents reject accessor arrays before observing their values", () => {
+  const values = ["first"];
+  let reads = 0;
+  Object.defineProperty(values, "0", { enumerable: true, get() { reads += 1; return reads === 1 ? "first" : "second"; } });
+  assert.throws(() => canonicalCutsceneDocument(values));
+  assert.equal(reads, 0);
+});
+
+test("runtime validators reject hostile accessor input without executing it", () => {
+  const plan = validCutscenePlan();
+  let reads = 0;
+  Object.defineProperty(plan.beats, "0", { enumerable: true, get() { reads += 1; throw new Error("must not execute"); } });
+  assert.deepEqual(firstError(validateCutsceneVisualPlan(plan)), { code: "cutscene.hostile_input", path: "" });
+  assert.equal(reads, 0);
 });
