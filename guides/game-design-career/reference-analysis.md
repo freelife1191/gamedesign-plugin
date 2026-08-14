@@ -10,6 +10,8 @@
 
 플레이 시간, 스크린샷, 유료 접근이나 네트워크가 없으면 제한과 확인 질문을 기록합니다. 접근하지 못한 자료는 없는 것으로 처리하지 않으며, 제한을 남긴 채 분석을 계속합니다.
 
+장르 관례와 오버레이는 조사 질문을 고르는 단서일 뿐입니다. 포트폴리오 문장이나 전송 제안의 자동 의무가 아닙니다.
+
 ## 단계별 요청문
 
 각 요청문은 앞 단계의 결과를 이어서 사용합니다. App에서는 제품 이름으로 요청하고, CLI에서는 설치된 공개 스킬을 호출합니다.
@@ -50,6 +52,12 @@ $game-design-career:analyze-game-design-references 평가 없이 시스템 목�
 $game-design-career:analyze-game-design-references 심층 분석 우선순위 확인: 플레이 경험, 경제·성장, 차별성, 근거 강도, 불확실성, 조사 비용을 점수와 이유로 보여 줘.
 ```
 
+### 선택한 시스템을 심층 분석하기
+
+```text
+$game-design-career:analyze-game-design-references 선택한 시스템 심층 분석 실행: 우선순위가 높은 시스템의 관찰 근거, 불확실성, 시스템 지도와 확인 질문을 분리해 기록해 줘.
+```
+
 ### 게임별 원리 비교하기
 
 ```text
@@ -74,6 +82,8 @@ $game-design-career:analyze-game-design-references adopt/adapt/reject/hold 제�
 - `reference-intelligence/comparison-matrix.md`: 게임별 비교와 hold 상태
 - `reference-intelligence/transfer-decisions.md`: adopt, adapt, reject, hold 제안
 - `reference-intelligence/verification-queue.md`: 다시 확인할 질문
+- `reference-intelligence/system-maps/<map-id>.json`: 선택한 시스템의 연결과 반복 구조
+- `reference-intelligence/deep-dives/<system-id>.md`: 선택한 시스템의 심층 분석
 
 전송 제안은 모두 `pending-review`로 시작하고 `validationState: not-run`입니다. 사람은 관찰 근거, 개인 기여 경계, 권리·공개 범위와 다음 검증 방법을 확인한 뒤에만 포트폴리오에 반영할지를 결정합니다.
 

@@ -1,6 +1,6 @@
 # Game Design Career 스킬 레퍼런스
 
-설치된 Career 제품 스킬 15개와 공통 스킬 6개를 합친 설치 스킬 21개를 정리합니다. 공통 스킬은 Archify, humanize-korean, Skillstead와 프로젝트 기억 스킬 3개입니다. 단계나 목표 역할이 불명확하면 오케스트레이터로 시작하고, 산출물이 명확하면 해당 스킬을 직접 호출합니다.
+설치된 Career 제품 스킬 15개와 공통 스킬 8개를 합친 설치 스킬 23개를 정리합니다. 공통 스킬은 Archify, humanize-korean, Skillstead, 프로젝트 기억 스킬 3개와 레퍼런스 분석·용어 사전 스킬 2개입니다. 단계나 목표 역할이 불명확하면 오케스트레이터로 시작하고, 산출물이 명확하면 해당 스킬을 직접 호출합니다.
 
 ## 오케스트레이터와 직접 호출
 
@@ -14,6 +14,7 @@
 | 스킬 ID | 목적 | 직접 호출 | 주 템플릿 | 일반 입력 | 일반 결과 |
 | --- | --- | --- | --- | --- | --- |
 | [`apply-document-quality-profile`](apply-document-quality-profile.md) | artifact별 품질 profile과 checklist 결정 | `$game-design-career:apply-document-quality-profile` | 요청에 맞는 설치 템플릿 | goal, audience, artifact type, format | selection record, checklist, manifest |
+| [`analyze-game-design-references`](../reference-analysis.md) | 경쟁작 관찰을 포트폴리오 분석 근거와 검토 대기 전송 제안으로 정리 | `$game-design-career:analyze-game-design-references` | 레퍼런스 분석 | 결정 질문, 관찰 근거, 개인 기여 경계 | 시스템 지도, 심층 분석, `pending-review` 제안 |
 | [`archify`](archify.md) | 경력 경로와 작업 흐름을 탐색 가능한 HTML로 설명 | `$game-design-career:archify` | 선택된 canonical artifact | 근거, 관계, 독자 | JSON 원본, HTML, 검증 영수증 |
 | [`capture-game-design-memory`](../memory.md#기본-작업-흐름) | 검증한 Career 교훈을 후보로 기록 | `$game-design-career:capture-game-design-memory` | 프로젝트 기억 | 출처가 연결된 결과, 적용·제외 조건 | 검토 대기 후보와 기록 결과 |
 | [`build-game-design-portfolio`](build-game-design-portfolio.md) | 결정·실험·협업 증거를 case study로 구성 | `$game-design-career:build-game-design-portfolio` | `creative-design-portfolio` | 목표 역량, claim, 기여, evidence | case study와 claim-evidence index |
@@ -21,6 +22,7 @@
 | [`generate-image-assets`](generate-image-assets.md) | mode와 사용자 선택에 맞는 이미지 생성 라우팅 | `$game-design-career:generate-image-assets` | 선택된 canonical artifact | manifest, prompt, mode, selection receipt | generation 결과와 review handoff |
 | [`humanize-korean`](humanize-korean.md) | 증거·주장 경계를 보존한 한국어 문체 검토 | `$game-design-career:humanize-korean` | 선택된 canonical artifact | 원문, 독자, 보호 항목 | 자연스러운 수정안과 변경 요약 |
 | [`maintain-game-design-memory`](../memory.md#후보-확인승인거부폐기-예시) | 후보 확인과 사람 승인·거부·폐기 | `$game-design-career:maintain-game-design-memory` | 프로젝트 기억 | 기억 ID, 이름 있는 사람, 결정 이유 | 상태 변경 이력 또는 충돌 안내 |
+| [`maintain-game-design-glossary`](../glossary.md) | 용어 후보와 승인된 스냅샷을 사람 검토로 관리 | `$game-design-career:maintain-game-design-glossary` | 용어 사전 | 문서, 근거 ID, 사람 결정 | 후보, findings, 승인된 용어 스냅샷 |
 | [`map-game-design-career`](map-game-design-career.md) | 역할군·목표 수준·역량 gap 비교 | `$game-design-career:map-game-design-career` | `game-design-role-map` | 현재 증거, 제약, 역할 후보 | provisional role paths와 증거 과제 |
 | [`orchestrate-game-design-career`](orchestrate-game-design-career.md) | 단계 진단과 전체 Career workflow routing | `$game-design-career:orchestrate-game-design-career` | `career-stage-goal` | 목표, 단계, 보유 증거, 제약 | stage brief와 최소 skill chain |
 | [`plan-image-assets`](plan-image-assets.md) | portfolio 이미지·diagram slot과 prompt package 계획 | `$game-design-career:plan-image-assets` | 선택된 canonical artifact | profile, source section, 수량, placement | manifest, prompt, placeholder |

@@ -10,6 +10,8 @@
 
 유료 접근, 네트워크, 스크린샷 또는 플레이 시간이 없으면 제한과 확인 질문을 남깁니다. 자료가 없다는 이유로 부재를 추정하지 않으며, 작업은 제한을 기록한 채 계속합니다.
 
+장르 관례와 오버레이는 조사 질문을 고르는 단서일 뿐입니다. 프로젝트 규칙이나 전송 제안의 자동 의무가 아닙니다.
+
 ## 단계별 요청문
 
 각 요청문은 앞 단계의 결과를 이어서 사용합니다. App에서는 제품 이름으로 요청하고, CLI에서는 설치된 공개 스킬을 호출합니다.
@@ -50,6 +52,12 @@ $game-design-studio:analyze-game-design-references 평가 없이 시스템 목�
 $game-design-studio:analyze-game-design-references 심층 분석 우선순위 확인: 플레이 경험, 경제·성장, 차별성, 근거 강도, 불확실성, 조사 비용을 점수와 이유로 보여 줘.
 ```
 
+### 선택한 시스템을 심층 분석하기
+
+```text
+$game-design-studio:analyze-game-design-references 선택한 시스템 심층 분석 실행: 우선순위가 높은 시스템의 관찰 근거, 불확실성, 시스템 지도와 확인 질문을 분리해 기록해 줘.
+```
+
 ### 해결 원리를 비교하기
 
 ```text
@@ -74,6 +82,8 @@ $game-design-studio:analyze-game-design-references adopt/adapt/reject/hold 제�
 - `reference-intelligence/comparison-matrix.md`: 비교 결과와 hold 상태
 - `reference-intelligence/transfer-decisions.md`: adopt, adapt, reject, hold 제안
 - `reference-intelligence/verification-queue.md`: 확인이 필요한 질문
+- `reference-intelligence/system-maps/<map-id>.json`: 선택한 시스템의 연결과 반복 구조
+- `reference-intelligence/deep-dives/<system-id>.md`: 선택한 시스템의 심층 분석
 
 전송 제안은 모두 `pending-review`로 시작하며 `validationState: not-run`입니다. 사람은 근거, 프로젝트 제약, 위험, 검증 방법을 확인한 뒤에만 채택 여부를 결정합니다.
 

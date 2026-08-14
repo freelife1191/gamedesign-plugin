@@ -27,6 +27,10 @@ $game-design-studio:maintain-game-design-glossary 후보 용어의 정의, 적�
 
 `TERM-PLAYER-POWER`는 `플레이어 파워`와 `Player Power`를 함께 검토할 수 있는 예시입니다. 두 표현이 함께 나와도 승인이나 의미 변경을 추론하지 않습니다.
 
+공통 용어 사전과 프로젝트 오버레이는 `TERM-*` ID로 병합합니다. 같은 ID가 충돌하면 명시적 이유와 이름이 확인된 사람의 승인이 있어야 합니다.
+
+값만 담은 진단은 비공개 원문, 비밀, 절대 경로를 싣지 않습니다. 문제 코드와 필요한 용어 ID만 보고합니다.
+
 ## 남는 파일과 사람 결정
 
 승인된 용어와 검사 결과는 결과 폴더의 다음 경로에 기록합니다:
@@ -36,6 +40,7 @@ $game-design-studio:maintain-game-design-glossary 후보 용어의 정의, 적�
 - `reference-intelligence/glossary/glossary.ko.md`: 한국어 조회용 목록
 - `reference-intelligence/glossary/glossary.en.md`: 영어 조회용 목록
 - `reference-intelligence/glossary/terminology-findings.md`: 문서 검사에서 찾은 항목
+- `reference-intelligence/decisions/glossary-<safe-event-id>.json`: 사람 결정과 이유
 
 검사는 수정문을 반환하지 않습니다. 사람은 findings와 impact review를 보고 원문을 고칠지, 유지할지, 새 후보로 남길지 결정합니다.
 

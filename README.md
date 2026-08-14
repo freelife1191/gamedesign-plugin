@@ -67,7 +67,7 @@
 
 ### ⚙️ 짧게 요청해도 체계가 작동합니다
 
-제품마다 제품 스킬 15개와 공통 스킬 6개, 모두 설치 스킬 21개가 함께 들어갑니다. Studio에는 전문 역할 12개, Career에는 전문 역할 10개가 있으며 요청에 맞는 역할만 골라 씁니다. 사용자가 스킬 이름을 일일이 나열할 필요는 없습니다. 요청이 분명하면 가장 짧은 전문 경로를 선택하고 복합 요청은 오케스트레이터가 필요한 단계만 묶습니다.
+제품마다 제품 스킬 15개와 공통 스킬 8개, 모두 설치 스킬 23개가 함께 들어갑니다. 공통 스킬에는 레퍼런스 분석과 용어 사전 관리도 포함합니다. Studio에는 전문 역할 12개, Career에는 전문 역할 10개가 있으며 요청에 맞는 역할만 골라 씁니다. 사용자가 스킬 이름을 일일이 나열할 필요는 없습니다. 요청이 분명하면 가장 짧은 전문 경로를 선택하고 복합 요청은 오케스트레이터가 필요한 단계만 묶습니다.
 
 시작할 때 `SessionStart` 훅이 문서 변환기, 브라우저와 이미지 생성 기능을 확인합니다. 작업이 끝날 때는 `Stop` 훅이 표시된 기준 기획 결과물과 요청한 형식을 다시 점검합니다. 두 훅 모두 결과를 자동으로 승인하지 않습니다. 검토 담당자가 승인하거나 보류합니다. 보류 이유와 남은 작업을 기록해 다음 요청에서 보류한 지점부터 다시 시작합니다.
 
@@ -1711,22 +1711,23 @@ $game-design-studio:export-game-design-documents \
 | 작업 그룹 | Studio: 언제 어떤 결과를 만드는가 | Career: 언제 어떤 결과를 만드는가 |
 | --- | --- | --- |
 | 전체 조율 | 게임 기획 프로젝트 조율 (`orchestrate-game-design-project`): 여러 분야를 연결할 때 호출 → 게임 기획 요약서 (`game-design-brief`) | 게임 기획 경력 조율 (`orchestrate-game-design-career`): 경력 단계와 여러 작업을 연결할 때 호출 → 경력 계획 (`game-design-career-plan`) |
-| 탐색·분석 | 게임 기획 검토 (`review-game-design`): 기존 결과물의 근거와 위험을 분석할 때 호출 → 기획 검토 기록 (`game-design-review`) | 채용 조사 (`research-game-design-jobs`)·역기획 (`reverse-engineer-game-design`): 공고 또는 관찰 자료가 있을 때 호출 → 채용 근거 (`job-research-evidence`)·역기획 문서 (`reverse-design-document`) |
+| 탐색·분석 | 게임 기획 검토 (`review-game-design`)와 레퍼런스 분석 (`analyze-game-design-references`): 기존 결과물 또는 경쟁작 관찰을 분석할 때 호출 → 기획 검토 기록·시스템 지도·검토 대기 전송 제안 | 채용 조사 (`research-game-design-jobs`)·역기획 (`reverse-engineer-game-design`)·레퍼런스 분석 (`analyze-game-design-references`): 공고 또는 관찰 자료가 있을 때 호출 → 채용 근거·역기획 문서·포트폴리오 분석 근거 |
 | 핵심 설계 | 게임 비전 정의 (`define-game-vision`)·게임 시스템 설계 (`design-game-systems`): 비전 또는 규칙 범위가 정해졌을 때 호출 → 게임 방향 원칙 (`vision-pillars`)·시스템 명세서 (`system-specification`) | 경력 지도 만들기 (`map-game-design-career`)·주니어 성장 계획 (`plan-junior-growth`): 목표 역할 또는 성장 기간을 비교할 때 호출 → 역량표 (`competency-matrix`)·학습 경로 (`learning-roadmap`) |
 | 콘텐츠·경험 | 게임 콘텐츠 설계 (`design-game-content`)·플레이어 경험 설계 (`design-player-experience`): 콘텐츠 단위나 UX 흐름이 정해졌을 때 호출 → 퀘스트·NPC 명세 (`narrative-quest-npc`)·UI·UX 흐름과 상태표 (`ui-ux-flow-state`) | 기획 포트폴리오 만들기 (`build-game-design-portfolio`)·면접 연습 (`practice-game-design-interview`): 공개 가능한 자료 또는 공고가 있을 때 호출 → 포트폴리오 (`creative-design-portfolio`)·면접 답변 기록 (`interview-question-answer-log`) |
 | 검토·품질 | 게임 기획 검토 (`review-game-design`)·문서 품질 기준 적용 (`apply-document-quality-profile`): 결과물 또는 출력 목적이 있을 때 호출 → 검토 보고서·품질 기준 기록 | 포트폴리오 검토 (`review-game-design-portfolio`)·경력 문서 품질 기준 적용 (`apply-document-quality-profile`): 근거 묶음 또는 출력 목적이 있을 때 호출 → 포트폴리오 검토·품질 기준 기록 |
 | 이미지·도식·출력 | 이미지 자산 계획 (`plan-image-assets`) → 이미지 자산 생성 (`generate-image-assets`) → 이미지 자산 검토 (`review-image-assets`), 게임 기획 시각화 (`visualize-game-design`)·문서 내보내기 준비 (`export-game-design-documents`): 승인된 기준 문서가 있을 때 호출 → SVG·PNG·내보내기 준비 목록 | 경력 이미지 자산 계획 (`plan-image-assets`) → 경력 이미지 자산 생성 (`generate-image-assets`) → 경력 이미지 자산 검토 (`review-image-assets`), 경력 성장 경로 시각화 (`visualize-career-roadmap`)·경력 문서 내보내기 준비 (`export-career-documents`): 승인된 기준 문서가 있을 때 호출 → SVG·PNG·내보내기 준비 목록 |
 
-각 제품은 제품 스킬 15개와 공통 스킬 6개를 설치하므로 총 21개가 됩니다. 공통 스킬은 `archify`, `humanize-korean`, `svg-infographic`과 프로젝트 기억 조회·후보 기록·관리 스킬 3개입니다. `polish-game-design-writing`은 제품 스킬에 포함됩니다. 공통 스킬은 제품 원본 디렉터리가 아니라 표준 빌드가 번들합니다.
+각 제품은 제품 스킬 15개와 공통 스킬 8개를 설치하므로 총 23개가 됩니다. 공통 스킬은 `analyze-game-design-references`, `maintain-game-design-glossary`, `archify`, `humanize-korean`, `svg-infographic`과 프로젝트 기억 조회·후보 기록·관리 스킬 3개입니다. `polish-game-design-writing`은 제품 스킬에 포함됩니다. 공통 스킬은 제품 원본 디렉터리가 아니라 표준 빌드가 번들합니다.
 
 <details>
 <summary>Studio 설치 스킬 전체 보기</summary>
 
-### Studio 설치 스킬 21개
+### Studio 설치 스킬 23개
 
 | 스킬 이름과 ID | 사용하는 때 | 핵심 결과 | 직접 호출 | 상세 가이드 |
 | --- | --- | --- | --- | --- |
 | 문서 품질 기준 적용 (`apply-document-quality-profile`) | 문서의 독자·형식·검토 기준을 먼저 고정할 때 | 문서 목적과 형식에 맞는 품질 기준을 고정하고 선택 기록을 만듭니다. | `$game-design-studio:apply-document-quality-profile` | [문서 품질 기준 적용 상세 가이드](guides/game-design-studio/skills/apply-document-quality-profile.md) |
+| 경쟁작 레퍼런스 분석 (`analyze-game-design-references`) | 경쟁작 관찰을 시스템 비교와 검토 대기 전송 제안으로 정리할 때 | 시스템 지도, 심층 분석과 `pending-review` 전송 제안을 기록합니다. | `$game-design-studio:analyze-game-design-references` | [Studio 경쟁작 레퍼런스 분석 가이드](guides/game-design-studio/reference-analysis.md) |
 | 기획 구조 도식 만들기 (`archify`) | 시스템 구성·작업 흐름을 탐색 가능한 HTML로 설명할 때 | 시스템 구성과 작업 흐름을 탐색 가능한 HTML 구조 도식으로 만듭니다. | `$game-design-studio:archify` | [기획 구조 도식 만들기 상세 가이드](guides/game-design-studio/skills/archify.md) |
 | 게임 비전 정의 (`define-game-vision`) | 대상 플레이어와 핵심 재미를 한 문장으로 정할 때 | 대상 플레이어, 핵심 재미와 검증 기준을 정리해 게임 방향 원칙을 만듭니다. | `$game-design-studio:define-game-vision` | [게임 비전 정의 상세 가이드](guides/game-design-studio/skills/define-game-vision.md) |
 | 게임 콘텐츠 설계 (`design-game-content`) | 퀘스트·레벨·캐릭터의 선택과 결과를 설계할 때 | 퀘스트, 레벨, 조우와 캐릭터를 제작 가능한 콘텐츠 명세로 만듭니다. | `$game-design-studio:design-game-content` | [게임 콘텐츠 설계 상세 가이드](guides/game-design-studio/skills/design-game-content.md) |
@@ -1738,6 +1739,7 @@ $game-design-studio:export-game-design-documents \
 | 한국어 문장 다듬기 (`humanize-korean`) | 검토한 초안의 어색한 문체만 자연스럽게 다듬을 때 | 사실과 수치, ID를 보존하며 기계적인 표현을 자연스러운 문장으로 다듬습니다. | `$game-design-studio:humanize-korean` | [한국어 문장 다듬기 상세 가이드](guides/game-design-studio/skills/humanize-korean.md) |
 | 프로젝트 기억 후보 기록 (`capture-game-design-memory`) | 검증한 작업에서 다시 쓸 교훈을 후보로 남길 때 | 출처와 적용·제외 조건이 붙은 검토 대기 후보를 기록합니다. | `$game-design-studio:capture-game-design-memory` | [Studio 프로젝트 기억](guides/game-design-studio/memory.md) |
 | 프로젝트 기억 관리 (`maintain-game-design-memory`) | 후보를 확인하고 사람이 승인·거부·폐기할 때 | 이름이 확인된 사람의 결정과 변경 이력을 기록합니다. | `$game-design-studio:maintain-game-design-memory` | [Studio 프로젝트 기억](guides/game-design-studio/memory.md) |
+| 게임 기획 용어 사전 관리 (`maintain-game-design-glossary`) | 용어 후보를 사람 검토와 스냅샷으로 관리할 때 | 후보, findings와 승인된 용어 스냅샷을 기록합니다. | `$game-design-studio:maintain-game-design-glossary` | [Studio 용어 사전 검토 가이드](guides/game-design-studio/glossary.md) |
 | 게임 기획 프로젝트 조율 (`orchestrate-game-design-project`) | 여러 기획 분야를 하나의 프로젝트 순서로 묶을 때 | 여러 기획 분야의 범위, 순서와 검토 지점을 프로젝트 브리프로 묶습니다. | `$game-design-studio:orchestrate-game-design-project` | [게임 기획 프로젝트 조율 상세 가이드](guides/game-design-studio/skills/orchestrate-game-design-project.md) |
 | 게임 제작 계획 (`plan-game-production`) | 시제품 범위·일정·의존성과 중단 기준을 검토할 때 | 시제품 기준, 의존성, 담당자와 중단 기준을 제작 계획으로 만듭니다. | `$game-design-studio:plan-game-production` | [게임 제작 계획 상세 가이드](guides/game-design-studio/skills/plan-game-production.md) |
 | 이미지 자산 계획 (`plan-image-assets`) | 기획서에 필요한 이미지와 프롬프트를 먼저 목록화할 때 | 기준 문서에서 이미지 목록, 프롬프트 묶음과 자리표시자를 만듭니다. | `$game-design-studio:plan-image-assets` | [이미지 자산 계획 상세 가이드](guides/game-design-studio/skills/plan-image-assets.md) |
@@ -1753,11 +1755,12 @@ $game-design-studio:export-game-design-documents \
 <details>
 <summary>Career 설치 스킬 전체 보기</summary>
 
-### Career 설치 스킬 21개
+### Career 설치 스킬 23개
 
 | 스킬 이름과 ID | 사용하는 때 | 핵심 결과 | 직접 호출 | 상세 가이드 |
 | --- | --- | --- | --- | --- |
 | 경력 문서 품질 기준 적용 (`apply-document-quality-profile`) | 지원·학습 문서의 독자와 평가 기준을 먼저 정할 때 | 경력 문서 목적과 형식에 맞는 품질 기준과 선택 기록을 만듭니다. | `$game-design-career:apply-document-quality-profile` | [경력 문서 품질 기준 적용 상세 가이드](guides/game-design-career/skills/apply-document-quality-profile.md) |
+| 경쟁작 레퍼런스 분석 (`analyze-game-design-references`) | 경쟁작 관찰을 포트폴리오 분석 근거와 검토 대기 전송 제안으로 정리할 때 | 시스템 지도, 심층 분석과 `pending-review` 전송 제안을 기록합니다. | `$game-design-career:analyze-game-design-references` | [Career 경쟁작 레퍼런스 분석 가이드](guides/game-design-career/reference-analysis.md) |
 | 경력 구조 도식 만들기 (`archify`) | 경력 경로·작업 흐름을 탐색 가능한 HTML로 설명할 때 | 경력 경로와 작업 흐름을 탐색 가능한 HTML 구조 도식으로 만듭니다. | `$game-design-career:archify` | [경력 구조 도식 만들기 상세 가이드](guides/game-design-career/skills/archify.md) |
 | 기획 포트폴리오 만들기 (`build-game-design-portfolio`) | 공개 가능한 기획 결과를 포트폴리오 사례로 정리할 때 | 공개 가능한 판단, 개인 기여와 검증을 포트폴리오 사례로 만듭니다. | `$game-design-career:build-game-design-portfolio` | [기획 포트폴리오 만들기 상세 가이드](guides/game-design-career/skills/build-game-design-portfolio.md) |
 | 경력 문서 내보내기 준비 (`export-career-documents`) | 검토한 경력 문서를 제출·발표 형식으로 준비할 때 | 경력 기준 결과 폴더의 MD, PDF, DOCX, PPTX 준비 상태를 기록합니다. | `$game-design-career:export-career-documents` | [경력 문서 내보내기 준비 상세 가이드](guides/game-design-career/skills/export-career-documents.md) |
@@ -1765,6 +1768,7 @@ $game-design-studio:export-game-design-documents \
 | 경력 문장 다듬기 (`humanize-korean`) | 증거를 보존하며 포트폴리오 문체만 자연스럽게 다듬을 때 | 증거와 주장 경계를 보존하며 기계적인 표현을 자연스러운 문장으로 다듬습니다. | `$game-design-career:humanize-korean` | [경력 문장 다듬기 상세 가이드](guides/game-design-career/skills/humanize-korean.md) |
 | 프로젝트 기억 후보 기록 (`capture-game-design-memory`) | 검증한 학습·포트폴리오 작업에서 다시 쓸 교훈을 후보로 남길 때 | 출처와 적용·제외 조건이 붙은 검토 대기 후보를 기록합니다. | `$game-design-career:capture-game-design-memory` | [Career 프로젝트 기억](guides/game-design-career/memory.md) |
 | 프로젝트 기억 관리 (`maintain-game-design-memory`) | 후보를 확인하고 사람이 승인·거부·폐기할 때 | 이름이 확인된 사람의 결정과 변경 이력을 기록합니다. | `$game-design-career:maintain-game-design-memory` | [Career 프로젝트 기억](guides/game-design-career/memory.md) |
+| 게임 기획 용어 사전 관리 (`maintain-game-design-glossary`) | 용어 후보를 사람 검토와 스냅샷으로 관리할 때 | 후보, findings와 승인된 용어 스냅샷을 기록합니다. | `$game-design-career:maintain-game-design-glossary` | [Career 용어 사전 검토 가이드](guides/game-design-career/glossary.md) |
 | 게임 기획 경력 지도 만들기 (`map-game-design-career`) | 목표 직무와 현재 역량의 차이를 비교할 때 | 역할군, 목표 수준과 역량 격차를 비교해 경력 지도를 만듭니다. | `$game-design-career:map-game-design-career` | [게임 기획 경력 지도 만들기 상세 가이드](guides/game-design-career/skills/map-game-design-career.md) |
 | 게임 기획 경력 조율 (`orchestrate-game-design-career`) | 역할 탐색·학습·포트폴리오 작업을 한 경로로 묶을 때 | 경력 단계, 작업 순서와 검토를 하나의 경력 계획으로 묶습니다. | `$game-design-career:orchestrate-game-design-career` | [게임 기획 경력 조율 상세 가이드](guides/game-design-career/skills/orchestrate-game-design-career.md) |
 | 경력 이미지 자산 계획 (`plan-image-assets`) | 포트폴리오에 넣을 이미지와 프롬프트를 먼저 정리할 때 | 경력 기준 결과 폴더에서 이미지 목록, 프롬프트 묶음과 자리표시자를 만듭니다. | `$game-design-career:plan-image-assets` | [경력 이미지 자산 계획 상세 가이드](guides/game-design-career/skills/plan-image-assets.md) |
@@ -1893,13 +1897,13 @@ Skillstead 미리보기는 **Studio·Career의 결과 경계와 사람 승인·�
 
 ### Studio 설치 패키지 구조
 
-Studio 생성본 (snapshot)은 에이전트 12개, 설치 스킬 21개, 템플릿 15개와 최상위 실행 스크립트 21개를 포함합니다.
+Studio 생성본 (snapshot)은 에이전트 12개, 설치 스킬 23개, 템플릿 15개와 최상위 실행 스크립트 21개를 포함합니다.
 
 ```text
 plugins/game-design-studio/
 ├── .codex-plugin/plugin.json   # 플러그인 manifest
 ├── agents/                     # 전문 에이전트 12개
-├── skills/                     # 제품 스킬 15개 + 공통 스킬 6개
+├── skills/                     # 제품 스킬 15개 + 공통 스킬 8개
 ├── assets/
 │   ├── templates/              # Canonical Artifact 템플릿 15개
 │   └── shared/                 # 공통 템플릿·지원 자산
@@ -1920,13 +1924,13 @@ generated snapshot: plugins/game-design-studio/
 
 ### Career 설치 패키지 구조
 
-Career 생성본 (snapshot)은 에이전트 10개, 설치 스킬 21개, 템플릿 15개와 최상위 실행 스크립트 21개를 포함합니다.
+Career 생성본 (snapshot)은 에이전트 10개, 설치 스킬 23개, 템플릿 15개와 최상위 실행 스크립트 21개를 포함합니다.
 
 ```text
 plugins/game-design-career/
 ├── .codex-plugin/plugin.json   # 플러그인 manifest
 ├── agents/                     # 전문 에이전트 10개
-├── skills/                     # 제품 스킬 15개 + 공통 스킬 6개
+├── skills/                     # 제품 스킬 15개 + 공통 스킬 8개
 ├── assets/
 │   ├── templates/              # Canonical Artifact 템플릿 15개
 │   └── shared/                 # 공통 템플릿·지원 자산
@@ -2135,7 +2139,7 @@ Source tree, build·release·검증 명령과 패키지 내부 계약은 기술 
 <details>
 <summary>패키지 기술 inventory</summary>
 
-표준 빌드는 Studio에 전문 에이전트 12개, Career에 10개, 각 제품에 설치 스킬 21개와 Canonical Artifact 템플릿 15개, 최상위 실행 스크립트 21개를 포함합니다. 공통 변경은 `shared/`, 제품 변경은 `products/<product>/plugin/`에서 작성합니다.
+표준 빌드는 Studio에 전문 에이전트 12개, Career에 10개, 각 제품에 설치 스킬 23개와 Canonical Artifact 템플릿 15개, 최상위 실행 스크립트 21개를 포함합니다. 공통 변경은 `shared/`, 제품 변경은 `products/<product>/plugin/`에서 작성합니다.
 
 | 기술 경로 | 역할 |
 | --- | --- |

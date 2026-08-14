@@ -1,6 +1,6 @@
 # Game Design Studio 스킬 레퍼런스
 
-설치된 Studio 제품 스킬 15개와 공통 스킬 6개를 합친 설치 스킬 21개를 정리합니다. 공통 스킬은 Archify, humanize-korean, Skillstead와 프로젝트 기억 스킬 3개입니다. 복합 요청은 오케스트레이터로 시작하고, 목적이 한 영역으로 분명하면 해당 스킬을 직접 호출합니다.
+설치된 Studio 제품 스킬 15개와 공통 스킬 8개를 합친 설치 스킬 23개를 정리합니다. 공통 스킬은 Archify, humanize-korean, Skillstead, 프로젝트 기억 스킬 3개와 레퍼런스 분석·용어 사전 스킬 2개입니다. 복합 요청은 오케스트레이터로 시작하고, 목적이 한 영역으로 분명하면 해당 스킬을 직접 호출합니다.
 
 ## 활용 경로
 
@@ -15,6 +15,7 @@
 | 스킬 ID | 목적 | 직접 호출 | 주 템플릿 | 일반 입력 | 일반 결과 |
 | --- | --- | --- | --- | --- | --- |
 | [`apply-document-quality-profile`](apply-document-quality-profile.md) | 산출물에 결정적 품질 계약 적용 | `$game-design-studio:apply-document-quality-profile` | 요청에 맞는 설치 템플릿 | 목표, 청중, artifact 유형, 형식 | 선택 기록, checklist, requirement manifest |
+| [`analyze-game-design-references`](../reference-analysis.md) | 경쟁작 관찰을 시스템 비교와 검토 대기 전송 제안으로 정리 | `$game-design-studio:analyze-game-design-references` | 레퍼런스 분석 | 결정 질문, 관찰 근거, 프로젝트 제약 | 시스템 지도, 심층 분석, `pending-review` 제안 |
 | [`archify`](archify.md) | 구조와 흐름을 탐색 가능한 HTML로 설명 | `$game-design-studio:archify` | 선택된 canonical artifact | 구성 요소, 관계, 독자 | JSON 원본, HTML, 검증 영수증 |
 | [`capture-game-design-memory`](../memory.md#기본-작업-흐름) | 검증한 Studio 교훈을 후보로 기록 | `$game-design-studio:capture-game-design-memory` | 프로젝트 기억 | 출처가 연결된 결과, 적용·제외 조건 | 검토 대기 후보와 기록 결과 |
 | [`define-game-vision`](define-game-vision.md) | 플레이어 약속과 검증 가능한 비전 정의 | `$game-design-studio:define-game-vision` | `vision-pillars` | 대상 플레이어, 핵심 재미, 제약 | pillar, loop, 성공 기준 |
@@ -26,6 +27,7 @@
 | [`generate-image-assets`](generate-image-assets.md) | 선택된 stable asset ID만 provider에 라우팅 | `$game-design-studio:generate-image-assets` | 선택된 canonical artifact | image manifest, prompt, mode, 선택 receipt | generation 결과와 검토 handoff |
 | [`humanize-korean`](humanize-korean.md) | 뜻과 수치·ID를 보존한 한국어 문체 검토 | `$game-design-studio:humanize-korean` | 선택된 canonical artifact | 원문, 독자, 보호 항목 | 자연스러운 수정안과 변경 요약 |
 | [`maintain-game-design-memory`](../memory.md#후보-확인승인거부폐기-예시) | 후보 확인과 사람 승인·거부·폐기 | `$game-design-studio:maintain-game-design-memory` | 프로젝트 기억 | 기억 ID, 이름 있는 사람, 결정 이유 | 상태 변경 이력 또는 충돌 안내 |
+| [`maintain-game-design-glossary`](../glossary.md) | 용어 후보와 승인된 스냅샷을 사람 검토로 관리 | `$game-design-studio:maintain-game-design-glossary` | 용어 사전 | 문서, 근거 ID, 사람 결정 | 후보, findings, 승인된 용어 스냅샷 |
 | [`orchestrate-game-design-project`](orchestrate-game-design-project.md) | 복합 게임 기획의 전체 라우팅과 게이트 조정 | `$game-design-studio:orchestrate-game-design-project` | `game-design-brief` | 신규 모바일 협동 RPG 브리프 | 최소 스킬 체인과 Canonical Artifact |
 | [`plan-game-production`](plan-game-production.md) | prototype·범위·owner·kill criteria 계획 | `$game-design-studio:plan-game-production` | `production-scope-risk` | 목표 경험, capacity, dependency, 근거 | 단계별 commit/defer/kill 계약 |
 | [`plan-image-assets`](plan-image-assets.md) | profile-bound 이미지 manifest와 prompt 계획 | `$game-design-studio:plan-image-assets` | 선택된 canonical artifact | profile, slot, source ID, 수량 | manifest, prompt package, placeholder |
