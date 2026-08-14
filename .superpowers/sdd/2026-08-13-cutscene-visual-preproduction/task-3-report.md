@@ -83,7 +83,7 @@
 
 ### RED/GREEN
 
-- RED: generated 상태만 설정하고 해당 artifact 파일을 만들지 않은 상태에서 `node --test tests/unit/cutscene-generation-approval.test.mjs`를 실행해 `bindCutscenePromptPackage()`가 `unsafe reference input`으로 실패함을 확인했다.
+- 정정: generated 상태만 설정하고 해당 artifact 파일을 만들지 않은 상태에서 `bindCutscenePromptPackage()`가 `unsafe reference input`으로 실패한 것은 불완전한 fixture/setup 실패였다. production 회귀를 검출한 유효한 RED 증거로 간주하지 않는다.
 - GREEN: 정확한 두 output 경로에 완전한 PNG를 추가한 뒤 focused Task 3 + Task 2 tests는 42 passed, 0 failed였다.
 - 최종: Task 3/cutscene/image-assets 스위트는 83 passed, 0 failed였다.
 
@@ -91,3 +91,19 @@
 
 - generation-ready package를 테스트에서 수동 조립하지 않았고, future keyframe/storyboard output을 만들지 않았다.
 - production source는 변경하지 않았다. 실패 원인은 secure binding이 요구하는 PNG 완전성 조건이었고, 실제 파일 fixture로 해소했다.
+
+## Fix 4 — exact integration evidence and controlled mutation REDs
+
+### 커밋된 증거
+
+- exact literal source-order oracle: `tests/unit/cutscene-generation-approval.test.mjs:21-28`은 Task 2 source order(`style`, `environment`)와 Task 3 canonical receipt order(`environment`, `style`)를 서로 다른 literal 배열로 고정한다. `:236-238`은 planner가 만든 manifest의 실제 master 순서를 literal Task 2 oracle과 대조하고 두 oracle이 같지 않음을 확인하며, `:251-255`는 bound package가 Task 2 순서를 보존하고 receipt만 canonical order를 사용함을 각각 직접 단언한다. 따라서 같은 데이터에서 기대값을 다시 계산하는 self-derived oracle이 아니다.
+- actual bound package through host validation: `:245-250`은 실제 `bindCutscenePromptPackage()` 반환값을 estimate, issuer, current binding에 그대로 전달한다. `:271-272`는 발급된 live receipt/capability pair를 먼저 직접 assertion하고, 이어 같은 실제 `promptPackage`를 `validateHostCutsceneApproval()`에 전달해 host 경계까지 검증한다.
+- all-element deep freeze: `:32-36`의 helper는 각 mutation이 `TypeError`를 던지고 receipt 직렬화 bytes가 그대로임을 확인한다. `:256-269`는 `assetIds` 배열, `referenceBindings` 배열, 모든 reference element를 frozen으로 확인하고, 모든 asset element 대입과 push, 모든 reference의 `assetId`/`sha256` 대입, 배열 element 교체와 push를 전부 거절한다. 첫 reference 하나만 확인하는 증거가 아니다.
+
+### Controlled mutation REDs
+
+- `source-order` — **EXPECTED_RED (implementer observed; rereviewer independently confirmed)**. Task 2 literal source order를 임시로 역전하자 `:237`의 actual manifest source-order assertion과 `:252`의 bound-package source-order assertion이 깨졌다. 이는 Task 2 보존 순서와 Task 3 canonical receipt 순서를 별도 oracle로 검증한다는 증거다.
+- `host-package` — **EXPECTED_RED (implementer observed; rereviewer independently confirmed)**. host 검증 입력의 live receipt를 임시 clone으로 바꾸자 `:272`의 `validateHostCutsceneApproval()` assertion이 실패했다. clone은 발급된 capability와 `WeakMap`에 등록된 exact receipt identity가 아니므로 host 경계에서 통과할 수 없으며, 실제 bound `promptPackage`를 사용하는 host-path assertion이 형식적인 직접 호출에 그치지 않음을 검출한다.
+- `deep-freeze` — **EXPECTED_RED (implementer observed; rereviewer independently confirmed)**. receipt의 deep-freeze를 임시 제거하자 `:256-269`의 frozen/all-element mutation assertions가 실패했다. mutation helper가 요구하는 `TypeError` 또는 mutation 전후 동일 bytes 조건을 만족하지 못하므로, 일부 element만 frozen인 구현도 통과하지 않는다.
+
+세 controlled mutation은 확인 후 완전히 원복되었고 production/test의 커밋 상태에는 남아 있지 않다. Fix4 implementer가 보고한 GREEN은 focused integration **1/1**, scoped suite **64/64**이며, 이 Fix5 보고서 정정 라운드에서는 해당 test command를 재실행하지 않았다. 위 수치는 implementer-reported 결과이고 rereviewer는 세 mutation의 `EXPECTED_RED`만 독립 재확인했다.
