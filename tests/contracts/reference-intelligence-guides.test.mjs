@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
@@ -49,6 +50,31 @@ const rootGuideLinks = [
   { label: "Career 분석", target: "guides/game-design-career/reference-analysis.md" },
   { label: "Career 용어 사전", target: "guides/game-design-career/glossary.md" },
 ];
+
+function assertActiveInventoryStatements({ guideIndex, studioUseCases, marketplaceSmoke, archifyCatalog, careerWorkbench }) {
+  assert.match(guideIndex, /각 제품 인덱스는 23개 설치 스킬, 15개 템플릿, 6개 목적별 레시피/u);
+  for (const product of ["Studio", "Career"]) {
+    assert.match(guideIndex, new RegExp(`\\[스킬 23개\\]\\(game-design-${product.toLowerCase()}/skills/README\\.md\\)`, "u"));
+  }
+  assert.match(studioUseCases, /설치된 Studio 스킬 23개의 직접 호출 신호/u);
+  assert.match(marketplaceSmoke, /플러그인마다 스킬 23개와 공식 플러그인 검증기/u);
+  assert.equal((marketplaceSmoke.match(/"skills": 23,/gu) ?? []).length, 2, "marketplace success examples use the packaged 23-skill count");
+
+  const catalogSources = [
+    { id: "excluded-649d189a8231", source: guideIndex, label: "guide index" },
+    { id: "excluded-95601350f8c7", source: studioUseCases, label: "Studio use-case index" },
+    { id: "excluded-902c61df1537", source: careerWorkbench, label: "Career workbench" },
+  ];
+  for (const { id, source, label } of catalogSources) {
+    const entry = archifyCatalog.entries.find((candidate) => candidate.id === id);
+    assert.ok(entry, `${label} catalog entry exists`);
+    assert.equal(entry.source_digest, createHash("sha256").update(source).digest("hex"), `${label} catalog digest matches the active source`);
+  }
+
+  const workbenchEntry = archifyCatalog.entries.find((entry) => entry.id === "excluded-902c61df1537");
+  assert.ok(workbenchEntry, "Career workbench catalog entry exists");
+  assert.match(workbenchEntry.decision_reason, /설치된 Career 스킬 23개/u);
+}
 
 async function markdownFiles(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -129,6 +155,54 @@ test("reference guides are linked from root and product discovery pages", async 
     assert.deepEqual(visibleSkillLinks, expectedSkillLinks, `${product}: source-bound skill discovery`);
     assert.match(skillReadme, /설치 스킬 23개/u, `${product}: skill inventory count`);
   }
+});
+
+test("active user documentation keeps the installed 23-skill inventory synchronized", async () => {
+  const [guideIndex, studioUseCases, marketplaceSmoke, catalogText, careerWorkbench] = await Promise.all([
+    readFile(path.join(repoRoot, "guides/README.md"), "utf8"),
+    readFile(path.join(repoRoot, "guides/game-design-studio/use-cases/README.md"), "utf8"),
+    readFile(path.join(repoRoot, "tests/e2e/install-marketplace-smoke.md"), "utf8"),
+    readFile(path.join(repoRoot, "guides/archify-diagrams/catalog.json"), "utf8"),
+    readFile(path.join(repoRoot, "guides/game-design-career/use-cases/skill-workbench.md"), "utf8"),
+  ]);
+  const archifyCatalog = JSON.parse(catalogText);
+  assertActiveInventoryStatements({ guideIndex, studioUseCases, marketplaceSmoke, archifyCatalog, careerWorkbench });
+
+  const staleGuideIndex = guideIndex.replace("각 제품 인덱스는 23개 설치 스킬", "각 제품 인덱스는 21개 설치 스킬");
+  assert.notEqual(staleGuideIndex, guideIndex, "guide-index mutation changes the active statement");
+  assert.throws(() => assertActiveInventoryStatements({
+    guideIndex: staleGuideIndex,
+    studioUseCases,
+    marketplaceSmoke,
+    archifyCatalog,
+    careerWorkbench,
+  }), /23개 설치 스킬/u, "stale guide-index inventory is rejected");
+  const staleMarketplaceExample = marketplaceSmoke.replace('"skills": 23,', '"skills": 21,');
+  assert.notEqual(staleMarketplaceExample, marketplaceSmoke, "marketplace mutation changes the active statement");
+  assert.throws(() => assertActiveInventoryStatements({
+    guideIndex,
+    studioUseCases,
+    marketplaceSmoke: staleMarketplaceExample,
+    archifyCatalog,
+    careerWorkbench,
+  }), /23-skill count/u, "stale marketplace example inventory is rejected");
+  const staleCatalog = { ...archifyCatalog, entries: archifyCatalog.entries.map((entry) => entry.id === "excluded-902c61df1537" ? { ...entry, decision_reason: entry.decision_reason.replace("스킬 23개", "스킬 21개") } : entry) };
+  assert.notDeepEqual(staleCatalog, archifyCatalog, "catalog mutation changes the active statement");
+  assert.throws(() => assertActiveInventoryStatements({
+    guideIndex,
+    studioUseCases,
+    marketplaceSmoke,
+    archifyCatalog: staleCatalog,
+    careerWorkbench,
+  }), /Career 스킬 23개/u, "stale catalog inventory is rejected");
+  const staleCatalogDigest = { ...archifyCatalog, entries: archifyCatalog.entries.map((entry) => entry.id === "excluded-902c61df1537" ? { ...entry, source_digest: "0".repeat(64) } : entry) };
+  assert.throws(() => assertActiveInventoryStatements({
+    guideIndex,
+    studioUseCases,
+    marketplaceSmoke,
+    archifyCatalog: staleCatalogDigest,
+    careerWorkbench,
+  }), /Career workbench catalog digest/u, "catalog source digest mutation is rejected");
 });
 
 test("guide validation count follows the actual Markdown inventory", async () => {
