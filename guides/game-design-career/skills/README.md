@@ -14,7 +14,7 @@
 | 스킬 ID | 목적 | 직접 호출 | 주 템플릿 | 일반 입력 | 일반 결과 |
 | --- | --- | --- | --- | --- | --- |
 | [`apply-document-quality-profile`](apply-document-quality-profile.md) | artifact별 품질 profile과 checklist 결정 | `$game-design-career:apply-document-quality-profile` | 요청에 맞는 설치 템플릿 | goal, audience, artifact type, format | selection record, checklist, manifest |
-| [`analyze-game-design-references`](../reference-analysis.md) | 경쟁작 관찰을 포트폴리오 분석 근거와 검토 대기 전송 제안으로 정리 | `$game-design-career:analyze-game-design-references` | 레퍼런스 분석 | 결정 질문, 관찰 근거, 개인 기여 경계 | 시스템 지도, 심층 분석, `pending-review` 제안 |
+| [`analyze-game-design-references`](../reference-analysis.md) | 경쟁작 관찰을 포트폴리오 분석 근거와 검토 대기 설계 전환 제안으로 정리 | `$game-design-career:analyze-game-design-references` | 레퍼런스 분석 | 결정 질문, 관찰 근거, 개인 기여 경계 | 시스템 지도, 심층 분석, `pending-review` 제안 |
 | [`archify`](archify.md) | 경력 경로와 작업 흐름을 탐색 가능한 HTML로 설명 | `$game-design-career:archify` | 선택된 canonical artifact | 근거, 관계, 독자 | JSON 원본, HTML, 검증 영수증 |
 | [`capture-game-design-memory`](../memory.md#기본-작업-흐름) | 검증한 Career 교훈을 후보로 기록 | `$game-design-career:capture-game-design-memory` | 프로젝트 기억 | 출처가 연결된 결과, 적용·제외 조건 | 검토 대기 후보와 기록 결과 |
 | [`build-game-design-portfolio`](build-game-design-portfolio.md) | 결정·실험·협업 증거를 case study로 구성 | `$game-design-career:build-game-design-portfolio` | `creative-design-portfolio` | 목표 역량, claim, 기여, evidence | case study와 claim-evidence index |

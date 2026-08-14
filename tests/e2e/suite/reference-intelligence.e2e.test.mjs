@@ -24,6 +24,7 @@ import {
 } from "../../../shared/scripts/lib/system-atlas.mjs";
 import {
   applyGlossaryDecision,
+  analyzeGlossaryImpact,
   createGlossarySnapshot,
   mergeGameDesignGlossaries,
   validateDocumentTerminology,
@@ -69,6 +70,7 @@ function evidence(overrides = {}) {
     availability: "available",
     limitation: null,
     verificationQuestion: null,
+    build: "1.0.0", region: "kr", accountState: "guest", observedAt: "2026-08-13T00:00:00.000Z", locator: { kind: "project-relative", value: "evidence/loop.png" }, screen: "loop", action: "complete", result: "choice", transformations: [{ from: "original", to: "capture" }, { from: "capture", to: "summary" }], rights: { copyright: "reference-owner", use: "analysis", publication: "private" }, conflictState: "none", counterexampleOf: null,
     ...overrides,
   };
 }
@@ -78,12 +80,12 @@ function analysisInput(atlas, overrides = {}) {
     brief: {
       analysisId: "reference-lifecycle",
       objective: "Compare observable decision loops without automatic transfer.",
-      decisionQuestions: ["Which observed loop supports the next design decision?"],
+      decisionQuestions: ["question-observed-loop"], playerExperiencePromise: "Observed choices remain legible.", differentiationHypotheses: ["choice-first"], genreHypotheses: ["action-rpg"], platformHypotheses: ["pc"], businessModelHypotheses: ["premium"], researchScope: ["observable-loop"], exclusionScope: ["private-metrics"], constraints: { time: "two-hours", materials: ["local-notes"], languages: ["ko"], regions: ["kr"] }, forbiddenConclusions: ["revenue-causality"], completionCriteria: ["human-review"], humanReviewer: "Lead Designer",
     },
     referenceSet: [
-      { referenceId: "ref-alpha", label: "Alpha ../자료 🧭", role: "direct-competitor", availability: "available", limitation: null },
-      { referenceId: "ref-beta", label: "Beta", role: "core-system-exemplar", availability: "available", limitation: null },
-      { referenceId: "ref-gamma", label: "Gamma", role: "operations-monetization-comparator", availability: "unavailable", limitation: "Paid source unavailable while offline." },
+      { referenceId: "ref-alpha", label: "Alpha ../자료 🧭", role: "direct-competitor", decisionQuestionIds: ["question-observed-loop"], availability: "available", limitation: null },
+      { referenceId: "ref-beta", label: "Beta", role: "core-system-exemplar", decisionQuestionIds: ["question-observed-loop"], availability: "available", limitation: null },
+      { referenceId: "ref-gamma", label: "Gamma", role: "operations-monetization-comparator", decisionQuestionIds: ["question-observed-loop"], availability: "unavailable", limitation: "Paid source unavailable while offline." },
     ],
     referenceContexts: [
       { contextId: "ctx-alpha-pc-v1", referenceId: "ref-alpha", version: "1.0", platform: "pc" },
@@ -194,6 +196,10 @@ test("three-role reference set produces one evidence-bound analysis", async (t) 
   assert.equal(validateReferenceAnalysis(analysis).ok, true);
   assert.equal(new Set(analysis.referenceSet.map(({ role }) => role)).size, 3);
   assert.deepEqual(analysis.deepDives[0].evidenceIds, ["ev-alpha", "ev-beta"]);
+  assert.deepEqual(analysis.referenceSet.map(({ decisionQuestionIds }) => decisionQuestionIds), [["question-observed-loop"], ["question-observed-loop"], ["question-observed-loop"]]);
+  assert.equal(analysis.brief.humanReviewer, "Lead Designer");
+  assert.equal(analysis.evidence[0].locator.value, "evidence/loop.png");
+  assert.deepEqual(analysis.evidence[0].transformations, [{ from: "original", to: "capture" }, { from: "capture", to: "summary" }]);
   assert.deepEqual(persisted.evidence.map(({ evidenceId }) => evidenceId), ["ev-alpha", "ev-beta", "ev-gamma"]);
   assert.equal(written.analysisSha256, sha256Canonical(analysis));
 });
@@ -203,9 +209,9 @@ test("single-game input keeps comparison transfer on hold", async (t) => {
   const { atlas } = await loadBundledReferenceCatalog();
   const input = analysisInput(atlas, {
     referenceSet: [
-      { referenceId: "ref-alpha", label: "Alpha", role: "direct-competitor", availability: "available", limitation: null },
-      { referenceId: "ref-alpha", label: "Alpha", role: "core-system-exemplar", availability: "available", limitation: null },
-      { referenceId: "ref-alpha", label: "Alpha", role: "operations-monetization-comparator", availability: "available", limitation: null },
+      { referenceId: "ref-alpha", label: "Alpha", role: "direct-competitor", decisionQuestionIds: ["question-observed-loop"], availability: "available", limitation: null },
+      { referenceId: "ref-alpha", label: "Alpha", role: "core-system-exemplar", decisionQuestionIds: ["question-observed-loop"], availability: "available", limitation: null },
+      { referenceId: "ref-alpha", label: "Alpha", role: "operations-monetization-comparator", decisionQuestionIds: ["question-observed-loop"], availability: "available", limitation: null },
     ],
     referenceContexts: [{ contextId: "ctx-alpha-pc-v1", referenceId: "ref-alpha", version: "1.0", platform: "pc" }],
     evidence: [evidence()],
@@ -321,6 +327,11 @@ test("Studio and Career projections preserve claim and evidence IDs", async (t) 
     careerRuntimeBytes,
   };
   assertProductProjectionParity(parity);
+  for (const analysis of [studioAnalysis, careerAnalysis]) {
+    const question = analysis.atlasSelection.find(({ questionId }) => questionId === "core-play-action-rpg-loop");
+    assert.deepEqual(Object.keys(question).sort(), ["applicability", "conditions", "questionId", "rationale", "systemId", "verificationPrompts"]);
+    assert.equal(question.applicability, "required-candidate"); assert.equal(question.conditions.length > 0, true); assert.equal(question.verificationPrompts.length > 0, true);
+  }
   assert.throws(() => assertProductProjectionParity({ ...parity, careerRuntimeBytes: Buffer.concat([careerRuntimeBytes, Buffer.from("\n")]) }), /packaged analysis runtime bytes drifted/u);
   const driftedCareerProjection = structuredClone(careerProjection);
   driftedCareerProjection.claims[0].evidenceIds = ["ev-beta"];
@@ -372,6 +383,9 @@ test("glossary approval requires a live named-human capability", async (t) => {
   const approved = applyGlossaryDecision({ glossary, receipt: issued.receipt, capability: issued.capability });
   assert.equal(approved.terms[0].state, "approved");
   assert.equal(approved.terms[0].approver, "Lead Designer");
+  const replacement = { ...approved.terms[0], termId: "TERM-COMBAT-POWER", koPreferred: "전투 파워", enPreferred: "Combat Power", decisionIds: ["decision-combat-power"] };
+  const effective = mergeGameDesignGlossaries({ sharedGlossary: { schemaVersion: 1, scope: "shared", version: 2, terms: [{ ...approved.terms[0], state: "deprecated", replacementTermId: "TERM-COMBAT-POWER" }, replacement].sort((left, right) => left.termId.localeCompare(right.termId, "en")) }, projectOverlay: { schemaVersion: 1, scope: "project-overlay", version: 1, terms: [] } });
+  assert.deepEqual(analyzeGlossaryImpact({ documents: [{ documentId: "combat-v1", text: "플레이어 파워" }], effectiveGlossary: effective }), [{ documentId: "combat-v1", termIds: ["TERM-PLAYER-POWER"], status: "deprecated-replacement" }]);
 });
 
 test("stale glossary receipt blocks terminology-reviewed status", async (t) => {

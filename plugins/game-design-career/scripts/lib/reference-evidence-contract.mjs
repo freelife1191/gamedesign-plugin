@@ -18,6 +18,8 @@ export const evidenceClaimKinds = Object.freeze(["observation", "inference", "hy
 export const evidenceRecordKeys = Object.freeze([
   "evidenceId", "referenceId", "contextId", "systemIds", "sourceType", "tier", "claimKind", "claim",
   "availability", "limitation", "verificationQuestion",
+  "build", "region", "accountState", "observedAt", "locator", "screen", "action", "result",
+  "transformations", "rights", "conflictState", "counterexampleOf",
 ]);
 
 export function tierForSourceType(sourceType) {

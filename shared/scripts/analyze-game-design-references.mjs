@@ -21,8 +21,14 @@ function availability(value) { return (value.availability === "available" && val
 
 export function buildReferenceBrief(input = {}) {
   const value = copy(input);
-  if (!exact(value, ["analysisId", "objective", "decisionQuestions"]) || !id(value.analysisId) || !text(value.objective) || !sorted(value.decisionQuestions)) fail("invalid-brief");
-  return freeze({ objective: value.objective, decisionQuestions: value.decisionQuestions });
+  const keys = ["analysisId", "objective", "decisionQuestions", "playerExperiencePromise", "differentiationHypotheses", "genreHypotheses", "platformHypotheses", "businessModelHypotheses", "researchScope", "exclusionScope", "constraints", "forbiddenConclusions", "completionCriteria", "humanReviewer"];
+  if (!exact(value, keys) || !id(value.analysisId) || !text(value.objective) || !sorted(value.decisionQuestions, id) || !text(value.playerExperiencePromise)
+    || !sorted(value.differentiationHypotheses, id) || !sorted(value.genreHypotheses, id) || !sorted(value.platformHypotheses, id) || !sorted(value.businessModelHypotheses, id)
+    || !sorted(value.researchScope, id) || !sorted(value.exclusionScope, id) || !sorted(value.forbiddenConclusions, id) || !sorted(value.completionCriteria, id)
+    || !text(value.humanReviewer) || !exact(value.constraints, ["time", "materials", "languages", "regions"]) || !text(value.constraints.time)
+    || !sorted(value.constraints.materials, id) || !sorted(value.constraints.languages, id) || !sorted(value.constraints.regions, id)) fail("invalid-brief");
+  const { analysisId, ...brief } = value;
+  return freeze(brief);
 }
 
 function normalizeReferences(input) {
@@ -30,7 +36,7 @@ function normalizeReferences(input) {
   if (!Array.isArray(values) || values.length !== roles.length) fail("invalid-reference-set");
   const byRole = new Map();
   for (const value of values) {
-    if (!exact(value, ["referenceId", "label", "role", "availability", "limitation"]) || !id(value.referenceId) || !text(value.label) || !roles.includes(value.role) || !availability(value) || byRole.has(value.role)) fail("invalid-reference-set");
+    if (!exact(value, ["referenceId", "label", "role", "decisionQuestionIds", "availability", "limitation"]) || !id(value.referenceId) || !text(value.label) || !roles.includes(value.role) || !sorted(value.decisionQuestionIds, id) || !availability(value) || byRole.has(value.role)) fail("invalid-reference-set");
     byRole.set(value.role, value);
   }
   if (roles.some((role) => !byRole.has(role))) fail("invalid-reference-set");
@@ -46,9 +52,7 @@ function normalizeContexts(input, referenceSet) {
 }
 
 function compactAtlas(questions) {
-  const groups = new Map();
-  for (const question of questions) groups.set(question.systemId, [...(groups.get(question.systemId) ?? []), question.rationale]);
-  return [...groups.entries()].map(([systemId, rationales]) => ({ systemId, rationale: [...new Set(rationales)].sort(compare).join(" ") })).sort((left, right) => compare(left.systemId, right.systemId));
+  return questions.map((question) => ({ ...question, conditions: [...question.conditions], verificationPrompts: [...question.verificationPrompts] })).sort((left, right) => compare(left.questionId, right.questionId));
 }
 
 function atlasNames(selection) {
@@ -73,7 +77,7 @@ function validateClaims(claims, evidence) {
 /** Stage 4: records only the available evidence explicitly bound to each selected system. */
 export function inventoryReferenceSystems({ brief, atlas, evidence, claims = [] } = {}) {
   const safeBrief = copy(brief); const selected = copy(atlas); const registered = registerReferenceEvidence({ records: evidence });
-  if (!exact(safeBrief, ["objective", "decisionQuestions"]) || !text(safeBrief.objective) || !sorted(safeBrief.decisionQuestions) || !Array.isArray(selected)) fail("invalid-atlas");
+  if (!text(safeBrief.objective) || !sorted(safeBrief.decisionQuestions, id) || !Array.isArray(selected)) fail("invalid-atlas");
   validateClaims(claims, registered);
   const systems = new Map();
   for (const entry of selected) {
@@ -84,7 +88,10 @@ export function inventoryReferenceSystems({ brief, atlas, evidence, claims = [] 
   return freeze([...systems.entries()].map(([systemId, questions]) => {
     const evidenceIds = registered.filter((record) => record.systemIds.includes(systemId)).map(({ evidenceId }) => evidenceId);
     const hasAvailableEvidence = registered.some((record) => record.availability === "available" && record.systemIds.includes(systemId));
-    return { systemId, name: systemId.split("-").map((part) => part[0].toUpperCase() + part.slice(1)).join(" "), applicability: hasAvailableEvidence && !questions.some(({ applicability }) => applicability === "unknown") ? questions[0].applicability : "unknown", evidenceIds };
+    const order = ["unknown", "conditional", "optional", "required-candidate"];
+    const applicable = questions.map(({ applicability }) => applicability);
+    const summary = applicable.every((value) => value === "not-applicable") ? "not-applicable" : applicable.includes("not-applicable") ? "unknown" : order.reduce((current, value) => order.indexOf(value) < order.indexOf(current) ? value : current, "required-candidate");
+    return { systemId, name: systemId.split("-").map((part) => part[0].toUpperCase() + part.slice(1)).join(" "), applicability: hasAvailableEvidence ? summary : "unknown", evidenceIds };
   }).sort((left, right) => compare(left.systemId, right.systemId)));
 }
 
@@ -164,6 +171,8 @@ function verificationQueue(evidence, dives) {
 export function buildReferenceAnalysis(input = {}) {
   const value = copy(input); const analysisId = value.brief?.analysisId; const brief = buildReferenceBrief(value.brief); const referenceSet = normalizeReferences(value.referenceSet); const referenceContexts = normalizeContexts(value.referenceContexts, referenceSet);
   const atlasQuestions = mergeSystemAtlas(value.atlas); const atlasSelection = compactAtlas(atlasQuestions); const evidence = registerReferenceEvidence({ records: value.evidence });
+  const decisionQuestionIds = new Set(brief.decisionQuestions);
+  if (referenceSet.some(({ decisionQuestionIds: ids }) => ids.some((questionId) => !decisionQuestionIds.has(questionId)))) fail("dangling-decision-question");
   validateEvidenceBindings({ evidence, contexts: referenceContexts, systemIds: atlasSelection.map(({ systemId }) => systemId) });
   const claims = validateClaims(value.claims ?? [], evidence);
   const names = atlasNames(value.atlas); const systemInventory = inventoryReferenceSystems({ brief, atlas: atlasQuestions, evidence, claims }).map((item) => ({ ...item, name: names.get(item.systemId) ?? item.name }));

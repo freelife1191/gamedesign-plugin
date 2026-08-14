@@ -62,7 +62,7 @@
 
 | 스킬 | 직접 호출 신호 | 피할 때 | 입력 | 결과 | 다음 스킬 | 상세 가이드 |
 | --- | --- | --- | --- | --- | --- | --- |
-| `analyze-game-design-references` | `$game-design-studio:analyze-game-design-references` — 경쟁작 관찰과 시스템 비교 | 단일 규칙 명세만 바로 작성할 때 | 결정 질문·관찰 근거·프로젝트 제약 | 시스템 지도·심층 분석·`pending-review` 전송 제안 | 사람 검토 또는 시스템 설계 | [경쟁작·레퍼런스 분석](../reference-analysis.md) |
+| `analyze-game-design-references` | `$game-design-studio:analyze-game-design-references` — 경쟁작 관찰과 시스템 비교 | 단일 규칙 명세만 바로 작성할 때 | 결정 질문·관찰 근거·프로젝트 제약 | 시스템 지도·심층 분석·`pending-review` 설계 전환 제안 | 사람 검토 또는 시스템 설계 | [경쟁작·레퍼런스 분석](../reference-analysis.md) |
 | `maintain-game-design-glossary` | `$game-design-studio:maintain-game-design-glossary` — 용어 후보와 스냅샷 검토 | 원문을 자동으로 바꾸려 할 때 | 문서·근거 ID·사람 결정 | 후보·findings·승인된 용어 스냅샷 | 사람의 원문 반영 결정 | [용어 사전 검토](../glossary.md) |
 
 이미지 mode는 `prompt-only`, `select`, `required`, `all`의 기존 artifact-local 선택을 그대로 따릅니다. `prompt-only`는 prompt·placeholder만 보존하고 생성 없음입니다. `select`는 사용자가 제공한 ordered exact stable IDs로 finite generation을 선택합니다. host adapter가 immutable selection receipt를 공급합니다. `required`와 `all`은 declared finite generation만 허용합니다. 이 generation selection은 승인 결정이 아닙니다. named human decision은 `concept-draft → document-approved → production-candidate` lifecycle promotion에만 필요하며, 각 승격의 reviewer·scope·evidence를 대체하지 않습니다. SVG는 Skillstead wrapper의 source mapping·lint·renderer fallback 경계를 우회하지 않습니다.

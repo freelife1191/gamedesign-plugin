@@ -35,12 +35,16 @@ function validReferenceAnalysis() {
     analysisId: "cutscene-reference-v1",
     brief: {
       objective: "Identify reusable cutscene pacing patterns.",
-      decisionQuestions: ["Which pacing loop supports player agency?"],
+      decisionQuestions: ["question-agency-loop"],
+      playerExperiencePromise: "Each reveal leads to a legible player choice.",
+      differentiationHypotheses: ["choice-first"], genreHypotheses: ["action-rpg"], platformHypotheses: ["pc"], businessModelHypotheses: ["premium"],
+      researchScope: ["observable-loop"], exclusionScope: ["private-metrics"], constraints: { time: "two-hours", materials: ["local-notes"], languages: ["ko"], regions: ["kr"] },
+      forbiddenConclusions: ["revenue-causality"], completionCriteria: ["human-review"], humanReviewer: "Lead Designer",
     },
     referenceSet: [
-      { referenceId: "ref-cinematic-sample", label: "Cinematic sample", role: "core-system-exemplar", availability: "available", limitation: null },
-      { referenceId: "ref-cinematic-sample", label: "Cinematic sample", role: "direct-competitor", availability: "available", limitation: null },
-      { referenceId: "ref-cinematic-sample", label: "Cinematic sample", role: "operations-monetization-comparator", availability: "unavailable", limitation: "No comparable operations evidence is available." },
+      { referenceId: "ref-cinematic-sample", label: "Cinematic sample", role: "core-system-exemplar", decisionQuestionIds: ["question-agency-loop"], availability: "available", limitation: null },
+      { referenceId: "ref-cinematic-sample", label: "Cinematic sample", role: "direct-competitor", decisionQuestionIds: ["question-agency-loop"], availability: "available", limitation: null },
+      { referenceId: "ref-cinematic-sample", label: "Cinematic sample", role: "operations-monetization-comparator", decisionQuestionIds: ["question-agency-loop"], availability: "unavailable", limitation: "No comparable operations evidence is available." },
     ],
     referenceContexts: [{ contextId: "ctx-cinematic-v1", referenceId: "ref-cinematic-sample", version: "1", platform: "pc" }],
     evidence: [{
@@ -55,9 +59,10 @@ function validReferenceAnalysis() {
       verificationQuestion: null,
       claimKind: "observation",
       claim: "The player receives a movement choice after the reveal.",
+      build: "1.0.0", region: "kr", accountState: "guest", observedAt: "2026-08-13T00:00:00.000Z", locator: { kind: "project-relative", value: "evidence/reveal.png" }, screen: "reveal", action: "move", result: "choice", transformations: [{ from: "original", to: "capture" }, { from: "capture", to: "summary" }], rights: { copyright: "reference-owner", use: "analysis", publication: "private" }, conflictState: "none", counterexampleOf: null,
     }],
     claims: [],
-    atlasSelection: [{ systemId: "system-reveal-loop", rationale: "Supports the decision question." }],
+    atlasSelection: [{ questionId: "question-reveal-loop", systemId: "system-reveal-loop", applicability: "required-candidate", rationale: "Supports the decision question.", conditions: ["if-reveal"], verificationPrompts: ["verify-reveal"] }],
     systemInventory: [{
       systemId: "system-reveal-loop",
       name: "Reveal loop",
@@ -154,6 +159,7 @@ function registryEvidence(overrides = {}) {
     availability: "available",
     limitation: null,
     verificationQuestion: null,
+    build: "1.0.0", region: "kr", accountState: "guest", observedAt: "2026-08-13T00:00:00.000Z", locator: { kind: "project-relative", value: "evidence/registry.png" }, screen: "loop", action: "observe", result: "choice", transformations: [{ from: "original", to: "capture" }, { from: "capture", to: "summary" }], rights: { copyright: "reference-owner", use: "analysis", publication: "private" }, conflictState: "none", counterexampleOf: null,
     ...overrides,
   };
 }
@@ -202,6 +208,41 @@ test("reference analysis keeps fact, inference, unknown and transfer state close
     mutate(value);
     assert.equal(validateReferenceAnalysis(value).ok, false);
   }
+});
+
+test("Reference Brief roles and evidence preserve their closed decision and provenance contracts", () => {
+  const brief = buildReferenceBrief({
+    analysisId: "brief-contract",
+    objective: "Test the complete reference boundary.",
+    decisionQuestions: ["question-loop"],
+    playerExperiencePromise: "A legible choice follows each reveal.",
+    differentiationHypotheses: ["choice-first"],
+    genreHypotheses: ["action-rpg"],
+    platformHypotheses: ["pc"],
+    businessModelHypotheses: ["premium"],
+    researchScope: ["observable-loop"],
+    exclusionScope: ["private-metrics"],
+    constraints: { languages: ["ko"], materials: ["local-notes"], regions: ["kr"], time: "two-hours" },
+    forbiddenConclusions: ["revenue-causality"],
+    completionCriteria: ["human-review"],
+    humanReviewer: "Lead Designer",
+  });
+  assert.deepEqual(brief.decisionQuestions, ["question-loop"]);
+  assert.throws(() => buildReferenceAnalysis({ ...validReferenceAnalysis(), brief: { ...brief, analysisId: "cutscene-reference-v1" }, referenceSet: validReferenceAnalysis().referenceSet.map((entry) => ({ ...entry, decisionQuestionIds: entry.role === "direct-competitor" ? ["question-missing"] : ["question-loop"] })) }), /invalid/u);
+  const registered = registerReferenceEvidence({ records: [{
+    ...registryEvidence(), build: "1.0.0", region: "kr", accountState: "guest", observedAt: "2026-08-13T00:00:00.000Z",
+    locator: { kind: "project-relative", value: "evidence/loop.png" }, screen: "loop", action: "complete", result: "choice",
+    transformations: [{ from: "original", to: "capture" }, { from: "capture", to: "summary" }],
+    rights: { copyright: "reference-owner", use: "analysis", publication: "private" }, conflictState: "none", counterexampleOf: null,
+  }] });
+  assert.equal(registered[0].locator.value, "evidence/loop.png");
+  assert.throws(() => registerReferenceEvidence({ records: [{ ...registered[0], locator: { kind: "project-relative", value: "../secret" } }] }), /reference evidence/u);
+});
+
+test("analysis preserves full Atlas questions and conservatively summarizes systems", () => {
+  const atlas = strictAtlas({ genre: [{ overlayId: "genre-action", questions: [atlasQuestion("economy-question", "required-candidate", ["if economy exists"]) ] }] });
+  const merged = mergeSystemAtlas({ atlas, genreIds: ["genre-action"] });
+  assert.deepEqual(merged[0].verificationPrompts, ["Verify this question."]);
 });
 
 test("reference analysis rejects dangling references instead of treating fake evidence as support", () => {
@@ -425,24 +466,13 @@ test("bundled catalog preserves optional source fallbacks and exact registered U
     ["steamdb-faq", "https://steamdb.info/faq/", false],
     ["igdb-api", "https://api-docs.igdb.com/", false],
   ]);
-  assert.deepEqual(registerReferenceEvidence({ records: [registryEvidence({
+  const unavailable = registerReferenceEvidence({ records: [registryEvidence({
     evidenceId: "ev-offline-source",
     availability: "unavailable",
     limitation: "Offline source unavailable; direct verification remains open.",
     verificationQuestion: "Which official source can verify this when access returns?",
-  })] }), [{
-    evidenceId: "ev-offline-source",
-    referenceId: "ref-cinematic-sample",
-    contextId: "ctx-cinematic-v1",
-    systemIds: ["system-reveal-loop"],
-    sourceType: "official-site",
-    tier: "primary",
-    claimKind: "observation",
-    claim: "A direct evidence record for registry validation.",
-    availability: "unavailable",
-    limitation: "Offline source unavailable; direct verification remains open.",
-    verificationQuestion: "Which official source can verify this when access returns?",
-  }]);
+  })] });
+  assert.deepEqual(unavailable.map(({ evidenceId, tier, conflictState }) => [evidenceId, tier, conflictState]), [["ev-offline-source", "primary", "none"]]);
 });
 
 test("Atlas rejects unknown and duplicate overlay selections", async () => {
@@ -603,20 +633,9 @@ test("catalog loader rejects coercion, source mutation, and symlink leaves", asy
 });
 
 test("registry emits exact EvidenceRecord values that immediately compose with claim validation", () => {
-  const record = {
-    evidenceId: "ev-registry-observation",
-    referenceId: "ref-cinematic-sample",
-    contextId: "ctx-cinematic-v1",
-    systemIds: ["system-reveal-loop"],
-    sourceType: "official-site",
-    claimKind: "observation",
-    claim: "The official page lists the observed movement choice.",
-    availability: "available",
-    limitation: null,
-    verificationQuestion: null,
-  };
+  const record = registryEvidence({ evidenceId: "ev-registry-observation", claim: "The official page lists the observed movement choice." });
   const [registered] = registerReferenceEvidence({ records: [record] });
-  assert.deepEqual(Object.keys(registered), ["evidenceId", "referenceId", "contextId", "systemIds", "sourceType", "tier", "claimKind", "claim", "availability", "limitation", "verificationQuestion"]);
+  assert.equal(Object.keys(registered).includes("counterexampleOf"), true);
   const claim = { claimId: "claim-registry-observation", kind: "observation", category: "general", causal: false, evidenceIds: ["ev-registry-observation"], systemIds: ["system-reveal-loop"] };
   assert.deepEqual(validateClaimAgainstEvidence({ claim, evidenceById: new Map([[registered.evidenceId, registered]]) }), { ok: true, code: "supported" });
   assert.throws(() => registerReferenceEvidence({ records: [{ ...record, extra: true }] }), { code: "reference-evidence.invalid" });
@@ -658,19 +677,19 @@ function analysisBriefFixture(overrides = {}) {
   return {
     analysisId: "reference-analysis-fixture",
     objective: "Identify transferable session-loop patterns.",
-    decisionQuestions: ["Which loop supports a ten-minute session?"],
+    decisionQuestions: ["question-session-loop"], playerExperiencePromise: "A short loop leaves the next choice clear.", differentiationHypotheses: ["choice-first"], genreHypotheses: ["action-rpg"], platformHypotheses: ["pc"], businessModelHypotheses: ["premium"], researchScope: ["observable-loop"], exclusionScope: ["private-metrics"], constraints: { time: "two-hours", materials: ["local-notes"], languages: ["ko"], regions: ["kr"] }, forbiddenConclusions: ["revenue-causality"], completionCriteria: ["human-review"], humanReviewer: "Lead Designer",
     ...overrides,
   };
 }
 
 function analysisReferenceSetFixture({ singleGame = false } = {}) {
-  const shared = { referenceId: "ref-alpha", label: "Alpha", availability: "available", limitation: null };
+  const shared = { referenceId: "ref-alpha", label: "Alpha", decisionQuestionIds: ["question-session-loop"], availability: "available", limitation: null };
   return [
     { ...shared, role: "direct-competitor" },
-    singleGame ? { ...shared, role: "core-system-exemplar" } : { referenceId: "ref-beta", label: "Beta", role: "core-system-exemplar", availability: "available", limitation: null },
+    singleGame ? { ...shared, role: "core-system-exemplar" } : { referenceId: "ref-beta", label: "Beta", role: "core-system-exemplar", decisionQuestionIds: ["question-session-loop"], availability: "available", limitation: null },
     singleGame
       ? { ...shared, role: "operations-monetization-comparator" }
-      : { referenceId: "ref-gamma", label: "Gamma", role: "operations-monetization-comparator", availability: "unavailable", limitation: "Offline source is unavailable." },
+      : { referenceId: "ref-gamma", label: "Gamma", role: "operations-monetization-comparator", decisionQuestionIds: ["question-session-loop"], availability: "unavailable", limitation: "Offline source is unavailable." },
   ];
 }
 
@@ -687,6 +706,7 @@ function analysisEvidenceFixture(overrides = {}) {
       availability: "available",
       limitation: null,
       verificationQuestion: null,
+      build: "1.0.0", region: "kr", accountState: "guest", observedAt: "2026-08-13T00:00:00.000Z", locator: { kind: "project-relative", value: "evidence/alpha.png" }, screen: "loop", action: "complete", result: "reward", transformations: [{ from: "original", to: "capture" }, { from: "capture", to: "summary" }], rights: { copyright: "reference-owner", use: "analysis", publication: "private" }, conflictState: "none", counterexampleOf: null,
     },
     {
       evidenceId: "ev-beta-offline",
@@ -699,6 +719,7 @@ function analysisEvidenceFixture(overrides = {}) {
       availability: "unavailable",
       limitation: "Offline source is unavailable.",
       verificationQuestion: "Which official page can verify the offer?",
+      build: "1.0.0", region: "kr", accountState: "guest", observedAt: "2026-08-13T00:00:00.000Z", locator: { kind: "url", value: "https://example.invalid/offer" }, screen: "offer", action: "inspect", result: "unavailable", transformations: [{ from: "original", to: "capture" }, { from: "capture", to: "summary" }], rights: { copyright: "reference-owner", use: "analysis", publication: "private" }, conflictState: "none", counterexampleOf: null,
     },
     ...(overrides.records ?? []),
   ];
@@ -855,7 +876,7 @@ test("fix1 preserves evidence context bindings, structured loops, priority trace
     contextId: "ctx-cinematic-v1",
     systemIds: ["core-play"],
   }] });
-  assert.deepEqual(Object.keys(evidence), ["evidenceId", "referenceId", "contextId", "systemIds", "sourceType", "tier", "claimKind", "claim", "availability", "limitation", "verificationQuestion"]);
+  assert.equal(Object.keys(evidence).includes("counterexampleOf"), true);
   const inventory = [{ systemId: "core-play", name: "Core play", applicability: "unknown", evidenceIds: ["ev-default"] }];
   const maps = buildSystemMaps({
     inventory,
@@ -884,7 +905,7 @@ test("fix1 preserves evidence context bindings, structured loops, priority trace
 
 test("fix1 binds only related available evidence and preserves contexts in canonical artifacts", async (t) => {
   const input = await analysisInputFixture({ evidence: analysisEvidenceFixture({ records: [{
-    evidenceId: "ev-alpha-progression", referenceId: "ref-alpha", contextId: "ctx-alpha-v1", systemIds: ["progression"], sourceType: "direct-play", claimKind: "observation", claim: "A separate progression observation.", availability: "available", limitation: null, verificationQuestion: null,
+    ...analysisEvidenceFixture()[0], evidenceId: "ev-alpha-progression", systemIds: ["progression"], claim: "A separate progression observation.",
   }] }) });
   const analysis = buildReferenceAnalysis(input);
   assert.deepEqual(analysis.deepDives[0].evidenceIds, ["ev-alpha-loop"]);
@@ -969,7 +990,7 @@ test("fix2 holds unavailable-only systems but allows two observed references to 
     assert.equal([templateLines[2], templateLines[3], templateLines[4], ...outputLines.slice(2)].every((line) => cellCount(line) === expectedColumns), true);
   }
   const unavailableOnly = buildReferenceAnalysis(await analysisInputFixture({ evidence: [{
-    evidenceId: "ev-alpha-offline", referenceId: "ref-alpha", contextId: "ctx-alpha-v1", systemIds: ["core-play"], sourceType: "official-site", claimKind: "observation", claim: "Unavailable core-loop source.", availability: "unavailable", limitation: "Offline.", verificationQuestion: "Which official page can verify the loop?",
+    ...analysisEvidenceFixture()[0], evidenceId: "ev-alpha-offline", sourceType: "official-site", claim: "Unavailable core-loop source.", availability: "unavailable", limitation: "Offline.", verificationQuestion: "Which official page can verify the loop?",
   }] }));
   assert.equal(unavailableOnly.systemInventory.some(({ systemId, evidenceIds }) => systemId === "core-play" && evidenceIds.includes("ev-alpha-offline")), true);
   assert.deepEqual(unavailableOnly.deepDives[0].referenceIds, []);

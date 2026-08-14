@@ -44,7 +44,26 @@ function isRecord(value) {
 }
 
 function nonEmptyText(value) {
-  return typeof value === "string" && value.length > 0;
+  return typeof value === "string" && value.length > 0 && !value.includes("\0") && !value.includes("\r") && value === value.normalize("NFC");
+}
+
+function safeLocator(value) {
+  if (!isRecord(value) || Object.keys(value).sort().join("\0") !== "kind\0value" || !nonEmptyText(value.value)) return false;
+  if (value.kind === "project-relative") return !value.value.startsWith("/") && !value.value.includes("\\") && !value.value.split("/").includes("..");
+  if (value.kind === "url") {
+    try { const url = new URL(value.value); return url.protocol === "https:" && !url.username && !url.password && !url.hash; } catch { return false; }
+  }
+  return false;
+}
+
+function validProvenance(value) {
+  if (!nonEmptyText(value.build) || !nonEmptyText(value.region) || !nonEmptyText(value.accountState) || !nonEmptyText(value.observedAt)
+    || Number.isNaN(Date.parse(value.observedAt)) || !safeLocator(value.locator) || !nonEmptyText(value.screen) || !nonEmptyText(value.action) || !nonEmptyText(value.result)) return false;
+  if (!Array.isArray(value.transformations) || value.transformations.length !== 2
+    || !value.transformations.every((item) => isRecord(item) && Object.keys(item).sort().join("\0") === "from\0to" && ["original", "capture", "summary"].includes(item.from) && ["original", "capture", "summary"].includes(item.to))) return false;
+  if (value.transformations[0].from !== "original" || value.transformations[0].to !== "capture" || value.transformations[1].from !== "capture" || value.transformations[1].to !== "summary") return false;
+  if (!isRecord(value.rights) || Object.keys(value.rights).sort().join("\0") !== "copyright\0publication\0use" || !["analysis", "internal-review"].includes(value.rights.use) || !["private", "redacted"].includes(value.rights.publication) || !nonEmptyText(value.rights.copyright)) return false;
+  return ["none", "conflicting"].includes(value.conflictState) && (value.counterexampleOf === null || validEvidenceId(value.counterexampleOf));
 }
 
 function dataField(value, key) {
@@ -85,6 +104,7 @@ function validTieredEvidence(value) {
     && ["available", "unavailable"].includes(value.availability)
     && claimKinds.has(value.claimKind)
     && nonEmptyText(value.claim)
+    && validProvenance(value)
     && ((value.availability === "available" && value.limitation === null && value.verificationQuestion === null)
       || (value.availability === "unavailable" && nonEmptyText(value.limitation) && nonEmptyText(value.verificationQuestion)));
 }
@@ -114,7 +134,7 @@ export function registerReferenceEvidence(input = {}) {
   const ids = new Set();
   const registered = copy.records.map((record) => {
     if (!hasExactEvidenceKeys(record, { allowMissingTier: true }) && !hasExactEvidenceKeys(record)) fail();
-    if (!validEvidenceId(record.evidenceId) || !validEvidenceId(record.referenceId) || !validEvidenceId(record.contextId) || !sortedUniqueIds(record.systemIds) || !evidenceSourceTypes.includes(record.sourceType) || !claimKinds.has(record.claimKind) || !nonEmptyText(record.claim)) fail();
+    if (!validEvidenceId(record.evidenceId) || !validEvidenceId(record.referenceId) || !validEvidenceId(record.contextId) || !sortedUniqueIds(record.systemIds) || !evidenceSourceTypes.includes(record.sourceType) || !claimKinds.has(record.claimKind) || !nonEmptyText(record.claim) || !validProvenance(record)) fail();
     const tier = tierForSourceType(record.sourceType);
     if (!tier || (Object.hasOwn(record, "tier") && record.tier !== tier)) fail("tier");
     if (ids.has(record.evidenceId)) fail("duplicate-id");
@@ -134,6 +154,18 @@ export function registerReferenceEvidence(input = {}) {
       availability: record.availability,
       limitation: record.limitation,
       verificationQuestion: record.verificationQuestion,
+      build: record.build,
+      region: record.region,
+      accountState: record.accountState,
+      observedAt: record.observedAt,
+      locator: record.locator,
+      screen: record.screen,
+      action: record.action,
+      result: record.result,
+      transformations: record.transformations,
+      rights: record.rights,
+      conflictState: record.conflictState,
+      counterexampleOf: record.counterexampleOf,
     };
   });
   return registered.sort((left, right) => byteCompare(left.evidenceId, right.evidenceId));

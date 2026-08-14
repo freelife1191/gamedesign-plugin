@@ -12,7 +12,7 @@
 | [`map-game-design-career`](../skills/map-game-design-career.md) | 한 역할의 current evidence와 gap만 비교할 때 | `career-strategist`가 사실·추론·제안을 구분합니다. |
 | [`orchestrate-game-design-career`](../skills/orchestrate-game-design-career.md) | 여러 Career stage와 completion gate를 한 brief로 묶을 때 | route 선택은 사실·추론·제안과 named owner를 보존합니다. |
 | [`research-game-design-jobs`](../skills/research-game-design-jobs.md) | 한 role·level·region의 current posting sample만 조사할 때 | `sourceUrl`, `location`, `retrievalDate`, `region`, sample boundary, `reviewAfter`가 없으면 current claim을 만들지 않습니다. |
-| [`analyze-game-design-references`](../reference-analysis.md) | 경쟁작 관찰을 포트폴리오 분석 근거로 정리할 때 | 관찰·추론·가설을 나누고, 전송 제안은 `pending-review`로 남깁니다. |
+| [`analyze-game-design-references`](../reference-analysis.md) | 경쟁작 관찰을 포트폴리오 분석 근거로 정리할 때 | 관찰·추론·가설을 나누고, 설계 전환 제안은 `pending-review`로 남깁니다. |
 | [`maintain-game-design-glossary`](../glossary.md) | 용어 후보와 스냅샷을 검토할 때 | 원문 자동 치환 없이 사람이 승인한 용어만 스냅샷에 넣습니다. |
 
 직접 스킬은 입력과 output이 하나로 확정됐을 때만 사용합니다. 여러 단계와 우선순위가 남으면 오케스트레이터가 route를 정한 후 같은 직접 스킬로 돌아옵니다.

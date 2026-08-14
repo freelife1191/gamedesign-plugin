@@ -135,12 +135,13 @@ async function loadAnalysisRuntime(skillPath, contract, layout, counterpartFiles
 }
 
 function analysisInput(atlas) {
+  const provenance = { build: "1.0.0", region: "kr", accountState: "guest", observedAt: "2026-08-13T00:00:00.000Z", locator: { kind: "project-relative", value: "evidence/loop.png" }, screen: "loop", action: "complete", result: "choice", transformations: [{ from: "original", to: "capture" }, { from: "capture", to: "summary" }], rights: { copyright: "reference-owner", use: "analysis", publication: "private" }, conflictState: "none", counterexampleOf: null };
   return {
-    brief: { analysisId: "pressure-analysis", objective: "Test a safe reference workflow.", decisionQuestions: ["Which loop is evidenced?"] },
+    brief: { analysisId: "pressure-analysis", objective: "Test a safe reference workflow.", decisionQuestions: ["question-loop"], playerExperiencePromise: "Choices stay legible.", differentiationHypotheses: ["choice-first"], genreHypotheses: ["action-rpg"], platformHypotheses: ["pc"], businessModelHypotheses: ["premium"], researchScope: ["observable-loop"], exclusionScope: ["private-metrics"], constraints: { time: "two-hours", materials: ["local-notes"], languages: ["ko"], regions: ["kr"] }, forbiddenConclusions: ["revenue-causality"], completionCriteria: ["human-review"], humanReviewer: "Lead Designer" },
     referenceSet: [
-      { referenceId: "ref-alpha", label: "Alpha", role: "direct-competitor", availability: "available", limitation: null },
-      { referenceId: "ref-beta", label: "Beta", role: "core-system-exemplar", availability: "available", limitation: null },
-      { referenceId: "ref-gamma", label: "Gamma", role: "operations-monetization-comparator", availability: "unavailable", limitation: "Offline official source is unavailable." },
+      { referenceId: "ref-alpha", label: "Alpha", role: "direct-competitor", decisionQuestionIds: ["question-loop"], availability: "available", limitation: null },
+      { referenceId: "ref-beta", label: "Beta", role: "core-system-exemplar", decisionQuestionIds: ["question-loop"], availability: "available", limitation: null },
+      { referenceId: "ref-gamma", label: "Gamma", role: "operations-monetization-comparator", decisionQuestionIds: ["question-loop"], availability: "unavailable", limitation: "Offline official source is unavailable." },
     ],
     referenceContexts: [
       { contextId: "ctx-alpha-v1", referenceId: "ref-alpha", version: "1", platform: "pc" },
@@ -149,9 +150,9 @@ function analysisInput(atlas) {
     ],
     atlas: { atlas },
     evidence: [
-      { evidenceId: "ev-alpha", referenceId: "ref-alpha", contextId: "ctx-alpha-v1", systemIds: ["core-play"], sourceType: "direct-play", claimKind: "observation", claim: "The player completes a loop.", availability: "available", limitation: null, verificationQuestion: null },
-      { evidenceId: "ev-beta-community", referenceId: "ref-beta", contextId: "ctx-beta-v1", systemIds: ["core-play"], sourceType: "community", claimKind: "observation", claim: "Community material suggests a loop question.", availability: "available", limitation: null, verificationQuestion: null },
-      { evidenceId: "ev-gamma-offline", referenceId: "ref-gamma", contextId: "ctx-gamma-v1", systemIds: ["core-play"], sourceType: "official-site", claimKind: "observation", claim: "Official offer evidence is unavailable.", availability: "unavailable", limitation: "Offline official source is unavailable.", verificationQuestion: "Which official page can verify the offer?" },
+      { evidenceId: "ev-alpha", referenceId: "ref-alpha", contextId: "ctx-alpha-v1", systemIds: ["core-play"], sourceType: "direct-play", claimKind: "observation", claim: "The player completes a loop.", availability: "available", limitation: null, verificationQuestion: null, ...provenance },
+      { evidenceId: "ev-beta-community", referenceId: "ref-beta", contextId: "ctx-beta-v1", systemIds: ["core-play"], sourceType: "community", claimKind: "observation", claim: "Community material suggests a loop question.", availability: "available", limitation: null, verificationQuestion: null, ...provenance },
+      { evidenceId: "ev-gamma-offline", referenceId: "ref-gamma", contextId: "ctx-gamma-v1", systemIds: ["core-play"], sourceType: "official-site", claimKind: "observation", claim: "Official offer evidence is unavailable.", availability: "unavailable", limitation: "Offline official source is unavailable.", verificationQuestion: "Which official page can verify the offer?", ...provenance },
     ],
     claims: [],
     edges: [{ mapId: "map-core-play", systemId: "core-play", nodes: [{ nodeId: "input", kind: "input", label: "Input" }, { nodeId: "output", kind: "output", label: "Output" }, { nodeId: "process", kind: "process", label: "Process" }], connections: [{ connectionId: "input-process", fromNodeId: "input", toNodeId: "process", connectedSystemIds: ["core-play"] }, { connectionId: "process-output", fromNodeId: "process", toNodeId: "output", connectedSystemIds: ["core-play"] }] }],

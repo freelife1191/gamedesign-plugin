@@ -98,7 +98,7 @@
 | 한국어 문서 다듬기 | [im-not-ai](https://github.com/epoko77-ai/im-not-ai)를 내부 스킬로 사용해 번역투와 기계적인 문장을 찾고 사실·수치·식별자(ID)·승인 상태를 보호한 채 수정안과 검증 기록을 남김 | 윤문 초안, 변경 검증 기록, 사람이 반영할 수정안 |
 | 흐름과 구조 설명하기 | [Skillstead](https://github.com/kyungseo/skillstead)로 편집 가능한 SVG와 검증용 2배 PNG를 만들고 [Archify](https://github.com/tt-a1i/archify)로 관계를 따라가며 살펴볼 수 있는 HTML 구조도를 제작 | SVG·PNG 도식, Archify HTML, 렌더·검수 기록 |
 | 문서 형식으로 전달하기 | 기준 결과와 승인된 자산을 보존한 채 MD·PDF·DOCX·PPTX 형식별 준비와 화면 검수를 분리 | 원본 MD, 검증된 PDF·DOCX·PPTX, 형식별 결과 기록 |
-| 경쟁작·레퍼런스 분석과 용어 사전 | [Studio 분석](guides/game-design-studio/reference-analysis.md)·[Studio 용어 사전](guides/game-design-studio/glossary.md), [Career 분석](guides/game-design-career/reference-analysis.md)·[Career 용어 사전](guides/game-design-career/glossary.md)에서 관찰 근거, 전송 제안과 승인 전 용어 후보를 분리 | 비교작 근거 등록부, 시스템 지도, 검토 대기 제안, 승인된 용어 스냅샷 |
+| 경쟁작·레퍼런스 분석과 용어 사전 | [Studio 분석](guides/game-design-studio/reference-analysis.md)·[Studio 용어 사전](guides/game-design-studio/glossary.md), [Career 분석](guides/game-design-career/reference-analysis.md)·[Career 용어 사전](guides/game-design-career/glossary.md)에서 관찰 근거, 설계 전환 제안과 승인 전 용어 후보를 분리 | 비교작 근거 등록부, 시스템 지도, 검토 대기 제안, 승인된 용어 스냅샷 |
 
 #### 🎨 게임 이미지는 먼저 기준부터 정합니다
 
@@ -1711,7 +1711,7 @@ $game-design-studio:export-game-design-documents \
 | 작업 그룹 | Studio: 언제 어떤 결과를 만드는가 | Career: 언제 어떤 결과를 만드는가 |
 | --- | --- | --- |
 | 전체 조율 | 게임 기획 프로젝트 조율 (`orchestrate-game-design-project`): 여러 분야를 연결할 때 호출 → 게임 기획 요약서 (`game-design-brief`) | 게임 기획 경력 조율 (`orchestrate-game-design-career`): 경력 단계와 여러 작업을 연결할 때 호출 → 경력 계획 (`game-design-career-plan`) |
-| 탐색·분석 | 게임 기획 검토 (`review-game-design`)와 레퍼런스 분석 (`analyze-game-design-references`): 기존 결과물 또는 경쟁작 관찰을 분석할 때 호출 → 기획 검토 기록·시스템 지도·검토 대기 전송 제안 | 채용 조사 (`research-game-design-jobs`)·역기획 (`reverse-engineer-game-design`)·레퍼런스 분석 (`analyze-game-design-references`): 공고 또는 관찰 자료가 있을 때 호출 → 채용 근거·역기획 문서·포트폴리오 분석 근거 |
+| 탐색·분석 | 게임 기획 검토 (`review-game-design`)와 레퍼런스 분석 (`analyze-game-design-references`): 기존 결과물 또는 경쟁작 관찰을 분석할 때 호출 → 기획 검토 기록·시스템 지도·검토 대기 설계 전환 제안 | 채용 조사 (`research-game-design-jobs`)·역기획 (`reverse-engineer-game-design`)·레퍼런스 분석 (`analyze-game-design-references`): 공고 또는 관찰 자료가 있을 때 호출 → 채용 근거·역기획 문서·포트폴리오 분석 근거 |
 | 핵심 설계 | 게임 비전 정의 (`define-game-vision`)·게임 시스템 설계 (`design-game-systems`): 비전 또는 규칙 범위가 정해졌을 때 호출 → 게임 방향 원칙 (`vision-pillars`)·시스템 명세서 (`system-specification`) | 경력 지도 만들기 (`map-game-design-career`)·주니어 성장 계획 (`plan-junior-growth`): 목표 역할 또는 성장 기간을 비교할 때 호출 → 역량표 (`competency-matrix`)·학습 경로 (`learning-roadmap`) |
 | 콘텐츠·경험 | 게임 콘텐츠 설계 (`design-game-content`)·플레이어 경험 설계 (`design-player-experience`): 콘텐츠 단위나 UX 흐름이 정해졌을 때 호출 → 퀘스트·NPC 명세 (`narrative-quest-npc`)·UI·UX 흐름과 상태표 (`ui-ux-flow-state`) | 기획 포트폴리오 만들기 (`build-game-design-portfolio`)·면접 연습 (`practice-game-design-interview`): 공개 가능한 자료 또는 공고가 있을 때 호출 → 포트폴리오 (`creative-design-portfolio`)·면접 답변 기록 (`interview-question-answer-log`) |
 | 검토·품질 | 게임 기획 검토 (`review-game-design`)·문서 품질 기준 적용 (`apply-document-quality-profile`): 결과물 또는 출력 목적이 있을 때 호출 → 검토 보고서·품질 기준 기록 | 포트폴리오 검토 (`review-game-design-portfolio`)·경력 문서 품질 기준 적용 (`apply-document-quality-profile`): 근거 묶음 또는 출력 목적이 있을 때 호출 → 포트폴리오 검토·품질 기준 기록 |
@@ -1727,7 +1727,7 @@ $game-design-studio:export-game-design-documents \
 | 스킬 이름과 ID | 사용하는 때 | 핵심 결과 | 직접 호출 | 상세 가이드 |
 | --- | --- | --- | --- | --- |
 | 문서 품질 기준 적용 (`apply-document-quality-profile`) | 문서의 독자·형식·검토 기준을 먼저 고정할 때 | 문서 목적과 형식에 맞는 품질 기준을 고정하고 선택 기록을 만듭니다. | `$game-design-studio:apply-document-quality-profile` | [문서 품질 기준 적용 상세 가이드](guides/game-design-studio/skills/apply-document-quality-profile.md) |
-| 경쟁작 레퍼런스 분석 (`analyze-game-design-references`) | 경쟁작 관찰을 시스템 비교와 검토 대기 전송 제안으로 정리할 때 | 시스템 지도, 심층 분석과 `pending-review` 전송 제안을 기록합니다. | `$game-design-studio:analyze-game-design-references` | [Studio 경쟁작 레퍼런스 분석 가이드](guides/game-design-studio/reference-analysis.md) |
+| 경쟁작 레퍼런스 분석 (`analyze-game-design-references`) | 경쟁작 관찰을 시스템 비교와 검토 대기 설계 전환 제안으로 정리할 때 | 시스템 지도, 심층 분석과 `pending-review` 설계 전환 제안을 기록합니다. | `$game-design-studio:analyze-game-design-references` | [Studio 경쟁작 레퍼런스 분석 가이드](guides/game-design-studio/reference-analysis.md) |
 | 기획 구조 도식 만들기 (`archify`) | 시스템 구성·작업 흐름을 탐색 가능한 HTML로 설명할 때 | 시스템 구성과 작업 흐름을 탐색 가능한 HTML 구조 도식으로 만듭니다. | `$game-design-studio:archify` | [기획 구조 도식 만들기 상세 가이드](guides/game-design-studio/skills/archify.md) |
 | 게임 비전 정의 (`define-game-vision`) | 대상 플레이어와 핵심 재미를 한 문장으로 정할 때 | 대상 플레이어, 핵심 재미와 검증 기준을 정리해 게임 방향 원칙을 만듭니다. | `$game-design-studio:define-game-vision` | [게임 비전 정의 상세 가이드](guides/game-design-studio/skills/define-game-vision.md) |
 | 게임 콘텐츠 설계 (`design-game-content`) | 퀘스트·레벨·캐릭터의 선택과 결과를 설계할 때 | 퀘스트, 레벨, 조우와 캐릭터를 제작 가능한 콘텐츠 명세로 만듭니다. | `$game-design-studio:design-game-content` | [게임 콘텐츠 설계 상세 가이드](guides/game-design-studio/skills/design-game-content.md) |
@@ -1760,7 +1760,7 @@ $game-design-studio:export-game-design-documents \
 | 스킬 이름과 ID | 사용하는 때 | 핵심 결과 | 직접 호출 | 상세 가이드 |
 | --- | --- | --- | --- | --- |
 | 경력 문서 품질 기준 적용 (`apply-document-quality-profile`) | 지원·학습 문서의 독자와 평가 기준을 먼저 정할 때 | 경력 문서 목적과 형식에 맞는 품질 기준과 선택 기록을 만듭니다. | `$game-design-career:apply-document-quality-profile` | [경력 문서 품질 기준 적용 상세 가이드](guides/game-design-career/skills/apply-document-quality-profile.md) |
-| 경쟁작 레퍼런스 분석 (`analyze-game-design-references`) | 경쟁작 관찰을 포트폴리오 분석 근거와 검토 대기 전송 제안으로 정리할 때 | 시스템 지도, 심층 분석과 `pending-review` 전송 제안을 기록합니다. | `$game-design-career:analyze-game-design-references` | [Career 경쟁작 레퍼런스 분석 가이드](guides/game-design-career/reference-analysis.md) |
+| 경쟁작 레퍼런스 분석 (`analyze-game-design-references`) | 경쟁작 관찰을 포트폴리오 분석 근거와 검토 대기 설계 전환 제안으로 정리할 때 | 시스템 지도, 심층 분석과 `pending-review` 설계 전환 제안을 기록합니다. | `$game-design-career:analyze-game-design-references` | [Career 경쟁작 레퍼런스 분석 가이드](guides/game-design-career/reference-analysis.md) |
 | 경력 구조 도식 만들기 (`archify`) | 경력 경로·작업 흐름을 탐색 가능한 HTML로 설명할 때 | 경력 경로와 작업 흐름을 탐색 가능한 HTML 구조 도식으로 만듭니다. | `$game-design-career:archify` | [경력 구조 도식 만들기 상세 가이드](guides/game-design-career/skills/archify.md) |
 | 기획 포트폴리오 만들기 (`build-game-design-portfolio`) | 공개 가능한 기획 결과를 포트폴리오 사례로 정리할 때 | 공개 가능한 판단, 개인 기여와 검증을 포트폴리오 사례로 만듭니다. | `$game-design-career:build-game-design-portfolio` | [기획 포트폴리오 만들기 상세 가이드](guides/game-design-career/skills/build-game-design-portfolio.md) |
 | 경력 문서 내보내기 준비 (`export-career-documents`) | 검토한 경력 문서를 제출·발표 형식으로 준비할 때 | 경력 기준 결과 폴더의 MD, PDF, DOCX, PPTX 준비 상태를 기록합니다. | `$game-design-career:export-career-documents` | [경력 문서 내보내기 준비 상세 가이드](guides/game-design-career/skills/export-career-documents.md) |

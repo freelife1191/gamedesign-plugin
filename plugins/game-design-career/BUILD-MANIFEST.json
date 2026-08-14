@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-career",
   "sourceDateEpoch": 0,
-  "treeSha256": "bd7001d30ba7b6843e6402db2ebd0d383c9e37971ea63af89af04c809d40c4c5",
+  "treeSha256": "97529cb4dcd04762315cc26aef76a21f1bee0704cdf5428323b15b82e513613e",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -1156,8 +1156,8 @@
     },
     {
       "path": "references/shared/reference-intelligence/schema/reference-analysis.schema.json",
-      "sha256": "bb02faeb119d0d582643d02e0a3f089721bf8d3a338c35efd61616941c0e5baa",
-      "size": 12886
+      "sha256": "06999795ba1147bda88d9cd99e0d44fd75dacade1b3d18f66906c3d0aa885014",
+      "size": 15713
     },
     {
       "path": "references/shared/reference-intelligence/templates/analysis-priority.md",
@@ -1471,8 +1471,8 @@
     },
     {
       "path": "scripts/analyze-game-design-references.mjs",
-      "sha256": "a2f2a70a73dcf6989624296ae64554ba9caed2fbe0400b964d587afe337d3805",
-      "size": 22220
+      "sha256": "f5a8d901d22dbbaff0e5dd6fccded78a37619fc699fee13dc1d498ce33f160f5",
+      "size": 23536
     },
     {
       "path": "scripts/build-image-asset-plan.mjs",
@@ -1561,13 +1561,13 @@
     },
     {
       "path": "scripts/lib/reference-evidence-contract.mjs",
-      "sha256": "523b000ff51b4c97fb8eedd1c1920f9a23634a29676ed376ea6f2c8890c6362a",
-      "size": 900
+      "sha256": "b6937dedce9546ea13a8db082ecf6a9e236d93b6cb2a8713403d19fcd62135d3",
+      "size": 1060
     },
     {
       "path": "scripts/lib/reference-evidence.mjs",
-      "sha256": "70dcbd916e3d049c3f351745c17c61737c6204e17c4d7f76fd312d8edf2268a4",
-      "size": 9372
+      "sha256": "fda86a61086b363d6f6fb79d88ab1376182f34e6e08aab8c27d14b9e7c8e73e9",
+      "size": 11776
     },
     {
       "path": "scripts/lib/reference-intelligence-canonical.mjs",
@@ -1616,8 +1616,8 @@
     },
     {
       "path": "scripts/manage-game-design-glossary.mjs",
-      "sha256": "82a024e48113c03ea7b7e9e65ef7c839523cd28d64601668a943979b1fe1f335",
-      "size": 18827
+      "sha256": "305be66c84e75626d584fcbbf6c37f2efd16d1196b2c733173c321fb54fa5188",
+      "size": 21045
     },
     {
       "path": "scripts/quality-source-anchors.mjs",
@@ -1681,8 +1681,8 @@
     },
     {
       "path": "scripts/validate-reference-intelligence.mjs",
-      "sha256": "04406ac96c25b5df18f4e1064f10aa4b882454fa662446eae90e2e75e25af8e7",
-      "size": 30434
+      "sha256": "d0302fe5d2dc5653e61ef690c16e6bc1c478e49de3ffeaf1971c771ad2302a1e",
+      "size": 34612
     },
     {
       "path": "scripts/validate-reference-preset.mjs",

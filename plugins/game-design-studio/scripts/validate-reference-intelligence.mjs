@@ -86,13 +86,18 @@ export function validateReferenceAnalysis(value) {
     closedObject(value, rootKeys, "", issue);
     if (value?.schemaVersion !== 1) issue("/schemaVersion", "schema-version.invalid");
     safeId(value?.analysisId, "/analysisId", issue);
-    closedObject(value?.brief, ["objective", "decisionQuestions"], "/brief", issue);
+    closedObject(value?.brief, ["objective", "decisionQuestions", "playerExperiencePromise", "differentiationHypotheses", "genreHypotheses", "platformHypotheses", "businessModelHypotheses", "researchScope", "exclusionScope", "constraints", "forbiddenConclusions", "completionCriteria", "humanReviewer"], "/brief", issue);
     nonEmptyText(value?.brief?.objective, "/brief/objective", issue);
-    sortedUnique(value?.brief?.decisionQuestions, "/brief/decisionQuestions", issue);
+    sortedUnique(value?.brief?.decisionQuestions, "/brief/decisionQuestions", issue, isId);
+    for (const field of ["differentiationHypotheses", "genreHypotheses", "platformHypotheses", "businessModelHypotheses", "researchScope", "exclusionScope", "forbiddenConclusions", "completionCriteria"]) sortedUnique(value?.brief?.[field], `/brief/${field}`, issue, isId);
+    nonEmptyText(value?.brief?.playerExperiencePromise, "/brief/playerExperiencePromise", issue); nonEmptyText(value?.brief?.humanReviewer, "/brief/humanReviewer", issue);
+    closedObject(value?.brief?.constraints, ["time", "materials", "languages", "regions"], "/brief/constraints", issue); nonEmptyText(value?.brief?.constraints?.time, "/brief/constraints/time", issue);
+    for (const field of ["materials", "languages", "regions"]) sortedUnique(value?.brief?.constraints?.[field], `/brief/constraints/${field}`, issue, isId);
     sortedRecords(value?.referenceSet, "/referenceSet", issue, (record) => `${record.referenceId}\0${record.role}`, (record, path, add) => {
-      closedObject(record, ["referenceId", "label", "role", "availability", "limitation"], path, add);
+      closedObject(record, ["referenceId", "label", "role", "decisionQuestionIds", "availability", "limitation"], path, add);
       safeId(record?.referenceId, `${path}/referenceId`, add); nonEmptyText(record?.label, `${path}/label`, add);
       enumValue(record?.role, referenceRoles, `${path}/role`, add); enumValue(record?.availability, ["available", "unavailable"], `${path}/availability`, add);
+      sortedUnique(record?.decisionQuestionIds, `${path}/decisionQuestionIds`, add, isId);
       if (record?.availability === "available" && record?.limitation !== null) add(`${path}/limitation`, "availability.limitation-invalid");
       if (record?.availability === "unavailable") nonEmptyText(record?.limitation, `${path}/limitation`, add);
     });
@@ -101,7 +106,7 @@ export function validateReferenceAnalysis(value) {
       safeId(record?.contextId, `${path}/contextId`, add); safeId(record?.referenceId, `${path}/referenceId`, add); nonEmptyText(record?.version, `${path}/version`, add); safeId(record?.platform, `${path}/platform`, add);
     });
     sortedRecords(value?.evidence, "/evidence", issue, "evidenceId", (record, path, add) => {
-      closedObject(record, ["evidenceId", "referenceId", "contextId", "systemIds", "tier", "sourceType", "availability", "limitation", "verificationQuestion", "claimKind", "claim"], path, add);
+      closedObject(record, ["evidenceId", "referenceId", "contextId", "systemIds", "tier", "sourceType", "availability", "limitation", "verificationQuestion", "claimKind", "claim", "build", "region", "accountState", "observedAt", "locator", "screen", "action", "result", "transformations", "rights", "conflictState", "counterexampleOf"], path, add);
       safeId(record?.evidenceId, `${path}/evidenceId`, add); safeId(record?.referenceId, `${path}/referenceId`, add); safeId(record?.contextId, `${path}/contextId`, add); sortedUnique(record?.systemIds, `${path}/systemIds`, add, isId);
       enumValue(record?.tier, ["primary", "supporting", "discovery"], `${path}/tier`, add);
       enumValue(record?.sourceType, evidenceSourceTypes, `${path}/sourceType`, add);
@@ -114,6 +119,14 @@ export function validateReferenceAnalysis(value) {
       }
       enumValue(record?.claimKind, ["observation", "inference", "hypothesis", "unknown"], `${path}/claimKind`, add);
       nonEmptyText(record?.claim, `${path}/claim`, add);
+      for (const field of ["build", "region", "accountState", "observedAt", "screen", "action", "result"]) nonEmptyText(record?.[field], `${path}/${field}`, add);
+      if (Number.isNaN(Date.parse(record?.observedAt))) add(`${path}/observedAt`, "evidence.invalid-observed-at");
+      closedObject(record?.locator, ["kind", "value"], `${path}/locator`, add); enumValue(record?.locator?.kind, ["url", "project-relative"], `${path}/locator/kind`, add); nonEmptyText(record?.locator?.value, `${path}/locator/value`, add);
+      if (record?.locator?.kind === "project-relative" && (record.locator.value.startsWith("/") || record.locator.value.includes("\\") || record.locator.value.split("/").includes(".."))) add(`${path}/locator/value`, "evidence.unsafe-locator");
+      if (record?.locator?.kind === "url" && (!/^https:\/\/[^/?#]+(?:\/[^#]*)?$/u.test(record.locator.value) || /https:\/\/[^/]*@/u.test(record.locator.value))) add(`${path}/locator/value`, "evidence.unsafe-locator");
+      if (!Array.isArray(record?.transformations) || canonicalJson(record.transformations) !== '[{"from":"original","to":"capture"},{"from":"capture","to":"summary"}]') add(`${path}/transformations`, "evidence.invalid-transformations");
+      closedObject(record?.rights, ["copyright", "use", "publication"], `${path}/rights`, add); nonEmptyText(record?.rights?.copyright, `${path}/rights/copyright`, add); enumValue(record?.rights?.use, ["analysis", "internal-review"], `${path}/rights/use`, add); enumValue(record?.rights?.publication, ["private", "redacted"], `${path}/rights/publication`, add);
+      enumValue(record?.conflictState, ["none", "conflicting"], `${path}/conflictState`, add); if (record?.counterexampleOf !== null) safeId(record?.counterexampleOf, `${path}/counterexampleOf`, add);
     });
     sortedRecords(value?.claims, "/claims", issue, "claimId", (record, path, add) => {
       closedObject(record, ["claimId", "systemIds", "evidenceIds", "kind", "category", "causal"], path, add);
@@ -121,8 +134,9 @@ export function validateReferenceAnalysis(value) {
       enumValue(record?.kind, ["observation", "inference", "hypothesis", "unknown"], `${path}/kind`, add); enumValue(record?.category, ["general", "monetization", "retention", "performance"], `${path}/category`, add);
       if (typeof record?.causal !== "boolean") add(`${path}/causal`, "schema.type");
     }, { allowEmpty: true });
-    sortedRecords(value?.atlasSelection, "/atlasSelection", issue, "systemId", (record, path, add) => {
-      closedObject(record, ["systemId", "rationale"], path, add); safeId(record?.systemId, `${path}/systemId`, add); nonEmptyText(record?.rationale, `${path}/rationale`, add);
+    sortedRecords(value?.atlasSelection, "/atlasSelection", issue, "questionId", (record, path, add) => {
+      closedObject(record, ["questionId", "systemId", "applicability", "rationale", "conditions", "verificationPrompts"], path, add); safeId(record?.questionId, `${path}/questionId`, add); safeId(record?.systemId, `${path}/systemId`, add); nonEmptyText(record?.rationale, `${path}/rationale`, add);
+      enumValue(record?.applicability, ["required-candidate", "conditional", "optional", "not-applicable", "unknown"], `${path}/applicability`, add); sortedUnique(record?.conditions, `${path}/conditions`, add, isSafeText, { allowEmpty: true }); sortedUnique(record?.verificationPrompts, `${path}/verificationPrompts`, add, isSafeText, { allowEmpty: true });
     });
     sortedRecords(value?.systemInventory, "/systemInventory", issue, "systemId", (record, path, add) => {
       closedObject(record, ["systemId", "name", "applicability", "evidenceIds"], path, add);
@@ -164,12 +178,15 @@ export function validateReferenceAnalysis(value) {
     }, { allowEmpty: true });
     for (const role of referenceRoles) if ((value?.referenceSet ?? []).filter((entry) => entry?.role === role).length !== 1) issue("/referenceSet", "reference.role-cardinality");
     const referenceIds = new Set((value?.referenceSet ?? []).map(({ referenceId }) => referenceId));
+    const decisionQuestionIds = new Set(value?.brief?.decisionQuestions ?? []);
     const contextsById = new Map((value?.referenceContexts ?? []).map((context) => [context.contextId, context]));
     const evidenceIds = new Set((value?.evidence ?? []).map(({ evidenceId }) => evidenceId));
     const systemIds = new Set((value?.systemInventory ?? []).map(({ systemId }) => systemId));
     const selectedSystemIds = new Set((value?.atlasSelection ?? []).map(({ systemId }) => systemId));
     requireKnownRecordIds(value?.referenceContexts, "/referenceContexts", issue, referenceIds, "referenceId"); requireKnownRecordIds(value?.evidence, "/evidence", issue, referenceIds, "referenceId");
+    for (const [index, record] of (value?.referenceSet ?? []).entries()) for (const [questionIndex, questionId] of (record?.decisionQuestionIds ?? []).entries()) if (!decisionQuestionIds.has(questionId)) issue(`/referenceSet/${index}/decisionQuestionIds/${questionIndex}`, "reference.dangling");
     for (const [index, record] of (value?.evidence ?? []).entries()) { const context = contextsById.get(record?.contextId); if (!context || context.referenceId !== record?.referenceId) issue(`/evidence/${index}/contextId`, "reference.dangling"); for (const [systemIndex, systemId] of (record?.systemIds ?? []).entries()) if (!selectedSystemIds.has(systemId)) issue(`/evidence/${index}/systemIds/${systemIndex}`, "reference.dangling"); }
+    for (const [index, record] of (value?.evidence ?? []).entries()) if (record?.counterexampleOf !== null && !evidenceIds.has(record?.counterexampleOf)) issue(`/evidence/${index}/counterexampleOf`, "reference.dangling");
     for (const [index, record] of (value?.systemInventory ?? []).entries()) for (const [evidenceIndex, evidenceId] of (record?.evidenceIds ?? []).entries()) { const evidence = (value?.evidence ?? []).find((item) => item?.evidenceId === evidenceId); if (!evidence || !evidence.systemIds.includes(record.systemId)) issue(`/systemInventory/${index}/evidenceIds/${evidenceIndex}`, "reference.dangling"); }
     requireKnownRecordIds(value?.systemMaps, "/systemMaps", issue, systemIds, "systemId");
     requireKnownRecordIds(value?.priority, "/priority", issue, systemIds, "systemId");

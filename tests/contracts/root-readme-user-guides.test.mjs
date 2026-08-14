@@ -378,7 +378,7 @@ const readableResultLabels = new Map([
 ]);
 const readableSkillMetadata = new Map([
   ["game-design-studio", new Map([
-    ["analyze-game-design-references", ["경쟁작 레퍼런스 분석", "시스템 지도, 심층 분석과 `pending-review` 전송 제안을 기록합니다."]],
+    ["analyze-game-design-references", ["경쟁작 레퍼런스 분석", "시스템 지도, 심층 분석과 `pending-review` 설계 전환 제안을 기록합니다."]],
     ["apply-document-quality-profile", ["문서 품질 기준 적용", "문서 목적과 형식에 맞는 품질 기준을 고정하고 선택 기록을 만듭니다."]],
     ["archify", ["기획 구조 도식 만들기", "시스템 구성과 작업 흐름을 탐색 가능한 HTML 구조 도식으로 만듭니다."]],
     ["define-game-vision", ["게임 비전 정의", "대상 플레이어, 핵심 재미와 검증 기준을 정리해 게임 방향 원칙을 만듭니다."]],
@@ -403,7 +403,7 @@ const readableSkillMetadata = new Map([
     ["visualize-game-design", ["게임 기획 시각화", "루프, 상태, 흐름과 의존성을 접근 가능한 SVG와 PNG 도식으로 만듭니다."]],
   ])],
   ["game-design-career", new Map([
-    ["analyze-game-design-references", ["경쟁작 레퍼런스 분석", "시스템 지도, 심층 분석과 `pending-review` 전송 제안을 기록합니다."]],
+    ["analyze-game-design-references", ["경쟁작 레퍼런스 분석", "시스템 지도, 심층 분석과 `pending-review` 설계 전환 제안을 기록합니다."]],
     ["apply-document-quality-profile", ["경력 문서 품질 기준 적용", "경력 문서 목적과 형식에 맞는 품질 기준과 선택 기록을 만듭니다."]],
     ["archify", ["경력 구조 도식 만들기", "경력 경로와 작업 흐름을 탐색 가능한 HTML 구조 도식으로 만듭니다."]],
     ["build-game-design-portfolio", ["기획 포트폴리오 만들기", "공개 가능한 판단, 개인 기여와 검증을 포트폴리오 사례로 만듭니다."]],
@@ -430,7 +430,7 @@ const readableSkillMetadata = new Map([
 ]);
 const readableSkillUsage = new Map([
   ["game-design-studio", new Map([
-    ["analyze-game-design-references", "경쟁작 관찰을 시스템 비교와 검토 대기 전송 제안으로 정리할 때"],
+    ["analyze-game-design-references", "경쟁작 관찰을 시스템 비교와 검토 대기 설계 전환 제안으로 정리할 때"],
     ["apply-document-quality-profile", "문서의 독자·형식·검토 기준을 먼저 고정할 때"],
     ["archify", "시스템 구성·작업 흐름을 탐색 가능한 HTML로 설명할 때"],
     ["define-game-vision", "대상 플레이어와 핵심 재미를 한 문장으로 정할 때"],
@@ -455,7 +455,7 @@ const readableSkillUsage = new Map([
     ["visualize-game-design", "루프·상태·의존성을 기획 문서에 도식으로 넣을 때"],
   ])],
   ["game-design-career", new Map([
-    ["analyze-game-design-references", "경쟁작 관찰을 포트폴리오 분석 근거와 검토 대기 전송 제안으로 정리할 때"],
+    ["analyze-game-design-references", "경쟁작 관찰을 포트폴리오 분석 근거와 검토 대기 설계 전환 제안으로 정리할 때"],
     ["apply-document-quality-profile", "지원·학습 문서의 독자와 평가 기준을 먼저 정할 때"],
     ["archify", "경력 경로·작업 흐름을 탐색 가능한 HTML로 설명할 때"],
     ["build-game-design-portfolio", "공개 가능한 기획 결과를 포트폴리오 사례로 정리할 때"],

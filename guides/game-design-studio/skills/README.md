@@ -15,7 +15,7 @@
 | 스킬 ID | 목적 | 직접 호출 | 주 템플릿 | 일반 입력 | 일반 결과 |
 | --- | --- | --- | --- | --- | --- |
 | [`apply-document-quality-profile`](apply-document-quality-profile.md) | 산출물에 결정적 품질 계약 적용 | `$game-design-studio:apply-document-quality-profile` | 요청에 맞는 설치 템플릿 | 목표, 청중, artifact 유형, 형식 | 선택 기록, checklist, requirement manifest |
-| [`analyze-game-design-references`](../reference-analysis.md) | 경쟁작 관찰을 시스템 비교와 검토 대기 전송 제안으로 정리 | `$game-design-studio:analyze-game-design-references` | 레퍼런스 분석 | 결정 질문, 관찰 근거, 프로젝트 제약 | 시스템 지도, 심층 분석, `pending-review` 제안 |
+| [`analyze-game-design-references`](../reference-analysis.md) | 경쟁작 관찰을 시스템 비교와 검토 대기 설계 전환 제안으로 정리 | `$game-design-studio:analyze-game-design-references` | 레퍼런스 분석 | 결정 질문, 관찰 근거, 프로젝트 제약 | 시스템 지도, 심층 분석, `pending-review` 제안 |
 | [`archify`](archify.md) | 구조와 흐름을 탐색 가능한 HTML로 설명 | `$game-design-studio:archify` | 선택된 canonical artifact | 구성 요소, 관계, 독자 | JSON 원본, HTML, 검증 영수증 |
 | [`capture-game-design-memory`](../memory.md#기본-작업-흐름) | 검증한 Studio 교훈을 후보로 기록 | `$game-design-studio:capture-game-design-memory` | 프로젝트 기억 | 출처가 연결된 결과, 적용·제외 조건 | 검토 대기 후보와 기록 결과 |
 | [`define-game-vision`](define-game-vision.md) | 플레이어 약속과 검증 가능한 비전 정의 | `$game-design-studio:define-game-vision` | `vision-pillars` | 대상 플레이어, 핵심 재미, 제약 | pillar, loop, 성공 기준 |

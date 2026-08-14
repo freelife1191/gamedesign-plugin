@@ -65,6 +65,19 @@ export function extractGlossaryCandidates({ documents, effectiveGlossary } = {})
   return freeze(candidates.sort((left, right) => compare(left.candidateId, right.candidateId)));
 }
 
+/** Reports only stable document and term IDs; source text is never persisted in an impact artifact. */
+export function analyzeGlossaryImpact({ documents, effectiveGlossary } = {}) {
+  const glossary = copy(effectiveGlossary); if (!valid(glossary) || glossary.scope !== "effective" || !Array.isArray(documents)) fail();
+  const affected = glossary.terms.filter((item) => item.state === "deprecated" && item.replacementTermId !== null);
+  const results = [];
+  for (const document of documents) {
+    if (!id.test(document?.documentId ?? "") || !canonicalText(document?.text, 2 * 1024 * 1024)) fail();
+    const termIds = affected.filter((item) => termMatch(document.text, item.koPreferred, "ko") || termMatch(document.text, item.enPreferred, "en", true) || item.deprecatedTerms.some((value) => termMatch(document.text, value, "en", true)) || item.forbiddenTerms.some((value) => termMatch(document.text, value, "ko"))).map(({ termId: value }) => value).sort(compare);
+    if (termIds.length > 0) results.push({ documentId: document.documentId, termIds, status: "deprecated-replacement" });
+  }
+  return freeze(results.sort((left, right) => compare(left.documentId, right.documentId)));
+}
+
 function receiptMatches(receipt, documentId, glossary) { return id.test(documentId ?? "") && receipt?.documentId === documentId && validateGlossaryReceipt(receipt, { glossary }).ok && receipt.glossaryVersion === glossary.version && receipt.glossarySha256 === sha256Canonical(glossary); }
 function escaped(value) { return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 function termMatch(text, value, language, insensitive = false) { if (!value) return false; const flags = `${insensitive ? "iu" : "u"}`; return new RegExp(`(?<![\\p{L}\\p{N}])${escaped(value)}(?![\\p{L}\\p{N}])`, flags).test(text); }
@@ -103,12 +116,12 @@ async function targetState(root, relativePath) { const target = path.join(root, 
 async function cleanupEmpty(root, directories) { for (const directory of [...directories].sort((a, b) => b.length - a.length)) await rmdir(path.join(root, directory)).catch(() => {}); }
 
 /** Function-level transaction: failures roll back targets and newly created directories; crash-wide atomicity is intentionally not claimed. */
-export async function writeGameDesignGlossaryArtifacts({ artifactRoot, glossary, receipt, findings, decision, ...unknown } = {}) {
+export async function writeGameDesignGlossaryArtifacts({ artifactRoot, glossary, receipt, findings, decision, impact = [], ...unknown } = {}) {
   if (Object.keys(unknown).length !== 0 || glossary?.scope !== "effective" || !receiptMatches(receipt, receipt?.documentId, glossary) || !decision || decision.eventId !== decision.receipt?.eventId) fail();
   try { assertGlossaryHumanDecision(decision.receipt, decision.capability); } catch { fail(); }
-  const value = copy(glossary); if (!valid(value) || !persistedSafe(value) || Buffer.byteLength(canonicalJson(value), "utf8") > 2 * 1024 * 1024) fail(); const safeFindings = validateFindings(findings); const safeDecision = copy(decision.receipt); if (!persistedSafe(safeDecision)) fail(); const decisionPath = `reference-intelligence/decisions/glossary-${decision.eventId}.json`;
-  const outputs = new Map([[fixedPaths[0], `${canonicalJson(value)}\n`], [fixedPaths[1], markdown("Game Design Glossary (Korean)", value.terms, "koPreferred")], [fixedPaths[2], markdown("Game Design Glossary (English)", value.terms, "enPreferred")], [fixedPaths[3], `# Terminology findings\n\n${canonicalJson(safeFindings)}\n`], [fixedPaths[4], `${canonicalJson(receipt)}\n`], [decisionPath, `${canonicalJson(safeDecision)}\n`]]);
-  if ([...outputs.entries()].some(([relativePath, data]) => !fixedPaths.includes(relativePath) && relativePath !== decisionPath || Buffer.byteLength(data, "utf8") > 2 * 1024 * 1024)) fail(); const files = [...outputs.keys()].sort(compare);
+  const value = copy(glossary); if (!valid(value) || !persistedSafe(value) || Buffer.byteLength(canonicalJson(value), "utf8") > 2 * 1024 * 1024) fail(); const safeFindings = validateFindings(findings); const safeDecision = copy(decision.receipt); if (!persistedSafe(safeDecision) || !Array.isArray(impact)) fail(); const safeImpact = impact.map((item) => { if (!item || Object.keys(item).sort().join("\0") !== "documentId\0status\0termIds" || !id.test(item.documentId) || item.status !== "deprecated-replacement" || !Array.isArray(item.termIds) || item.termIds.length === 0 || item.termIds.some((term, index) => !termId.test(term) || index > 0 && compare(item.termIds[index - 1], term) >= 0)) fail(); return { documentId: item.documentId, termIds: [...item.termIds], status: item.status }; }).sort((left, right) => compare(left.documentId, right.documentId)); const decisionPath = `reference-intelligence/decisions/glossary-${decision.eventId}.json`; const impactPath = `${glossaryDirectory}/impact-list.json`;
+  const outputs = new Map([[fixedPaths[0], `${canonicalJson(value)}\n`], [fixedPaths[1], markdown("Game Design Glossary (Korean)", value.terms, "koPreferred")], [fixedPaths[2], markdown("Game Design Glossary (English)", value.terms, "enPreferred")], [fixedPaths[3], `# Terminology findings\n\n${canonicalJson(safeFindings)}\n`], [fixedPaths[4], `${canonicalJson(receipt)}\n`], [impactPath, `${canonicalJson(safeImpact)}\n`], [decisionPath, `${canonicalJson(safeDecision)}\n`]]);
+  if ([...outputs.entries()].some(([relativePath, data]) => !fixedPaths.includes(relativePath) && relativePath !== decisionPath && relativePath !== impactPath || Buffer.byteLength(data, "utf8") > 2 * 1024 * 1024)) fail(); const files = [...outputs.keys()].sort(compare);
   const root = await canonicalArtifactRoot(artifactRoot); const before = new Map(); for (const relativePath of files) before.set(relativePath, await targetState(root.path, relativePath));
   const directories = ["reference-intelligence", glossaryDirectory, "reference-intelligence/decisions"]; const created = new Set(); for (const directory of directories) if (!await lstat(path.join(root.path, directory)).catch(() => null)) created.add(directory);
   const stage = `.glossary-stage-${randomUUID()}`;
@@ -118,7 +131,14 @@ export async function writeGameDesignGlossaryArtifacts({ artifactRoot, glossary,
     for (const relativePath of files) await safeWriteArtifactFile({ artifactRoot: root.path, relativePath, data: await readFile(path.join(root.path, stage, relativePath)) });
     await rm(path.join(root.path, stage), { recursive: true, force: true }); return freeze({ files });
   } catch (error) {
-    for (const relativePath of files) { const prior = before.get(relativePath); if (prior === null) await unlink(path.join(root.path, relativePath)).catch(() => {}); else await safeWriteArtifactFile({ artifactRoot: root.path, relativePath, data: prior }).catch(() => {}); }
-    await rm(path.join(root.path, stage), { recursive: true, force: true }); await cleanupEmpty(root.path, created); throw error;
+    const rollbackFailures = [];
+    for (const relativePath of files) {
+      const prior = before.get(relativePath);
+      try { if (prior === null) await unlink(path.join(root.path, relativePath)); else await safeWriteArtifactFile({ artifactRoot: root.path, relativePath, data: prior }); }
+      catch (rollbackError) { rollbackFailures.push(new Error(`rollback.${prior === null ? "unlink" : "restore"}:${relativePath}`)); }
+    }
+    await rm(path.join(root.path, stage), { recursive: true, force: true }); await cleanupEmpty(root.path, created);
+    if (rollbackFailures.length > 0) throw new AggregateError([error, ...rollbackFailures], "Glossary artifact publish and rollback failed.");
+    throw error;
   }
 }
