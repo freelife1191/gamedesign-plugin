@@ -463,6 +463,8 @@ test("immutable Task 2 manifest is adapted only inside a frozen dispatch snapsho
   const artifactRoot = await mkdtemp(path.join(tmpdir(), "cutscene-adapter-"));
   t.after(() => rm(artifactRoot, { recursive: true, force: true }));
   const fixture = stageFixture({ ceilings: [0.4] });
+  const asset = fixture.manifest.assets.find(({ asset_id }) => asset_id === fixture.selectedAssetIds[0]);
+  asset.output = { ...asset.output, width: 768, height: 768 };
   const before = {
     plan: JSON.stringify(fixture.plan), promptPackage: JSON.stringify(fixture.promptPackage), manifest: JSON.stringify(fixture.manifest),
     estimate: JSON.stringify(fixture.estimate), receipt: JSON.stringify(fixture.receipt),
@@ -472,8 +474,8 @@ test("immutable Task 2 manifest is adapted only inside a frozen dispatch snapsho
     ...fixture, artifactRoot,
     fetchFn: async (_url, options) => { request = JSON.parse(options.body); return imageResponse({ requestId: "req-adapter" }); },
   });
-  const asset = fixture.manifest.assets.find(({ asset_id }) => asset_id === fixture.selectedAssetIds[0]);
-  const expectedRequestSha256 = digest({ provider: "openai", model: "gpt-image-2", quality: "low", promptDigest: asset.prompt_sha256, referenceDigests: [], output: { path: asset.output.path, width: asset.output.width, height: asset.output.height, aspectRatio: asset.output.aspect_ratio, format: asset.output.format, background: asset.output.background } });
+  const target = asset.planning.target_output;
+  const expectedRequestSha256 = digest({ provider: "openai", model: "gpt-image-2", quality: "low", promptDigest: asset.prompt_sha256, referenceDigests: [], output: { path: target.path, width: target.width, height: target.height, aspectRatio: target.aspect_ratio, format: target.format, background: target.background } });
   assert.deepEqual(request, { model: "gpt-image-2", quality: "low", prompt: asset.prompt, size: "1024x1024", n: 1 });
   assert.equal(fixture.estimate.attemptCeilings[0].requestSha256, expectedRequestSha256);
   assert.equal(Object.hasOwn(asset, "prompt_digest"), false);
@@ -642,11 +644,9 @@ test("output target mutations invalidate the approved attempt schedule before pr
     const fixture = stageFixture({ ceilings: [0.4] });
     const manifest = structuredClone(fixture.manifest);
     const asset = manifest.assets.find(({ asset_id: assetId }) => assetId === fixture.selectedAssetIds[0]);
-    asset.output[field] = replacement;
     asset.planning.target_output[field] = replacement;
     if (field === "format") {
-      asset.output.path = "assets/generated/cutscene-escape-style-master-01.svg";
-      asset.planning.target_output.path = asset.output.path;
+      asset.planning.target_output.path = "assets/generated/cutscene-escape-style-master-01.svg";
     }
     let calls = 0;
     await assert.rejects(

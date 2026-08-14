@@ -4,7 +4,7 @@ import { mkdir, mkdtemp, readFile, rename, rm, symlink, writeFile } from "node:f
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { deflateSync } from "node:zlib";
 
 import { validateImageAssetManifest } from "../../shared/scripts/validate-image-assets.mjs";
@@ -29,6 +29,7 @@ import {
 } from "../../shared/scripts/plan-cutscene-visual-preproduction.mjs";
 import { planImageAssetWorkflow } from "../../shared/scripts/run-image-asset-workflow.mjs";
 import { readSecureReferenceFile } from "../../shared/scripts/lib/image-reference-loader.mjs";
+import { buildProduct } from "../../tooling/lib/build-product.mjs";
 
 const SHA = "a".repeat(64);
 const WAVES = ["style-master", "reference-masters", "keyframes", "storyboard"];
@@ -603,6 +604,18 @@ test("runtime and packaged JSON Schema agree on valid and rejected closed fixtur
   cases.push(["cutscene-cost-estimate", unavailableWithoutCeiling, validateCutsceneCostEstimate, false]);
   const contradictoryOutcome = validUsage({ providerOutcome: "not-called" });
   cases.push(["cutscene-generation-usage", contradictoryOutcome, validateCutsceneGenerationUsage, false]);
+  const hostileNotCalledUsage = validUsage({
+    usage: { status: "unavailable", reason: "provider-not-called" },
+    actualCost: { status: "unavailable", reason: "provider-usage-unavailable" },
+  });
+  cases.push(["cutscene-generation-usage", hostileNotCalledUsage, validateCutsceneGenerationUsage, false]);
+  const normalNotCalledUsage = validUsage({
+    providerOutcome: "not-called",
+    assetOutcome: "not-attempted",
+    usage: { status: "unavailable", reason: "provider-not-called" },
+    actualCost: { status: "known", usd: 0 },
+  });
+  cases.push(["cutscene-generation-usage", normalNotCalledUsage, validateCutsceneGenerationUsage, true]);
   const unavailableUsage = validUsage({ usage: { status: "unavailable", reason: "provider-usage-invalid" }, actualCost: { status: "unavailable", reason: "provider-usage-invalid" } });
   cases.push(["cutscene-generation-usage", unavailableUsage, validateCutsceneGenerationUsage, true]);
   const mismatchedUnavailableUsage = structuredClone(unavailableUsage); mismatchedUnavailableUsage.actualCost.reason = "provider-usage-unavailable"; mismatchedUnavailableUsage.sha256 = cutsceneDocumentSha256(Object.fromEntries(Object.entries(mismatchedUnavailableUsage).filter(([key]) => key !== "sha256")));
@@ -614,6 +627,18 @@ test("runtime and packaged JSON Schema agree on valid and rejected closed fixtur
   const crossArrayOnly = validContinuityReview(); crossArrayOnly.findings = [{ findingId: "screen-direction", code: "continuity.break", path: "/shots/0", sourceMasterIds: ["cutscene-escape-style-master-01"], affectedAssetIds: ["cutscene-escape-style-master-01"], blocking: true }];
   assert.equal(validateCutsceneContinuityReview(crossArrayOnly).ok, false, "runtime enforces blocker-set identity beyond JSON Schema vocabulary");
   assert.equal(schemaAccepts(crossArrayOnly, byName.get("cutscene-continuity-review"), byFile), true, "packaged JSON Schema still validates its expressible structural contract");
+});
+
+test("temporary Studio and Career builds preserve exact cutscene usage schema bytes", async (t) => {
+  const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
+  const source = await readFile(new URL("../../shared/image-assets/schema/cutscene-generation-usage.schema.json", import.meta.url));
+  for (const productName of ["game-design-studio", "game-design-career"]) {
+    const stagingRoot = await mkdtemp(path.join(tmpdir(), `cutscene-${productName}-`));
+    t.after(() => rm(stagingRoot, { recursive: true, force: true }));
+    const build = await buildProduct({ repoRoot, productName, stagingRoot, sourceDateEpoch: 0 });
+    const packaged = await readFile(path.join(build.outputDir, "references/shared/image-assets/schema/cutscene-generation-usage.schema.json"));
+    assert.deepEqual(packaged, source, productName);
+  }
 });
 
 test("schema evaluator fails closed for unsupported keywords, dates, and references", () => {

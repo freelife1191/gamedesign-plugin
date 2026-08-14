@@ -159,3 +159,37 @@ no live provider or network call was approved or performed.
 - JSON Schema expresses the finite closed unavailable-reason branches; runtime
   additionally checks the cross-field reason equality before a journal record
   is accepted.
+
+## Breaker closure — C1 target authority and I1 impossible usage outcome
+
+### RED → GREEN evidence
+
+- **C1 RED:** changing only one field of
+  `asset.planning.target_output` while leaving `asset.output` unchanged did
+  not stale the existing estimate. The public wave API therefore reached its
+  provider path instead of rejecting before artifact writes.
+  **GREEN:** request identity now takes the exact six-field provider target
+  (`path`, `width`, `height`, `aspect_ratio`, `format`, `background`) from
+  `planning.target_output`. Estimate creation, approval revalidation, and the
+  frozen dispatch snapshot all rebuild from that same object. Each individual
+  target mutation is `cutscene.cost_estimate_stale`, makes zero provider calls,
+  and leaves the real temporary artifact tree empty. A distinct historical
+  `asset.output` remains allowed and cannot alter the frozen provider request.
+- **I1 RED:** the shared JSON Schema accepted a `providerOutcome: "success"`
+  record whose unavailable usage reason was `provider-not-called`, while the
+  runtime rejected it. **GREEN:** the shared conditional schema explicitly
+  forbids that reason whenever the provider outcome is not `not-called`; the
+  runtime journal validator and test-local runtime validator apply the same
+  rule. The hostile success fixture is rejected by both evaluators, while the
+  normal `not-called` zero-cost fixture remains accepted.
+
+### Breaker validation
+
+`node --test tests/unit/cutscene-visual-preproduction.test.mjs tests/unit/cutscene-generation-approval.test.mjs tests/unit/generate-openai-images.test.mjs tests/unit/image-asset-plan.test.mjs tests/unit/image-assets.test.mjs tests/unit/image-config.test.mjs tests/unit/image-prompts.test.mjs tests/unit/image-provider.test.mjs tests/unit/smoke-openai-image.test.mjs tests/products/studio/image-assets.test.mjs`
+
+Result: **184 passing, 0 failing**. Tests use injected provider fixtures only;
+no live provider or network request ran.
+
+The five cutscene schemas parse, the runtime modules pass `node --check`, and
+`git diff --check` passes. Temporary Studio and Career product builds contain
+byte-identical copies of the shared usage schema.

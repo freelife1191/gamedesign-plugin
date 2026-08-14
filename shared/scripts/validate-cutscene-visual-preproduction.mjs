@@ -283,6 +283,7 @@ export function validateCutsceneGenerationUsage(value) {
     }
     if (value?.providerOutcome !== "not-called" && value?.usage?.status === "unavailable"
       && (value?.actualCost?.status !== "unavailable" || value.actualCost.reason !== value.usage.reason)) issue("cutscene.usage_cost_reason_mismatch", "/actualCost/reason");
+    if (value?.providerOutcome !== "not-called" && value?.usage?.reason === "provider-not-called") issue("cutscene.provider_not_called_usage_forbidden", "/usage/reason");
     if (value?.providerOutcome === "not-called" && value?.usage?.reason !== "provider-not-called") issue("cutscene.not_called_usage_invalid", "/usage/reason");
     if (value?.providerOutcome === "not-called" && (value?.actualCost?.status !== "known" || value.actualCost.usd !== 0)) issue("cutscene.not_called_cost_invalid", "/actualCost");
     if (!isRfc3339DateTime(value?.completedAt)) issue("cutscene.timestamp_invalid", "/completedAt");

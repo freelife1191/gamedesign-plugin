@@ -76,6 +76,7 @@ function validateOutcome(record, waveId, assetId, name) {
     || !["retryable", "none"].includes(record.retryDisposition) || !validUsage(record.usage) || !validActualCost(record.actualCost)
     || !isRfc3339DateTime(record.completedAt) || record.sha256 !== recordSha256(record) || name !== path.posix.basename(journalRelativePath(record))
     || (record.providerOutcome === "not-called") !== (record.assetOutcome === "not-attempted")
+    || (record.providerOutcome !== "not-called" && record.usage?.reason === "provider-not-called")
     || (record.retryDisposition === "retryable") !== (record.assetOutcome === "retryable-failure")) throw coded("cutscene.usage_receipt_corrupt", `/cutscene/usage-receipts/${waveId}/${assetId}/${name}`);
 }
 

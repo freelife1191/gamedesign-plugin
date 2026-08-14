@@ -82,6 +82,13 @@
         {
           "if": { "allOf": [
             { "properties": { "providerOutcome": { "not": { "const": "not-called" } } }, "required": ["providerOutcome"] },
+            { "properties": { "usage": { "type": "object", "required": ["reason"], "properties": { "reason": { "const": "provider-not-called" } } } }, "required": ["usage"] }
+          ] },
+          "then": false
+        },
+        {
+          "if": { "allOf": [
+            { "properties": { "providerOutcome": { "not": { "const": "not-called" } } }, "required": ["providerOutcome"] },
             { "properties": { "usage": { "type": "object", "required": ["reason"], "properties": { "reason": { "const": "provider-usage-invalid" } } } }, "required": ["usage"] }
           ] },
           "then": { "properties": { "actualCost": { "type": "object", "required": ["status", "reason"], "properties": { "status": { "const": "unavailable" }, "reason": { "const": "provider-usage-invalid" } } } } }

@@ -124,9 +124,9 @@ function requestForAsset(asset, prompt, pricingSnapshot, manifestAssets, referen
     if (!plain(reference) || !isHash(reference.sha256)) throw coded("cutscene.dispatch_binding_invalid", `/manifest/assets/reference_images/${index}`);
     return reference.sha256;
   });
-  const output = asset.output;
+  const output = asset.planning?.target_output;
   if (!plain(output) || !Number.isInteger(output.width) || !Number.isInteger(output.height) || typeof output.path !== "string"
-    || typeof output.aspect_ratio !== "string" || typeof output.format !== "string" || typeof output.background !== "string") throw coded("cutscene.dispatch_binding_invalid", "/manifest/assets/output");
+    || typeof output.aspect_ratio !== "string" || typeof output.format !== "string" || typeof output.background !== "string") throw coded("cutscene.dispatch_binding_invalid", "/manifest/assets/planning/target_output");
   const request = {
     provider: routing.provider,
     model: routing.model,
