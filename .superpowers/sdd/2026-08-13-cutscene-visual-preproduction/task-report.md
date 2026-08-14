@@ -21,12 +21,12 @@
 | E02 | estimate-only | complete bound fixture | estimate, provider 0 / pass | E2E, temp removed |
 | E03 | unavailable quote | missing finite ceilings | unavailable, provider 0 / pass | E2E, temp removed |
 | E04 | no approval | receipt/capability omitted | approval required, provider 0 / pass | E2E, temp removed |
-| E05 | reference tamper | generation-ready reference digest changed | package invalid, provider 0 / pass | E2E, temp removed |
+| E05 | reference tamper | current reference-master bytes changed after approval | valid current package + old authority approval binding stale, provider 0 / pass | E2E, temp removed |
 | E06 | stale predecessor | keyframes master state changed | predecessor incomplete, no write / pass | whole-tree snapshot |
 | E07 | selection injection | extra storyboard stable ID | selection invalid, provider 0 / pass | E2E |
-| E08 | reapproval | plan beat altered | plan invalid before dispatch / pass | E2E |
-| E09 | reserve/cap | sealed estimate reserve changed | stale/invalid estimate, provider 0 / pass | E2E |
-| E10 | partial retry | retryable fake provider response | unrelated bytes retained / pass | real temporary FS |
+| E08 | reapproval | separate valid rebound package paired with old approval | old plan/package pair stale before dispatch / pass | E2E |
+| E09 | reserve/cap | valid journal with cap/reserve boundary | journal-derived cap/reserve is enforced, provider 0 on rejection / pass | E2E |
+| E10 | partial retry | reference-masters: one success, one retryable result | failed-only retry; successful state, bytes, receipt preserved / pass | real temporary FS |
 | E11 | dialogue overlay | dialogue change | no image ID / pass | pure API |
 | E12 | visual overlay | blocking change | new derivative outside base IDs / pass | pure API |
 | E13 | continuity drift | blocking screen-direction finding | gate rejects; lifecycle blocked / pass | pure API |
@@ -155,3 +155,38 @@ Exact mutation names: `approval-authority`, `approval-binding`,
 
 - Task 8 remains **not final-approved**. This closure supplies the contract
   evidence required for independent review only.
+
+## Task 8 — Unit-contract closure
+
+### RED
+
+- The focused unit contract set exposed three stale pre-cutscene snapshots:
+  Studio source enumeration expected 33 IDs without `st-s16`, package inventory
+  expected 46 skills without the Studio cutscene skill, and the trusted Studio
+  quality-selection anchor still bound 20 profiles rather than the canonical
+  21-profile index.
+
+### GREEN
+
+- Studio source validation now asserts the literal ordered 34-ID source set,
+  including `st-s16`, before checking the exact all-missing diagnostic.
+- The two-plugin skill contract now pins Career 23 + Studio 24 = 47 skills.
+- The trusted Studio selection anchor now pins the canonical 21 IDs and
+  SHA-256 `b2333da6f292e71dae29e4198ee7ac3e9d8db4ca7090f89a745065d5b10fd70c`.
+
+### Validation
+
+- Focused unit contracts: diagram builder **31/31**, package inventory **1/1**,
+  and quality-profile selection **20/20** pass after the RED baseline.
+- Generated package parity: `npm run build` refreshed both product runtime
+  mirrors and BUILD-MANIFEST files; `npm run build -- --check` passed.
+- Final closure: the combined focused unit set passed **52/52**;
+  `validate-packages` passed **2** plugin and **47** skill validators. Shared
+  source/package byte parity passed **4** checks, three runtime `node --check`
+  checks and two BUILD-MANIFEST JSON parses passed, and `git diff --check` is
+  clean.
+
+### Remaining lane
+
+- Task 8 remains **not final-approved**. This closure restores exact unit and
+  package contracts; independent final review remains required.

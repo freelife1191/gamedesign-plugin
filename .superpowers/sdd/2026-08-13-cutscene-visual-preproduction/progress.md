@@ -204,6 +204,25 @@ Task self-consistency:
   provider/network call, runtime, E2E harness, or plugin runtime edit. Final
   approval remains pending independent review.
 
+- Task 8 unit-contract closure RED: the exact Studio all-missing source test
+  retained the pre-cutscene 33-ID diagnostic, package discovery retained the
+  46-skill snapshot, and the trusted Studio quality-selection anchor rejected
+  the canonical 21-profile index because it still named 20 profiles.
+- Task 8 unit-contract closure GREEN: the Studio source test independently
+  enumerates all 34 source IDs including `st-s16`; the exact two-plugin skill
+  inventory is Career 23 + Studio 24 = 47; and the Studio anchor uses the
+  canonical 21 IDs/digest `b2333da6f292e71dae29e4198ee7ac3e9d8db4ca7090f89a745065d5b10fd70c`.
+- Task 8 unit-contract closure validation: focused diagram builder **31/31**,
+  package inventory **1/1**, and quality-profile selection **20/20** pass
+  after the RED baseline. `npm run build` refreshed both runtime mirrors and
+  BUILD-MANIFEST files; `npm run build -- --check` passes.
+- Task 8 unit-contract closure final checks: combined focused unit **52/52**;
+  package validation **2** plugins and **47** skills; shared source/package
+  byte parity **4** checks; three runtime `node --check`, two BUILD-MANIFEST
+  JSON parses, and `git diff --check` pass.
+- Task 8 unit-contract closure remains pending independent final review; do
+  not mark Task 8 final-complete from this progress update.
+
 ## Task 6 completion evidence
 
 - RED: Studio routing was 13 routes / 22 routed skills and lacked the cutscene

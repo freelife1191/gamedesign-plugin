@@ -15,14 +15,14 @@ const expectedSkillIdsByProduct = Object.freeze({
   ],
   "game-design-studio": [
     "analyze-game-design-references", "apply-document-quality-profile", "archify", "define-game-vision", "design-game-content",
-    "design-game-economy-and-liveops", "design-game-systems", "design-player-experience", "export-game-design-documents",
+    "design-cutscene-visual-preproduction", "design-game-economy-and-liveops", "design-game-systems", "design-player-experience", "export-game-design-documents",
     "capture-game-design-memory", "generate-image-assets", "humanize-korean", "maintain-game-design-glossary", "maintain-game-design-memory", "orchestrate-game-design-project", "plan-game-production",
     "plan-image-assets", "polish-game-design-writing", "retrieve-approved-design-memory", "review-game-design", "review-image-assets",
     "svg-infographic", "visualize-game-design",
   ],
 });
 
-test("package validator discovers the exact two-plugin, 46-skill snapshot", async () => {
+test("package validator discovers the exact two-plugin, 47-skill snapshot", async () => {
   const plugins = await discoverPackagedTargets(repoRoot, "plugins");
   const skills = await discoverPackagedTargets(repoRoot, "skills");
 
@@ -36,4 +36,9 @@ test("package validator discovers the exact two-plugin, 46-skill snapshot", asyn
       .flatMap(([productId, ids]) => ids.map((id) => `plugins/${productId}/skills/${id}`))
       .sort(),
   );
+  assert.deepEqual(
+    Object.fromEntries(Object.entries(expectedSkillIdsByProduct).map(([productId, skillIds]) => [productId, skillIds.length])),
+    { "game-design-career": 23, "game-design-studio": 24 },
+  );
+  assert.equal(Object.values(expectedSkillIdsByProduct).flat().length, 47);
 });

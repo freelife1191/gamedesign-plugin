@@ -200,9 +200,14 @@ async function writeStudioProductionFixture(t, mutate) {
 
 const studioSource = (sources, id) => sources.find((candidate) => candidate.id === id);
 const studioRoute = (routing, id) => routing.routes.find((candidate) => candidate.id === id);
+const exactStudioProductionSourceIds = Object.freeze([
+  "st-c01", "st-c02", "st-c03", "st-c04", "st-c05", "st-c06", "st-c07", "st-c08",
+  "st-g01", "st-g02", "st-g03", "st-g04", "st-g05", "st-g06", "st-g07", "st-g08", "st-g09", "st-g10",
+  "st-s01", "st-s02", "st-s03", "st-s04", "st-s05", "st-s06", "st-s07", "st-s08", "st-s09", "st-s10", "st-s11", "st-s12", "st-s13", "st-s14", "st-s15", "st-s16",
+]);
 
 for (const [name, mutate, expected] of [
-  ["a missing one of the exact 33 Studio sources", ({ sources }) => sources.splice(sources.findIndex(({ id }) => id === "st-c01"), 1), /Studio production source IDs.*missing.*st-c01/u],
+  ["a missing one of the exact 34 Studio sources", ({ sources }) => sources.splice(sources.findIndex(({ id }) => id === "st-c01"), 1), /Studio production source IDs.*missing.*st-c01/u],
   ["an extra Studio source", ({ sources }) => sources.push({ ...structuredClone(studioSource(sources, "st-c01")), id: "st-c99" }), /Studio production source IDs.*extra.*st-c99/u],
   ["a duplicate Studio source ID", ({ sources }) => sources.push(structuredClone(studioSource(sources, "st-c01"))), /duplicate.*st-c01/u],
   ["a missing canonical route", ({ routing }) => routing.routes.splice(routing.routes.findIndex(({ id }) => id === "vision"), 1), /canonical route IDs.*missing.*vision/u],
@@ -220,8 +225,15 @@ for (const [name, mutate, expected] of [
   });
 }
 
-test("production builder rejects the exact missing 33 Studio sources when only non-Studio sources remain", async (t) => {
+test("production builder rejects the exact missing 34 Studio sources when only non-Studio sources remain", async (t) => {
   const { repoRoot } = await writeStudioProductionFixture(t, ({ sources }) => {
+    assert.deepEqual(
+      sources
+        .filter(({ scope }) => scope === "game-design-studio-use-case" || scope === "game-design-studio-skill")
+        .map(({ id }) => id)
+        .sort(),
+      exactStudioProductionSourceIds,
+    );
     const nonStudioSources = sources.filter(({ scope }) => scope !== "game-design-studio-use-case" && scope !== "game-design-studio-skill");
     sources.splice(0, sources.length, ...nonStudioSources);
   });
@@ -230,7 +242,7 @@ test("production builder rejects the exact missing 33 Studio sources when only n
     () => buildUseCaseDiagrams({ repoRoot, ids: ["aud-01"] }),
     {
       name: "TypeError",
-      message: "Studio production source IDs mismatch: missing [st-c01, st-c02, st-c03, st-c04, st-c05, st-c06, st-c07, st-c08, st-g01, st-g02, st-g03, st-g04, st-g05, st-g06, st-g07, st-g08, st-g09, st-g10, st-s01, st-s02, st-s03, st-s04, st-s05, st-s06, st-s07, st-s08, st-s09, st-s10, st-s11, st-s12, st-s13, st-s14, st-s15], extra []",
+      message: "Studio production source IDs mismatch: missing [st-c01, st-c02, st-c03, st-c04, st-c05, st-c06, st-c07, st-c08, st-g01, st-g02, st-g03, st-g04, st-g05, st-g06, st-g07, st-g08, st-g09, st-g10, st-s01, st-s02, st-s03, st-s04, st-s05, st-s06, st-s07, st-s08, st-s09, st-s10, st-s11, st-s12, st-s13, st-s14, st-s15, st-s16], extra []",
     },
   );
 });
