@@ -128,9 +128,9 @@ Task self-consistency:
 - Task 4 breaker closure RED: with `asset.output` held unchanged, each isolated `planning.target_output` mutation retained the old request schedule and reached the public provider path; the packaged usage schema also accepted `providerOutcome: "success"` plus `usage.reason: "provider-not-called"` while the runtime rejected it.
 - Task 4 breaker closure GREEN: request hashing, estimate issuance/revalidation, approval binding, and frozen dispatch now all consume `planning.target_output`'s exact six fields. The public real-filesystem matrix rejects every isolated target mutation as stale before provider calls and leaves the artifact root empty; a differing historical `asset.output` cannot alter the provider request. Shared schema, test-local evaluator, runtime validator, and journal reader reject the hostile non-`not-called` reason while the valid `not-called` zero-cost record is accepted. Temporary Studio/Career builds verify exact shared-schema bytes.
 - Task 4 breaker closure validation: focused RED observed the expected C1 no-rejection and I1 schema-only acceptance; GREEN matrix `node --test tests/unit/cutscene-visual-preproduction.test.mjs tests/unit/cutscene-generation-approval.test.mjs tests/unit/generate-openai-images.test.mjs tests/unit/image-asset-plan.test.mjs tests/unit/image-assets.test.mjs tests/unit/image-config.test.mjs tests/unit/image-prompts.test.mjs tests/unit/image-provider.test.mjs tests/unit/smoke-openai-image.test.mjs tests/products/studio/image-assets.test.mjs` → 184 pass, 0 fail; five JSON schemas parsed, modified runtime modules passed `node --check`, and `git diff --check` passed.
-- Task 2: pending
-- Task 3: pending
-- Task 4: breaker closure verified; scoped commit pending
+- Task 2: complete (commits `3b2fc97..6373d6f`, independent review clean).
+- Task 3: complete at round cap (commits `6373d6f..8f4dbef`, final scoped review APPROVE).
+- Task 4: complete at breaker (`8f4dbef..060c7d3`, final independent review C0/I0/M0 APPROVE).
 - Task 5: pending
 - Task 6: pending
 - Task 7: pending
