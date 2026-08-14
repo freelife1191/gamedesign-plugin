@@ -620,6 +620,19 @@ export async function generateImageAssetWorkflow({
   if (jobs.length > 0) {
     if (decision.provider === "openai" && (typeof apiKey !== "string" || apiKey.length === 0)) throw new Error("Internal API key is required for the OpenAI route.");
     attemptId = validateAttemptId(attemptIdFactory());
+  }
+  // Cutscene authorization is a stricter paid-call boundary than the generic
+  // attempt receipt.  Delay the receipt until each provider path has accepted
+  // its per-asset authorization, so a fail-closed authorization cannot leave
+  // an ordinary generation-attempt write behind.
+  const beforeAuthorizedProvider = async (dispatch) => {
+    const authorization = await beforeProvider?.(dispatch);
+    if (!reservation && jobs.length > 0) reservation = await reserveGenerationAttempt(root, jobs, decision.provider, publicConfig, now, attemptId);
+    return authorization;
+  };
+  // Ordinary image workflows have no stricter per-provider gate. Keep their
+  // existing receipt behavior, including unavailable-provider outcomes.
+  if (jobs.length > 0 && typeof beforeProvider !== "function") {
     reservation = await reserveGenerationAttempt(root, jobs, decision.provider, publicConfig, now, attemptId);
   }
   let providerResult = { results: [], failures: [] };
@@ -641,12 +654,12 @@ export async function generateImageAssetWorkflow({
       if (decision.provider === "openai") {
         one = await generateViaOpenAI({
           jobs: [boundJob], apiKey, model: publicConfig.model, quality: publicConfig.quality, stagingRoot: root, fetchFn, sleepFn, now,
-          requestTimeoutMs: config.requestTimeoutMs ?? 30_000, beforeProvider, afterProvider, generateOpenAIImagesFn,
+          requestTimeoutMs: config.requestTimeoutMs ?? 30_000, beforeProvider: beforeAuthorizedProvider, afterProvider, generateOpenAIImagesFn,
         });
       } else if (typeof hostGenerate !== "function") {
         one = { results: [], failures: [{ asset_id: boundJob.asset_id, generation_state: "generation-unavailable", reason: "host-generator-unavailable" }] };
       } else {
-        one = await generateHostWithRetries({ root, jobs: [boundJob], prepared: preparedHostOutputs, hostGenerate, beforeProvider, afterProvider });
+        one = await generateHostWithRetries({ root, jobs: [boundJob], prepared: preparedHostOutputs, hostGenerate, beforeProvider: beforeAuthorizedProvider, afterProvider });
       }
       providerResult.results.push(...one.results);
       providerResult.failures.push(...one.failures);
@@ -660,14 +673,14 @@ export async function generateImageAssetWorkflow({
   } else if (jobs.length > 0 && decision.provider === "openai") {
     providerResult = await generateViaOpenAI({
       jobs, apiKey, model: publicConfig.model, quality: publicConfig.quality, stagingRoot: root, fetchFn, sleepFn, now,
-      requestTimeoutMs: config.requestTimeoutMs ?? 30_000, beforeProvider, afterProvider, generateOpenAIImagesFn,
+      requestTimeoutMs: config.requestTimeoutMs ?? 30_000, beforeProvider: beforeAuthorizedProvider, afterProvider, generateOpenAIImagesFn,
     });
     executedJobs.push(...jobs);
   } else if (jobs.length > 0 && decision.provider === "codex") {
     if (typeof hostGenerate !== "function") {
       providerResult = { results: [], failures: jobs.map(({ asset_id }) => ({ asset_id, generation_state: "generation-unavailable", reason: "host-generator-unavailable" })) };
     } else {
-      providerResult = await generateHostWithRetries({ root, jobs, prepared: preparedHostOutputs, hostGenerate, beforeProvider, afterProvider });
+      providerResult = await generateHostWithRetries({ root, jobs, prepared: preparedHostOutputs, hostGenerate, beforeProvider: beforeAuthorizedProvider, afterProvider });
     }
     executedJobs.push(...jobs);
   } else if (jobs.length > 0 && decision.provider === "unavailable") {
