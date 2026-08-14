@@ -188,3 +188,98 @@ Output:
 game-design-career: PASS (23 exact skills, skillstead:55, archify:60 vendor files, network:0, canonical MD + quality profile + hooks)
 game-design-studio: PASS (23 exact skills, skillstead:55, archify:60 vendor files, network:0, canonical MD + quality profile + hooks)
 ```
+
+## Fix round 4/5 — control-keyword member calls
+
+### RED
+
+The scanner treated a control-keyword property name as a control statement because it retained only `previousWord`; `rules.if(...)` and `rules?.if(...)` therefore marked the closing parenthesis as a regex boundary and `/ import(path)` was skipped as regex text. Exact regressions cover `rules.if(ready) / import(path)`, `rules.while(ready) / import(path)`, and `rules?.if(ready) / import(path)`.
+
+Command:
+
+```text
+node --test tests/unit/js-import-scanner.test.mjs
+```
+
+Output:
+
+```text
+✔ scanner returns each static form and literal dynamic import once
+✔ scanner ignores comments and strings but rejects nonliteral dynamic imports
+✔ scanner recursively scans JavaScript expressions inside template literals
+✔ scanner treats regexes after control statements as literals without bypassing division imports
+✖ scanner does not treat control-named member calls as control statements
+ℹ tests 5
+ℹ pass 4
+ℹ fail 1
+
+actual errors for rules.if(ready) / import(path): []
+expected errors: ['dynamic-import-nonliteral']
+```
+
+### GREEN
+
+- The tokenizer now carries immediate member-access context from `.` (including the final `.` token in `?.`) into the following word. A member property cannot mark the next parenthesis as a control condition, so all three nonliteral imports remain fail-closed.
+- Genuine `if (ready) /import(foo)/`, `while (ready) /import(foo)/`, `if (ready) {} /import(foo)/`, and ordinary division retain their Fix round 3 behavior.
+
+Command:
+
+```text
+node --test tests/unit/js-import-scanner.test.mjs
+```
+
+Output:
+
+```text
+ℹ tests 5
+ℹ pass 5
+ℹ fail 0
+```
+
+Command:
+
+```text
+node --test tests/unit/build-product.test.mjs tests/contracts/shared-contract.test.mjs tests/contracts/reference-intelligence-package.test.mjs tests/e2e/suite/memory-install-lifecycle.e2e.test.mjs tests/unit/js-import-scanner.test.mjs tests/unit/reference-intelligence-contract.test.mjs
+```
+
+Output:
+
+```text
+ℹ tests 68
+ℹ pass 68
+ℹ fail 0
+```
+
+Command:
+
+```text
+node --test tests/isolation/plugin-smoke.test.mjs tests/products/studio/product-contract.test.mjs tests/products/career/product-contract.test.mjs
+```
+
+Output:
+
+```text
+ℹ tests 31
+ℹ pass 31
+ℹ fail 0
+```
+
+Command and output:
+
+```text
+$ node tooling/isolation-smoke.mjs
+game-design-career: PASS (23 exact skills, skillstead:55, archify:60 vendor files, network:0, canonical MD + quality profile + hooks)
+game-design-studio: PASS (23 exact skills, skillstead:55, archify:60 vendor files, network:0, canonical MD + quality profile + hooks)
+
+$ node --check tooling/lib/js-import-scanner.mjs && node --check tests/unit/js-import-scanner.test.mjs
+node --check: PASS (2 files)
+
+$ JSON parse check over git ls-files '*.json'
+JSON parse: PASS (412 files)
+
+$ git diff --check 7b9a67e
+git diff --check 7b9a67e: PASS
+
+$ git diff --exit-code 7b9a67e -- plugins
+plugins unchanged from 7b9a67e: PASS
+```

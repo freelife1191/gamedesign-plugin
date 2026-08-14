@@ -47,3 +47,15 @@ test("scanner treats regexes after control statements as literals without bypass
   assert.deepEqual(result.specifiers, []);
   assert.deepEqual(result.errors.map(({ code }) => code), ["dynamic-import-nonliteral"]);
 });
+
+test("scanner does not treat control-named member calls as control statements", () => {
+  for (const source of [
+    "rules.if(ready) / import(path)",
+    "rules.while(ready) / import(path)",
+    "rules?.if(ready) / import(path)",
+  ]) {
+    const result = scanJavaScriptImports(source);
+    assert.deepEqual(result.specifiers, [], source);
+    assert.deepEqual(result.errors.map(({ code }) => code), ["dynamic-import-nonliteral"], source);
+  }
+});

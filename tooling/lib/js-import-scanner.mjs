@@ -19,16 +19,18 @@ const CONTROL_CONDITIONS = new Set(["catch", "for", "if", "switch", "while", "wi
 const EXPRESSION_START_WORDS = new Set(["case", "delete", "do", "else", "in", "instanceof", "new", "of", "return", "throw", "typeof", "void", "yield"]);
 
 function syntaxContext() {
-  return { braces: [], parentheses: [], previousWord: "", regexAllowed: true, statementPending: false };
+  return { braces: [], memberAccess: false, parentheses: [], previousWord: "", regexAllowed: true, statementPending: false };
 }
 
 function noteWord(context, word) {
-  context.previousWord = word;
-  context.regexAllowed = EXPRESSION_START_WORDS.has(word);
+  context.previousWord = context.memberAccess ? "" : word;
+  context.regexAllowed = !context.memberAccess && EXPRESSION_START_WORDS.has(word);
+  context.memberAccess = false;
   if (["do", "else", "finally", "try"].includes(word)) context.statementPending = true;
 }
 
 function noteLiteral(context) {
+  context.memberAccess = false;
   context.previousWord = "";
   context.regexAllowed = false;
   context.statementPending = false;
@@ -37,12 +39,14 @@ function noteLiteral(context) {
 function notePunctuation(context, value) {
   if (value === "(") {
     context.parentheses.push({ control: CONTROL_CONDITIONS.has(context.previousWord) });
+    context.memberAccess = false;
     context.previousWord = "";
     context.regexAllowed = true;
     return;
   }
   if (value === ")") {
     const parenthesis = context.parentheses.pop();
+    context.memberAccess = false;
     context.previousWord = "";
     context.regexAllowed = Boolean(parenthesis?.control);
     context.statementPending = Boolean(parenthesis?.control);
@@ -50,6 +54,7 @@ function notePunctuation(context, value) {
   }
   if (value === "{") {
     context.braces.push({ statement: context.statementPending });
+    context.memberAccess = false;
     context.previousWord = "";
     context.regexAllowed = true;
     context.statementPending = false;
@@ -57,11 +62,13 @@ function notePunctuation(context, value) {
   }
   if (value === "}") {
     const brace = context.braces.pop();
+    context.memberAccess = false;
     context.previousWord = "";
     context.regexAllowed = Boolean(brace?.statement);
     context.statementPending = Boolean(brace?.statement);
     return;
   }
+  context.memberAccess = value === ".";
   context.previousWord = "";
   context.statementPending = false;
   context.regexAllowed = value === ";" || /[\[,:;!?=+*%&|^~<>/]/u.test(value);
