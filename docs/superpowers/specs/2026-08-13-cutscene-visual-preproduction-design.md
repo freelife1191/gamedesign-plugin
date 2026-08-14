@@ -302,7 +302,9 @@ cutscene/
 이 template-ready manifest는 cutscene planner만 작성한다. `plan-image-assets`는
 cutscene 요청에서 그 manifest를 검증·handoff할 뿐 stable ID, DAG, prompt hash,
 approval binding을 다시 계획하거나 수정하지 않는다. 일반 image planning 경로는
-바뀌지 않는다.
+바뀌지 않는다. handoff validator는 별도 workflow authority 인자를 받지 않는
+`validateCutsceneManifestHandoff({manifest})` 하나의 계약이며 closed
+`manifest.cutsceneWorkflow`만 검증한다.
 
 ### Estimate Only
 
