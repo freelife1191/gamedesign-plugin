@@ -73,7 +73,7 @@ export function analyzeGlossaryImpact({ documents, effectiveGlossary } = {}) {
   for (const document of documents) {
     if (!id.test(document?.documentId ?? "") || !canonicalText(document?.text, 2 * 1024 * 1024)) fail();
     const termIds = affected.filter((item) => termMatch(document.text, item.koPreferred, "ko") || termMatch(document.text, item.enPreferred, "en", true) || item.deprecatedTerms.some((value) => termMatch(document.text, value, "en", true)) || item.forbiddenTerms.some((value) => termMatch(document.text, value, "ko"))).map(({ termId: value }) => value).sort(compare);
-    if (termIds.length > 0) results.push({ documentId: document.documentId, termIds, status: "deprecated-replacement" });
+    if (termIds.length > 0) results.push({ documentId: document.documentId, termIds, status: "deprecated-replacement", reason: "approved-replacement" });
   }
   return freeze(results.sort((left, right) => compare(left.documentId, right.documentId)));
 }
@@ -116,25 +116,32 @@ async function targetState(root, relativePath) { const target = path.join(root, 
 async function cleanupEmpty(root, directories) { for (const directory of [...directories].sort((a, b) => b.length - a.length)) await rmdir(path.join(root, directory)).catch(() => {}); }
 
 /** Function-level transaction: failures roll back targets and newly created directories; crash-wide atomicity is intentionally not claimed. */
-export async function writeGameDesignGlossaryArtifacts({ artifactRoot, glossary, receipt, findings, decision, impact = [], ...unknown } = {}) {
+export async function writeGameDesignGlossaryArtifacts({ artifactRoot, glossary, receipt, findings, decision, documents = [], ...unknown } = {}) {
   if (Object.keys(unknown).length !== 0 || glossary?.scope !== "effective" || !receiptMatches(receipt, receipt?.documentId, glossary) || !decision || decision.eventId !== decision.receipt?.eventId) fail();
-  try { assertGlossaryHumanDecision(decision.receipt, decision.capability); } catch { fail(); }
-  const value = copy(glossary); if (!valid(value) || !persistedSafe(value) || Buffer.byteLength(canonicalJson(value), "utf8") > 2 * 1024 * 1024) fail(); const safeFindings = validateFindings(findings); const safeDecision = copy(decision.receipt); if (!persistedSafe(safeDecision) || !Array.isArray(impact)) fail(); const safeImpact = impact.map((item) => { if (!item || Object.keys(item).sort().join("\0") !== "documentId\0status\0termIds" || !id.test(item.documentId) || item.status !== "deprecated-replacement" || !Array.isArray(item.termIds) || item.termIds.length === 0 || item.termIds.some((term, index) => !termId.test(term) || index > 0 && compare(item.termIds[index - 1], term) >= 0)) fail(); return { documentId: item.documentId, termIds: [...item.termIds], status: item.status }; }).sort((left, right) => compare(left.documentId, right.documentId)); const decisionPath = `reference-intelligence/decisions/glossary-${decision.eventId}.json`; const impactPath = `${glossaryDirectory}/impact-list.json`;
+  let liveDecision; try { liveDecision = assertGlossaryHumanDecision(decision.receipt, decision.capability); } catch { fail(); }
+  const value = copy(glossary); if (!valid(value) || !persistedSafe(value) || Buffer.byteLength(canonicalJson(value), "utf8") > 2 * 1024 * 1024) fail();
+  const selected = new Set(liveDecision.termIds); const termsById = new Map(value.terms.map((item) => [item.termId, item])); const replacement = liveDecision.replacementTermId === null ? null : termsById.get(liveDecision.replacementTermId);
+  if (liveDecision.action === "approve" ? [...selected].some((termIdValue) => termsById.get(termIdValue)?.state !== "approved") : !replacement || replacement.state !== "approved" || [...selected].some((termIdValue) => { const item = termsById.get(termIdValue); return !item || item.state !== "deprecated" || item.replacementTermId !== replacement.termId; })) fail();
+  const safeFindings = validateFindings(findings); const safeDecision = copy(liveDecision); if (!persistedSafe(safeDecision)) fail();
+  const computedImpact = analyzeGlossaryImpact({ documents, effectiveGlossary: value });
+  const safeImpact = { schemaVersion: 1, glossaryVersion: value.version, glossarySha256: sha256Canonical(value), decisionEventId: liveDecision.eventId, decisionSha256: sha256Canonical(liveDecision), items: computedImpact };
+  const decisionPath = `reference-intelligence/decisions/glossary-${decision.eventId}.json`; const impactPath = `${glossaryDirectory}/impact-list.json`;
   const outputs = new Map([[fixedPaths[0], `${canonicalJson(value)}\n`], [fixedPaths[1], markdown("Game Design Glossary (Korean)", value.terms, "koPreferred")], [fixedPaths[2], markdown("Game Design Glossary (English)", value.terms, "enPreferred")], [fixedPaths[3], `# Terminology findings\n\n${canonicalJson(safeFindings)}\n`], [fixedPaths[4], `${canonicalJson(receipt)}\n`], [impactPath, `${canonicalJson(safeImpact)}\n`], [decisionPath, `${canonicalJson(safeDecision)}\n`]]);
   if ([...outputs.entries()].some(([relativePath, data]) => !fixedPaths.includes(relativePath) && relativePath !== decisionPath && relativePath !== impactPath || Buffer.byteLength(data, "utf8") > 2 * 1024 * 1024)) fail(); const files = [...outputs.keys()].sort(compare);
   const root = await canonicalArtifactRoot(artifactRoot); const before = new Map(); for (const relativePath of files) before.set(relativePath, await targetState(root.path, relativePath));
   const directories = ["reference-intelligence", glossaryDirectory, "reference-intelligence/decisions"]; const created = new Set(); for (const directory of directories) if (!await lstat(path.join(root.path, directory)).catch(() => null)) created.add(directory);
   const stage = `.glossary-stage-${randomUUID()}`;
+  const published = [];
   try {
     await ensureArtifactDirectories({ artifactRoot: root.path, directories: [stage, ...directories, `${stage}/reference-intelligence`, `${stage}/${glossaryDirectory}`, `${stage}/reference-intelligence/decisions`] });
     for (const [relativePath, data] of outputs) await safeWriteArtifactFile({ artifactRoot: root.path, relativePath: `${stage}/${relativePath}`, data });
-    for (const relativePath of files) await safeWriteArtifactFile({ artifactRoot: root.path, relativePath, data: await readFile(path.join(root.path, stage, relativePath)) });
+    for (const relativePath of files) { await safeWriteArtifactFile({ artifactRoot: root.path, relativePath, data: await readFile(path.join(root.path, stage, relativePath)) }); published.push(relativePath); }
     await rm(path.join(root.path, stage), { recursive: true, force: true }); return freeze({ files });
   } catch (error) {
     const rollbackFailures = [];
-    for (const relativePath of files) {
+    for (const relativePath of [...published].reverse()) {
       const prior = before.get(relativePath);
-      try { if (prior === null) await unlink(path.join(root.path, relativePath)); else await safeWriteArtifactFile({ artifactRoot: root.path, relativePath, data: prior }); }
+      try { if (prior === null) await unlink(path.join(root.path, relativePath)).catch((rollbackError) => rollbackError?.code === "ENOENT" ? undefined : Promise.reject(rollbackError)); else await safeWriteArtifactFile({ artifactRoot: root.path, relativePath, data: prior }); }
       catch (rollbackError) { rollbackFailures.push(new Error(`rollback.${prior === null ? "unlink" : "restore"}:${relativePath}`)); }
     }
     await rm(path.join(root.path, stage), { recursive: true, force: true }); await cleanupEmpty(root.path, created);

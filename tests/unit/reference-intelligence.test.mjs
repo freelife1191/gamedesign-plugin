@@ -782,6 +782,38 @@ test("analysis persists exact claim-to-evidence bindings in the evidence registe
   assert.deepEqual(persisted.claims, [claim]);
 });
 
+test("workspace persists the complete canonical brief and merged Atlas selection", async (t) => {
+  const analysis = buildReferenceAnalysis(await analysisInputFixture());
+  const root = await analysisArtifactRoot(t);
+  const written = await writeReferenceAnalysisWorkspace({ artifactRoot: root, analysis });
+  const [brief, atlas] = await Promise.all([
+    readFile(join(root, "reference-intelligence", "brief.json"), "utf8").then(JSON.parse),
+    readFile(join(root, "reference-intelligence", "atlas-selection.json"), "utf8").then(JSON.parse),
+  ]);
+  assert.deepEqual(brief, analysis.brief);
+  assert.deepEqual(atlas, analysis.atlasSelection);
+  assert.equal(written.files.includes("reference-intelligence/brief.json"), true);
+  assert.equal(written.files.includes("reference-intelligence/atlas-selection.json"), true);
+});
+
+test("locators and non-positive evidence fail closed for comparison and transfer", () => {
+  for (const value of ["/private/evidence.png", "C:\\private\\evidence.png", "\\\\server\\share\\evidence.png", "\\\\?\\C:\\private\\evidence.png", "file:///private/evidence.png", "https:relative"]) {
+    assert.throws(() => registerReferenceEvidence({ records: [registryEvidence({ locator: { kind: "project-relative", value } })] }), /reference evidence/u);
+  }
+  assert.throws(() => registerReferenceEvidence({ records: [registryEvidence({ evidenceId: "ev-self", counterexampleOf: "ev-self" })] }), /reference evidence/u);
+  const positive = registryEvidence({ evidenceId: "ev-positive", referenceId: "ref-cinematic-sample", contextId: "ctx-cinematic-v1", systemIds: ["system-reveal-loop"] });
+  const counterexample = registryEvidence({ evidenceId: "ev-counterexample", referenceId: "ref-other", contextId: "ctx-other", systemIds: ["system-reveal-loop"], conflictState: "conflicting", counterexampleOf: "ev-positive" });
+  const records = registerReferenceEvidence({ records: [positive, counterexample] });
+  const transfers = buildDesignTransfers({
+    deepDives: [{ systemId: "system-reveal-loop", claimKind: "observation", finding: "Observed.", evidenceIds: records.map(({ evidenceId }) => evidenceId), referenceIds: ["ref-cinematic-sample"], contextIds: ["ctx-cinematic-v1"], coverageCount: 1 }],
+    projectConstraints: ["ten-minute-session"], evidence: records,
+    referenceContexts: [{ contextId: "ctx-cinematic-v1", referenceId: "ref-cinematic-sample", version: "1", platform: "pc" }, { contextId: "ctx-other", referenceId: "ref-other", version: "1", platform: "pc" }],
+    referenceSet: [{ referenceId: "ref-cinematic-sample", label: "Sample", role: "direct-competitor", decisionQuestionIds: ["question-loop"], availability: "available", limitation: null }, { referenceId: "ref-other", label: "Other", role: "core-system-exemplar", decisionQuestionIds: ["question-loop"], availability: "available", limitation: null }, { referenceId: "ref-third", label: "Third", role: "operations-monetization-comparator", decisionQuestionIds: ["question-loop"], availability: "unavailable", limitation: "Unavailable." }],
+  });
+  assert.equal(transfers[0].decision, "hold");
+  assert.equal(transfers[0].coverageCount, 1);
+});
+
 test("reference analysis schema and runtime close persisted claim bindings", async () => {
   const schema = JSON.parse(await readFile(new URL("../../shared/reference-intelligence/schema/reference-analysis.schema.json", import.meta.url), "utf8"));
   const value = validReferenceAnalysis();
@@ -857,6 +889,8 @@ test("priority leaves a missing dimension unscored and artifact paths fail close
 
 test("reference analysis machine templates, catalog, and schema parse as JSON", async () => {
   const files = [
+    "../../shared/reference-intelligence/templates/atlas-selection.json",
+    "../../shared/reference-intelligence/templates/brief.json",
     "../../shared/reference-intelligence/templates/reference-set.yml",
     "../../shared/reference-intelligence/templates/evidence-register.yml",
     "../../shared/reference-intelligence/templates/system-inventory.json",

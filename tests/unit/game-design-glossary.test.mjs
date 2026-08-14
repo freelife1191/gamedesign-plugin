@@ -118,8 +118,27 @@ test("deprecated and replacement terms yield a value-minimal deterministic impac
     documents: [{ documentId: "combat-v1", text: "플레이어 파워" }, { documentId: "other-v1", text: "unrelated" }],
     effectiveGlossary: effective,
   });
-  assert.deepEqual(impact, [{ documentId: "combat-v1", termIds: ["TERM-PLAYER-POWER"], status: "deprecated-replacement" }]);
+  assert.deepEqual(impact, [{ documentId: "combat-v1", termIds: ["TERM-PLAYER-POWER"], status: "deprecated-replacement", reason: "approved-replacement" }]);
   assert.equal(JSON.stringify(impact).includes("플레이어 파워"), false);
+});
+
+test("impact publication recomputes a receipt-bound deprecated replacement result", async (t) => {
+  const current = glossary({ terms: [
+    term({ termId: "TERM-COMBAT-POWER", koPreferred: "전투 파워", enPreferred: "Combat Power", state: "approved", approver: "Lead", decisionIds: ["new"] }),
+    term({ state: "approved", approver: "Lead", decisionIds: ["old"] }),
+  ] });
+  const issued = issueGlossaryHumanDecision({ action: "deprecate", termIds: ["TERM-PLAYER-POWER"], replacementTermId: "TERM-COMBAT-POWER", actor: "Lead", eventId: "deprecate-player-power", glossarySha256: sha256Canonical(current), glossaryVersion: current.version, changedAt });
+  const effective = mergeGameDesignGlossaries({ sharedGlossary: applyGlossaryDecision({ glossary: current, ...issued }), projectOverlay: { schemaVersion: 1, scope: "project-overlay", version: 1, terms: [] } });
+  const receipt = createGlossarySnapshot({ documentId: "combat-v1", effectiveGlossary: effective, termIds: ["TERM-COMBAT-POWER"] });
+  const root = await mkdtemp(join(tmpdir(), "glossary-impact-authority-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await assert.rejects(() => writeGameDesignGlossaryArtifacts({ artifactRoot: root, glossary: effective, receipt, findings: { ok: true, blocking: [], warnings: [] }, decision: { eventId: issued.receipt.eventId, receipt: issued.receipt, capability: issued.capability }, documents: [{ documentId: "combat-v1", text: "플레이어 파워" }], impact: [] }), /glossary/i);
+  await writeGameDesignGlossaryArtifacts({ artifactRoot: root, glossary: effective, receipt, findings: { ok: true, blocking: [], warnings: [] }, decision: { eventId: issued.receipt.eventId, receipt: issued.receipt, capability: issued.capability }, documents: [{ documentId: "combat-v1", text: "플레이어 파워" }] });
+  const stored = JSON.parse(await readFile(join(root, "reference-intelligence", "glossary", "impact-list.json"), "utf8"));
+  assert.deepEqual(stored.items, [{ documentId: "combat-v1", termIds: ["TERM-PLAYER-POWER"], status: "deprecated-replacement", reason: "approved-replacement" }]);
+  assert.equal(stored.glossarySha256, sha256Canonical(effective));
+  assert.equal(stored.decisionEventId, issued.receipt.eventId);
+  assert.equal(JSON.stringify(stored).includes("플레이어 파워"), false);
 });
 
 test("snapshot binds exact document, glossary hash/version, sorted approved term ids", () => {
@@ -289,9 +308,10 @@ test("mid-publish filesystem failure rolls every artifact byte and path back", a
   const processResult = await runNode(join(moduleRoot, "rollback-driver.mjs")); assert.equal(processResult.code, 0, `${processResult.stdout}\n${processResult.stderr}`); assert.equal(processResult.signal, null);
   assert.deepEqual(await tree(root), before);
   assert.equal((await readdir(root)).some((entry) => entry.startsWith(".glossary-stage-")), false);
-  await writeFile(join(moduleRoot, "scripts", "lib", "safe-artifact-write-test-wrapper.mjs"), `import * as base from "./safe-artifact-write.mjs";\nexport const canonicalArtifactRoot = base.canonicalArtifactRoot;\nexport const ensureArtifactDirectories = base.ensureArtifactDirectories;\nconst artifactRoot = ${JSON.stringify(canonicalRoot)}; const finalPaths = new Set(${JSON.stringify(finalPaths)}); let finalPublishes = 0; let publishFailed = false;\nexport async function safeWriteArtifactFile(value) { if (value?.artifactRoot === artifactRoot && finalPaths.has(value?.relativePath)) { finalPublishes += 1; if (!publishFailed && finalPublishes === 2) { publishFailed = true; throw new Error("final publish failure"); } if (publishFailed && value?.relativePath === "reference-intelligence/glossary/terms.json") throw new Error("restore failure"); } return base.safeWriteArtifactFile(value); }\n`);
+  await writeFile(join(moduleRoot, "scripts", "lib", "safe-artifact-write-test-wrapper.mjs"), `import * as base from "./safe-artifact-write.mjs";\nexport const canonicalArtifactRoot = base.canonicalArtifactRoot;\nexport const ensureArtifactDirectories = base.ensureArtifactDirectories;\nconst artifactRoot = ${JSON.stringify(canonicalRoot)}; const finalPaths = new Set(${JSON.stringify(finalPaths)}); let finalPublishes = 0; let publishFailed = false;\nexport async function safeWriteArtifactFile(value) { if (value?.artifactRoot === artifactRoot && finalPaths.has(value?.relativePath)) { finalPublishes += 1; if (!publishFailed && finalPublishes === 2) { publishFailed = true; throw new Error("final publish failure"); } if (publishFailed && value?.relativePath === "reference-intelligence/decisions/glossary-decision-player-power.json") throw new Error("restore failure"); } return base.safeWriteArtifactFile(value); }\n`);
   await writeFile(join(moduleRoot, "rollback-driver.mjs"), 'import { readFile } from "node:fs/promises";\nimport { issueGlossaryHumanDecision } from "./scripts/lib/game-design-glossary-capabilities.mjs";\nimport { writeGameDesignGlossaryArtifacts } from "./scripts/manage-game-design-glossary.mjs";\nconst payload = JSON.parse(await readFile(new URL("./payload.json", import.meta.url), "utf8")); const issued = issueGlossaryHumanDecision(payload.decisionInput);\ntry { await writeGameDesignGlossaryArtifacts({ artifactRoot: payload.artifactRoot, glossary: payload.glossary, receipt: payload.receipt, findings: { ok: true, blocking: [], warnings: [] }, decision: { eventId: issued.receipt.eventId, receipt: issued.receipt, capability: issued.capability } }); process.exitCode = 1; } catch (error) { if (!(error instanceof AggregateError) || error.errors?.[0]?.message !== "final publish failure" || !error.errors?.slice(1).every((item) => /^rollback\\.(?:restore|unlink):reference-intelligence\\//u.test(item.message))) { console.error("unexpected aggregate rollback failure"); process.exitCode = 2; } else process.stdout.write(JSON.stringify({ name: error.name, message: error.message, errors: error.errors.map((item) => item.message) })); }\n');
   const aggregate = await runNode(join(moduleRoot, "rollback-driver.mjs")); assert.equal(aggregate.code, 0, `${aggregate.stdout}\n${aggregate.stderr}`); const diagnostics = JSON.parse(aggregate.stdout); assert.equal(diagnostics.name, "AggregateError"); assert.equal(diagnostics.message, "Glossary artifact publish and rollback failed."); assert.equal(diagnostics.errors.some((value) => value.includes(canonicalRoot)), false);
+  const afterHostile = await tree(root); for (const [relativePath, bytes] of Object.entries(before)) if (relativePath !== "reference-intelligence/decisions/glossary-decision-player-power.json") assert.equal(afterHostile[relativePath], bytes);
 });
 
 test("terminology restores preferred-pair and dedicated English writing diagnostics", () => {

@@ -7,7 +7,7 @@ import { comparePriorityEntries, priorityDimensions, deriveComparisonPresentatio
 
 const roles = Object.freeze(["direct-competitor", "core-system-exemplar", "operations-monetization-comparator"]);
 const dimensions = priorityDimensions;
-const artifactFiles = Object.freeze(["reference-intelligence/brief.md", "reference-intelligence/reference-set.yml", "reference-intelligence/evidence-register.yml", "reference-intelligence/system-inventory.json", "reference-intelligence/analysis-priority.md", "reference-intelligence/comparison-matrix.md", "reference-intelligence/transfer-decisions.md", "reference-intelligence/verification-queue.md"]);
+const artifactFiles = Object.freeze(["reference-intelligence/brief.md", "reference-intelligence/brief.json", "reference-intelligence/reference-set.yml", "reference-intelligence/evidence-register.yml", "reference-intelligence/atlas-selection.json", "reference-intelligence/system-inventory.json", "reference-intelligence/analysis-priority.md", "reference-intelligence/comparison-matrix.md", "reference-intelligence/transfer-decisions.md", "reference-intelligence/verification-queue.md"]);
 const id = (value) => typeof value === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(value);
 const text = (value) => typeof value === "string" && value.length > 0 && !value.includes("\0") && !value.includes("\r") && value === value.normalize("NFC");
 const compare = (left, right) => Buffer.compare(Buffer.from(left, "utf8"), Buffer.from(right, "utf8"));
@@ -87,7 +87,7 @@ export function inventoryReferenceSystems({ brief, atlas, evidence, claims = [] 
   }
   return freeze([...systems.entries()].map(([systemId, questions]) => {
     const evidenceIds = registered.filter((record) => record.systemIds.includes(systemId)).map(({ evidenceId }) => evidenceId);
-    const hasAvailableEvidence = registered.some((record) => record.availability === "available" && record.systemIds.includes(systemId));
+    const hasAvailableEvidence = registered.some((record) => record.availability === "available" && record.conflictState === "none" && record.counterexampleOf === null && record.systemIds.includes(systemId));
     const order = ["unknown", "conditional", "optional", "required-candidate"];
     const applicable = questions.map(({ applicability }) => applicability);
     const summary = applicable.every((value) => value === "not-applicable") ? "not-applicable" : applicable.includes("not-applicable") ? "unknown" : order.reduce((current, value) => order.indexOf(value) < order.indexOf(current) ? value : current, "required-candidate");
@@ -130,7 +130,7 @@ function deepDives(priority, inventory, evidence) {
   const inventoryBySystem = new Map(inventory.map((item) => [item.systemId, item])); const evidenceById = new Map(evidence.map((item) => [item.evidenceId, item]));
   return priority.map(({ systemId }) => {
     const records = inventoryBySystem.get(systemId).evidenceIds.map((evidenceId) => evidenceById.get(evidenceId)).filter((record) => record?.systemIds.includes(systemId)).sort((left, right) => compare(left.evidenceId, right.evidenceId));
-    const available = records.filter((record) => record.availability === "available");
+    const available = records.filter((record) => record.availability === "available" && record.conflictState === "none" && record.counterexampleOf === null);
     if (records.length === 0) return { systemId, claimKind: "unknown", finding: "Not observed; verification required.", evidenceIds: [], referenceIds: [], contextIds: [], coverageCount: 0 };
     if (available.length === 0) return { systemId, claimKind: "unknown", finding: "Not observed; verification required.", evidenceIds: records.map(({ evidenceId }) => evidenceId), referenceIds: [], contextIds: [], coverageCount: 0 };
     const claimKind = deriveAvailableClaimKind(records);
@@ -154,7 +154,7 @@ export function buildDesignTransfers({ deepDives, projectConstraints, evidence, 
     if (!exact(dive, ["systemId", "claimKind", "finding", "evidenceIds", "referenceIds", "contextIds", "coverageCount"]) || !id(dive.systemId) || !["observation", "inference", "hypothesis", "unknown"].includes(dive.claimKind) || !Array.isArray(dive.evidenceIds) || !dive.evidenceIds.every(id) || !sorted(dive.referenceIds, id, { allowEmpty: true }) || !sorted(dive.contextIds, id, { allowEmpty: true }) || !Number.isInteger(dive.coverageCount)) fail("invalid-transfer");
     const linked = dive.evidenceIds.map((evidenceId) => evidenceById.get(evidenceId));
     if (linked.some((record) => !record || !record.systemIds.includes(dive.systemId))) fail("invalid-transfer");
-    const available = linked.filter(({ availability }) => availability === "available"); const computedReferenceIds = [...new Set(available.map(({ referenceId }) => referenceId))].sort(compare); const computedContextIds = [...new Set(available.map(({ contextId }) => contextId))].sort(compare);
+    const available = linked.filter(({ availability, conflictState, counterexampleOf }) => availability === "available" && conflictState === "none" && counterexampleOf === null); const computedReferenceIds = [...new Set(available.map(({ referenceId }) => referenceId))].sort(compare); const computedContextIds = [...new Set(available.map(({ contextId }) => contextId))].sort(compare);
     if (computedReferenceIds.some((referenceId) => !referenceIds.has(referenceId)) || computedContextIds.some((contextId) => !contextsById.has(contextId)) || computedContextIds.some((contextId) => contextsById.get(contextId).referenceId !== available.find((record) => record.contextId === contextId).referenceId) || dive.referenceIds.join("\0") !== computedReferenceIds.join("\0") || dive.contextIds.join("\0") !== computedContextIds.join("\0") || dive.coverageCount !== computedReferenceIds.length) fail("invalid-transfer");
     if (dive.claimKind !== deriveAvailableClaimKind(linked)) fail("invalid-transfer");
     const hold = computedReferenceIds.length < 2 || dive.claimKind === "unknown";
@@ -192,13 +192,15 @@ export async function writeReferenceAnalysisWorkspace({ artifactRoot, analysis, 
   const safeAnalysis = JSON.parse(canonicalReferenceAnalysis(analysis));
   const outputs = new Map([
     [artifactFiles[0], markdown("Reference brief", ["objective", "decisionQuestions"], [{ objective: safeAnalysis.brief.objective, decisionQuestions: safeAnalysis.brief.decisionQuestions.join("; ") }])],
-    [artifactFiles[1], canonicalJson(safeAnalysis.referenceSet)],
-    [artifactFiles[2], canonicalJson({ referenceContexts: safeAnalysis.referenceContexts, evidence: safeAnalysis.evidence, claims: safeAnalysis.claims })],
-    [artifactFiles[3], canonicalJson(safeAnalysis.systemInventory)],
-    [artifactFiles[4], markdown("Analysis priority", ["rank", "systemId", ...dimensions, "rationale"], safeAnalysis.priority)],
-    [artifactFiles[5], markdown("Comparison matrix", ["comparisonId", "sourceSystemId", "state", "subject", "claimKind", "coverageCount", "referenceIds", "contextIds", "finding", "evidenceIds"], safeAnalysis.comparison.map((item) => ({ ...item, evidenceIds: item.evidenceIds.join(", "), referenceIds: item.referenceIds.join(", "), contextIds: item.contextIds.join(", ") })))],
-    [artifactFiles[6], markdown("Transfer decisions", ["transferId", "sourceSystemId", "decision", "coverageCount", "evidenceIds", "referenceIds", "contextIds", "projectConstraints", "risks", "validationSteps", "validationState", "reviewState", "rationale"], safeAnalysis.transferDecisions.map((item) => ({ ...item, evidenceIds: item.evidenceIds.join(", "), referenceIds: item.referenceIds.join(", "), contextIds: item.contextIds.join(", "), projectConstraints: item.projectConstraints.join(", "), risks: item.risks.join(", "), validationSteps: item.validationSteps.join(", ") })))],
-    [artifactFiles[7], markdown("Verification queue", ["verificationId", "state", "question", "evidenceIds"], safeAnalysis.verificationQueue.map((item) => ({ ...item, evidenceIds: item.evidenceIds.join(", ") })))]
+    [artifactFiles[1], canonicalJson(safeAnalysis.brief)],
+    [artifactFiles[2], canonicalJson(safeAnalysis.referenceSet)],
+    [artifactFiles[3], canonicalJson({ referenceContexts: safeAnalysis.referenceContexts, evidence: safeAnalysis.evidence, claims: safeAnalysis.claims })],
+    [artifactFiles[4], canonicalJson(safeAnalysis.atlasSelection)],
+    [artifactFiles[5], canonicalJson(safeAnalysis.systemInventory)],
+    [artifactFiles[6], markdown("Analysis priority", ["rank", "systemId", ...dimensions, "rationale"], safeAnalysis.priority)],
+    [artifactFiles[7], markdown("Comparison matrix", ["comparisonId", "sourceSystemId", "state", "subject", "claimKind", "coverageCount", "referenceIds", "contextIds", "finding", "evidenceIds"], safeAnalysis.comparison.map((item) => ({ ...item, evidenceIds: item.evidenceIds.join(", "), referenceIds: item.referenceIds.join(", "), contextIds: item.contextIds.join(", ") })))],
+    [artifactFiles[8], markdown("Transfer decisions", ["transferId", "sourceSystemId", "decision", "coverageCount", "evidenceIds", "referenceIds", "contextIds", "projectConstraints", "risks", "validationSteps", "validationState", "reviewState", "rationale"], safeAnalysis.transferDecisions.map((item) => ({ ...item, evidenceIds: item.evidenceIds.join(", "), referenceIds: item.referenceIds.join(", "), contextIds: item.contextIds.join(", "), projectConstraints: item.projectConstraints.join(", "), risks: item.risks.join(", "), validationSteps: item.validationSteps.join(", ") })))],
+    [artifactFiles[9], markdown("Verification queue", ["verificationId", "state", "question", "evidenceIds"], safeAnalysis.verificationQueue.map((item) => ({ ...item, evidenceIds: item.evidenceIds.join(", ") })))]
   ]);
   for (const map of safeAnalysis.systemMaps) outputs.set(`reference-intelligence/system-maps/${map.mapId}.json`, canonicalJson(map));
   for (const dive of safeAnalysis.deepDives) outputs.set(`reference-intelligence/deep-dives/${dive.systemId}.md`, markdown("Deep dive", ["systemId", "claimKind", "coverageCount", "referenceIds", "contextIds", "finding", "evidenceIds"], [{ ...dive, referenceIds: dive.referenceIds.join(", "), contextIds: dive.contextIds.join(", "), evidenceIds: dive.evidenceIds.join(", ") }]));

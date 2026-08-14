@@ -247,7 +247,7 @@ async function collectReferenceRuntimeEntries(buildRoot) {
 }
 
 function assertExactReferenceFiles(actual, expected, productName) {
-  assert.equal(actual.length, 21, `${productName} reference-intelligence source inventory count`);
+  assert.equal(actual.length, 23, `${productName} reference-intelligence source inventory count`);
   assert.deepEqual(actual.map(({ relativePath }) => relativePath).sort(), expected.map(({ relativePath }) => relativePath).sort(), `${productName} reference-intelligence package inventory`);
   for (const { relativePath, bytes } of expected) {
     const packaged = actual.find((entry) => entry.relativePath === relativePath);

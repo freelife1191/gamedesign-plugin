@@ -16,7 +16,7 @@ export const claimKindCertainty = Object.freeze({ observation: 3, inference: 2, 
 
 /** Derives the strongest allowed persisted kind: the least-certain available source wins. */
 export function deriveAvailableClaimKind(records) {
-  const available = records.filter((record) => record?.availability === "available");
+  const available = records.filter((record) => record?.availability === "available" && record.conflictState === "none" && record.counterexampleOf === null);
   if (available.length === 0) return "unknown";
   return available.reduce((lowest, record) => claimKindCertainty[record.claimKind] < claimKindCertainty[lowest] ? record.claimKind : lowest, available[0].claimKind);
 }
@@ -49,7 +49,11 @@ function nonEmptyText(value) {
 
 function safeLocator(value) {
   if (!isRecord(value) || Object.keys(value).sort().join("\0") !== "kind\0value" || !nonEmptyText(value.value)) return false;
-  if (value.kind === "project-relative") return !value.value.startsWith("/") && !value.value.includes("\\") && !value.value.split("/").includes("..");
+  if (value.kind === "project-relative") {
+    if (value.value.includes("\\") || /^(?:[a-z][a-z0-9+.-]*:|[a-z]:[\\/]|[\\/]{1,2}|\\\\[.?]\\)/iu.test(value.value)) return false;
+    const parts = value.value.split("/");
+    return parts.every((part) => part.length > 0 && part !== "." && part !== "..");
+  }
   if (value.kind === "url") {
     try { const url = new URL(value.value); return url.protocol === "https:" && !url.username && !url.password && !url.hash; } catch { return false; }
   }
@@ -168,6 +172,14 @@ export function registerReferenceEvidence(input = {}) {
       counterexampleOf: record.counterexampleOf,
     };
   });
+  const byId = new Map(registered.map((record) => [record.evidenceId, record]));
+  for (const record of registered) {
+    if (record.counterexampleOf === null) continue;
+    const target = byId.get(record.counterexampleOf);
+    if (!target || target === record || record.conflictState !== "conflicting" || target.conflictState !== "none" || target.counterexampleOf !== null
+      || record.availability !== "available" || target.availability !== "available"
+      || record.systemIds.join("\0") !== target.systemIds.join("\0")) fail("counterexample");
+  }
   return registered.sort((left, right) => byteCompare(left.evidenceId, right.evidenceId));
 }
 

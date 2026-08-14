@@ -12,8 +12,10 @@ const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const products = ["game-design-studio", "game-design-career"];
 const analysisArtifacts = [
   "reference-intelligence/brief.md",
+  "reference-intelligence/brief.json",
   "reference-intelligence/reference-set.yml",
   "reference-intelligence/evidence-register.yml",
+  "reference-intelligence/atlas-selection.json",
   "reference-intelligence/system-inventory.json",
   "reference-intelligence/analysis-priority.md",
   "reference-intelligence/comparison-matrix.md",

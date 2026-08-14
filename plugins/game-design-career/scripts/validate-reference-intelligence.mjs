@@ -18,6 +18,9 @@ const isId = (value) => isSafeText(value) && idPattern.test(value);
 const isTermId = (value) => isSafeText(value) && termIdPattern.test(value);
 const isHash = (value) => isSafeText(value) && sha256Pattern.test(value);
 const referenceRoles = ["direct-competitor", "core-system-exemplar", "operations-monetization-comparator"];
+const safeProjectRelativeLocator = (value) => typeof value === "string" && !value.includes("\\")
+  && !/^(?:[a-z][a-z0-9+.-]*:|[a-z]:[\\/]|[\\/]{1,2}|\\\\[.?]\\)/iu.test(value)
+  && value.split("/").every((part) => part.length > 0 && part !== "." && part !== "..");
 
 function resultOf(validate) {
   const errors = [];
@@ -122,7 +125,7 @@ export function validateReferenceAnalysis(value) {
       for (const field of ["build", "region", "accountState", "observedAt", "screen", "action", "result"]) nonEmptyText(record?.[field], `${path}/${field}`, add);
       if (Number.isNaN(Date.parse(record?.observedAt))) add(`${path}/observedAt`, "evidence.invalid-observed-at");
       closedObject(record?.locator, ["kind", "value"], `${path}/locator`, add); enumValue(record?.locator?.kind, ["url", "project-relative"], `${path}/locator/kind`, add); nonEmptyText(record?.locator?.value, `${path}/locator/value`, add);
-      if (record?.locator?.kind === "project-relative" && (record.locator.value.startsWith("/") || record.locator.value.includes("\\") || record.locator.value.split("/").includes(".."))) add(`${path}/locator/value`, "evidence.unsafe-locator");
+      if (record?.locator?.kind === "project-relative" && !safeProjectRelativeLocator(record.locator.value)) add(`${path}/locator/value`, "evidence.unsafe-locator");
       if (record?.locator?.kind === "url" && (!/^https:\/\/[^/?#]+(?:\/[^#]*)?$/u.test(record.locator.value) || /https:\/\/[^/]*@/u.test(record.locator.value))) add(`${path}/locator/value`, "evidence.unsafe-locator");
       if (!Array.isArray(record?.transformations) || canonicalJson(record.transformations) !== '[{"from":"original","to":"capture"},{"from":"capture","to":"summary"}]') add(`${path}/transformations`, "evidence.invalid-transformations");
       closedObject(record?.rights, ["copyright", "use", "publication"], `${path}/rights`, add); nonEmptyText(record?.rights?.copyright, `${path}/rights/copyright`, add); enumValue(record?.rights?.use, ["analysis", "internal-review"], `${path}/rights/use`, add); enumValue(record?.rights?.publication, ["private", "redacted"], `${path}/rights/publication`, add);
@@ -181,12 +184,17 @@ export function validateReferenceAnalysis(value) {
     const decisionQuestionIds = new Set(value?.brief?.decisionQuestions ?? []);
     const contextsById = new Map((value?.referenceContexts ?? []).map((context) => [context.contextId, context]));
     const evidenceIds = new Set((value?.evidence ?? []).map(({ evidenceId }) => evidenceId));
+    const evidenceById = new Map((value?.evidence ?? []).map((record) => [record.evidenceId, record]));
     const systemIds = new Set((value?.systemInventory ?? []).map(({ systemId }) => systemId));
     const selectedSystemIds = new Set((value?.atlasSelection ?? []).map(({ systemId }) => systemId));
     requireKnownRecordIds(value?.referenceContexts, "/referenceContexts", issue, referenceIds, "referenceId"); requireKnownRecordIds(value?.evidence, "/evidence", issue, referenceIds, "referenceId");
     for (const [index, record] of (value?.referenceSet ?? []).entries()) for (const [questionIndex, questionId] of (record?.decisionQuestionIds ?? []).entries()) if (!decisionQuestionIds.has(questionId)) issue(`/referenceSet/${index}/decisionQuestionIds/${questionIndex}`, "reference.dangling");
     for (const [index, record] of (value?.evidence ?? []).entries()) { const context = contextsById.get(record?.contextId); if (!context || context.referenceId !== record?.referenceId) issue(`/evidence/${index}/contextId`, "reference.dangling"); for (const [systemIndex, systemId] of (record?.systemIds ?? []).entries()) if (!selectedSystemIds.has(systemId)) issue(`/evidence/${index}/systemIds/${systemIndex}`, "reference.dangling"); }
-    for (const [index, record] of (value?.evidence ?? []).entries()) if (record?.counterexampleOf !== null && !evidenceIds.has(record?.counterexampleOf)) issue(`/evidence/${index}/counterexampleOf`, "reference.dangling");
+    for (const [index, record] of (value?.evidence ?? []).entries()) if (record?.counterexampleOf !== null) {
+      const target = evidenceById.get(record.counterexampleOf);
+      if (!target) issue(`/evidence/${index}/counterexampleOf`, "reference.dangling");
+      else if (target === record || record.conflictState !== "conflicting" || target.conflictState !== "none" || target.counterexampleOf !== null || record.availability !== "available" || target.availability !== "available" || JSON.stringify(record.systemIds) !== JSON.stringify(target.systemIds)) issue(`/evidence/${index}/counterexampleOf`, "evidence.invalid-counterexample");
+    }
     for (const [index, record] of (value?.systemInventory ?? []).entries()) for (const [evidenceIndex, evidenceId] of (record?.evidenceIds ?? []).entries()) { const evidence = (value?.evidence ?? []).find((item) => item?.evidenceId === evidenceId); if (!evidence || !evidence.systemIds.includes(record.systemId)) issue(`/systemInventory/${index}/evidenceIds/${evidenceIndex}`, "reference.dangling"); }
     requireKnownRecordIds(value?.systemMaps, "/systemMaps", issue, systemIds, "systemId");
     requireKnownRecordIds(value?.priority, "/priority", issue, systemIds, "systemId");
@@ -198,12 +206,11 @@ export function validateReferenceAnalysis(value) {
     requireKnownRecordIds(value?.transferDecisions, "/transferDecisions", issue, systemIds, "sourceSystemId");
     requireKnownIds(value?.transferDecisions, "/transferDecisions", issue, evidenceIds);
     requireKnownIds(value?.verificationQueue, "/verificationQueue", issue, evidenceIds);
-    const evidenceById = new Map((value?.evidence ?? []).map((record) => [record.evidenceId, record]));
     for (const [index, claim] of (value?.claims ?? []).entries()) if (!validateClaimAgainstEvidence({ claim, evidenceById }).ok) issue(`/claims/${index}`, "claim.unsupported");
     for (const { collectionName, collection, systemField } of [{ collectionName: "deepDives", collection: value?.deepDives, systemField: "systemId" }, { collectionName: "comparison", collection: value?.comparison, systemField: "sourceSystemId" }, { collectionName: "transferDecisions", collection: value?.transferDecisions, systemField: "sourceSystemId" }]) for (const [index, record] of (collection ?? []).entries()) {
       const linked = (record?.evidenceIds ?? []).map((evidenceId) => evidenceById.get(evidenceId)); const systemId = systemField ? record?.[systemField] : undefined;
       if (linked.some((evidence) => !evidence || systemId && !evidence.systemIds.includes(systemId))) { issue(`/${collectionName}/${index}/evidenceIds`, "reference.dangling"); continue; }
-      const available = linked.filter((evidence) => evidence.availability === "available"); const expectedReferences = [...new Set(available.map(({ referenceId }) => referenceId))].sort(compareUtf8); const expectedContexts = [...new Set(available.map(({ contextId }) => contextId))].sort(compareUtf8);
+      const available = linked.filter((evidence) => evidence.availability === "available" && evidence.conflictState === "none" && evidence.counterexampleOf === null); const expectedReferences = [...new Set(available.map(({ referenceId }) => referenceId))].sort(compareUtf8); const expectedContexts = [...new Set(available.map(({ contextId }) => contextId))].sort(compareUtf8);
       if ((record?.referenceIds ?? []).join("\0") !== expectedReferences.join("\0") || (record?.contextIds ?? []).join("\0") !== expectedContexts.join("\0") || record?.coverageCount !== expectedReferences.length) issue(`/${collectionName}/${index}/coverageCount`, "coverage.invalid");
     }
     const priorities = Array.isArray(value?.priority) ? value.priority : [];

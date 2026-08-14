@@ -75,8 +75,10 @@ $game-design-studio:analyze-game-design-references adopt/adapt/reject/hold 제�
 선택한 결과 폴더 아래에 다음 분석 파일을 기록합니다. 이 파일은 Canonical Artifact의 `content.md`나 기존 시스템 명세를 자동으로 바꾸지 않습니다.
 
 - `reference-intelligence/brief.md`: 결정 질문
+- `reference-intelligence/brief.json`: 완전한 결정 경계의 canonical machine artifact
 - `reference-intelligence/reference-set.yml`: 비교작 역할과 접근 제한
 - `reference-intelligence/evidence-register.yml`: 맥락, 관찰 근거와 제한
+- `reference-intelligence/atlas-selection.json`: 조건과 verification prompt를 포함한 완전한 Atlas 선택
 - `reference-intelligence/system-inventory.json`: 평가 전 시스템 목록
 - `reference-intelligence/analysis-priority.md`: 심층 분석 우선순위
 - `reference-intelligence/comparison-matrix.md`: 비교 결과와 hold 상태

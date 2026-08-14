@@ -78,6 +78,8 @@ const sharedReferenceIntelligenceInventory = Object.freeze({
   ]),
   "shared/reference-intelligence/templates": Object.freeze([
     "analysis-priority.md",
+    "atlas-selection.json",
+    "brief.json",
     "brief.md",
     "comparison-matrix.md",
     "evidence-register.yml",

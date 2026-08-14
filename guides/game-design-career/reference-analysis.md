@@ -75,8 +75,10 @@ $game-design-career:analyze-game-design-references adopt/adapt/reject/hold 제�
 다음 파일은 선택한 결과 폴더 아래 `reference-intelligence/`에 기록합니다. 이 분석 파일은 개인 기여, 구현 경험, 공개 권한을 증명하지 않습니다.
 
 - `reference-intelligence/brief.md`: 포트폴리오가 답할 결정 질문
+- `reference-intelligence/brief.json`: 완전한 결정 경계의 canonical machine artifact
 - `reference-intelligence/reference-set.yml`: 비교작 역할과 접근 제한
 - `reference-intelligence/evidence-register.yml`: 맥락, 관찰 근거와 제한
+- `reference-intelligence/atlas-selection.json`: 조건과 verification prompt를 포함한 완전한 Atlas 선택
 - `reference-intelligence/system-inventory.json`: 평가 전 시스템 목록
 - `reference-intelligence/analysis-priority.md`: 심층 분석 우선순위
 - `reference-intelligence/comparison-matrix.md`: 게임별 비교와 hold 상태
