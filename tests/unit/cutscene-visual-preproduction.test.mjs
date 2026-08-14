@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { pathToFileURL } from "node:url";
+import { deflateSync } from "node:zlib";
 
 import { validateImageAssetManifest } from "../../shared/scripts/validate-image-assets.mjs";
 import { isRfc3339DateTime } from "../../shared/scripts/lib/rfc3339.mjs";
@@ -18,9 +19,97 @@ import {
   validateCutsceneGenerationUsage,
   validateCutsceneVisualPlan,
 } from "../../shared/scripts/validate-cutscene-visual-preproduction.mjs";
+import {
+  bindCutscenePromptPackage,
+  findCutsceneImpact,
+  invalidateCutsceneDependents,
+  planCutsceneVisualPreproduction,
+  validateCutsceneManifestHandoff,
+} from "../../shared/scripts/plan-cutscene-visual-preproduction.mjs";
+import { planImageAssetWorkflow } from "../../shared/scripts/run-image-asset-workflow.mjs";
 
 const SHA = "a".repeat(64);
 const WAVES = ["style-master", "reference-masters", "keyframes", "storyboard"];
+
+const taskTwoInput = (overrides = {}) => ({
+  cutsceneId: "cutscene-escape",
+  mode: "prompt-only",
+  beats: [{ beatId: "BEAT-01" }],
+  shots: [{ shotId: "SHOT-01", beatId: "BEAT-01" }],
+  ...overrides,
+});
+
+const cutsceneManifestFixture = ({
+  assetId = "cutscene-escape-style-master-style-01",
+  promptSha256 = "2".repeat(64),
+  dagSha256 = "3".repeat(64),
+  approvalBindingSha256 = "4".repeat(64),
+} = {}) => ({
+  schema_version: 1,
+  assets: [{ asset_id: assetId, prompt_sha256: promptSha256, approval_binding_sha256: approvalBindingSha256 }],
+  cutsceneWorkflow: { schemaVersion: 1, dagSha256, waves: [] },
+});
+
+async function cutsceneArtifactRoot(t) {
+  const root = await mkdtemp(path.join(tmpdir(), "cutscene-plan-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  return root;
+}
+
+function validPng() {
+  const crc32 = (bytes) => {
+    let crc = 0xffffffff;
+    for (const byte of bytes) { crc ^= byte; for (let bit = 0; bit < 8; bit += 1) crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1)); }
+    return (crc ^ 0xffffffff) >>> 0;
+  };
+  const chunk = (type, data) => {
+    const bytes = Buffer.alloc(12 + data.length);
+    bytes.writeUInt32BE(data.length); bytes.write(type, 4, "ascii"); data.copy(bytes, 8); bytes.writeUInt32BE(crc32(bytes.subarray(4, 8 + data.length)), 8 + data.length);
+    return bytes;
+  };
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(1); header.writeUInt32BE(1, 4); header.set([8, 6, 0, 0, 0], 8);
+  return Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk("IHDR", header), chunk("IDAT", deflateSync(Buffer.alloc(5))), chunk("IEND", Buffer.alloc(0))]);
+}
+
+test("prompt-only has expected references but no invented hashes", () => {
+  const { plan, manifest, templatePromptPackage } = planCutsceneVisualPreproduction(taskTwoInput());
+  assert.equal(plan.mode, "prompt-only");
+  assert.equal(templatePromptPackage.kind, "template-ready");
+  assert.equal(templatePromptPackage.references.length > 0 && templatePromptPackage.references.every((reference) => reference.expectedPath && reference.sha256 === undefined), true);
+  assert.equal(manifest.assets[0].asset_id, "cutscene-escape-style-master-style-01");
+  assert.equal(manifest.assets.every((asset) => asset.mode === undefined && /^[a-f0-9]{64}$/u.test(asset.prompt_sha256) && /^[a-f0-9]{64}$/u.test(asset.approval_binding_sha256)), true);
+  assert.deepEqual(validateCutsceneManifestHandoff({ manifest }), manifest);
+});
+
+test("plan-image-assets validates cutscene handoff without mutation", () => {
+  const manifest = cutsceneManifestFixture();
+  assert.deepEqual(validateCutsceneManifestHandoff({ manifest }), manifest);
+});
+
+test("planImageAssetWorkflow preserves handed-off manifest bytes and skips general planning", async (t) => {
+  const root = await cutsceneArtifactRoot(t);
+  const manifest = cutsceneManifestFixture();
+  const exact = `${JSON.stringify(manifest, null, 2)}\n`;
+  const result = await planImageAssetWorkflow({ artifactRoot: root, artifact: { invalid: true }, qualityProfile: { invalid: true }, cutsceneManifest: manifest });
+  assert.deepEqual(result.manifest, manifest);
+  assert.equal(await readFile(path.join(root, "assets/image-assets.yml"), "utf8"), exact);
+});
+
+test("binding reads current master bytes and invalidation retains unrelated state", async (t) => {
+  const root = await cutsceneArtifactRoot(t);
+  const planned = planCutsceneVisualPreproduction(taskTwoInput({ mode: "generate-after-approval" }));
+  const referenceBytes = validPng();
+  for (const reference of planned.templatePromptPackage.references) {
+    await mkdir(path.dirname(path.join(root, reference.expectedPath)), { recursive: true });
+    await writeFile(path.join(root, reference.expectedPath), referenceBytes);
+  }
+  const bound = await bindCutscenePromptPackage({ artifactRoot: root, plan: planned.plan, manifest: planned.manifest });
+  assert.equal(bound.kind, "generation-ready");
+  const impact = findCutsceneImpact({ plan: planned.plan, changedAssetIds: [planned.plan.cutsceneWorkflow.waves[0].assetIds[0]] });
+  const invalidated = invalidateCutsceneDependents({ plan: planned.plan, changedAssetIds: [planned.plan.cutsceneWorkflow.waves[0].assetIds[0]], reason: "master-changed" });
+  assert.deepEqual(invalidated.cutsceneWorkflow.waves.filter((wave) => !impact.waveIds.includes(wave.id)), planned.plan.cutsceneWorkflow.waves.filter((wave) => !impact.waveIds.includes(wave.id)));
+});
 
 const validCutscenePlan = () => ({
   schemaVersion: 1,

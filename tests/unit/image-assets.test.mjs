@@ -170,7 +170,11 @@ test("keeps optional prompt digests in runtime and JSON Schema parity", async (t
   const { manifestSchema, externalSchemas } = await imageAssetSchema();
   const valid = manifest({ asset: { prompt_digest: "a".repeat(64) } });
   const invalid = manifest({ asset: { prompt_digest: "A".repeat(64) } });
-  for (const [value, expected] of [[valid, true], [invalid, false]]) {
+  const cutscene = manifest({
+    cutsceneWorkflow: { schemaVersion: 1, dagSha256: "b".repeat(64), waves: [] },
+    asset: { prompt_sha256: "c".repeat(64), approval_binding_sha256: "d".repeat(64) },
+  });
+  for (const [value, expected] of [[valid, true], [invalid, false], [cutscene, true]]) {
     assert.equal(validateImageAssetManifest(value, { artifactRoot: root }).ok, expected);
     assert.equal(schemaAccepts(value, manifestSchema, externalSchemas), expected);
   }

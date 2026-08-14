@@ -114,6 +114,9 @@ test("Studio plan-image-assets makes a profile-preflight plan and hands Skillste
   assert.match(skill, /<title>|title\/desc/u);
   assert.match(skill, /2× PNG|@2x`? PNG/u);
   assert.match(skill, /lint|render|QA/u);
+  assert.match(skill, /cutsceneWorkflow/u);
+  assert.match(skill, /validateCutsceneManifestHandoff/u);
+  assert.match(skill, /secure reference loader/u);
   assert.doesNotMatch(skill, /OpenAI|Codex image generation/u);
 });
 

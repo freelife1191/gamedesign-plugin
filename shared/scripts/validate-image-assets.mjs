@@ -287,9 +287,12 @@ function validateAsset(asset, index, artifactRoot) {
   rejectUnknownProperties(errors, asset, new Set([
     "asset_id", "type", "requirement", "generation_state", "approval_state", "planning", "purpose", "placement", "alt_text", "readability",
     "art_brief", "prompt", "prompt_digest", "output", "provider", "generation_receipts", "rights", "reviews", "technical_fit", "gameplay_readability",
-    "asset_set_id", "derivative_of", "reference_asset_ids", "reference_images", "consistency_profile", "prompt_lineage",
+    "asset_set_id", "derivative_of", "reference_asset_ids", "reference_images", "consistency_profile", "prompt_lineage", "prompt_sha256", "approval_binding_sha256",
   ]), assetPath);
   if (!assetIdPattern.test(asset.asset_id ?? "")) errors.push(error("invalid_asset_id", `${assetPath}.asset_id`, "Asset IDs must be stable kebab-case identifiers."));
+  for (const field of ["prompt_sha256", "approval_binding_sha256"]) {
+    if (asset[field] !== undefined && !digestPattern.test(asset[field])) errors.push(error("invalid_cutscene_binding", `${assetPath}.${field}`, "Cutscene bindings must be SHA-256 values."));
+  }
   if (!assetTypes.has(asset.type)) errors.push(error("invalid_asset_type", `${assetPath}.type`, "Asset type is not approved."));
   if (!requirements.has(asset.requirement)) errors.push(error("invalid_requirement", `${assetPath}.requirement`, "Asset requirement is not approved."));
   if (!generationStates.has(asset.generation_state)) errors.push(error("invalid_generation_state", `${assetPath}.generation_state`, "Generation state is not approved."));
@@ -452,7 +455,7 @@ export function validateImageAssetManifest(value, { artifactRoot } = {}) {
   if (!isObject(value)) {
     return { ok: false, errors: [error("invalid_manifest", "", "Image asset manifest must be an object.")], warnings, counts: { assets: 0, generation: {}, approval: {} } };
   }
-  rejectUnknownProperties(errors, value, new Set(["schema_version", "assets"]), "");
+  rejectUnknownProperties(errors, value, new Set(["schema_version", "assets", "cutsceneWorkflow"]), "");
   if (value.schema_version !== 1) errors.push(error("invalid_schema_version", "schema_version", "Schema version 1 is required."));
   if (!Array.isArray(value.assets)) errors.push(error("invalid_assets", "assets", "Assets must be an array."));
   const assets = Array.isArray(value.assets) ? value.assets : [];

@@ -12,7 +12,7 @@ const canonicalPatternDigests = Object.freeze({
   "document-illustration": "d469fc17ec50ff57e8ff8ae818db898b1efe80a7625243ccf11d9804c0f53d40",
   environment: "02aa48b3f37565f16b8ae592d5e6bd897bcb4d6d65d93e543706a3e5891885a4",
   "skill-vfx": "16ba9a2c2b50786d232449652e88451a75ebd89eb753fe6a3583b18d14439b2e",
-  storyboard: "5da629f8647918b665a696fe65bde5f0a2c27d6422083d9c2fdc9d14c921928a",
+  storyboard: "2ba10d794f08ca27ac01ab7fdde2344d2d255f5c0b481632193d6927f8daf642",
   "ui-icon": "20be4075de5bf78d87deac0c9a3f7268d25567fb9632a1b9faa83aac4ae6af97",
 });
 

@@ -12,6 +12,7 @@ import { resolveImageProvider } from "./lib/image-provider.mjs";
 import { canonicalArtifactRoot, ensureArtifactDirectories, safeWriteArtifactFile } from "./lib/safe-artifact-write.mjs";
 import { applyImageReviewTransition, validateImageAssetManifest } from "./validate-image-assets.mjs";
 import { loadImageConfig, toPublicImageConfig } from "./validate-image-config.mjs";
+import { validateCutsceneManifestHandoff } from "./plan-cutscene-visual-preproduction.mjs";
 
 const patternNames = ["base", "character", "skill-vfx", "environment", "ui-icon", "storyboard", "document-illustration"];
 const specialistReviewerIds = new Set([
@@ -481,8 +482,13 @@ export async function runConfiguredImageAssetWorkflow({ workspaceRoot, env, ...o
   return { ...result, config: toPublicImageConfig(config) };
 }
 
-export async function planImageAssetWorkflow({ artifactRoot, artifact, qualityProfile, existingManifest = null, patternCatalog } = {}) {
+export async function planImageAssetWorkflow({ artifactRoot, artifact, qualityProfile, existingManifest = null, patternCatalog, cutsceneManifest } = {}) {
   const root = await ensureArtifactDirectories({ artifactRoot, directories: ["assets", "assets/prompts", "decisions"] });
+  if (cutsceneManifest !== undefined) {
+    const manifest = validateCutsceneManifestHandoff({ manifest: cutsceneManifest });
+    await safeWriteArtifactFile({ artifactRoot: root, relativePath: "assets/image-assets.yml", data: `${JSON.stringify(manifest, null, 2)}\n` });
+    return { manifest, summary: { required: 0, recommended: 0, variants: 0, total: manifest.assets.length }, promptDigests: [] };
+  }
   const plan = buildImageAssetPlan({ artifact, qualityProfile, existingManifest });
   const catalog = patternCatalog ?? await defaultPatternCatalog();
   const initialPrompts = compileImagePrompts({ manifest: plan.manifest, patternCatalog: catalog });

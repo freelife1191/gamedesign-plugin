@@ -22,6 +22,20 @@ Collect the canonical artifact root, its selected document-quality profile and s
 5. For a Skillstead diagram slot, create a separate diagram authority handoff: editable SVG is the authority, a verified `@2x` PNG is a derivative, and the handoff includes source mapping, nonempty SVG `<title>` and `<desc>`, adjacent alt text, lint command/result, renderer identity/result, and two-stage visual QA evidence. Hand it to the visualization workflow; planning does not generate SVG or PNG bytes.
 6. Record that all new assets remain `concept-draft`, that planning is not human approval, and that named review plus artifact-local evidence are required before document insertion or production candidacy. Hand the manifest, prompt package, placeholders, selection record, and Skillstead evidence checklist to `generate-image-assets` and `review-image-assets`.
 
+## Cutscene handoff
+
+When `design-cutscene-visual-preproduction` supplies a cutscene manifest, treat its closed
+`cutsceneWorkflow` as the sole authority. Invoke
+`validateCutsceneManifestHandoff({manifest})`, then safe-write the supplied manifest to
+`assets/image-assets.yml` without changing stable IDs, DAG hash, prompt hash, approval binding,
+wave records, or any asset bytes. Do not call the general image planner, compile general prompts,
+or bind template references in this branch. The cutscene planner owns those operations.
+
+Prompt Only still delivers a complete cutscene package: brief, beat sheet, shot list, continuity
+bible, master-reference plan, expected artifact-relative paths, prompts, and generation guide.
+Template references never invent image hashes; only generation-ready binding reads current regular
+files under `assets/generated/` through the secure reference loader.
+
 ## Output contract
 
 Produce or update exactly these artifact-local files:

@@ -7,6 +7,16 @@
   "required": ["schema_version", "assets"],
   "properties": {
     "schema_version": { "const": 1 },
+    "cutsceneWorkflow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "dagSha256", "waves"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "dagSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "waves": { "type": "array" }
+      }
+    },
     "assets": {
       "type": "array",
       "items": { "$ref": "#/$defs/asset" }
@@ -111,6 +121,8 @@
         },
         "prompt": { "type": "string", "minLength": 1 },
         "prompt_digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "prompt_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "approval_binding_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
         "output": {
           "type": "object",
           "additionalProperties": false,
