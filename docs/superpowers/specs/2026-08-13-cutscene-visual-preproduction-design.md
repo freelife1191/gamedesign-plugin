@@ -17,15 +17,18 @@
 
 이미지 일관성은 한 장의 “마스터 이미지”에만 의존하지 않는다. 스타일, 캐릭터와
 의상, 환경, 핵심 소품, 색·조명 기준을 마스터 레퍼런스 세트로 관리한다. 스타일
-마스터를 먼저 사람이 승인하고 캐릭터·환경·소품 마스터, 주요 키프레임, 연결
-shot과 조건부 variant를 순서대로 만든다. 이전 단계가 바뀌면 영향받는 후속
-자산만 다시 계획하고 비용을 다시 계산한다.
+마스터 권한은 세 단계가 아니라 네 approval wave로 나눈다. `style-master` 다음에
+`reference-masters`(캐릭터·환경·소품·색/조명), `keyframes`, `storyboard`(연결
+shot과 variant)를 순서대로 승인한다. 각 wave는 exact asset ID 집합, estimate,
+live host-user approval, attempt, completion, invalidation을 자신의 record로
+소유한다. 이전 wave가 바뀌면 영향받는 후속 자산만 다시 계산하고 재승인한다.
 
 작업 시작 시 사용자는 `prompt-only`, `estimate-only`,
 `generate-after-approval` 중 하나를 선택할 수 있다. 생성하지 않으면 완성된
 프롬프트 패키지와 나중에 순서대로 이미지를 요청하는 가이드를 제공한다. 생성할
-경우에도 마스터, 키프레임, 스토리보드 각 단계의 예상 비용과 최대 한도를 먼저
-보여 주고 해당 단계가 승인된 뒤에만 외부 이미지 생성 호출을 한다.
+경우에도 현재 wave의 예상 비용 범위·최대 한도·재시도 reserve를 먼저 보여 주고,
+해당 wave가 live host-user capability와 receipt로 승인된 뒤에만 외부 이미지 생성
+호출을 한다.
 
 ## 배경과 현재 기능
 
@@ -189,9 +192,11 @@ design-game-content
 5. 색·조명 마스터: 장면별 팔레트와 감정 전환
 6. 선택 항목: 표정 시트, 크기 비교와 상호작용 기준
 
-승인 순서는 스타일 마스터 → 캐릭터·환경·소품 마스터 → 주요 키프레임 → 연결
-shot과 variant다. 앞 단계가 승인되지 않으면 다음 단계 프롬프트는 준비할 수 있어도
-생성 승인을 받을 수 없다.
+승인 wave 순서는 `style-master` → `reference-masters` → `keyframes` →
+`storyboard`다. `reference-masters`에는 캐릭터·환경·소품·색/조명 master가
+들어가고 `storyboard`에는 연결 shot과 visual variant가 든다. 앞 wave가 승인되지
+않으면 다음 wave의 template-ready prompt는 준비할 수 있어도 generation-ready로
+결속하거나 생성 승인을 받을 수 없다.
 
 ### 6. Shot Prompt Compiler
 
@@ -206,8 +211,11 @@ shot과 variant다. 앞 단계가 승인되지 않으면 다음 단계 프롬프
 7. 제외할 요소와 금지 표현
 8. 크기, 화면비, 자막·UI 안전 영역
 
-프롬프트는 참고 이미지의 외형을 막연히 “비슷하게” 요구하지 않고 정확한 자산
-ID와 hash, 보존 항목과 변경 항목을 분리한다.
+프롬프트는 참고 이미지의 외형을 막연히 “비슷하게” 요구하지 않고 정확한 자산 ID와
+hash, 보존 항목과 변경 항목을 분리한다. 다만 아직 선택되지 않은 master의 Prompt
+Only record는 asset ID와 예상 상대 경로만 가진 template-ready 상태이며 SHA-256을
+발명하지 않는다. 실제 master bytes를 안전한 artifact path에서 읽어 hash한 뒤에만
+generation-ready bound prompt package가 된다.
 
 ## 생성 의존성 그래프
 
@@ -291,6 +299,10 @@ cutscene/
 7. 실패한 안정 ID만 재시도하는 요청
 
 생성하지 않은 파일은 이미지 대신 예상 상대 경로와 asset ID를 manifest에 남긴다.
+이 template-ready manifest는 cutscene planner만 작성한다. `plan-image-assets`는
+cutscene 요청에서 그 manifest를 검증·handoff할 뿐 stable ID, DAG, prompt hash,
+approval binding을 다시 계획하거나 수정하지 않는다. 일반 image planning 경로는
+바뀌지 않는다.
 
 ### Estimate Only
 
@@ -306,8 +318,9 @@ cutscene/
 
 ### Generate After Approval
 
-Estimate Only의 결과에 승인 receipt를 결속한 뒤 해당 단계만 생성한다. 마스터,
-키프레임, 스토리보드는 각각 별도 승인한다.
+Estimate Only의 결과에 승인 receipt를 결속한 뒤 해당 wave만 생성한다.
+`style-master`, `reference-masters`, `keyframes`, `storyboard`는 각각 별도
+estimate와 승인을 가진다. root는 이 네 record를 요약할 뿐 독립 승인 권한이 없다.
 
 ## 비용 추정과 승인 계약
 
@@ -330,22 +343,38 @@ Estimate Only의 결과에 승인 receipt를 결속한 뒤 해당 단계만 생�
 현재 기본 이미지 모델 후보는 `gpt-image-2`다. 설계 작성 시점의 공식 문서는 이미지
 입력, 캐시 입력, 이미지 출력과 텍스트 입력을 토큰 단위로 구분한다.
 
+이 계약은 `gpt-image-2` generations와 edits를 모두 유지한다. edit reference는
+순서를 보존한 복수 `image[]`로 보내고 `input_fidelity`는 보내지 않는다. 유효한
+크기는 임의의 width×height이되 각 edge가 16의 배수, 각 edge 최대 3840,
+aspect ratio 최대 3:1, 총 pixel 655360..8294400이어야 하며 transparent output은
+지원하지 않는다. 날짜가 붙은 model snapshot은 문서·시험 근거일 뿐 영구 runtime
+default가 아니다.
+
 - [OpenAI API Pricing](https://openai.com/api/pricing/)
 - [GPT Image 2 model](https://developers.openai.com/api/docs/models/gpt-image-2)
 - [Images API usage fields](https://platform.openai.com/docs/api-reference/images-streaming/image_generation/partial_image)
 
-가격은 실행 시점에 공식 출처에서 다시 확인하며 코드에 영구 상수로 고정하지
-않는다. 예상 비용은 선택한 모델·품질·크기·수량과 reference 입력을 바탕으로
-최소·예상·최대 USD로 표시한다. 원화는 환율과 조회 시점을 함께 적는 참고값일
-뿐 승인 기준은 기본적으로 USD다.
+가격은 실행 시점의 timestamped host-provided official snapshot으로 받고 코드에
+영구 상수로 고정하지 않는다. snapshot은 text input, cached text input, image
+input, cached image input, image output을 구분한다. 예상 비용은 선택한 모델·품질·
+크기·수량과 reference 입력을 바탕으로 최소·예상·최대 USD로 표시한다. 원화는
+환율과 조회 시점을 함께 적는 참고값일 뿐 승인 기준은 기본적으로 USD다.
 
 호스트 앱의 이미지 생성 기능처럼 API 단가와 usage를 확인할 수 없는 경로는
 `비용 확인 불가 — 호스트 구독 또는 사용량 정책이 적용될 수 있음`으로 표시한다.
 무료라고 추정하지 않으며 이 경우에도 생성 전 승인을 받는다.
 
+usage는 provider request와 asset마다 저장한다. 숫자가 제공되면
+`input_tokens = text_input_tokens + image_input_tokens` 및
+`total_tokens = input_tokens + output_tokens`의 정수 일관성을 검증한다. 현재 Images
+usage에는 cached-token breakdown이 없으므로, 향후 closed usage contract가 모든
+category를 증명하지 않는 한 exact actual USD는 `unavailable`이며 cached usage를
+0으로 추정하지 않는다.
+
 ### 단계별 승인 receipt
 
-승인은 다음 항목에 결속된다.
+승인은 private opaque live host-user capability와 receipt로만 성립하며 다음 항목에
+결속된다.
 
 - 컷씬·장면 ID와 생성 단계
 - 생성할 asset ID exact set
@@ -355,6 +384,11 @@ Estimate Only의 결과에 승인 receipt를 결속한 뒤 해당 단계만 생�
 - 예상 비용 범위, 최대 비용과 재시도 reserve
 - 승인자와 승인 시점
 
+receipt는 existing reference/glossary authority module과 같은 private capability
+pattern을 사용한다. 복사·proxy·stale capability, blank reviewer, agent/specialist/
+role-like reviewer ID, event actor 불일치, prose-only approval은 exact 오류로
+거절하며 provider call은 0회다. caller가 만든 plain `hostEvent`는 권한이 아니다.
+
 다음 항목이 바뀌면 재승인을 요구한다.
 
 - 자산 수 또는 ID
@@ -363,31 +397,37 @@ Estimate Only의 결과에 승인 receipt를 결속한 뒤 해당 단계만 생�
 - 비용 최대 한도
 - variant 범위
 
-provider 호출 직전에 receipt와 실제 요청을 다시 비교한다. 승인된 최대 비용을 넘을
-가능성이 있거나 가격 정보를 다시 확인할 수 없으면 호출 전 차단한다.
+provider 호출 **매 attempt 직전** receipt와 실제 요청을 다시 비교한다. asset ID,
+attempt ordinal, 남은 retry reserve, 누적 비용과 남은 모든 attempt의 최대 가능 비용,
+현재 bound prompt/reference/price binding 및 current wave approval을 검증한다.
+승인된 최대 비용을 넘을 가능성이 있거나 reserve/cap이 소진됐거나 가격 정보를 다시
+확인할 수 없으면 retry N+1도 포함해 호출 전 차단한다.
 
 호출 뒤에는 usage, 실제 비용 또는 비용 산정 불가 사유, 성공·실패 asset ID와
 provider request ID를 별도 receipt로 남긴다.
 
 ## 상태 모델
 
+root는 독립 approval authority나 mutable generation transition을 갖지 않는다.
+각 wave는 `planned → template-ready → generation-ready → cost-estimated →
+approval-pending → approved → dispatching → completed|blocked|invalidated` record를
+자신의 asset IDs, estimate, approval, attempts, completion, invalidation과 함께
+보유한다. root summary는 이 record에서만 다음을 derived한다.
+
 ```text
-planned
-  → prompt-ready
-  → cost-estimated
-  → approval-pending
-  → generation-approved
-  → generated
-  → continuity-review
-  → document-approved
-  → production-candidate
+planned → prompt-ready → cost-estimated → approval-pending → generated →
+continuity-review → document-approved → production-candidate
 ```
 
-- `prompt-only`는 `prompt-ready`에서 정상 완료할 수 있다.
+- `prompt-only`는 template-ready `prompt-ready`에서 정상 완료하며 실제 image hash가
+  없다.
 - 비용만 요청하면 `cost-estimated`에서 완료한다.
-- 사람이 승인하지 않으면 `approval-pending`을 넘지 않는다.
+- 사람이 승인하지 않으면 해당 wave는 `approval-pending`을 넘지 않는다.
 - 생성 성공은 `document-approved`나 `production-candidate`를 뜻하지 않는다.
-- master 또는 prompt 변경은 영향받는 자산을 `cost-estimated`로 되돌린다.
+- `document-approved`와 `production-candidate`는 기존 image asset approval lifecycle,
+  current continuity receipt, unresolved blocker 없음에서만 derived된다.
+- master/prompt/price/reference 변경은 impact closure에 있는 wave만
+  `cost-estimated`로 무효화하고 관계없는 성공 bytes·state·receipt를 보존한다.
 
 ## 결과물 구조
 
@@ -430,6 +470,21 @@ cutscene/
 결함은 영향받는 asset ID와 원인 master·prompt를 연결한다. retry는 실패 자산만
 대상으로 하고 성공한 자산을 덮어쓰지 않는다.
 
+## Routing, package and inventory boundary
+
+Studio route object의 현재 canonical fields는 closed exact shape로 유지한다. wave,
+downstream, approval metadata는 route field를 늘리지 않고 별도 closed top-level
+`cutsceneWorkflow` object에 둔다. `design-cutscene-visual-preproduction`은 Studio만
+노출하며 Career는 공통 schema/runtime package parity만 받고 Studio-only skill/route를
+받지 않는다.
+
+baseline은 Studio routing 22/installed 23, Career routing 22/installed 23, Studio
+source 15, shared reference 2, memory 3, vendor `svg-infographic` 1, top-level shared
+scripts 25다. 컷씬 후 Studio는 routing 23/installed 24, Career는 routing 22/installed
+23이고 두 package는 새 top-level cutscene scripts 5개를 포함해 30개다. Studio product
+README, skill guide/index/installation/use-case, root guide/README, Career package
+contract, package contents와 memory guide/source inventory test가 이 수치를 검증한다.
+
 ## 오류와 부분 실패 처리
 
 - 모델이나 가격 정보를 확인할 수 없으면 estimate를 확정하지 않고 호출하지 않는다.
@@ -447,20 +502,27 @@ cutscene/
 
 ### 승인과 비용
 
-- 비용·범위 설명과 승인 receipt 전에는 provider 호출이 0회다.
+- 비용·범위 설명과 current wave의 opaque live host-user approval receipt/capability 전에는 provider 호출이 0회다.
 - `prompt-only`는 이미지 파일을 만들지 않고 이미지 API 비용 USD 0으로 완료한다.
 - `estimate-only`는 usage를 발생시키지 않는다.
-- 승인은 exact asset ID, prompt hash, reference hash, 모델·품질·크기와 비용 상한에
-  결속된다.
+- 승인은 exact wave asset ID, bound prompt hash, reference hash, 모델·품질·크기와 비용 상한에 결속된다.
 - 승인 뒤 자산 수, prompt, reference, 모델, 품질, 크기나 variant가 바뀌면 호출이
   차단되고 재승인을 요구한다.
 - host 비용을 알 수 없을 때 무료로 표시하지 않는다.
+- copied/proxied/stale approval capability, actor-mismatched event, blank 또는 role-like
+  reviewer, prose-only approval은 exact error code/path로 거절되고 provider 호출은 0회다.
+- retry N+1은 reserve/cap을 포함한 per-attempt preflight를 통과할 때만 발생한다.
+- request/asset usage receipt는 integer identity를 검증하며 cached-token breakdown이
+  없으면 actual USD를 `unavailable`로 남긴다.
 
 ### 마스터와 연속성
 
-- 스타일 마스터 승인 전에 캐릭터·환경 마스터 생성이 실행되지 않는다.
+- `style-master` 승인 전에 `reference-masters` 생성이 실행되지 않고, 그 뒤
+  `keyframes`, `storyboard`가 네 wave 순서를 지킨다.
 - master hash 변경이 영향받는 keyframe·shot 승인만 무효화한다.
 - shot prompt가 참조한 master ID와 SHA-256을 잃으면 생성이 차단된다.
+- Prompt Only template는 master ID/expected path를 가지되 invented SHA-256이 없고,
+  actual master bytes를 읽어 bound prompt가 된 뒤에만 generation approval을 받는다.
 - base와 variant의 변경·보존 필드가 서로 충돌하면 검토 실패다.
 - 대사만 바뀐 variant가 불필요한 파생 이미지를 만들지 않는다.
 - 화면 방향, 의상, 소품과 조명 continuity mutation을 QA가 검출한다.
@@ -479,6 +541,8 @@ cutscene/
 - generation guide의 요청 순서가 생성 DAG의 위상 순서와 일치한다.
 - 각 복사 가능한 요청은 대상 ID, reference ID, 승인 단계와 예상 결과를 포함한다.
 - glossary 경고나 continuity finding이 원문을 자동 교정하지 않는다.
+- `plan-image-assets`가 cutscene manifest의 stable IDs, DAG, prompt hash, approval
+  binding을 다시 계획하거나 수정하지 않는다.
 
 ### 보안과 비공허성
 
@@ -488,6 +552,12 @@ cutscene/
 - 비용 상한, master 영향 전파와 variant 중복 방지 assertion을 제거하면 대응
   적대 테스트가 실제로 실패한다.
 - 패키징된 Studio 이미지 계약과 공통 원천 스키마가 일치한다.
+- 모든 generation fixture는 `env:{}`, failing default network, fake `fetchFn`, fake
+  host callback을 주입한다. process environment의 실제 `OPENAI_API_KEY`도 live call을
+  일으킬 수 없다.
+- public E2E는 15 scenarios(usage receipt/actual-cost-unavailable 포함), mutation
+  harness는 approval-authority와 usage-completeness를 포함한 11 named mutation을
+  검증한다.
 
 ## 완료 조건
 
@@ -495,8 +565,11 @@ cutscene/
 - 컷씬 brief, beat, shot, continuity, master plan, prompt manifest, 비용과 승인
   receipt 스키마가 구현된다.
 - Prompt Only가 외부 호출 없이 완전한 프롬프트와 순차 생성 가이드를 제공한다.
-- 실제 생성은 마스터, 키프레임, 스토리보드의 단계별 비용 승인 뒤에만 실행된다.
+- 실제 생성은 `style-master`, `reference-masters`, `keyframes`, `storyboard`의 현재
+  비용·범위 공개와 live host-user 승인 뒤에만 실행된다.
 - 조건부 variant가 base 자산을 복제하지 않고 변경된 shot만 추적한다.
 - continuity QA와 부분 실패·재시도 계약이 실행형 적대 테스트로 검증된다.
 - 이미지 기능이 꺼지거나 실패해도 기존 콘텐츠 기획, 문서 작성과 검증 흐름은
   계속 동작한다.
+- route canonical shape와 Studio/Career package inventory는 각각 Studio 23/24,
+  Career 22/23, 두 package top-level scripts 30으로 검증된다.
