@@ -18,8 +18,22 @@ import { bindCutscenePromptPackage, planCutsceneVisualPreproduction } from "../.
 import { cutsceneDocumentSha256 } from "../../shared/scripts/validate-cutscene-visual-preproduction.mjs";
 
 const REFERENCE_SHA = "3".repeat(64);
+const TASK2_MASTER_SOURCE_IDS = [
+  "cutscene-escape-style-master-style-01",
+  "cutscene-escape-reference-master-environment-01",
+];
+const TASK3_CANONICAL_RECEIPT_IDS = [
+  "cutscene-escape-reference-master-environment-01",
+  "cutscene-escape-style-master-style-01",
+];
 const digest = (value) => cutsceneDocumentSha256(value);
 const promptDigest = (prompt) => createHash("sha256").update(prompt).digest("hex");
+
+function assertReceiptMutationRejected(receipt, mutate) {
+  const bytes = JSON.stringify(receipt);
+  assert.throws(mutate, TypeError);
+  assert.equal(JSON.stringify(receipt), bytes);
+}
 
 function validPng() {
   const crc32 = (bytes) => {
@@ -219,8 +233,10 @@ test("Task 2 bound package with two generated masters issues a canonical live ap
     shots: [{ shotId: "SHOT-01", beatId: "BEAT-01" }],
   });
   const manifest = structuredClone(planned.manifest);
-  const sourceMasters = manifest.assets.slice(0, 2);
-  for (const [index, asset] of sourceMasters.entries()) {
+  const sourceMasters = manifest.assets.slice(0, TASK2_MASTER_SOURCE_IDS.length);
+  assert.deepEqual(sourceMasters.map(({ asset_id: assetId }) => assetId), TASK2_MASTER_SOURCE_IDS);
+  assert.notDeepEqual(TASK2_MASTER_SOURCE_IDS, TASK3_CANONICAL_RECEIPT_IDS);
+  for (const asset of sourceMasters) {
     asset.generation_state = "generated";
     const outputPath = path.join(artifactRoot, asset.output.path);
     await mkdir(path.dirname(outputPath), { recursive: true });
@@ -229,13 +245,29 @@ test("Task 2 bound package with two generated masters issues a canonical live ap
   const promptPackage = await bindCutscenePromptPackage({ artifactRoot, plan: planned.plan, manifest });
   const pricingSnapshot = pricingSnapshotFixture();
   const estimate = estimateCutsceneImageCost({ plan: planned.plan, promptPackage, waveId: "reference-masters", pricingSnapshot, retryReserve: 1 });
-  const issued = issueCutsceneHumanApproval({ ...approvalEvent(), decision: "approved", plan: planned.plan, promptPackage, pricingSnapshot, estimate });
+  const event = approvalEvent();
+  const issued = issueCutsceneHumanApproval({ ...event, decision: "approved", plan: planned.plan, promptPackage, pricingSnapshot, estimate });
   const binding = cutsceneApprovalBinding({ plan: planned.plan, promptPackage, pricingSnapshot, estimate });
   assert.equal(promptPackage.references.length, 2);
-  assert.deepEqual(promptPackage.references.map(({ assetId }) => assetId), sourceMasters.map(({ asset_id }) => asset_id));
+  assert.deepEqual(promptPackage.references.map(({ assetId }) => assetId), TASK2_MASTER_SOURCE_IDS);
   assert.deepEqual(issued.receipt.referenceBindings, [...binding.referenceBindings]);
-  assert.deepEqual(issued.receipt.referenceBindings.map(({ assetId }) => assetId), [...promptPackage.references.map(({ assetId }) => assetId)].sort());
+  assert.deepEqual(issued.receipt.referenceBindings.map(({ assetId }) => assetId), TASK3_CANONICAL_RECEIPT_IDS);
+  assert.notDeepEqual(promptPackage.references.map(({ assetId }) => assetId), issued.receipt.referenceBindings.map(({ assetId }) => assetId));
+  assert.equal(Object.isFrozen(issued.receipt.assetIds), true);
   assert.equal(Object.isFrozen(issued.receipt.referenceBindings), true);
-  assert.equal(Object.isFrozen(issued.receipt.referenceBindings[0]), true);
+  assert.equal(issued.receipt.referenceBindings.every(Object.isFrozen), true);
+
+  for (const index of issued.receipt.assetIds.keys()) {
+    assertReceiptMutationRejected(issued.receipt, () => { issued.receipt.assetIds[index] = "cutscene-escape-tampered"; });
+  }
+  assertReceiptMutationRejected(issued.receipt, () => { issued.receipt.assetIds.push("cutscene-escape-tampered"); });
+  for (const [index, reference] of issued.receipt.referenceBindings.entries()) {
+    assertReceiptMutationRejected(issued.receipt, () => { reference.assetId = "cutscene-escape-tampered"; });
+    assertReceiptMutationRejected(issued.receipt, () => { reference.sha256 = "0".repeat(64); });
+    assertReceiptMutationRejected(issued.receipt, () => { issued.receipt.referenceBindings[index] = { assetId: "cutscene-escape-tampered", sha256: "0".repeat(64) }; });
+  }
+  assertReceiptMutationRejected(issued.receipt, () => { issued.receipt.referenceBindings.push({ assetId: "cutscene-escape-tampered", sha256: "0".repeat(64) }); });
+
   assert.equal(assertCutsceneHumanApproval({ receipt: issued.receipt, capability: issued.capability, context: context(binding) }), issued.receipt);
+  assert.equal(validateHostCutsceneApproval({ receipt: issued.receipt, capability: issued.capability, approvalEvent: event, plan: planned.plan, promptPackage, pricingSnapshot, estimate, now: "2026-08-13T00:01:00.000Z" }), issued.receipt);
 });
