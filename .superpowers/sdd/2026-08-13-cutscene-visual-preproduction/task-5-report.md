@@ -59,3 +59,23 @@ and usage schemas, and `git diff --check` passed.
 Fix validation: the Task 1–5 plus Task 4 regression matrix passed **193/193**;
 schema parse, runtime syntax checks, temporary Studio/Career schema parity, and
 diff checks passed. Tests use injected fixtures only.
+
+## Fix round 2 — transparent Proxy input boundary
+
+- `snapshotCutscenePlainData` now uses `node:util` `types.isProxy` before any
+  reflective, prototype, or descriptor operation. A transparent Proxy is
+  rejected as `cutscene.hostile_input` at its stable path without running a
+  trap.
+- Public `findCutsceneImpact` and `invalidateCutsceneDependents` now snapshot
+  their complete input before accessing `plan`, `changedAssetIds`, or `reason`.
+  Their pre-snapshot boundary also rejects top-level accessors, symbols, and
+  cycles deterministically.
+- Public overlay, review, impact, and invalidation regressions prove zero Proxy
+  trap and getter executions. Existing descriptor, symbol, and cycle checks
+  remain covered.
+
+Fix validation: a fresh Task 1–5 plus Task 4 regression matrix passed
+**195/195**. All three runtime modules passed `node --check`; visual-plan,
+continuity, and usage schemas parsed; the temporary Studio/Career package-byte
+parity test passed; and `git diff --check` passed. Tests use injected fixtures
+only; hostile-input regressions make no live provider, host, or network call.

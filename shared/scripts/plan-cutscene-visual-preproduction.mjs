@@ -308,7 +308,8 @@ export function buildVariantOverlay(input = {}) {
   return structuredClone({ schemaVersion: 1, cutsceneId: basePlan.cutsceneId, basePlanSha256: cutsceneDocumentSha256(basePlan), triggerState, changes: copied, sourceAssetIds, generatedAssetIds });
 }
 
-function cutsceneImpactWaves({ plan, changedAssetIds = [] } = {}) {
+function cutsceneImpactWaves(input = {}) {
+  const { plan, changedAssetIds = [] } = snapshotCutscenePlainData(input);
   if (!validateCutsceneVisualPlan(plan).ok || !Array.isArray(changedAssetIds) || !changedAssetIds.every(stable)) throw new Error("Cutscene impact requires a valid plan and stable changed asset IDs.");
   const changed = [...new Set(changedAssetIds)].sort(compare);
   const known = new Set(plan.cutsceneWorkflow.waves.flatMap((wave) => wave.assetIds));
@@ -340,7 +341,8 @@ export function findCutsceneImpact(input = {}) {
   return { waveIds, assetIds };
 }
 
-export function invalidateCutsceneDependents({ plan, changedAssetIds = [], reason = "master-changed" } = {}) {
+export function invalidateCutsceneDependents(input = {}) {
+  const { plan, changedAssetIds = [], reason = "master-changed" } = snapshotCutscenePlainData(input);
   const impact = cutsceneImpactWaves({ plan, changedAssetIds });
   const next = clone(plan);
   for (const wave of next.cutsceneWorkflow.waves) {

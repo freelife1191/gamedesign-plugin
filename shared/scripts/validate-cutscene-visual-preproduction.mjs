@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { types } from "node:util";
 
 import { validateImageAssetManifest } from "./validate-image-assets.mjs";
 import { isRfc3339DateTime } from "./lib/rfc3339.mjs";
@@ -57,7 +58,7 @@ export function snapshotCutscenePlainData(value) {
   const copy = (current, path, stack = new Set()) => {
     if (current === null || typeof current === "boolean" || typeof current === "string") return current;
     if (typeof current === "number") return Number.isFinite(current) ? current : hostile(path);
-    if (typeof current !== "object" || stack.has(current)) hostile(path);
+    if (typeof current !== "object" || types.isProxy(current) || stack.has(current)) hostile(path);
     let keys; let descriptors; let prototype;
     try { keys = Reflect.ownKeys(current); descriptors = Object.getOwnPropertyDescriptors(current); prototype = Object.getPrototypeOf(current); } catch { hostile(path); }
     if (Array.isArray(current)) {

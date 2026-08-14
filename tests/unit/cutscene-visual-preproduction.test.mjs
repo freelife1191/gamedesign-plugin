@@ -235,6 +235,57 @@ test("overlay and continuity review reject hostile descriptors before executing 
   assert.equal(observationReads, 0);
 });
 
+test("all public cutscene snapshot boundaries reject transparent proxies without invoking traps", () => {
+  const { plan, manifest } = planCutsceneVisualPreproduction(taskTwoInput({ mode: "generate-after-approval" }));
+  const transparentProxy = (value) => {
+    let traps = 0;
+    const count = (operation) => (...args) => { traps += 1; return Reflect[operation](...args); };
+    return {
+      value: new Proxy(value, {
+        get: count("get"),
+        getOwnPropertyDescriptor: count("getOwnPropertyDescriptor"),
+        getPrototypeOf: count("getPrototypeOf"),
+        ownKeys: count("ownKeys"),
+      }),
+      trapCount: () => traps,
+    };
+  };
+  const inputs = [
+    [transparentProxy({ basePlan: plan, triggerState: "safe", changes: [] }), buildVariantOverlay],
+    [transparentProxy({ plan, manifest, observations: [], reviewedAt: "2026-08-13T00:00:00.000Z" }), reviewCutsceneContinuity],
+    [transparentProxy({ plan, changedAssetIds: [plan.cutsceneWorkflow.waves[0].assetIds[0]] }), findCutsceneImpact],
+    [transparentProxy({ plan, changedAssetIds: [plan.cutsceneWorkflow.waves[0].assetIds[0]], reason: "safe" }), invalidateCutsceneDependents],
+  ];
+  for (const [input, api] of inputs) {
+    assert.throws(() => api(input.value), { code: "cutscene.hostile_input", path: "" });
+    assert.equal(input.trapCount(), 0);
+  }
+});
+
+test("impact and invalidation snapshot top-level getters, symbols, and cycles before reading inputs", () => {
+  const { plan } = planCutsceneVisualPreproduction(taskTwoInput({ mode: "generate-after-approval" }));
+  const changedAssetIds = [plan.cutsceneWorkflow.waves[0].assetIds[0]];
+  let planReads = 0;
+  const getterInput = { changedAssetIds };
+  Object.defineProperty(getterInput, "plan", { enumerable: true, get() { planReads += 1; return plan; } });
+  assert.throws(() => findCutsceneImpact(getterInput), { code: "cutscene.hostile_input", path: "/plan" });
+  assert.equal(planReads, 0);
+
+  let reasonReads = 0;
+  const reasonInput = { plan, changedAssetIds };
+  Object.defineProperty(reasonInput, "reason", { enumerable: true, get() { reasonReads += 1; return "safe"; } });
+  assert.throws(() => invalidateCutsceneDependents(reasonInput), { code: "cutscene.hostile_input", path: "/reason" });
+  assert.equal(reasonReads, 0);
+
+  const symbolInput = { plan, changedAssetIds };
+  symbolInput[Symbol.for("cutscene-hostile")] = true;
+  assert.throws(() => findCutsceneImpact(symbolInput), { code: "cutscene.hostile_input", path: "/Symbol(cutscene-hostile)" });
+
+  const cyclicInput = { plan, changedAssetIds };
+  cyclicInput.self = cyclicInput;
+  assert.throws(() => invalidateCutsceneDependents(cyclicInput), { code: "cutscene.hostile_input", path: "/self" });
+});
+
 test("binding rejects plan-derived manifest mutations before reference I/O", async (t) => {
   const root = await cutsceneArtifactRoot(t);
   const planned = planCutsceneVisualPreproduction(taskTwoInput({ mode: "generate-after-approval" }));
