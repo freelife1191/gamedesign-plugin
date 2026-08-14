@@ -362,6 +362,12 @@ input, cached image input, image output을 구분한다. 예상 비용은 선택
 크기·수량과 reference 입력을 바탕으로 최소·예상·최대 USD로 표시한다. 원화는
 환율과 조회 시점을 함께 적는 참고값일 뿐 승인 기준은 기본적으로 USD다.
 
+승인 검증은 호출자가 전달한 현재 `plan`, `pricingSnapshot`, `estimate`에서 binding을
+다시 만들고 receipt와 비교한다. runtime은 시험 fixture hash·시험 helper·고정 가격을
+참조하지 않는다. live capability는 해당 current context로 host-user approval을 발급할
+때만 얻는 private WeakMap authority이며 복사 가능한 object나 동결된 빈 object로
+대체할 수 없다.
+
 호스트 앱의 이미지 생성 기능처럼 API 단가와 usage를 확인할 수 없는 경로는
 `비용 확인 불가 — 호스트 구독 또는 사용량 정책이 적용될 수 있음`으로 표시한다.
 무료라고 추정하지 않으며 이 경우에도 생성 전 승인을 받는다.
