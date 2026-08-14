@@ -111,7 +111,7 @@ export async function makeFixture(t, { waveId = "style-master", retryReserve = 1
   const manifest = bindManifest(plan, structuredClone(planned.manifest));
   if (actualMasterBinding) {
     const master = manifest.assets[0]; master.generation_state = "generated";
-    await mkdir(path.dirname(path.join(artifactRoot, master.planning.target_output.path)), { recursive: true }); await writeFile(path.join(artifactRoot, master.planning.target_output.path), validPng());
+    await mkdir(path.dirname(path.join(artifactRoot, master.output.path)), { recursive: true }); await writeFile(path.join(artifactRoot, master.output.path), validPng());
   }
   const packageValue = actualMasterBinding ? await bindCutscenePromptPackage({ artifactRoot, plan, manifest }) : promptPackage(plan, manifest); const pricing = pricingSnapshot();
   const assetIds = [...plan.cutsceneWorkflow.waves.find((wave) => wave.id === waveId).assetIds].sort(compare);

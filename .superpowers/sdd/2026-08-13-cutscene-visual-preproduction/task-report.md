@@ -43,17 +43,15 @@ Exact mutation names: `approval-authority`, `approval-binding`,
 
 - RED: `node --test tests/e2e/suite/cutscene-visual-preproduction.e2e.test.mjs`
   failed because the suite did not yet exist.
-- GREEN: focused E2E plus mutation suite passed **16/16** (15 top-level E2E,
-  11 mutation workers, skip 0).
+- RED follow-up: direct plan-derived prompt/output mutation fails closed before
+  binding; the final rebind scenarios use valid observed-master bytes instead.
+- GREEN: latest focused suites passed **28/28** (15 top-level E2E and 13
+  mutation-harness tests; 11 mutation workers, skip 0).
 - Source integration: selected Task 1–8/public product matrix passed **133/133**.
-- Snapshot: standard `npm run build` ran **once**; subsequent
-  `npm run build -- --check` passed. Both package validators passed.
-- `npm run test:contracts` currently reports eight unrelated Archify production
-  inventory failures; its output names only Archify contracts, not cutscene files.
-  This is retained as a validation gap rather than masked.
+- Snapshot: standard `npm run build` ran **twice**: the first was pre-review;
+  the second was the accepted post-fix snapshot refresh. Its `--check` passed.
+- `npm run test:contracts` passed after the contract integration lane landed.
 
 ## Known limits
 
-- The snapshot builder deliberately retained its exact recovery directory under
-  `/private/var/folders/99/kpfx0mdj3fvbczqpbncjl0bm0000gn/T/snapshot-recovery-DjPB3c`.
-  It is outside the repository and has not been deleted by this task.
+- Implementation evidence is complete; final contract review remains pending.

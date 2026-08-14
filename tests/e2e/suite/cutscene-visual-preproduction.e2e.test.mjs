@@ -39,13 +39,14 @@ test("style wave cannot dispatch until an approval authority is supplied", async
   await assert.rejects(() => runApprovedCutsceneImageWave({ ...generationInput(input), ...generationRuntime(runtime) }), { code: "cutscene.approval_required", path: "/cutsceneWorkflow/waves/0/approval" }); assert.equal(calls(runtime), 0);
 });
 
-test("reference masters retain the approval-bound style reference before any provider call", async (t) => {
+test("reference masters reject a current package whose observed master binding drifted", async (t) => {
   const fixture = await makeFixture(t, { waveId: "reference-masters", actualMasterBinding: true }); const runtime = makeRuntime();
-  const master = fixture.input.manifest.assets[0]; await (await import("node:fs/promises")).writeFile(`${fixture.artifactRoot}/${master.planning.target_output.path}`, validPng(2, 2));
+  const master = fixture.input.manifest.assets[0]; await (await import("node:fs/promises")).writeFile(`${fixture.artifactRoot}/${master.output.path}`, validPng(2, 2));
   const { bindCutscenePromptPackage } = await import("../../../shared/scripts/plan-cutscene-visual-preproduction.mjs");
   const currentPackage = await bindCutscenePromptPackage({ artifactRoot: fixture.artifactRoot, plan: fixture.input.plan, manifest: fixture.input.manifest });
   const currentEstimate = estimateCutsceneImageCost({ plan: fixture.input.plan, promptPackage: currentPackage, manifest: fixture.input.manifest, waveId: fixture.input.waveId, pricingSnapshot: fixture.input.pricingSnapshot, retryReserve: fixture.input.estimate.retryReserve, attemptCeilings: fixture.input.estimate.attemptCeilings.map(({ assetId, maximumUsd }) => ({ assetId, maximumUsd })) });
-  await assert.rejects(() => runApprovedCutsceneImageWave({ ...generationInput(fixture.input), promptPackage: currentPackage, estimate: currentEstimate, ...generationRuntime(runtime) }), { code: "cutscene.approval_binding_stale", path: "/promptPackageSha256" }); assert.equal(calls(runtime), 0);
+  const before = await snapshotArtifactTree(fixture.artifactRoot); assert.notEqual(currentPackage.references[0].sha256, fixture.input.promptPackage.references[0].sha256);
+  await assert.rejects(() => runApprovedCutsceneImageWave({ ...generationInput(fixture.input), promptPackage: currentPackage, estimate: currentEstimate, ...generationRuntime(runtime) }), { code: "cutscene.approval_binding_stale", path: "/promptPackageSha256" }); assert.equal(calls(runtime), 0); assert.deepEqual(await snapshotArtifactTree(fixture.artifactRoot), before);
 });
 
 test("keyframes reject an incomplete master predecessor before journal or provider activity", async (t) => {
@@ -62,13 +63,14 @@ test("storyboard selection rejects an extra stable id before provider dispatch",
   await assert.rejects(() => runApprovedCutsceneImageWave({ ...generationInput(fixture.input), ...generationRuntime(runtime) }), { code: "cutscene.selected_asset_ids_invalid", path: "/selectedAssetIds" }); assert.equal(calls(runtime), 0);
 });
 
-test("a current package with an old approval pair fails the exact approval binding", async (t) => {
+test("a valid re-bound prompt package with an old approval pair fails the exact approval binding", async (t) => {
   const fixture = await makeFixture(t, { actualMasterBinding: true }); const runtime = makeRuntime();
   const { bindCutscenePromptPackage } = await import("../../../shared/scripts/plan-cutscene-visual-preproduction.mjs");
-  const master = fixture.input.manifest.assets[0]; await (await import("node:fs/promises")).writeFile(`${fixture.artifactRoot}/${master.planning.target_output.path}`, validPng(2, 2));
+  const master = fixture.input.manifest.assets[0]; await (await import("node:fs/promises")).writeFile(`${fixture.artifactRoot}/${master.output.path}`, validPng(3, 2));
   const currentPackage = await bindCutscenePromptPackage({ artifactRoot: fixture.artifactRoot, plan: fixture.input.plan, manifest: fixture.input.manifest });
   const currentEstimate = estimateCutsceneImageCost({ plan: fixture.input.plan, promptPackage: currentPackage, manifest: fixture.input.manifest, waveId: fixture.input.waveId, pricingSnapshot: fixture.input.pricingSnapshot, retryReserve: fixture.input.estimate.retryReserve, attemptCeilings: fixture.input.estimate.attemptCeilings.map(({ assetId, maximumUsd }) => ({ assetId, maximumUsd })) });
-  await assert.rejects(() => runApprovedCutsceneImageWave({ ...generationInput(fixture.input), promptPackage: currentPackage, estimate: currentEstimate, ...generationRuntime(runtime) }), { code: "cutscene.approval_binding_stale", path: "/promptPackageSha256" }); assert.equal(calls(runtime), 0);
+  const before = await snapshotArtifactTree(fixture.artifactRoot);
+  await assert.rejects(() => runApprovedCutsceneImageWave({ ...generationInput(fixture.input), promptPackage: currentPackage, estimate: currentEstimate, ...generationRuntime(runtime) }), { code: "cutscene.approval_binding_stale", path: "/promptPackageSha256" }); assert.equal(calls(runtime), 0); assert.deepEqual(await snapshotArtifactTree(fixture.artifactRoot), before);
 });
 
 test("valid-journal retry reserve stops before provider dispatch or any tree write", async (t) => {
