@@ -71,3 +71,23 @@
 
 - arbitrary hash context는 발급 API의 authority input이 아니며, invalid plan/package/pricing/estimate는 receipt/capability 생성 이전에 실패한다.
 - source reference order가 unsorted여도 valid Task 2 package는 issue 및 host assertion을 통과하고, receipt의 reference binding은 단일 canonical comparison order를 사용한다.
+
+## Fix 3 — Task 2 생산자-승인 발급 통합 회귀
+
+### 변경
+
+- 실제 임시 artifact root에서 `planCutsceneVisualPreproduction()`가 만든 plan/manifest를 사용했다.
+- 현재 필요한 두 master만 `generated`로 전환하고, 각 manifest의 실제 `output.path`에 secure loader가 검증하는 완전한 PNG를 기록했다.
+- `bindCutscenePromptPackage()`의 실제 반환값을 그대로 `estimateCutsceneImageCost()`와 `issueCutsceneHumanApproval()`에 전달한 뒤 live receipt/capability pair를 검증했다.
+- Task 2의 manifest source 순서는 그대로 수용되고, Task 3 receipt 내부 reference binding만 UTF-8 canonical 순서 및 deep freeze 상태임을 단언했다.
+
+### RED/GREEN
+
+- RED: generated 상태만 설정하고 해당 artifact 파일을 만들지 않은 상태에서 `node --test tests/unit/cutscene-generation-approval.test.mjs`를 실행해 `bindCutscenePromptPackage()`가 `unsafe reference input`으로 실패함을 확인했다.
+- GREEN: 정확한 두 output 경로에 완전한 PNG를 추가한 뒤 focused Task 3 + Task 2 tests는 42 passed, 0 failed였다.
+- 최종: Task 3/cutscene/image-assets 스위트는 83 passed, 0 failed였다.
+
+### 자체 검토
+
+- generation-ready package를 테스트에서 수동 조립하지 않았고, future keyframe/storyboard output을 만들지 않았다.
+- production source는 변경하지 않았다. 실패 원인은 secure binding이 요구하는 PNG 완전성 조건이었고, 실제 파일 fixture로 해소했다.

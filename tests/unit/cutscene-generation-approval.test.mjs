@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { test } from "node:test";
+import { deflateSync } from "node:zlib";
 
 import { calculateActualCost, estimateCutsceneImageCost } from "../../shared/scripts/estimate-cutscene-image-cost.mjs";
 import {
@@ -10,12 +14,28 @@ import {
   requiresCutsceneReapproval,
   validateHostCutsceneApproval,
 } from "../../shared/scripts/lib/cutscene-generation-approval.mjs";
-import { planCutsceneVisualPreproduction } from "../../shared/scripts/plan-cutscene-visual-preproduction.mjs";
+import { bindCutscenePromptPackage, planCutsceneVisualPreproduction } from "../../shared/scripts/plan-cutscene-visual-preproduction.mjs";
 import { cutsceneDocumentSha256 } from "../../shared/scripts/validate-cutscene-visual-preproduction.mjs";
 
 const REFERENCE_SHA = "3".repeat(64);
 const digest = (value) => cutsceneDocumentSha256(value);
 const promptDigest = (prompt) => createHash("sha256").update(prompt).digest("hex");
+
+function validPng() {
+  const crc32 = (bytes) => {
+    let crc = 0xffffffff;
+    for (const byte of bytes) { crc ^= byte; for (let bit = 0; bit < 8; bit += 1) crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1)); }
+    return (crc ^ 0xffffffff) >>> 0;
+  };
+  const chunk = (type, data) => {
+    const bytes = Buffer.alloc(12 + data.length);
+    bytes.writeUInt32BE(data.length); bytes.write(type, 4, "ascii"); data.copy(bytes, 8); bytes.writeUInt32BE(crc32(bytes.subarray(4, 8 + data.length)), 8 + data.length);
+    return bytes;
+  };
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(1); header.writeUInt32BE(1, 4); header.set([8, 6, 0, 0, 0], 8);
+  return Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk("IHDR", header), chunk("IDAT", deflateSync(Buffer.alloc(5))), chunk("IEND", Buffer.alloc(0))]);
+}
 
 function planFixture() {
   return planCutsceneVisualPreproduction({
@@ -186,5 +206,36 @@ test("a two-reference Task 2 package issues and validates with an internally can
   const { authority, binding, issued } = issue();
   assert.equal(authority.promptPackage.references[0].assetId > authority.promptPackage.references[1].assetId, true);
   assert.deepEqual(issued.receipt.referenceBindings.map(({ assetId }) => assetId), [...binding.referenceBindings].map(({ assetId }) => assetId).sort());
+  assert.equal(assertCutsceneHumanApproval({ receipt: issued.receipt, capability: issued.capability, context: context(binding) }), issued.receipt);
+});
+
+test("Task 2 bound package with two generated masters issues a canonical live approval", async (t) => {
+  const artifactRoot = await mkdtemp(path.join(tmpdir(), "cutscene-task3-integration-"));
+  t.after(() => rm(artifactRoot, { recursive: true, force: true }));
+  const planned = planCutsceneVisualPreproduction({
+    cutsceneId: "cutscene-escape",
+    mode: "generate-after-approval",
+    beats: [{ beatId: "BEAT-01" }],
+    shots: [{ shotId: "SHOT-01", beatId: "BEAT-01" }],
+  });
+  const manifest = structuredClone(planned.manifest);
+  const sourceMasters = manifest.assets.slice(0, 2);
+  for (const [index, asset] of sourceMasters.entries()) {
+    asset.generation_state = "generated";
+    const outputPath = path.join(artifactRoot, asset.output.path);
+    await mkdir(path.dirname(outputPath), { recursive: true });
+    await writeFile(outputPath, validPng());
+  }
+  const promptPackage = await bindCutscenePromptPackage({ artifactRoot, plan: planned.plan, manifest });
+  const pricingSnapshot = pricingSnapshotFixture();
+  const estimate = estimateCutsceneImageCost({ plan: planned.plan, promptPackage, waveId: "reference-masters", pricingSnapshot, retryReserve: 1 });
+  const issued = issueCutsceneHumanApproval({ ...approvalEvent(), decision: "approved", plan: planned.plan, promptPackage, pricingSnapshot, estimate });
+  const binding = cutsceneApprovalBinding({ plan: planned.plan, promptPackage, pricingSnapshot, estimate });
+  assert.equal(promptPackage.references.length, 2);
+  assert.deepEqual(promptPackage.references.map(({ assetId }) => assetId), sourceMasters.map(({ asset_id }) => asset_id));
+  assert.deepEqual(issued.receipt.referenceBindings, [...binding.referenceBindings]);
+  assert.deepEqual(issued.receipt.referenceBindings.map(({ assetId }) => assetId), [...promptPackage.references.map(({ assetId }) => assetId)].sort());
+  assert.equal(Object.isFrozen(issued.receipt.referenceBindings), true);
+  assert.equal(Object.isFrozen(issued.receipt.referenceBindings[0]), true);
   assert.equal(assertCutsceneHumanApproval({ receipt: issued.receipt, capability: issued.capability, context: context(binding) }), issued.receipt);
 });
