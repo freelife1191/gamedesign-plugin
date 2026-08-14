@@ -163,6 +163,58 @@ test("impact publication rejects a caller-forged post-transition glossary withou
   assert.equal((await readdir(join(root, "reference-intelligence", "glossary"))).length, 1);
 });
 
+test("exact decision retry rebinds only the live post-transition glossary for publication", async (t) => {
+  const current = glossary({ terms: [
+    term({ termId: "TERM-COMBAT-POWER", koPreferred: "전투 파워", enPreferred: "Combat Power", state: "approved", approver: "Lead", decisionIds: ["new"] }),
+    term({ state: "approved", approver: "Lead", decisionIds: ["old"] }),
+  ] });
+  const issued = issueGlossaryHumanDecision({ action: "deprecate", termIds: ["TERM-PLAYER-POWER"], replacementTermId: "TERM-COMBAT-POWER", actor: "Lead", eventId: "deprecate-player-power", glossarySha256: sha256Canonical(current), glossaryVersion: current.version, changedAt });
+  const transitioned = applyGlossaryDecision({ glossary: current, ...issued });
+  const retried = applyGlossaryDecision({ glossary: transitioned, ...issued });
+  assert.notStrictEqual(retried, transitioned);
+  assert.deepEqual(retried, transitioned);
+  for (const value of [structuredClone(transitioned), new Proxy(transitioned, {}), { ...transitioned, version: transitioned.version + 1 }]) assert.throws(() => applyGlossaryDecision({ glossary: value, ...issued }), /glossary/i);
+  const effective = mergeGameDesignGlossaries({ sharedGlossary: retried, projectOverlay: { schemaVersion: 1, scope: "project-overlay", version: 1, terms: [] } });
+  const receipt = createGlossarySnapshot({ documentId: "combat-v1", effectiveGlossary: effective, termIds: ["TERM-COMBAT-POWER"] });
+  const root = await mkdtemp(join(tmpdir(), "glossary-exact-retry-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await writeGameDesignGlossaryArtifacts({ artifactRoot: root, glossary: effective, receipt, findings: { ok: true, blocking: [], warnings: [] }, decision: { eventId: issued.receipt.eventId, receipt: issued.receipt, capability: issued.capability }, documents: [{ documentId: "combat-v1", text: "플레이어 파워" }] });
+  const stored = JSON.parse(await readFile(join(root, "reference-intelligence", "glossary", "impact-list.json"), "utf8"));
+  assert.equal(stored.glossarySha256, sha256Canonical(effective));
+  assert.deepEqual(stored.items, [{ documentId: "combat-v1", termIds: ["TERM-PLAYER-POWER"], status: "deprecated-replacement", reason: "approved-replacement" }]);
+});
+
+test("removing the exact-retry publication binding makes retry publication fail closed", async (t) => {
+  const moduleRoot = await mkdtemp(join(tmpdir(), "glossary-retry-binding-mutation-"));
+  const artifactRoot = await mkdtemp(join(tmpdir(), "glossary-retry-binding-artifact-"));
+  t.after(() => Promise.all([rm(moduleRoot, { recursive: true, force: true }), rm(artifactRoot, { recursive: true, force: true })]));
+  await Promise.all([
+    cp(new URL("../../shared/scripts/", import.meta.url), join(moduleRoot, "scripts"), { recursive: true }),
+    cp(new URL("../../shared/reference-intelligence/schema/", import.meta.url), join(moduleRoot, "reference-intelligence", "schema"), { recursive: true }),
+  ]);
+  await writeFile(join(moduleRoot, "package.json"), '{"type":"module"}\n');
+  const managePath = join(moduleRoot, "scripts", "manage-game-design-glossary.mjs");
+  const source = await readFile(managePath, "utf8");
+  const anchor = "const frozen = freeze(current); bindPublication(frozen, new Map([[decision, binding]])); return frozen;";
+  assert.equal(source.split(anchor).length - 1, 1);
+  await writeFile(managePath, source.replace(anchor, "const frozen = freeze(current); return frozen;"));
+  const [api, capability] = await Promise.all([
+    import(`${pathToFileURL(managePath).href}?retry-binding-mutation`),
+    import(pathToFileURL(join(moduleRoot, "scripts", "lib", "game-design-glossary-capabilities.mjs")).href),
+  ]);
+  const current = glossary({ terms: [
+    term({ termId: "TERM-COMBAT-POWER", koPreferred: "전투 파워", enPreferred: "Combat Power", state: "approved", approver: "Lead", decisionIds: ["new"] }),
+    term({ state: "approved", approver: "Lead", decisionIds: ["old"] }),
+  ] });
+  const issued = capability.issueGlossaryHumanDecision({ action: "deprecate", termIds: ["TERM-PLAYER-POWER"], replacementTermId: "TERM-COMBAT-POWER", actor: "Lead", eventId: "deprecate-player-power", glossarySha256: sha256Canonical(current), glossaryVersion: current.version, changedAt });
+  const transitioned = api.applyGlossaryDecision({ glossary: current, ...issued });
+  const retried = api.applyGlossaryDecision({ glossary: transitioned, ...issued });
+  const effective = api.mergeGameDesignGlossaries({ sharedGlossary: retried, projectOverlay: { schemaVersion: 1, scope: "project-overlay", version: 1, terms: [] } });
+  const receipt = api.createGlossarySnapshot({ documentId: "combat-v1", effectiveGlossary: effective, termIds: ["TERM-COMBAT-POWER"] });
+  await assert.rejects(() => api.writeGameDesignGlossaryArtifacts({ artifactRoot, glossary: effective, receipt, findings: { ok: true, blocking: [], warnings: [] }, decision: { eventId: issued.receipt.eventId, receipt: issued.receipt, capability: issued.capability }, documents: [{ documentId: "combat-v1", text: "플레이어 파워" }] }), /glossary/i);
+  assert.deepEqual(await readdir(artifactRoot), []);
+});
+
 test("impact publication excludes unrelated historical deprecated transitions", async (t) => {
   const current = glossary({ terms: [
     term({ termId: "TERM-COMBAT-POWER", koPreferred: "전투 파워", enPreferred: "Combat Power", state: "approved", approver: "Lead", decisionIds: ["new-player"] }),

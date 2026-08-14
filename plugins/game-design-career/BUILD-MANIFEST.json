@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-career",
   "sourceDateEpoch": 0,
-  "treeSha256": "f4ae6240f53fed1a96eca9a0bff4b839ba2fafacaea0f382ef7a07b5b91ae9df",
+  "treeSha256": "68d4d8c2b9944bb5dcc723a8355773bb1ef394d01f668423c9b1f934ea665390",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -1626,8 +1626,8 @@
     },
     {
       "path": "scripts/manage-game-design-glossary.mjs",
-      "sha256": "859b5f87230634b29f6b3f5a0b3fd84acf564205c2d9d884434273c5d8d6f0f7",
-      "size": 23617
+      "sha256": "aa2894d92dbfcd10190c34713ede6f7d8d93807053f141d72e66c6e294fe4b65",
+      "size": 23841
     },
     {
       "path": "scripts/quality-source-anchors.mjs",

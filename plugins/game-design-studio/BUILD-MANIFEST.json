@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "7cee4334068e9916df0b044df7fb71fc6709c7d2e8d744aec2458ec05a06ac77",
+  "treeSha256": "6c4abc087c5ed833aba564c97f3cfc447d94b3084a56bb30802ff31a2f41b0a3",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -1641,8 +1641,8 @@
     },
     {
       "path": "scripts/manage-game-design-glossary.mjs",
-      "sha256": "859b5f87230634b29f6b3f5a0b3fd84acf564205c2d9d884434273c5d8d6f0f7",
-      "size": 23617
+      "sha256": "aa2894d92dbfcd10190c34713ede6f7d8d93807053f141d72e66c6e294fe4b65",
+      "size": 23841
     },
     {
       "path": "scripts/quality-source-anchors.mjs",

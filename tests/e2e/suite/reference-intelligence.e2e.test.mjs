@@ -375,7 +375,12 @@ test("Studio and Career projections preserve claim and evidence IDs", async (t) 
       glossaryTerm({ state: "approved", approver: "Lead", decisionIds: ["old"] }),
     ].sort((left, right) => left.termId.localeCompare(right.termId, "en")) };
     const issued = capabilityApi.issueGlossaryHumanDecision({ action: "deprecate", termIds: ["TERM-PLAYER-POWER"], replacementTermId: "TERM-COMBAT-POWER", actor: "Lead", eventId: "deprecate-player-power", glossarySha256: sha256Canonical(current), glossaryVersion: 1, changedAt });
-    const effective = glossaryApi.mergeGameDesignGlossaries({ sharedGlossary: glossaryApi.applyGlossaryDecision({ glossary: current, ...issued }), projectOverlay: { schemaVersion: 1, scope: "project-overlay", version: 1, terms: [] } });
+    const transitioned = glossaryApi.applyGlossaryDecision({ glossary: current, ...issued });
+    const retried = glossaryApi.applyGlossaryDecision({ glossary: transitioned, ...issued });
+    assert.notStrictEqual(retried, transitioned);
+    assert.deepEqual(retried, transitioned);
+    for (const value of [structuredClone(transitioned), new Proxy(transitioned, {}), { ...transitioned, version: transitioned.version + 1 }]) assert.throws(() => glossaryApi.applyGlossaryDecision({ glossary: value, ...issued }), /glossary/i);
+    const effective = glossaryApi.mergeGameDesignGlossaries({ sharedGlossary: retried, projectOverlay: { schemaVersion: 1, scope: "project-overlay", version: 1, terms: [] } });
     const receipt = glossaryApi.createGlossarySnapshot({ documentId: "combat-v1", effectiveGlossary: effective, termIds: ["TERM-COMBAT-POWER"] });
     const documents = [{ documentId: "combat-v1", text: "플레이어 파워. 이전 용어." }];
     const forged = structuredClone(effective); forged.version += 1;

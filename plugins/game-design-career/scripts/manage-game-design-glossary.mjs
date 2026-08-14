@@ -52,7 +52,11 @@ export function mergeGameDesignGlossaries({ sharedGlossary, projectOverlay, over
 export function applyGlossaryDecision({ glossary, receipt, capability } = {}) {
   const current = copy(glossary); if (!valid(current) || !["shared", "project-overlay"].includes(current.scope)) fail();
   let decision; try { decision = assertGlossaryHumanDecision(receipt, capability); } catch { fail(); }
-  const currentHash = sha256Canonical(current); if (decision.glossaryVersion !== current.version || decision.glossarySha256 !== currentHash) { if (applied.get(receipt) === currentHash) return freeze(current); fail(); }
+  const currentHash = sha256Canonical(current); if (decision.glossaryVersion !== current.version || decision.glossarySha256 !== currentHash) {
+    if (applied.get(receipt) !== currentHash) fail();
+    const binding = publicationBindings.get(glossary)?.get(decision); if (!binding || binding.glossarySha256 !== currentHash) fail();
+    const frozen = freeze(current); bindPublication(frozen, new Map([[decision, binding]])); return frozen;
+  }
   const byId = new Map(current.terms.map((item) => [item.termId, item])); if (decision.termIds.some((value) => !byId.has(value))) fail(); const replacement = decision.replacementTermId ? byId.get(decision.replacementTermId) : null;
   if (decision.action !== "approve" && (!approved(replacement) || decision.termIds.includes(replacement.termId))) fail();
   const terms = current.terms.map((item) => {
