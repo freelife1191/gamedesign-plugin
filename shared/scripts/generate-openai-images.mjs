@@ -229,7 +229,16 @@ function requestBody(job, model, quality, referenceInputs) {
   return { endpoint: editEndpoint, headers: {}, body };
 }
 
-async function requestImage({ job, apiKey, model, quality, fetchFn, sleepFn, now, referenceInputs, referenceVerifier, requestTimeoutMs, beforeProvider }) {
+function openAiUsage(value) {
+  const usage = value?.usage;
+  if (!usage || !Number.isInteger(usage.input_tokens) || !Number.isInteger(usage.output_tokens) || !Number.isInteger(usage.total_tokens)) return undefined;
+  const details = usage.input_tokens_details ?? {};
+  if (!Number.isInteger(details.text_tokens) || !Number.isInteger(details.image_tokens)) return undefined;
+  return { inputTokens: usage.input_tokens, inputTextTokens: details.text_tokens, inputImageTokens: details.image_tokens, outputTokens: usage.output_tokens, totalTokens: usage.total_tokens,
+    ...(Number.isInteger(details.cached_text_tokens) ? { cachedTextTokens: details.cached_text_tokens } : {}), ...(Number.isInteger(details.cached_image_tokens) ? { cachedImageTokens: details.cached_image_tokens } : {}) };
+}
+
+async function requestImage({ job, apiKey, model, quality, fetchFn, sleepFn, now, referenceInputs, referenceVerifier, requestTimeoutMs, beforeProvider, afterProvider }) {
   let attempts = 0;
   while (attempts < maximumAttempts) {
     try {
@@ -239,7 +248,7 @@ async function requestImage({ job, apiKey, model, quality, fetchFn, sleepFn, now
     }
     // Authorization belongs to the dispatch boundary: a retry is a new
     // provider attempt and must not inherit a previous authorization.
-    await beforeProvider?.({ asset_id: job.asset_id, attempt_ordinal: attempts + 1 });
+    const dispatch = await beforeProvider?.({ asset_id: job.asset_id, attempt_ordinal: attempts + 1 });
     // The authorization hook may take time or deliberately trigger a
     // filesystem race in a test harness. Verify pinned references once more
     // before consuming an attempt or delivering bytes to the provider.
@@ -266,11 +275,15 @@ async function requestImage({ job, apiKey, model, quality, fetchFn, sleepFn, now
       });
     } catch {
       clearTimeout(timeout);
+      await afterProvider?.({ ...dispatch, asset_id: job.asset_id, attempt_ordinal: attempts, providerRequestId: "no-request-id", outcome: "transport-failure", usage: undefined });
       if (timedOut) return { ok: false, attempts, generationState: "generation-failed", reason: "provider-timeout" };
       return { ok: false, attempts, generationState: "generation-failed", reason: "provider-request-failed" };
     }
     const parsed = await readBoundedJson(response, controller.signal);
     clearTimeout(timeout);
+    const providerRequestId = headerValue(response, "x-request-id");
+    const safeProviderRequestId = providerRequestId && safeRequestId.test(providerRequestId) ? providerRequestId : "no-request-id";
+    await afterProvider?.({ ...dispatch, asset_id: job.asset_id, attempt_ordinal: attempts, providerRequestId: safeProviderRequestId, outcome: response?.status >= 200 && response.status < 300 && parsed.ok ? "success" : "provider-failure", usage: parsed.ok ? openAiUsage(parsed.value) : undefined });
     if (timedOut) return { ok: false, attempts, generationState: "generation-failed", reason: "provider-timeout" };
     if (!parsed.ok) {
       if (response?.status >= 500 && attempts < maximumAttempts) {
@@ -283,8 +296,7 @@ async function requestImage({ job, apiKey, model, quality, fetchFn, sleepFn, now
       if (!Array.isArray(parsed.value.data) || parsed.value.data.length !== 1 || typeof parsed.value.data[0]?.b64_json !== "string") {
         return { ok: false, attempts, generationState: "qa-failed", reason: "invalid-provider-response" };
       }
-      const requestId = headerValue(response, "x-request-id");
-      return { ok: true, attempts, b64: parsed.value.data[0].b64_json, requestId: requestId && safeRequestId.test(requestId) ? requestId : undefined };
+      return { ok: true, attempts, b64: parsed.value.data[0].b64_json, requestId: safeProviderRequestId === "no-request-id" ? undefined : safeProviderRequestId };
     }
     const classified = providerErrorClass(parsed.value);
     if (classified.policy) return { ok: false, attempts, generationState: "policy-blocked", reason: "policy-blocked" };
@@ -316,11 +328,12 @@ export async function generateOpenAIImages({
   stagingRoot,
   requestTimeoutMs = defaultRequestTimeoutMs,
   beforeProvider,
+  afterProvider,
 } = {}) {
   if (!Array.isArray(jobs) || jobs.length > maximumJobs || typeof apiKey !== "string" || apiKey.length === 0
     || !safeModel.test(model) || !qualities.has(quality) || typeof fetchFn !== "function" || typeof sleepFn !== "function"
     || !Number.isInteger(requestTimeoutMs) || requestTimeoutMs < minimumRequestTimeoutMs || requestTimeoutMs > maximumRequestTimeoutMs
-    || (beforeProvider !== undefined && typeof beforeProvider !== "function")) throw requestError();
+    || (beforeProvider !== undefined && typeof beforeProvider !== "function") || (afterProvider !== undefined && typeof afterProvider !== "function")) throw requestError();
   const results = [];
   const failures = [];
   for (const job of jobs) {
@@ -345,7 +358,7 @@ export async function generateOpenAIImages({
       failures.push(failure(job.asset_id, "qa-failed", "invalid-generation-reference", 0));
       continue;
     }
-    const requested = await requestImage({ job, apiKey, model, quality, fetchFn, sleepFn, now, referenceInputs: references.inputs, referenceVerifier: references.verify, requestTimeoutMs, beforeProvider });
+    const requested = await requestImage({ job, apiKey, model, quality, fetchFn, sleepFn, now, referenceInputs: references.inputs, referenceVerifier: references.verify, requestTimeoutMs, beforeProvider, afterProvider });
     if (!requested.ok) {
       failures.push(failure(job.asset_id, requested.generationState, requested.reason, requested.attempts));
       continue;

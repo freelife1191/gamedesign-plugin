@@ -16,7 +16,7 @@ import {
 } from "../../shared/scripts/lib/cutscene-generation-approval.mjs";
 import { bindCutscenePromptPackage, planCutsceneVisualPreproduction } from "../../shared/scripts/plan-cutscene-visual-preproduction.mjs";
 import { cutsceneDocumentSha256 } from "../../shared/scripts/validate-cutscene-visual-preproduction.mjs";
-import { runApprovedCutsceneImageWave } from "../../shared/scripts/run-approved-cutscene-image-stage.mjs";
+import { runApprovedCutsceneImageWave, writeCutsceneUsageReceipt } from "../../shared/scripts/run-approved-cutscene-image-stage.mjs";
 
 const REFERENCE_SHA = "3".repeat(64);
 const TASK2_MASTER_SOURCE_IDS = [
@@ -215,6 +215,15 @@ test("actual cost never invents cached usage", () => {
   const pricingSnapshot = pricingSnapshotFixture();
   const usage = { inputTokens: 10, inputTextTokens: 6, inputImageTokens: 4, outputTokens: 8, totalTokens: 18 };
   assert.deepEqual(calculateActualCost({ pricingSnapshot, usage }), { status: "unavailable", reason: "cached-token-breakdown-unavailable" });
+});
+
+test("usage receipts preserve unavailable provider usage without fabricating token counts", async (t) => {
+  const artifactRoot = await mkdtemp(path.join(tmpdir(), "cutscene-usage-"));
+  t.after(() => rm(artifactRoot, { recursive: true, force: true }));
+  const result = await writeCutsceneUsageReceipt({ artifactRoot, waveId: "style-master", assetId: "cutscene-escape-style-master-style-01", attemptId: "attempt-01", attemptOrdinal: 1, providerRequestId: "no-request-id", outcome: "transport-failure", pricingSnapshot: pricingSnapshotFixture() });
+  assert.deepEqual(result.actualCost, { status: "unavailable", reason: "provider-usage-unavailable" });
+  assert.deepEqual(result.receipt.usage, { status: "unavailable", reason: "provider-usage-unavailable" });
+  await assert.rejects(() => writeCutsceneUsageReceipt({ artifactRoot, waveId: "style-master", assetId: "cutscene-escape-style-master-style-01", attemptId: "attempt-01", attemptOrdinal: 1, providerRequestId: "no-request-id", outcome: "transport-failure", pricingSnapshot: pricingSnapshotFixture() }));
 });
 
 test("non-generation modes reject before authority, provider dispatch, or artifact writes", async (t) => {
