@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { writeFileSync } from "node:fs";
+import { lstat, mkdir, mkdtemp, readFile, readdir, readlink, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -175,8 +176,11 @@ async function artifactSnapshot(artifactRoot) {
     for (const entry of (await readdir(directory, { withFileTypes: true })).sort((left, right) => left.name.localeCompare(right.name))) {
       const childRelative = relative ? `${relative}/${entry.name}` : entry.name;
       const absolute = path.join(directory, entry.name);
-      if (entry.isDirectory()) await visit(absolute, childRelative);
-      else entries.push([childRelative, await readFile(absolute)]);
+      const stats = await lstat(absolute);
+      if (stats.isDirectory()) { entries.push(["directory", childRelative]); await visit(absolute, childRelative); }
+      else if (stats.isSymbolicLink()) entries.push(["symlink", childRelative, await readlink(absolute)]);
+      else if (stats.isFile()) entries.push(["file", childRelative, await readFile(absolute)]);
+      else entries.push(["other", childRelative, stats.mode]);
     }
   }
   await visit(artifactRoot);
@@ -593,6 +597,75 @@ test("storyboard dispatch remains available when every predecessor has an exact 
   });
   assert.equal(providerCalls, fixture.selectedAssetIds.length);
   assert.equal(output.providerResult.results.length, fixture.selectedAssetIds.length);
+});
+
+test("predecessor guard snapshots hostile plan structures before reflection, provider dispatch, or artifact mutation", async (t) => {
+  const outcomes = [];
+  for (const [name, mutate] of [
+    ["getter", (plan, artifactRoot) => Object.defineProperty(plan.cutsceneWorkflow.waves[1], "state", { enumerable: true, get() { writeFileSync(path.join(artifactRoot, "getter-write.txt"), "must-not-write\n"); return "completed"; } })],
+    ["proxy", (plan) => { plan.cutsceneWorkflow.waves[1] = new Proxy(plan.cutsceneWorkflow.waves[1], {}); }],
+    ["symbol", (plan) => { plan.cutsceneWorkflow.waves[1][Symbol("hostile")] = true; }],
+    ["cycle", (plan) => { plan.cutsceneWorkflow.waves[1].cycle = plan; }],
+    ["descriptor", (plan) => Object.defineProperty(plan.cutsceneWorkflow.waves[1], "completion", { enumerable: true, get() { throw new Error("must-not-read"); } })],
+  ]) {
+    const artifactRoot = await mkdtemp(path.join(tmpdir(), `cutscene-predecessor-hostile-${name}-`));
+    t.after(() => rm(artifactRoot, { recursive: true, force: true }));
+    const fixture = stageFixture({ waveId: "keyframes", ceilings: [0.4] });
+    await mkdir(path.join(artifactRoot, "empty"));
+    await writeFile(path.join(artifactRoot, "keep.txt"), "unchanged\n");
+    await symlink("keep.txt", path.join(artifactRoot, "keep-link"));
+    mutate(fixture.plan, artifactRoot);
+    const before = await artifactSnapshot(artifactRoot);
+    let providerCalls = 0;
+    let error;
+    try {
+      await runApprovedCutsceneImageWave({
+        ...fixture,
+        artifactRoot,
+        workspaceRoot: artifactRoot,
+        fetchFn: async () => { providerCalls += 1; return imageResponse({ requestId: "must-not-dispatch" }); },
+      });
+    } catch (caught) { error = caught; }
+    outcomes.push({ name, code: error?.code, providerCalls, unchanged: JSON.stringify(await artifactSnapshot(artifactRoot)) === JSON.stringify(before) });
+  }
+  assert.deepEqual(outcomes, [
+    { name: "getter", code: "cutscene.hostile_input", providerCalls: 0, unchanged: true },
+    { name: "proxy", code: "cutscene.hostile_input", providerCalls: 0, unchanged: true },
+    { name: "symbol", code: "cutscene.hostile_input", providerCalls: 0, unchanged: true },
+    { name: "cycle", code: "cutscene.hostile_input", providerCalls: 0, unchanged: true },
+    { name: "descriptor", code: "cutscene.hostile_input", providerCalls: 0, unchanged: true },
+  ]);
+});
+
+test("predecessor completion diagnostics distinguish missing, wrong-kind, and stale asset-set evidence", async (t) => {
+  const outcomes = [];
+  for (const [name, mutate, expected] of [
+    ["missing", (wave) => { wave.completion = null; }, { code: "cutscene.predecessor_completion_missing", path: "/cutsceneWorkflow/waves/1/completion" }],
+    ["wrong-kind", (wave) => { wave.completion = { kind: "generation-ready", references: [] }; }, { code: "cutscene.predecessor_completion_kind_invalid", path: "/cutsceneWorkflow/waves/1/completion/kind" }],
+    ["asset-set", (wave) => { wave.completion = { kind: "completed", assetIds: [wave.assetIds[0]] }; }, { code: "cutscene.predecessor_completion_asset_set_mismatch", path: "/cutsceneWorkflow/waves/1/completion/assetIds" }],
+  ]) {
+    const artifactRoot = await mkdtemp(path.join(tmpdir(), `cutscene-predecessor-completion-${name}-`));
+    t.after(() => rm(artifactRoot, { recursive: true, force: true }));
+    const fixture = stageFixture({ waveId: "keyframes", ceilings: [0.4] });
+    mutate(fixture.plan.cutsceneWorkflow.waves[1]);
+    const before = await artifactSnapshot(artifactRoot);
+    let providerCalls = 0;
+    let error;
+    try {
+      await runApprovedCutsceneImageWave({
+        ...fixture,
+        artifactRoot,
+        workspaceRoot: artifactRoot,
+        fetchFn: async () => { providerCalls += 1; return imageResponse({ requestId: "must-not-dispatch" }); },
+      });
+    } catch (caught) { error = caught; }
+    outcomes.push({ name, code: error?.code, path: error?.path, providerCalls, unchanged: JSON.stringify(await artifactSnapshot(artifactRoot)) === JSON.stringify(before) });
+  }
+  assert.deepEqual(outcomes, [
+    { name: "missing", code: "cutscene.predecessor_completion_missing", path: "/cutsceneWorkflow/waves/1/completion", providerCalls: 0, unchanged: true },
+    { name: "wrong-kind", code: "cutscene.predecessor_completion_kind_invalid", path: "/cutsceneWorkflow/waves/1/completion/kind", providerCalls: 0, unchanged: true },
+    { name: "asset-set", code: "cutscene.predecessor_completion_asset_set_mismatch", path: "/cutsceneWorkflow/waves/1/completion/assetIds", providerCalls: 0, unchanged: true },
+  ]);
 });
 
 test("authorization without outcome consumes its full ceiling and blocks ordinary reentry while legacy records fail closed", async (t) => {

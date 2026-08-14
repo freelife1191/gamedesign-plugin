@@ -124,3 +124,35 @@ workflow task before that broader suite can be green.
 
 - Task 4/6 plus Studio/Career source matrix → 238 passing, 0 failing,
   including temporary Studio/Career shared runtime/schema parity.
+
+## Fix round 3 — hostile predecessor snapshot boundary
+
+### Baseline and RED
+
+- The Fix 2 predecessor guard read raw `state` and `completion` before the
+  existing safe plan boundary. A public getter could write
+  `getter-write.txt`; Proxy and unsafe-descriptor paths could reach dispatch.
+  Its filesystem snapshot also ignored empty directories, symlinks, and file
+  type information. Completion failures all reported the same asset-ID path.
+
+### Forward result
+
+- `assertCurrent` now calls the existing `snapshotCutscenePlainData(plan)` as
+  its first plan operation and passes only that copy to predecessor checking,
+  authority validation, approval validation, and dispatch. Getter, Proxy,
+  symbol, cycle, and unsafe-descriptor plans fail with
+  `cutscene.hostile_input` before provider or journal/artifact I/O.
+- Whole-tree snapshots now retain directory, regular-file bytes, symlink target,
+  and other file-type evidence. Missing completion, wrong completion kind, and
+  stale completion asset IDs return distinct stable code/path pairs.
+
+### Limit
+
+- The public request wrapper itself remains the existing API boundary; this
+  repair snapshots the validated `plan` payload before predecessor reflection.
+  It does not expand authority or introduce any provider/network call.
+
+### Fix validation
+
+- Task 4/5/6 plus Studio/Career source matrix → 240 passing, 0 failing,
+  including temporary Studio/Career shared runtime/schema parity.
