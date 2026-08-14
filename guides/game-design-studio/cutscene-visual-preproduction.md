@@ -1,8 +1,8 @@
 # 컷씬 비주얼 프리프로덕션
 
-이 가이드는 컷씬의 brief, beat, shot, continuity bible, 마스터 프롬프트와 이미지 검토를 한 패키지로 정리하는 방법을 설명합니다. 이미지 생성은 기획 작업과 별개입니다. 비용을 확인하고 이름을 기록한 실시간 승인을 받기 전에는 provider를 호출하지 않습니다.
+이 가이드는 컷씬의 brief, beat, shot, continuity bible, 마스터 프롬프트와 이미지 검토를 하나의 패키지로 정리합니다. 이미지 생성은 기획 작업과 별개입니다. 비용을 확인하고 이름을 기록한 실시간 승인을 받기 전에는 provider를 호출하지 않습니다.
 
-준비할 입력은 컷씬 목적, 플레이어가 조작을 되돌려받는 게임 상태, beat와 shot, 인물·배경·소품의 연속성 조건, 참고 이미지의 권리 상태, 원하는 모델·quality·size, 유한한 USD cap입니다. 결과물은 `cutscene-brief`, `cutscene-shot-package`, `cutscene-prompt-package`, `cutscene-cost-estimate`, `cutscene-continuity-review`로 남깁니다. 기준 기획 결과물과 [이미지 자산 가이드](image-assets.md)의 권리·사람 검토 경계도 함께 확인하세요.
+컷씬 목적, 플레이어가 조작을 되돌려받는 게임 상태, beat와 shot, 인물·배경·소품의 연속성 조건, 참고 이미지의 권리 상태, 원하는 모델·quality·size, 유한한 USD cap을 준비합니다. 결과물은 `cutscene-brief`, `cutscene-shot-package`, `cutscene-prompt-package`, `cutscene-cost-estimate`, `cutscene-continuity-review`로 남깁니다. 기준 기획 결과물과 [이미지 자산 가이드](image-assets.md)의 권리·사람 검토 경계도 확인하세요.
 
 ## 컷씬 비주얼 프리프로덕션
 
@@ -26,7 +26,7 @@ shot list와 continuity bible 작성
 
 ## Estimate Only
 
-Estimate Only는 현재 wave의 비용을 계산하지만 이미지를 생성하지 않습니다. `style-master`, `reference-masters`, `keyframes`, `storyboard`는 반드시 이 순서로 유료 dispatch합니다. 다음 wave의 기획·견적 초안은 만들 수 있어도, 이전 wave가 현재 승인·완료 상태가 아니면 다음 wave를 provider에 dispatch하지 않습니다.
+Estimate Only는 현재 wave의 비용을 계산하지만 이미지를 생성하지 않습니다. 다음 wave의 기획·견적 초안은 미리 만들 수 있습니다. 유료 dispatch는 `style-master → reference-masters → keyframes → storyboard` 순서로만 진행합니다. 각 현재 wave는 current estimate와 이름을 기록한 실시간 승인이 있어야 하며, `style-master` 뒤의 wave는 직전 모든 wave가 완료되어야 합니다. `style-master`에는 선행 wave가 없으므로 승인 뒤 완료 전 dispatch합니다.
 
 ```text
 스타일 마스터 비용과 승인
@@ -60,7 +60,7 @@ reference master bound prompt 재계산
 reference master 비용과 승인
 ```
 
-`reference-masters`가 완료되기 전에는 keyframe을 실행하지 않습니다. 승인·비용·선행 완료 조건이 맞지 않으면 provider 호출 0회로 멈춥니다. provider를 이미 호출한 뒤 실패하면 성공한 bytes와 receipt, 실패한 stable ID의 retryable 또는 terminal outcome을 보존하고 추가 호출 없이 멈춥니다.
+`reference-masters`가 완료되기 전에는 keyframe을 실행하지 않습니다. 현재 wave의 estimate·이름 있는 승인 또는 필요한 선행 wave 완료가 없으면 provider 호출 0회로 멈춥니다. provider를 이미 호출한 뒤 실패하면 성공한 bytes와 receipt, 실패한 stable ID의 retryable 또는 terminal outcome을 보존하고 추가 호출 없이 멈춥니다.
 
 ```text
 keyframe 비용과 승인
@@ -72,7 +72,7 @@ keyframe 비용과 승인
 storyboard와 variant 비용과 승인
 ```
 
-생성 결과만으로 `document-approved`나 `production-candidate`가 되지 않습니다. 스타일, reference, keyframe, storyboard의 lineage와 output을 점검한 continuity review가 먼저 필요합니다.
+생성 결과만으로 `document-approved`나 `production-candidate`가 되지 않습니다. 스타일, reference, keyframe, storyboard의 lineage와 output을 점검한 continuity review를 먼저 마쳐야 합니다.
 
 ```text
 continuity 검토와 실패 ID 재시도

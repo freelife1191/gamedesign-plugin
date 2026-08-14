@@ -7,7 +7,7 @@
 
 **생성 전 컷씬 개요와 장면 박자 고정**
 
-컷씬 목적, 플레이어 상태, beat와 조작 반환 지점을 prompt-only 패키지로 고정한다.
+컷씬 목적, 플레이어 상태, beat와 조작 반환 지점을 prompt-only 패키지에 고정한다.
 
 ### 간단 요청 예시
 ```text
@@ -129,7 +129,7 @@ content-narrative-designer와 lead-game-designer가 beat와 조작 반환을 검
 
 **컷씬 장면·연속성·마스터 프롬프트 패키지**
 
-인물·배경·소품의 continuity 조건과 shot별 마스터 프롬프트를 생성 없이 reusable package로 분리한다.
+인물·배경·소품의 continuity 조건과 shot별 마스터 프롬프트를 생성 없이 reusable package로 나눈다.
 
 ### 간단 요청 예시
 ```text
@@ -260,7 +260,7 @@ art-brief-director가 continuity 조건과 권리 상태를 검토하지만 prom
 
 **컷씬 4단계 비용·승인·연속성 관문**
 
-style-master, reference-masters, keyframes, storyboard의 순차 비용·승인·재시도 경계를 검증 가능한 계획으로 만든다.
+style-master, reference-masters, keyframes, storyboard의 순차 비용·승인·재시도 경계를 검증할 수 있는 계획으로 정리한다.
 
 ### 간단 요청 예시
 ```text
@@ -272,20 +272,20 @@ style-master, reference-masters, keyframes, storyboard의 순차 비용·승인�
 - 함께 검토하는 역할: art-brief-director → lead-game-designer
 
 ### 이 요청으로 받는 결과
-style-master 1건의 비용 범위와 cap, retryReserve를 공개했고 costStatus가 unavailable이면 provider 호출 0회로 멈추도록 기록했습니다. keyframes와 storyboard는 선행 wave의 현재 승인·완료 전에는 dispatch하지 않습니다. (ID: studio:design-cutscene-visual-preproduction:advanced; 파일: game-design/studio-cutscene/advanced/content.md)
+style-master 1건의 비용 범위와 cap, retryReserve를 공개했고 costStatus가 unavailable이면 provider 호출 0회로 멈추도록 기록했습니다. style-master는 current estimate와 named approval 뒤에 dispatch하며, keyframes와 storyboard는 같은 조건에 선행 wave 완료가 더 필요합니다. (ID: studio:design-cutscene-visual-preproduction:advanced; 파일: game-design/studio-cutscene/advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
-현재 컷씬 prompt package에 유한한 비용 cap과 이름 있는 실시간 승인 정보를 붙여 각 wave의 dispatch 조건을 검토할 때 사용한다.
+현재 컷씬 prompt package에 유한한 비용 cap과 이름 있는 실시간 승인 정보를 붙여 각 wave의 dispatch 조건을 검토할 때 사용한다. 견적 초안은 미리 만들 수 있지만 paid dispatch는 current estimate와 named approval이 필요하고, style-master 뒤의 wave에는 선행 wave 완료도 필요하다.
 
 ### 사용하지 않는 경우
 가격을 0으로 추정하거나 과거·포괄 승인을 다음 wave에 재사용할 때는 사용하지 않는다.
 
 ### 준비 입력
 #### 필수 입력
-- 현재 wave
+- current wave
 - count
 - provider
 - model
@@ -381,8 +381,9 @@ lead-game-designer가 현재 estimate와 이름 있는 승인 범위를 확인�
 #### 보류 조건
 - finite cap이 없음
 - costStatus가 unavailable
+- current estimate가 없음
 - named approval이 없음
-- 선행 wave receipt가 없음
+- style-master 뒤 wave의 선행 완료 receipt가 없음
 
 #### 안전 경계
 모르는 정보는 미정으로 남긴다. Do not request API keys, credentials, personal data, or private materials.

@@ -817,21 +817,42 @@ function assertCutscenePromptCards(entries) {
     assert.ok(card.source_references.includes("guides/game-design-studio/cutscene-visual-preproduction.md"));
   }
   const advanced = cards.at(-1);
-  for (const field of ["count", "model", "quality", "size", "USD min/expected/max", "finite cap", "retryReserve", "pricing time", "costStatus", "named approval"]) {
+  for (const field of ["current wave", "count", "provider", "model", "quality", "size", "USD min/expected/max", "finite cap", "retryReserve", "pricing time", "costStatus", "named approval"]) {
     assert.ok(advanced.required_inputs.includes(field), `advanced cutscene card requires ${field}`);
   }
   assert.match(advanced.when_not_to_use, /과거·포괄 승인/u);
   assert.match(advanced.resume_prompt, /최신 retryable stable ID.*같은 current full-wave estimate.*named live approval/u);
 }
 
+function assertCutsceneProjection(entries) {
+  assert.deepEqual(entries.filter((entry) => entry.skill === "design-cutscene-visual-preproduction").map((entry) => entry.id), [
+    "studio:design-cutscene-visual-preproduction:beginner",
+    "studio:design-cutscene-visual-preproduction:standard",
+    "studio:design-cutscene-visual-preproduction:advanced",
+  ]);
+}
+
 test("Studio cutscene prompt catalog keeps three ordered approval-safe cards and rejects mutations", async () => {
   const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
   const catalog = await loadPromptTemplateCatalog({ repoRoot });
   assertCutscenePromptCards(catalog.entries);
-  const mutated = catalog.entries.map((entry) => entry.id === "studio:design-cutscene-visual-preproduction:advanced"
-    ? { ...entry, required_inputs: entry.required_inputs.filter((value) => value !== "costStatus") }
+  const advancedInputs = catalog.entries.find((entry) => entry.id === "studio:design-cutscene-visual-preproduction:advanced").required_inputs;
+  for (const field of advancedInputs) {
+    const mutated = catalog.entries.map((entry) => entry.id === "studio:design-cutscene-visual-preproduction:advanced"
+      ? { ...entry, required_inputs: entry.required_inputs.filter((value) => value !== field) }
+      : entry);
+    assert.throws(() => assertCutscenePromptCards(mutated), new RegExp(field.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "u"), `advanced required input mutation: ${field}`);
+  }
+  const cutsceneCards = catalog.entries.filter((entry) => entry.skill === "design-cutscene-visual-preproduction");
+  const reordered = [...catalog.entries.filter((entry) => entry.skill !== "design-cutscene-visual-preproduction"), ...[...cutsceneCards].reverse()];
+  assert.throws(() => assertCutscenePromptCards(reordered), /Expected values to be strictly deep-equal/u, "three-card order mutation");
+  const missingSource = catalog.entries.map((entry) => entry.id === "studio:design-cutscene-visual-preproduction:beginner"
+    ? { ...entry, source_references: entry.source_references.slice(1) }
     : entry);
-  assert.throws(() => assertCutscenePromptCards(mutated), /costStatus/u);
+  assert.throws(() => assertCutscenePromptCards(missingSource), /design-cutscene-visual-preproduction\.md/u, "source reference mutation");
+  const projection = JSON.parse(await readFile(path.join(repoRoot, "products", "game-design-studio", "plugin", "references", "prompt-templates.json"), "utf8"));
+  assertCutsceneProjection(projection.entries);
+  assert.throws(() => assertCutsceneProjection(projection.entries.filter((entry) => entry.id !== "studio:design-cutscene-visual-preproduction:standard")), /Expected values to be strictly deep-equal/u, "projection mutation");
 });
 
 test("Studio visual catalog preserves image mode routing, no-key capability boundaries, and defaults", async () => {

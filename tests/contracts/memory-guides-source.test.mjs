@@ -300,6 +300,29 @@ test("new Korean guides pass the humanize quick-rule guard", async () => {
   }
 });
 
+test("cutscene Korean source keeps quick-rule boundaries and the runtime dispatch order", async () => {
+  const files = [
+    "guides/game-design-studio/cutscene-visual-preproduction.md",
+    "guides/game-design-studio/skills/design-cutscene-visual-preproduction.md",
+    "guides/prompt-templates/catalog/studio-cutscene.json",
+    "guides/prompt-templates/studio/design-cutscene-visual-preproduction.md",
+  ];
+  const sources = await Promise.all(files.map((relative) => readFile(path.join(root, relative), "utf8")));
+  for (const [index, source] of sources.entries()) {
+    for (const pattern of [/에 있어(?:서)?/u, /되어진/u, /지게 된다/u, /시사하는 바/u, /주목할 만/u, /결론적으로/u, /요약하면/u, /—/u]) {
+      assert.doesNotMatch(source, pattern, `${files[index]}: ${pattern}`);
+    }
+    assert.doesNotMatch(source, /자동 승인/u, `${files[index]}: no automatic approval`);
+    assert.match(source, /컷씬|style-master/u, `${files[index]}: meaningful cutscene source`);
+  }
+  const [howTo, skillGuide, catalog] = sources;
+  assert.match(howTo, /견적 초안은 미리 만들 수 있습니다[\s\S]*style-master.*current estimate.*이름을 기록한 실시간 승인[\s\S]*style-master.*선행 wave가 없/u);
+  assert.match(howTo, /style-master.*뒤의 wave[\s\S]*직전 모든 wave가 완료/u);
+  assert.match(skillGuide, /style-master.*current estimate.*이름 있는 실시간 승인[\s\S]*style-master.*선행 조건이 없/u);
+  assert.match(skillGuide, /뒤의 wave.*모든 선행 wave 완료/u);
+  assert.match(catalog, /paid dispatch.*current estimate.*named approval[\s\S]*style-master 뒤의 wave.*선행 wave 완료/u);
+});
+
 test("hostile documentation mutations are non-vacuously rejected", async () => {
   const source = await readFile(path.join(root, "guides/game-design-studio/memory.md"), "utf8");
   const mutations = [
