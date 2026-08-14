@@ -292,10 +292,11 @@ export function validateCutsceneGenerationUsage(value) {
 
 export function validateCutsceneContinuityReview(value) {
   return resultOf(value, (issue) => {
-    closed(value, ["schemaVersion", "cutsceneId", "planSha256", "reviewedAt", "findings", "blockingFindingIds"], "", issue);
+    closed(value, ["schemaVersion", "cutsceneId", "planSha256", "manifestSha256", "reviewedAt", "findings", "blockingFindingIds"], "", issue);
     if (value?.schemaVersion !== 1) issue("cutscene.schema_version_invalid", "/schemaVersion");
     if (!CUTSCENE_ID.test(value?.cutsceneId ?? "")) issue("cutscene.cutscene_id_invalid", "/cutsceneId");
     if (!isHash(value?.planSha256)) issue("cutscene.hash_invalid", "/planSha256");
+    if (!isHash(value?.manifestSha256)) issue("cutscene.hash_invalid", "/manifestSha256");
     if (!isRfc3339DateTime(value?.reviewedAt)) issue("cutscene.timestamp_invalid", "/reviewedAt");
     const expectedBlockers = [];
     const findingDocuments = new Set();
@@ -357,20 +358,86 @@ function canonicalize(value, stack = new Set()) {
 export function canonicalCutsceneDocument(value) { return canonicalize(value); }
 export function cutsceneDocumentSha256(value) { return createHash("sha256").update(canonicalCutsceneDocument(value)).digest("hex"); }
 
+function continuityAssetProjection(asset) {
+  return {
+    assetId: asset.asset_id,
+    assetSetId: asset.asset_set_id,
+    derivativeOf: asset.derivative_of,
+    referenceAssetIds: asset.reference_asset_ids,
+    referenceImages: asset.reference_images,
+    consistencyProfile: asset.consistency_profile,
+    promptLineage: asset.prompt_lineage,
+    promptSha256: asset.prompt_sha256,
+    approvalBindingSha256: asset.approval_binding_sha256,
+    generationState: asset.generation_state,
+    planningTargetOutput: asset.planning?.target_output,
+    output: asset.output,
+    provider: asset.provider,
+    generationReceipts: asset.generation_receipts ?? [],
+  };
+}
+
+export function cutsceneContinuityManifestSha256(manifest) {
+  if (!safeData(manifest) || !plainObject(manifest) || !Array.isArray(manifest.assets) || !plainObject(manifest.cutsceneWorkflow)) throw new TypeError("A canonical cutscene manifest is required.");
+  return cutsceneDocumentSha256({
+    schemaVersion: manifest.schema_version,
+    cutsceneWorkflow: manifest.cutsceneWorkflow,
+    assets: manifest.assets.map(continuityAssetProjection),
+  });
+}
+
+function sameDocument(left, right) {
+  try { return canonicalCutsceneDocument(left) === canonicalCutsceneDocument(right); } catch { return false; }
+}
+
+function manifestMatchesCurrentPlan(plan, manifest) {
+  if (!safeData(manifest) || !validateImageAssetManifest(manifest).ok || !plainObject(manifest.cutsceneWorkflow)) return false;
+  const expectedWaves = plan.cutsceneWorkflow.waves.map(({ id, assetIds }) => ({ id, assetIds }));
+  if (!sameDocument(manifest.cutsceneWorkflow.waves, expectedWaves)) return false;
+  if (manifest.cutsceneWorkflow.dagSha256 !== cutsceneDocumentSha256(plan.cutsceneWorkflow.downstream)) return false;
+  const expectedIds = plan.cutsceneWorkflow.waves.flatMap((wave) => wave.assetIds).sort(compareUtf8);
+  const actualIds = manifest.assets.map((asset) => asset?.asset_id).sort(compareUtf8);
+  if (!sameDocument(actualIds, expectedIds)) return false;
+  const planSha256 = cutsceneDocumentSha256(plan);
+  const dagSha256 = cutsceneDocumentSha256(plan.cutsceneWorkflow.downstream);
+  return manifest.assets.every((asset) => {
+    const promptSha256 = typeof asset?.prompt === "string" ? createHash("sha256").update(asset.prompt).digest("hex") : undefined;
+    return asset?.asset_set_id === plan.cutsceneId && promptSha256 === asset?.prompt_sha256
+      && asset?.approval_binding_sha256 === cutsceneDocumentSha256({ assetId: asset.asset_id, dagSha256, planSha256, promptSha256 });
+  });
+}
+
+export function assertCutsceneContinuityGate({ plan, manifest, waves, continuityReceipt } = {}) {
+  const failure = (message, code, path) => { throw Object.assign(new Error(message), { code, path }); };
+  if (!validateCutsceneVisualPlan(plan).ok) failure("Cutscene plan is invalid.", "cutscene.plan_invalid", "/plan");
+  if (!sameDocument(waves, plan.cutsceneWorkflow.waves)) failure("Cutscene waves are stale.", "cutscene.waves_stale", "/waves");
+  if (!manifestMatchesCurrentPlan(plan, manifest)) failure("Cutscene manifest is stale.", "cutscene.manifest_stale", "/manifest");
+  if (!validateCutsceneContinuityReview(continuityReceipt).ok) failure("Cutscene continuity receipt is invalid.", "cutscene.continuity_receipt_invalid", "/continuityReceipt");
+  if (continuityReceipt.planSha256 !== cutsceneDocumentSha256(plan)) failure("Cutscene continuity receipt plan is stale.", "cutscene.continuity_plan_stale", "/continuityReceipt/planSha256");
+  if (continuityReceipt.manifestSha256 !== cutsceneContinuityManifestSha256(manifest)) failure("Cutscene continuity receipt manifest is stale.", "cutscene.continuity_manifest_stale", "/continuityReceipt/manifestSha256");
+  if (continuityReceipt.blockingFindingIds.length > 0) failure("Cutscene continuity has blocking findings.", "cutscene.continuity_blocking_findings", "/continuityReceipt/blockingFindingIds");
+  const unfinished = waves.findIndex((wave) => wave.state !== "completed");
+  if (unfinished >= 0) failure("Cutscene wave is incomplete.", "cutscene.wave_not_completed", `/waves/${unfinished}/state`);
+  const notCandidate = manifest.assets.findIndex((asset) => asset.approval_state !== "production-candidate");
+  if (notCandidate >= 0) failure("Cutscene asset is not production-candidate.", "cutscene.asset_not_production_candidate", `/manifest/assets/${notCandidate}/approval_state`);
+}
+
 export function deriveCutsceneLifecycle({ plan, manifest, waves, continuityReceipt } = {}) {
   const planValid = validateCutsceneVisualPlan(plan).ok;
   const currentPlanSha256 = planValid ? cutsceneDocumentSha256(plan) : undefined;
   const listedWaves = Array.isArray(waves) && safeData(waves) ? waves : [];
-  const wavesValid = planValid && validateCutsceneVisualPlan({ ...plan, cutsceneWorkflow: { ...plan.cutsceneWorkflow, waves: listedWaves } }).ok;
+  const wavesValid = planValid && sameDocument(listedWaves, plan.cutsceneWorkflow.waves)
+    && validateCutsceneVisualPlan({ ...plan, cutsceneWorkflow: { ...plan.cutsceneWorkflow, waves: listedWaves } }).ok;
   const lifecycle = listedWaves.some((wave) => wave?.state === "blocked" || wave?.state === "invalidated") ? "blocked"
     : listedWaves.some((wave) => wave?.state === "dispatching") ? "dispatching"
       : listedWaves.length > 0 && listedWaves.every((wave) => wave?.state === "completed") ? "completed" : "planned";
-  const manifestValid = safeData(manifest) && validateImageAssetManifest(manifest).ok;
+  const manifestValid = planValid && manifestMatchesCurrentPlan(plan, manifest);
   const receiptValid = validateCutsceneContinuityReview(continuityReceipt).ok;
-  const receiptBound = receiptValid && currentPlanSha256 !== undefined && continuityReceipt.planSha256 === currentPlanSha256;
+  const receiptBound = receiptValid && currentPlanSha256 !== undefined && continuityReceipt.planSha256 === currentPlanSha256
+    && manifestValid && continuityReceipt.manifestSha256 === cutsceneContinuityManifestSha256(manifest);
   const blockerIds = receiptBound ? [...continuityReceipt.blockingFindingIds] : [];
   const assets = manifestValid && Array.isArray(manifest.assets) ? manifest.assets : [];
-  const documentApproved = manifestValid && wavesValid && receiptBound && blockerIds.length === 0 && assets.length > 0 && assets.every((asset) => ["document-approved", "production-candidate"].includes(asset.approval_state));
+  const documentApproved = manifestValid && wavesValid && receiptBound && blockerIds.length === 0 && listedWaves.every((wave) => wave.state === "completed") && assets.length > 0 && assets.every((asset) => ["document-approved", "production-candidate"].includes(asset.approval_state));
   const productionCandidate = documentApproved && assets.every((asset) => asset.approval_state === "production-candidate");
   return { lifecycle: blockerIds.length > 0 ? "blocked" : lifecycle, documentApproved, productionCandidate, blockerIds };
 }
