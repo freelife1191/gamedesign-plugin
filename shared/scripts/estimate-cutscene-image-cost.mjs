@@ -125,14 +125,22 @@ function requestForAsset(asset, prompt, pricingSnapshot, manifestAssets, referen
     return reference.sha256;
   });
   const output = asset.output;
-  if (!plain(output) || !Number.isInteger(output.width) || !Number.isInteger(output.height) || typeof output.path !== "string" || output.format !== "png") throw coded("cutscene.dispatch_binding_invalid", "/manifest/assets/output");
+  if (!plain(output) || !Number.isInteger(output.width) || !Number.isInteger(output.height) || typeof output.path !== "string"
+    || typeof output.aspect_ratio !== "string" || typeof output.format !== "string" || typeof output.background !== "string") throw coded("cutscene.dispatch_binding_invalid", "/manifest/assets/output");
   const request = {
     provider: routing.provider,
     model: routing.model,
     quality: routing.quality,
-    size: `${output.width}x${output.height}`,
     promptDigest: asset.prompt_sha256,
     referenceDigests,
+    output: {
+      path: output.path,
+      width: output.width,
+      height: output.height,
+      aspectRatio: output.aspect_ratio,
+      format: output.format,
+      background: output.background,
+    },
   };
   return { ...routing, requestSha256: cutsceneDocumentSha256(request), request, output: { ...output } };
 }

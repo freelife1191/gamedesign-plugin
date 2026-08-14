@@ -261,7 +261,7 @@ export function validateCutsceneGenerationUsage(value) {
     if (!plainObject(value?.usage)) issue("cutscene.usage_invalid", "/usage");
     else if (value.usage.status === "unavailable") {
       closed(value.usage, ["status", "reason"], "/usage", issue);
-      if (!isText(value.usage.reason)) issue("cutscene.usage_invalid", "/usage/reason");
+      if (!["provider-not-called", "provider-usage-unavailable", "provider-usage-invalid"].includes(value.usage.reason)) issue("cutscene.usage_invalid", "/usage/reason");
     } else {
       const required = ["inputTokens", "inputTextTokens", "inputImageTokens", "outputTokens", "totalTokens"];
       const optional = ["cachedTextTokens", "cachedImageTokens"];
@@ -279,8 +279,11 @@ export function validateCutsceneGenerationUsage(value) {
       if (typeof value.actualCost.usd !== "number" || !Number.isFinite(value.actualCost.usd) || value.actualCost.usd < 0) issue("cutscene.cost_invalid", "/actualCost/usd");
     } else {
       closed(value.actualCost, ["status", "reason"], "/actualCost", issue);
-      if (!isText(value.actualCost.reason)) issue("cutscene.cost_invalid", "/actualCost/reason");
+      if (!["provider-usage-unavailable", "provider-usage-invalid", "cached-token-breakdown-unavailable"].includes(value.actualCost.reason)) issue("cutscene.cost_invalid", "/actualCost/reason");
     }
+    if (value?.providerOutcome !== "not-called" && value?.usage?.status === "unavailable"
+      && (value?.actualCost?.status !== "unavailable" || value.actualCost.reason !== value.usage.reason)) issue("cutscene.usage_cost_reason_mismatch", "/actualCost/reason");
+    if (value?.providerOutcome === "not-called" && value?.usage?.reason !== "provider-not-called") issue("cutscene.not_called_usage_invalid", "/usage/reason");
     if (value?.providerOutcome === "not-called" && (value?.actualCost?.status !== "known" || value.actualCost.usd !== 0)) issue("cutscene.not_called_cost_invalid", "/actualCost");
     if (!isRfc3339DateTime(value?.completedAt)) issue("cutscene.timestamp_invalid", "/completedAt");
   });

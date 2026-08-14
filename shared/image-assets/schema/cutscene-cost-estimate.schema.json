@@ -45,7 +45,15 @@
     },
     {
       "if": { "properties": { "costStatus": { "const": "unavailable" } }, "required": ["costStatus"] },
-      "then": { "properties": { "minimumUsd": { "const": null }, "expectedUsd": { "const": null }, "maximumUsd": { "const": null } } }
+      "then": {
+        "properties": {
+          "attemptCeilings": {
+            "contains": { "type": "object", "required": ["maximumUsd"], "properties": { "maximumUsd": { "const": null } } },
+            "minContains": 1
+          },
+          "minimumUsd": { "const": null }, "expectedUsd": { "const": null }, "maximumUsd": { "const": null }
+        }
+      }
     }
   ]
 }

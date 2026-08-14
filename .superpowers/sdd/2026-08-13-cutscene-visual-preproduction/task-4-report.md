@@ -109,3 +109,53 @@ fixtures; no live provider or network call is made.
 
 The three changed JSON schemas parse successfully. `node --check` passes for
 all six changed runtime modules, and staged diff checks pass.
+
+## Fix round 5 — output-bound v2 authority, truthful usage, and closed reentry
+
+### RED → GREEN evidence
+
+- **RED 1/6:** mutating each planned output semantic (`path`, `width`,
+  `height`, `aspect_ratio`, `format`, `background`) after estimation did not
+  change the request hash, so an old estimate/approval could reach a provider.
+  **GREEN:** request identity now canonically includes the complete output
+  target; every field mutation is stale before a provider call and the empty
+  artifact root remains empty.
+- **RED 2/6:** a valid PNG with contradictory provider usage made
+  `calculateActualCost` throw after the physical call, stranding an
+  authorization without its outcome. **GREEN:** all usage is normalized once
+  before outcome persistence; malformed, incomplete, or contradictory usage
+  becomes the closed `provider-usage-invalid`/`provider-usage-unavailable`
+  record and consumes the authorized ceiling without changing successful PNG
+  publication truth.
+- **RED 3/6:** a normal wave reentry dispatched an asset after a terminal
+  physical outcome. **GREEN:** normal entry now rejects any selected asset
+  with prior physical journal evidence; only `retryCutsceneFailedAssets` can
+  reach the internal retry path, and only from a latest retryable failure.
+- **RED 4/6:** the unavailable estimate schema accepted an all-finite
+  `attemptCeilings` array although runtime rejected it. **GREEN:** packaged
+  schema uses `contains`/`minContains`, and the test-local schema evaluator
+  implements and preflights those keywords; valid and rejected runtime/schema
+  fixtures agree.
+- **RED 5/6:** public `runApprovedCutsceneImageWave({ retry: true })` bypassed
+  the normal reentry guard. **GREEN:** the public flag is ignored; only the
+  explicit retry export supplies a module-private symbol token, and the
+  hostile public call makes zero additional provider calls.
+- **RED 6/6:** unavailable usage and unavailable actual-cost reasons could
+  diverge. **GREEN:** both records use closed reason enums; non-`not-called`
+  outcomes require exact reason equality in runtime validation and packaged
+  JSON Schema branch rules.
+
+### Fix5 validation
+
+`node --test tests/unit/cutscene-visual-preproduction.test.mjs tests/unit/cutscene-generation-approval.test.mjs tests/unit/generate-openai-images.test.mjs tests/unit/image-asset-plan.test.mjs tests/unit/image-assets.test.mjs tests/unit/image-config.test.mjs tests/unit/image-prompts.test.mjs tests/unit/image-provider.test.mjs tests/unit/smoke-openai-image.test.mjs tests/products/studio/image-assets.test.mjs`
+
+Result: **183 passing, 0 failing**. The provider paths use injected responses;
+no live provider or network call was approved or performed.
+
+### Limits
+
+- Existing v1 estimates/journals remain intentionally incompatible and fail
+  closed; they require v2 re-estimate and reapproval.
+- JSON Schema expresses the finite closed unavailable-reason branches; runtime
+  additionally checks the cross-field reason equality before a journal record
+  is accepted.

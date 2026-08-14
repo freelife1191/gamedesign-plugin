@@ -18,10 +18,13 @@ const same = (left, right) => JSON.stringify(left) === JSON.stringify(right);
 const withoutSha = ({ sha256: _sha256, ...content }) => content;
 const recordSha256 = (record) => cutsceneDocumentSha256(withoutSha(record));
 const sequenceName = (sequence) => String(sequence).padStart(8, "0");
+const explicitRetryToken = Symbol("cutscene-explicit-retry");
+const unavailableUsageReasons = new Set(["provider-not-called", "provider-usage-unavailable", "provider-usage-invalid"]);
 
 function plain(value) { return value !== null && typeof value === "object" && !Array.isArray(value) && Object.getPrototypeOf(value) === Object.prototype; }
 function exact(value, keys) { return plain(value) && Object.keys(value).length === keys.length && keys.every((key) => Object.hasOwn(value, key)); }
 function deepFreeze(value) { if (value && typeof value === "object" && !Object.isFrozen(value)) { Object.freeze(value); for (const nested of Object.values(value)) deepFreeze(nested); } return value; }
+function isExplicitRetry(input) { return input?.[explicitRetryToken] === true; }
 
 function selectedWave(plan, waveId, selectedAssetIds, allowSubset = false) {
   const wave = plan.cutsceneWorkflow?.waves?.find((item) => item.id === waveId);
@@ -47,11 +50,15 @@ function validateAuthorization(record, waveId, assetId, name) {
 }
 
 function validUsage(value) {
-  if (exact(value, ["status", "reason"])) return value.status === "unavailable" && typeof value.reason === "string" && value.reason.length > 0;
+  if (exact(value, ["status", "reason"])) return value.status === "unavailable" && unavailableUsageReasons.has(value.reason);
   const required = ["inputTokens", "inputTextTokens", "inputImageTokens", "outputTokens", "totalTokens"];
   const optional = ["cachedTextTokens", "cachedImageTokens"];
   return plain(value) && Object.keys(value).every((key) => [...required, ...optional].includes(key)) && required.every((key) => Number.isInteger(value[key]) && value[key] >= 0)
-    && optional.every((key) => value[key] === undefined || Number.isInteger(value[key]) && value[key] >= 0);
+    && optional.every((key) => value[key] === undefined || Number.isInteger(value[key]) && value[key] >= 0)
+    && value.inputTokens === value.inputTextTokens + value.inputImageTokens
+    && value.totalTokens === value.inputTokens + value.outputTokens
+    && (value.cachedTextTokens === undefined || value.cachedTextTokens <= value.inputTextTokens)
+    && (value.cachedImageTokens === undefined || value.cachedImageTokens <= value.inputImageTokens);
 }
 
 function validActualCost(value) {
@@ -113,7 +120,7 @@ async function readJournal(artifactRoot, waveId, assetIds, { estimate, pricingSn
     if (!authorization || outcomeById.has(outcome.attemptId) || outcome.attemptSequence !== authorization.attemptSequence || outcome.assetAttemptOrdinal !== authorization.assetAttemptOrdinal
       || outcome.assetId !== authorization.assetId || outcome.authorizationSha256 !== authorization.sha256) throw coded("cutscene.usage_receipt_corrupt", `/cutscene/usage-receipts/${waveId}/${outcome.assetId}`);
     const expectedCost = outcome.providerOutcome === "not-called" ? { status: "known", usd: 0 }
-      : outcome.usage?.status === "unavailable" ? { status: "unavailable", reason: "provider-usage-unavailable" }
+      : outcome.usage?.status === "unavailable" ? { status: "unavailable", reason: outcome.usage.reason }
         : calculateActualCost({ pricingSnapshot, usage: outcome.usage });
     if (!same(outcome.actualCost, expectedCost)) throw coded("cutscene.usage_receipt_corrupt", `/cutscene/usage-receipts/${waveId}/${outcome.assetId}`);
     outcomeById.set(outcome.attemptId, outcome);
@@ -136,7 +143,7 @@ async function readJournal(artifactRoot, waveId, assetIds, { estimate, pricingSn
 function assertCurrent(input) {
   if (input.plan?.mode !== "generate-after-approval") throw coded("cutscene.mode_generation_forbidden", "/mode");
   if (Object.hasOwn(input, "authorizeProviderAttempt")) throw coded("cutscene.authorization_seam_forbidden", "/authorizeProviderAttempt");
-  const wave = selectedWave(input.plan, input.waveId, input.selectedAssetIds, input.retry === true);
+  const wave = selectedWave(input.plan, input.waveId, input.selectedAssetIds, isExplicitRetry(input));
   const authority = resolveCutsceneGenerationAuthority({ plan: input.plan, promptPackage: input.promptPackage });
   const estimate = assertCurrentCutsceneEstimate({ estimate: input.estimate, authority, pricingSnapshot: input.pricingSnapshot });
   if (estimate.costStatus !== "available") throw coded("cutscene.cost_estimate_unavailable", "/estimate/costStatus");
@@ -190,9 +197,16 @@ async function createAuthorization(args) {
 async function createOutcome({ input, dispatch, providerRequestId = "no-request-id", providerOutcome, assetOutcome, retryDisposition, usage }) {
   const safeProviderRequestId = providerRequestId ?? "no-request-id";
   if (!opaqueId.test(safeProviderRequestId)) throw coded("cutscene.provider_request_id_invalid", "/providerRequestId");
-  const usageRecord = usage ?? { status: "unavailable", reason: providerOutcome === "not-called" ? "provider-not-called" : "provider-usage-unavailable" };
+  const usageRecord = providerOutcome === "not-called"
+    ? { status: "unavailable", reason: "provider-not-called" }
+    : !usage || !validUsage(usage)
+      ? { status: "unavailable", reason: usage ? "provider-usage-invalid" : "provider-usage-unavailable" }
+      : (() => {
+        try { calculateActualCost({ pricingSnapshot: input.pricingSnapshot, usage }); return usage; } catch { return { status: "unavailable", reason: "provider-usage-invalid" }; }
+      })();
   const actualCost = providerOutcome === "not-called" ? { status: "known", usd: 0 }
-    : usage ? calculateActualCost({ pricingSnapshot: input.pricingSnapshot, usage }) : { status: "unavailable", reason: "provider-usage-unavailable" };
+    : usageRecord.status === "unavailable" ? { status: "unavailable", reason: usageRecord.reason }
+      : calculateActualCost({ pricingSnapshot: input.pricingSnapshot, usage: usageRecord });
   const outcome = {
     schemaVersion: 2, kind: "outcome", waveId: dispatch.waveId, assetId: dispatch.assetId, attemptId: dispatch.attemptId,
     attemptSequence: dispatch.attemptSequence, assetAttemptOrdinal: dispatch.assetAttemptOrdinal, authorizationSha256: dispatch.authorizationSha256,
@@ -206,6 +220,10 @@ async function createOutcome({ input, dispatch, providerRequestId = "no-request-
 
 export async function runApprovedCutsceneImageWave(input = {}) {
   const current = assertCurrent(input);
+  if (!isExplicitRetry(input)) {
+    const existing = await readJournal(input.artifactRoot, input.waveId, [...current.wave.assetIds].sort(compareUtf8), { estimate: input.estimate, pricingSnapshot: input.pricingSnapshot });
+    if (current.dispatch.assetIds.some((assetId) => (existing.physicalCounts.get(assetId) ?? 0) > 0)) throw coded("cutscene.asset_already_attempted", "/selectedAssetIds");
+  }
   const ceilingByAsset = new Map(current.estimate.attemptCeilings.map((ceiling) => [ceiling.assetId, ceiling]));
   let queue = Promise.resolve();
   const beforeProvider = ({ asset_id }) => {
@@ -221,7 +239,7 @@ export async function runApprovedCutsceneImageWave(input = {}) {
   };
   const afterProvider = (dispatch) => createOutcome({ input, dispatch, ...dispatch });
   let executionDispatch = current.dispatch;
-  if (input.retry === true) {
+  if (isExplicitRetry(input)) {
     let existing;
     try { existing = JSON.parse(await readFile(path.join(input.artifactRoot, "assets", "image-assets.yml"), "utf8")); } catch { throw coded("cutscene.retry_state_invalid", "/assets/image-assets.yml"); }
     const existingById = new Map(existing.assets?.map((asset) => [asset.asset_id, asset]));
@@ -285,11 +303,11 @@ async function physicalSubsetDigest(artifactRoot, mutableAssetIds, manifest) {
 export async function retryCutsceneFailedAssets({ failedAssetIds, ...input } = {}) {
   if (input.plan?.mode !== "generate-after-approval") throw coded("cutscene.mode_generation_forbidden", "/mode");
   const wave = selectedWave(input.plan, input.waveId, failedAssetIds, true);
-  assertCurrent({ ...input, selectedAssetIds: failedAssetIds, retry: true });
+  assertCurrent({ ...input, selectedAssetIds: failedAssetIds, [explicitRetryToken]: true });
   const ledger = await readJournal(input.artifactRoot, input.waveId, [...wave.assetIds].sort(compareUtf8), { estimate: input.estimate, pricingSnapshot: input.pricingSnapshot });
   if (!failedAssetIds.every((assetId) => ledger.latest.get(assetId)?.assetOutcome === "retryable-failure")) throw coded("cutscene.retry_asset_not_failed", "/failedAssetIds");
   const before = await physicalSubsetDigest(input.artifactRoot, failedAssetIds, input.manifest);
-  const output = await runApprovedCutsceneImageWave({ ...input, retry: true, selectedAssetIds: failedAssetIds });
+  const output = await runApprovedCutsceneImageWave({ ...input, selectedAssetIds: failedAssetIds, [explicitRetryToken]: true });
   const after = await physicalSubsetDigest(input.artifactRoot, failedAssetIds, input.manifest);
   if (before !== after) throw coded("cutscene.unrelated_tree_changed", "/failedAssetIds");
   return { retriedIds: [...failedAssetIds], unaffectedOutputSha256: after, output };

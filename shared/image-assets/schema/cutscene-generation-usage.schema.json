@@ -8,7 +8,7 @@
     "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
     "usage": {
       "oneOf": [
-        { "type": "object", "additionalProperties": false, "required": ["status", "reason"], "properties": { "status": { "const": "unavailable" }, "reason": { "type": "string", "minLength": 1 } } },
+        { "type": "object", "additionalProperties": false, "required": ["status", "reason"], "properties": { "status": { "const": "unavailable" }, "reason": { "enum": ["provider-not-called", "provider-usage-unavailable", "provider-usage-invalid"] } } },
         {
           "type": "object", "additionalProperties": false,
           "required": ["inputTokens", "inputTextTokens", "inputImageTokens", "outputTokens", "totalTokens"],
@@ -24,7 +24,7 @@
     "actualCost": {
       "oneOf": [
         { "type": "object", "additionalProperties": false, "required": ["status", "usd"], "properties": { "status": { "const": "known" }, "usd": { "type": "number", "minimum": 0 } } },
-        { "type": "object", "additionalProperties": false, "required": ["status", "reason"], "properties": { "status": { "const": "unavailable" }, "reason": { "type": "string", "minLength": 1 } } }
+        { "type": "object", "additionalProperties": false, "required": ["status", "reason"], "properties": { "status": { "const": "unavailable" }, "reason": { "enum": ["provider-usage-unavailable", "provider-usage-invalid", "cached-token-breakdown-unavailable"] } } }
       ]
     }
   },
@@ -67,6 +67,31 @@
           "if": { "properties": { "assetOutcome": { "const": "retryable-failure" } } },
           "then": { "properties": { "retryDisposition": { "const": "retryable" } } },
           "else": { "properties": { "retryDisposition": { "const": "none" } } }
+        },
+        {
+          "if": { "allOf": [
+            { "properties": { "usage": { "type": "object", "required": ["status"], "properties": { "status": { "const": "unavailable" } } } }, "required": ["usage"] },
+            { "properties": { "providerOutcome": { "not": { "const": "not-called" } } }, "required": ["providerOutcome"] }
+          ] },
+          "then": { "properties": { "actualCost": { "type": "object", "required": ["status"], "properties": { "status": { "const": "unavailable" } } } } }
+        },
+        {
+          "if": { "properties": { "providerOutcome": { "const": "not-called" } }, "required": ["providerOutcome"] },
+          "then": { "properties": { "usage": { "type": "object", "required": ["reason"], "properties": { "reason": { "const": "provider-not-called" } } } } }
+        },
+        {
+          "if": { "allOf": [
+            { "properties": { "providerOutcome": { "not": { "const": "not-called" } } }, "required": ["providerOutcome"] },
+            { "properties": { "usage": { "type": "object", "required": ["reason"], "properties": { "reason": { "const": "provider-usage-invalid" } } } }, "required": ["usage"] }
+          ] },
+          "then": { "properties": { "actualCost": { "type": "object", "required": ["status", "reason"], "properties": { "status": { "const": "unavailable" }, "reason": { "const": "provider-usage-invalid" } } } } }
+        },
+        {
+          "if": { "allOf": [
+            { "properties": { "providerOutcome": { "not": { "const": "not-called" } } }, "required": ["providerOutcome"] },
+            { "properties": { "usage": { "type": "object", "required": ["reason"], "properties": { "reason": { "const": "provider-usage-unavailable" } } } }, "required": ["usage"] }
+          ] },
+          "then": { "properties": { "actualCost": { "type": "object", "required": ["status", "reason"], "properties": { "status": { "const": "unavailable" }, "reason": { "const": "provider-usage-unavailable" } } } } }
         }
       ]
     }

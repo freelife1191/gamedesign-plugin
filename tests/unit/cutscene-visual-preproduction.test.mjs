@@ -329,7 +329,7 @@ function approvedManifest() {
   };
 }
 
-const schemaKeywords = new Set(["$schema", "$id", "$defs", "$ref", "type", "const", "enum", "required", "additionalProperties", "properties", "items", "pattern", "minLength", "minItems", "maxItems", "uniqueItems", "minimum", "exclusiveMinimum", "maximum", "allOf", "anyOf", "oneOf", "not", "if", "then", "else", "format"]);
+const schemaKeywords = new Set(["$schema", "$id", "$defs", "$ref", "type", "const", "enum", "required", "additionalProperties", "properties", "items", "contains", "minContains", "maxContains", "pattern", "minLength", "minItems", "maxItems", "uniqueItems", "minimum", "exclusiveMinimum", "maximum", "allOf", "anyOf", "oneOf", "not", "if", "then", "else", "format"]);
 const schemaType = (value, type) => type === "null" ? value === null : type === "object" ? value !== null && typeof value === "object" && !Array.isArray(value) : type === "array" ? Array.isArray(value) : type === "string" ? typeof value === "string" : type === "integer" ? Number.isInteger(value) : type === "number" ? typeof value === "number" && Number.isFinite(value) : type === "boolean" ? typeof value === "boolean" : false;
 const schemaStructuralJson = (value) => value === null || typeof value !== "object" ? JSON.stringify(value) : Array.isArray(value) ? `[${value.map(schemaStructuralJson).join(",")}]` : `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${schemaStructuralJson(value[key])}`).join(",")}}`;
 
@@ -349,6 +349,7 @@ function schemaPreflight(rootSchema, schemas, schema = rootSchema, seen = new Se
   if (schema.$defs) nested.push(...Object.values(schema.$defs));
   if (schema.properties) nested.push(...Object.values(schema.properties));
   if (schema.items !== undefined) nested.push(schema.items);
+  if (schema.contains !== undefined) nested.push(schema.contains);
   if (schema.additionalProperties && typeof schema.additionalProperties === "object") nested.push(schema.additionalProperties);
   for (const key of ["allOf", "anyOf", "oneOf"]) if (schema[key]) { if (!Array.isArray(schema[key])) return false; nested.push(...schema[key]); }
   for (const key of ["not", "if", "then", "else"]) if (schema[key] !== undefined) nested.push(schema[key]);
@@ -393,6 +394,13 @@ function schemaAccepts(value, rootSchema, schemas, schema = rootSchema, prefligh
     if (schema.minItems !== undefined && value.length < schema.minItems || schema.maxItems !== undefined && value.length > schema.maxItems) return false;
     if (schema.uniqueItems && new Set(value.map(schemaStructuralJson)).size !== value.length) return false;
     if (schema.items !== undefined && !value.every((item) => schemaAccepts(item, rootSchema, schemas, schema.items, false))) return false;
+    if (schema.contains !== undefined) {
+      const minContains = schema.minContains ?? 1;
+      const maxContains = schema.maxContains;
+      if (!Number.isInteger(minContains) || minContains < 0 || maxContains !== undefined && (!Number.isInteger(maxContains) || maxContains < minContains)) return false;
+      const matches = value.filter((item) => schemaAccepts(item, rootSchema, schemas, schema.contains, false)).length;
+      if (matches < minContains || maxContains !== undefined && matches > maxContains) return false;
+    }
   }
   return true;
 }
@@ -591,8 +599,14 @@ test("runtime and packaged JSON Schema agree on valid and rejected closed fixtur
   cases.push(["cutscene-generation-usage", invalidUsage, validateCutsceneGenerationUsage, false]);
   const availableWithoutCeiling = validEstimate(); availableWithoutCeiling.attemptCeilings[0].maximumUsd = null;
   cases.push(["cutscene-cost-estimate", availableWithoutCeiling, validateCutsceneCostEstimate, false]);
+  const unavailableWithoutCeiling = validEstimate(); unavailableWithoutCeiling.costStatus = "unavailable"; unavailableWithoutCeiling.minimumUsd = null; unavailableWithoutCeiling.expectedUsd = null; unavailableWithoutCeiling.maximumUsd = null;
+  cases.push(["cutscene-cost-estimate", unavailableWithoutCeiling, validateCutsceneCostEstimate, false]);
   const contradictoryOutcome = validUsage({ providerOutcome: "not-called" });
   cases.push(["cutscene-generation-usage", contradictoryOutcome, validateCutsceneGenerationUsage, false]);
+  const unavailableUsage = validUsage({ usage: { status: "unavailable", reason: "provider-usage-invalid" }, actualCost: { status: "unavailable", reason: "provider-usage-invalid" } });
+  cases.push(["cutscene-generation-usage", unavailableUsage, validateCutsceneGenerationUsage, true]);
+  const mismatchedUnavailableUsage = structuredClone(unavailableUsage); mismatchedUnavailableUsage.actualCost.reason = "provider-usage-unavailable"; mismatchedUnavailableUsage.sha256 = cutsceneDocumentSha256(Object.fromEntries(Object.entries(mismatchedUnavailableUsage).filter(([key]) => key !== "sha256")));
+  cases.push(["cutscene-generation-usage", mismatchedUnavailableUsage, validateCutsceneGenerationUsage, false]);
   for (const [name, value, validate, expected] of cases) {
     assert.equal(validate(value).ok, expected, `${name} runtime`);
     assert.equal(schemaAccepts(value, byName.get(name), byFile), expected, `${name} schema`);

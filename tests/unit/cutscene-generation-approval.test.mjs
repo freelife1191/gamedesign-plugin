@@ -139,9 +139,9 @@ async function journalRecords(artifactRoot, waveId) {
   return records.sort((left, right) => left.attemptSequence - right.attemptSequence || left.kind.localeCompare(right.kind));
 }
 
-function imageResponse({ status = 200, requestId = "req-cutscene", corrupt = false } = {}) {
+function imageResponse({ status = 200, requestId = "req-cutscene", corrupt = false, usage } = {}) {
   const body = status >= 200 && status < 300
-    ? { data: [{ b64_json: corrupt ? Buffer.from("not-png").toString("base64") : validPng(1024, 1024).toString("base64") }], usage: { input_tokens: 8, output_tokens: 4, total_tokens: 12, input_tokens_details: { text_tokens: 3, image_tokens: 5, cached_text_tokens: 0, cached_image_tokens: 0 } } }
+    ? { data: [{ b64_json: corrupt ? Buffer.from("not-png").toString("base64") : validPng(1024, 1024).toString("base64") }], usage: usage ?? { input_tokens: 8, output_tokens: 4, total_tokens: 12, input_tokens_details: { text_tokens: 3, image_tokens: 5, cached_text_tokens: 0, cached_image_tokens: 0 } } }
     : { error: { type: "server_error" } };
   const bytes = Buffer.from(JSON.stringify(body));
   return { status, headers: { get: (name) => name.toLowerCase() === "x-request-id" ? requestId : name.toLowerCase() === "content-length" ? String(bytes.length) : null }, body: { async *[Symbol.asyncIterator]() { yield bytes; } } };
@@ -356,7 +356,7 @@ test("v2 journal keeps a wave-global sequence across internal and explicit retri
   assert.equal(records.every((record) => validateCutsceneGenerationUsage(record).ok), true);
 });
 
-test("authorization without outcome consumes its full ceiling and legacy journal records fail closed", async (t) => {
+test("authorization without outcome consumes its full ceiling and blocks ordinary reentry while legacy records fail closed", async (t) => {
   const artifactRoot = await mkdtemp(path.join(tmpdir(), "cutscene-pending-"));
   t.after(() => rm(artifactRoot, { recursive: true, force: true }));
   const fixture = stageFixture({ retryReserve: 1, ceilings: [0.4] });
@@ -372,10 +372,8 @@ test("authorization without outcome consumes its full ceiling and legacy journal
   await mkdir(directory, { recursive: true });
   await writeFile(path.join(directory, "00000001-crashed-before-outcome.authorization.json"), `${JSON.stringify(authorization, null, 2)}\n`);
   let calls = 0;
-  const recovered = await runApprovedCutsceneImageWave({ ...fixture, artifactRoot, workspaceRoot: artifactRoot, fetchFn: async () => { calls += 1; return imageResponse(); } });
-  assert.equal(calls, 1);
-  assert.equal(recovered.journal.accountedUsd, 0.400175);
-  assert.equal(recovered.journal.retryConsumed, 1);
+  await assert.rejects(() => runApprovedCutsceneImageWave({ ...fixture, artifactRoot, workspaceRoot: artifactRoot, fetchFn: async () => { calls += 1; return imageResponse(); } }), { code: "cutscene.asset_already_attempted", path: "/selectedAssetIds" });
+  assert.equal(calls, 0);
 
   await rm(directory, { recursive: true });
   await mkdir(directory, { recursive: true });
@@ -475,7 +473,7 @@ test("immutable Task 2 manifest is adapted only inside a frozen dispatch snapsho
     fetchFn: async (_url, options) => { request = JSON.parse(options.body); return imageResponse({ requestId: "req-adapter" }); },
   });
   const asset = fixture.manifest.assets.find(({ asset_id }) => asset_id === fixture.selectedAssetIds[0]);
-  const expectedRequestSha256 = digest({ provider: "openai", model: "gpt-image-2", quality: "low", size: "1024x1024", promptDigest: asset.prompt_sha256, referenceDigests: [] });
+  const expectedRequestSha256 = digest({ provider: "openai", model: "gpt-image-2", quality: "low", promptDigest: asset.prompt_sha256, referenceDigests: [], output: { path: asset.output.path, width: asset.output.width, height: asset.output.height, aspectRatio: asset.output.aspect_ratio, format: asset.output.format, background: asset.output.background } });
   assert.deepEqual(request, { model: "gpt-image-2", quality: "low", prompt: asset.prompt, size: "1024x1024", n: 1 });
   assert.equal(fixture.estimate.attemptCeilings[0].requestSha256, expectedRequestSha256);
   assert.equal(Object.hasOwn(asset, "prompt_digest"), false);
@@ -627,4 +625,87 @@ test("Task 2 bound package with two generated masters issues a canonical live ap
 
   assert.equal(assertCutsceneHumanApproval({ receipt: issued.receipt, capability: issued.capability, context: context(binding) }), issued.receipt);
   assert.equal(validateHostCutsceneApproval({ receipt: issued.receipt, capability: issued.capability, approvalEvent: event, plan: planned.plan, promptPackage, manifest, pricingSnapshot, estimate, now: "2026-08-13T00:01:00.000Z" }), issued.receipt);
+});
+
+test("output target mutations invalidate the approved attempt schedule before provider dispatch or writes", async (t) => {
+  const fields = [
+    ["path", "assets/generated/cutscene-escape-style-master-01-mutated.png"],
+    ["width", 1152],
+    ["height", 1152],
+    ["aspect_ratio", "16:9"],
+    ["format", "svg"],
+    ["background", "transparent"],
+  ];
+  for (const [field, replacement] of fields) {
+    const artifactRoot = await mkdtemp(path.join(tmpdir(), `cutscene-output-${field}-`));
+    t.after(() => rm(artifactRoot, { recursive: true, force: true }));
+    const fixture = stageFixture({ ceilings: [0.4] });
+    const manifest = structuredClone(fixture.manifest);
+    const asset = manifest.assets.find(({ asset_id: assetId }) => assetId === fixture.selectedAssetIds[0]);
+    asset.output[field] = replacement;
+    asset.planning.target_output[field] = replacement;
+    if (field === "format") {
+      asset.output.path = "assets/generated/cutscene-escape-style-master-01.svg";
+      asset.planning.target_output.path = asset.output.path;
+    }
+    let calls = 0;
+    await assert.rejects(
+      () => runApprovedCutsceneImageWave({ ...fixture, artifactRoot, manifest, fetchFn: async () => { calls += 1; return imageResponse(); } }),
+      { code: "cutscene.cost_estimate_stale" },
+      field,
+    );
+    assert.equal(calls, 0, field);
+    assert.deepEqual(await readdir(artifactRoot), [], field);
+  }
+});
+
+test("contradictory provider usage preserves one successful physical outcome with conservative unavailable accounting", async (t) => {
+  const artifactRoot = await mkdtemp(path.join(tmpdir(), "cutscene-contradictory-usage-"));
+  t.after(() => rm(artifactRoot, { recursive: true, force: true }));
+  const fixture = stageFixture({ ceilings: [0.4] });
+  const result = await runApprovedCutsceneImageWave({
+    ...fixture,
+    artifactRoot,
+    fetchFn: async () => imageResponse({ usage: { input_tokens: 8, output_tokens: 4, total_tokens: 11, input_tokens_details: { text_tokens: 3, image_tokens: 5, cached_text_tokens: 4, cached_image_tokens: 0 } } }),
+  });
+  assert.equal(result.providerResult.results.length, 1);
+  const records = await journalRecords(artifactRoot, fixture.waveId);
+  assert.equal(records.filter(({ kind }) => kind === "authorization").length, 1);
+  const outcome = records.find(({ kind }) => kind === "outcome");
+  assert.deepEqual(outcome.usage, { status: "unavailable", reason: "provider-usage-invalid" });
+  assert.deepEqual(outcome.actualCost, { status: "unavailable", reason: "provider-usage-invalid" });
+  const mismatchedReason = structuredClone(outcome);
+  mismatchedReason.actualCost.reason = "provider-usage-unavailable";
+  mismatchedReason.sha256 = digest(Object.fromEntries(Object.entries(mismatchedReason).filter(([key]) => key !== "sha256")));
+  assert.deepEqual(validateCutsceneGenerationUsage(mismatchedReason).errors[0], { code: "cutscene.usage_cost_reason_mismatch", path: "/actualCost/reason" });
+  assert.equal(result.journal.accountedUsd, 0.4);
+  assert.equal((await readFile(path.join(artifactRoot, fixture.manifest.assets.find(({ asset_id: assetId }) => assetId === fixture.selectedAssetIds[0]).output.path))).subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])), true);
+});
+
+test("ordinary wave reentry never redispatches an asset with a terminal physical outcome", async (t) => {
+  const artifactRoot = await mkdtemp(path.join(tmpdir(), "cutscene-terminal-reentry-"));
+  t.after(() => rm(artifactRoot, { recursive: true, force: true }));
+  const fixture = stageFixture({ ceilings: [0.4] });
+  let calls = 0;
+  await runApprovedCutsceneImageWave({ ...fixture, artifactRoot, fetchFn: async () => { calls += 1; return imageResponse({ status: 400, requestId: "req-terminal" }); } });
+  assert.equal(calls, 1);
+  await assert.rejects(
+    () => runApprovedCutsceneImageWave({ ...fixture, artifactRoot, fetchFn: async () => { calls += 1; return imageResponse(); } }),
+    { code: "cutscene.asset_already_attempted", path: "/selectedAssetIds" },
+  );
+  assert.equal(calls, 1);
+  assert.equal((await journalRecords(artifactRoot, fixture.waveId)).filter(({ kind }) => kind === "outcome").length, 1);
+});
+
+test("public retry flag cannot bypass ordinary reentry dispatch protection", async (t) => {
+  const artifactRoot = await mkdtemp(path.join(tmpdir(), "cutscene-public-retry-"));
+  t.after(() => rm(artifactRoot, { recursive: true, force: true }));
+  const fixture = stageFixture({ ceilings: [0.4] });
+  let calls = 0;
+  await runApprovedCutsceneImageWave({ ...fixture, artifactRoot, fetchFn: async () => { calls += 1; return imageResponse({ status: 400, requestId: "req-terminal" }); } });
+  await assert.rejects(
+    () => runApprovedCutsceneImageWave({ ...fixture, artifactRoot, retry: true, fetchFn: async () => { calls += 1; return imageResponse(); } }),
+    { code: "cutscene.asset_already_attempted", path: "/selectedAssetIds" },
+  );
+  assert.equal(calls, 1);
 });
