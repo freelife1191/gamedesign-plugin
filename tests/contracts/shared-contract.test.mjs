@@ -462,9 +462,9 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
       .sort();
     const installed = installedSkillIds(build.files);
     const sharedSkillIds = installed.filter((skillId) => !sourceSkillIds.includes(skillId));
-    assert.equal(sourceSkillIds.length, 15);
+    assert.equal(sourceSkillIds.length, productName === "game-design-studio" ? 16 : 15);
     assert.deepEqual(sharedSkillIds, expectedSharedSkillIds);
-    assert.equal(installed.length, 23);
+    assert.equal(installed.length, productName === "game-design-studio" ? 24 : 23);
   }
 
   const receiptSource = await readFile(path.join(repoRoot, "shared/memory/schema/memory-receipt.schema.json"));

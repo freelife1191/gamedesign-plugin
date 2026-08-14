@@ -24,6 +24,10 @@ Collect a validated artifact-local `assets/image-assets.yml`, its prompt package
 
 Use the packaged `scripts/run-image-asset-workflow.mjs` composition: `runConfiguredImageAssetWorkflow` invokes `planImageAssetWorkflow` and internally invokes `generateImageAssetWorkflow` with private configuration. Host callbacks receive only selected compiled jobs and return bounded PNG bytes plus closed provenance; no callback receives a final artifact path, workspace root, full configuration, or API key.
 
+## Cutscene dispatch handoff
+
+For `design-cutscene-visual-preproduction`, do not use this general workflow or its selection receipt as a legacy bypass. Dispatch only through `run-approved-cutscene-image-stage.mjs` after the current wave approval proves the current exact prompt, references, output request, cost estimate, and live host-user identity. Preserve successful assets and retry only current retryable stable IDs after a new per-wave estimate and approval.
+
 For `select`, the host adapter supplies exactly `{kind:"host-user-image-selection",channel:"host-user-input",event_id,asset_ids}` with the nonempty ordered stable-ID selection. Reject duplicate/mismatched IDs, specialist/agent channels, prose `selectionSource`, and arbitrary files; persist and return only the event-addressed, secret-free selection record.
 
 ## Output contract

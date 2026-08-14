@@ -19,6 +19,7 @@ const skillIds = [
   "define-game-vision",
   "design-game-systems",
   "design-game-content",
+  "design-cutscene-visual-preproduction",
   "design-player-experience",
   "design-game-economy-and-liveops",
   "plan-game-production",
@@ -38,7 +39,7 @@ const skillIds = [
   "analyze-game-design-references",
   "maintain-game-design-glossary",
 ];
-const directSkillIds = skillIds.slice(0, 15);
+const directSkillIds = skillIds.slice(0, 16);
 const installedSkillIds = [...directSkillIds, "analyze-game-design-references", "archify", "capture-game-design-memory", "humanize-korean", "maintain-game-design-glossary", "maintain-game-design-memory", "retrieve-approved-design-memory", "svg-infographic"].sort();
 
 const roleIds = [
@@ -120,6 +121,13 @@ const routeContract = {
         reviewers: ["level-puzzle-reviewer"],
       },
     ],
+  },
+  "cutscene-visual-preproduction": {
+    skill: "design-cutscene-visual-preproduction",
+    reference: "references/methods/content-specification.md",
+    artifactType: "cutscene-visual-preproduction",
+    outputArtifacts: ["cutscene-brief", "cutscene-shot-package", "cutscene-prompt-package", "cutscene-cost-estimate", "cutscene-continuity-review"],
+    outputTypes: ["cutscene-visual-preproduction"],
   },
   "player-experience": {
     skill: "design-player-experience",
@@ -226,7 +234,7 @@ test("Studio routing enumerates the planned skills, roles, and composable profil
   const routing = await readJson("references/routing.json");
 
   assert.deepEqual(routing.skillIds, skillIds);
-  assert.equal(new Set(routing.skillIds).size, 22);
+  assert.equal(new Set(routing.skillIds).size, 23);
   assert.deepEqual(routing.roleIds, roleIds);
   assert.deepEqual(routing.imageSpecialistIds, imageSpecialistIds);
   assert.equal(new Set(routing.roleIds).size, 10);
@@ -236,12 +244,12 @@ test("Studio routing enumerates the planned skills, roles, and composable profil
   assert.deepEqual(routing.plannedPaths, plannedPaths);
 });
 
-test("Studio keeps the 15-direct and 23-installed skill inventory contract", async () => {
+test("Studio keeps the 16-direct and 24-installed skill inventory contract", async () => {
   const inventory = await collectProductInventory(repoRoot, "game-design-studio");
 
-  assert.equal(directSkillIds.length, 15, "Studio has exactly 15 direct product skills");
+  assert.equal(directSkillIds.length, 16, "Studio has exactly 16 direct product skills");
   assert.deepEqual(inventory.skillIds, installedSkillIds);
-  assert.equal(inventory.skillIds.length, 23, "Studio installs the 15 direct skills plus eight shared skills");
+  assert.equal(inventory.skillIds.length, 24, "Studio installs the 16 direct skills plus eight shared skills");
 });
 
 test("Studio orchestrator accepts ordinary natural-language requests without explicit skill names", async () => {
@@ -259,7 +267,7 @@ test("Studio orchestrator accepts ordinary natural-language requests without exp
 test("Every Studio route is deterministic and points at its planned artifact source", async () => {
   const routing = await readJson("references/routing.json");
   assert.equal(routing.schemaVersion, 1);
-  assert.equal(routing.routes.length, 13);
+  assert.equal(routing.routes.length, 14);
 
   const routes = new Map(routing.routes.map((route) => [route.id, route]));
   assert.deepEqual([...routes.keys()], Object.keys(routeContract));

@@ -19,6 +19,7 @@ Specify a content unit as a playable expression of canonical systems. Connect pl
 - Use `define-game-vision` for the overall player promise or design pillars.
 - Use `design-game-systems` when rules, state transitions, or schemas are not yet canonical.
 - Use `plan-game-production` for portfolio-wide staffing, milestones, or scheduling.
+- Use `design-cutscene-visual-preproduction` for 컷씬, 시네마틱, 스토리보드, master image, prompt, or continuity packages.
 
 ## Required input
 

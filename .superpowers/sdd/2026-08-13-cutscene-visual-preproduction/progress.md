@@ -140,6 +140,10 @@ Task self-consistency:
 - Task 5 fix round 1/5: original implementer resumes; close all six findings with public hostile regressions and preserve the read-only Task 4 boundary.
 - Task 5 fix round 1/5 (`f1b5ed4..3475a72`): five Important and one Minor addressed except the hostile snapshot boundary remains open for transparent Proxy traps and top-level impact getters.
 - Task 5 fix round 2/5: original implementer resumes; reject Proxy before reflection and snapshot all public impact/invalidation inputs before use.
+- Task 5 fix round 2/5 (`3475a72..4f1752e`): Proxy/getter/symbol/cycle boundary closed; final independent review C0/I0/M0 APPROVE.
+- Task 5: complete (commits `dcc4043..4f1752e`, public runtime freeze approved).
+- Task 6: in progress — create and forward-test the Studio-only cutscene workflow skill, exact route, document-quality profile, and Career common-runtime/no-route parity.
+- Task 6 skill baseline: without the new skill, current routing falls back to orchestration/general image skills. It safely performs zero unapproved calls but cannot expose the four cutscene waves, current per-wave cost approval, dialogue-only no-image overlay, failed-ID-only retry, or continuity gate. The new skill MUST close those exact observed gaps without weakening the existing fail-closed image boundaries.
 - Task 5 fix round 2 GREEN: `snapshotCutscenePlainData` uses `node:util` `types.isProxy` before any Reflect/prototype/descriptor access, so transparent Proxy traps execute zero times. Public `findCutsceneImpact` and `invalidateCutsceneDependents` snapshot their full inputs before reading `plan`, `changedAssetIds`, or `reason`; top-level getter, symbol, and cycle inputs reject with stable hostile-input errors.
 - Task 5 fix round 2 validation: RED reproduced transparent Proxy pass-through and top-level impact getter access (2 failing new public regressions); GREEN focused cutscene suite → 42 pass, 0 fail. Fresh Task 1–5 plus Task 4 matrix `node --test tests/unit/cutscene-visual-preproduction.test.mjs tests/unit/cutscene-generation-approval.test.mjs tests/unit/generate-openai-images.test.mjs tests/unit/image-asset-plan.test.mjs tests/unit/image-assets.test.mjs tests/unit/image-config.test.mjs tests/unit/image-prompts.test.mjs tests/unit/image-provider.test.mjs tests/unit/smoke-openai-image.test.mjs tests/products/studio/image-assets.test.mjs` → 195 pass, 0 fail; three runtime `node --check`, visual-plan/continuity/usage schema parse, temporary Studio/Career schema byte parity, and diff check passed. No live calls.
 - Task 5 fix round 1 GREEN: direct seeds that are also reached downstream now invalidate their full wave; repeated invalidation appends the former record to `invalidationHistory` and returns a valid closed plan without erasing evidence. Overlay/review snapshot descriptor-only plain data before getters/proxies/symbols/cycles can execute. Completed wave completions bind exact wave asset sets; gate/lifecycle bind receipt cutscene IDs; duplicate observation `(shotId,kind)` pairs fail before receipt creation.
@@ -152,3 +156,25 @@ Task self-consistency:
 - Task 6: pending
 - Task 7: pending
 - Task 8: pending
+
+## Task 6 completion evidence
+
+- RED: Studio routing was 13 routes / 22 routed skills and lacked the cutscene
+  skill/profile. Generic image routing remained zero-call safe but did not
+  expose four serial per-wave estimates/approvals, dialogue-only overlay,
+  failed-stable-ID retry, or continuity closure.
+- GREEN: initialized `design-cutscene-visual-preproduction` through the
+  official skill creator; added its Studio-only route, closed top-level
+  `cutsceneWorkflow`, quality profile/index, immutable planner/generator/review
+  handoffs, and exact route/inventory/pressure/parity contracts. Studio is now
+  routing 23, direct 16, installed 24; Career remains routing 22, direct 15,
+  installed 23 with no Studio cutscene route or skill.
+- Validation: official skill `quick_validate.py` passed; Task 6 product
+  contracts passed 5/5; focused Task 1–6 source matrix passed 104/104; JSON
+  parse and `git diff --check` passed. Temporary Studio/Career builds have
+  byte-identical five cutscene runtime modules and five schema files.
+- Broader product image matrix retains two pre-existing Career host-callback
+  failures (`host unavailable`, `throw-secret-never-persist`) in
+  `tests/products/career/image-assets.test.mjs`; Task 6 did not change that
+  runtime or Career image skills. See `task-6-report.md`.
+- Task 6: complete — one scoped commit follows this ledger entry.
