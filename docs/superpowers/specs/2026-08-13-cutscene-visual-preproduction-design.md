@@ -404,15 +404,19 @@ attempt ordinal, 남은 retry reserve, 누적 비용과 남은 모든 attempt의
 확인할 수 없으면 retry N+1도 포함해 호출 전 차단한다.
 
 호출 뒤에는 usage, 실제 비용 또는 비용 산정 불가 사유, 성공·실패 asset ID와
-provider request ID를 별도 receipt로 남긴다.
+provider request ID를 별도 receipt로 남긴다. attempt ID를 dispatch 전에 만들고
+`cutscene/usage-receipts/<wave-id>/<asset-id>/<attempt-id>-<provider-request-id>.json`
+에 create-once로 기록한다. `provider-request-id`가 없으면 `no-request-id`를 쓰므로
+asset, provider request, attempt 조합이 충돌하지 않는다.
 
 ## 상태 모델
 
 root는 독립 approval authority나 mutable generation transition을 갖지 않는다.
-각 wave는 `planned → template-ready → generation-ready → cost-estimated →
-approval-pending → approved → dispatching → completed|blocked|invalidated` record를
-자신의 asset IDs, estimate, approval, attempts, completion, invalidation과 함께
-보유한다. root summary는 이 record에서만 다음을 derived한다.
+각 wave는 정확히 `id`, `state`, `assetIds`, `estimate`, `approval`, `attempts`,
+`completion`, `invalidation`을 가진 closed record다. `state`는 `planned →
+template-ready → generation-ready → cost-estimated → approval-pending → approved →
+dispatching → completed|blocked|invalidated`로 전이하며 `invalidated → cost-estimated`
+만 재견적을 위한 역방향 전이다. root summary는 이 record에서만 다음을 derived한다.
 
 ```text
 planned → prompt-ready → cost-estimated → approval-pending → generated →
