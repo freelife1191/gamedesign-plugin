@@ -98,6 +98,7 @@
 | 한국어 문서 다듬기 | [im-not-ai](https://github.com/epoko77-ai/im-not-ai)를 내부 스킬로 사용해 번역투와 기계적인 문장을 찾고 사실·수치·식별자(ID)·승인 상태를 보호한 채 수정안과 검증 기록을 남김 | 윤문 초안, 변경 검증 기록, 사람이 반영할 수정안 |
 | 흐름과 구조 설명하기 | [Skillstead](https://github.com/kyungseo/skillstead)로 편집 가능한 SVG와 검증용 2배 PNG를 만들고 [Archify](https://github.com/tt-a1i/archify)로 관계를 따라가며 살펴볼 수 있는 HTML 구조도를 제작 | SVG·PNG 도식, Archify HTML, 렌더·검수 기록 |
 | 문서 형식으로 전달하기 | 기준 결과와 승인된 자산을 보존한 채 MD·PDF·DOCX·PPTX 형식별 준비와 화면 검수를 분리 | 원본 MD, 검증된 PDF·DOCX·PPTX, 형식별 결과 기록 |
+| 경쟁작·레퍼런스 분석과 용어 사전 | [Studio 분석](guides/game-design-studio/reference-analysis.md)·[Studio 용어 사전](guides/game-design-studio/glossary.md), [Career 분석](guides/game-design-career/reference-analysis.md)·[Career 용어 사전](guides/game-design-career/glossary.md)에서 관찰 근거, 전송 제안과 승인 전 용어 후보를 분리 | 비교작 근거 등록부, 시스템 지도, 검토 대기 제안, 승인된 용어 스냅샷 |
 
 #### 🎨 게임 이미지는 먼저 기준부터 정합니다
 

@@ -1491,6 +1491,14 @@ export async function validateUserGuides({ repoRoot, requireComplete }) {
           counts.skillGuides += 1;
         }
       }
+      if (relative.length === 2 && PRODUCT_IDS.includes(relative[0]) && relative[1] === "reference-analysis.md") {
+        documentedSkillIds.get(relative[0]).add("analyze-game-design-references");
+        counts.skillGuides += 1;
+      }
+      if (relative.length === 2 && PRODUCT_IDS.includes(relative[0]) && relative[1] === "glossary.md") {
+        documentedSkillIds.get(relative[0]).add("maintain-game-design-glossary");
+        counts.skillGuides += 1;
+      }
       if (relative.length === 2 && PRODUCT_IDS.includes(relative[0]) && relative[1] === "templates.md") {
         counts.templates += inventories.get(relative[0]).templateIds.length;
       }

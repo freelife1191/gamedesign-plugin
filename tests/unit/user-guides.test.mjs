@@ -72,8 +72,12 @@ const sharedMemorySkills = Object.freeze([
   "maintain-game-design-memory",
   "retrieve-approved-design-memory",
 ]);
+const sharedReferenceIntelligenceSkills = Object.freeze([
+  "analyze-game-design-references",
+  "maintain-game-design-glossary",
+]);
 const expectedSkillIdsByProduct = Object.freeze(Object.fromEntries(
-  Object.entries(sourceSkillIdsByProduct).map(([productId, ids]) => [productId, [...ids, ...sharedVendorSkillIds, ...sharedMemorySkills].sort()]),
+  Object.entries(sourceSkillIdsByProduct).map(([productId, ids]) => [productId, [...ids, ...sharedVendorSkillIds, ...sharedMemorySkills, ...sharedReferenceIntelligenceSkills].sort()]),
 ));
 
 async function withGuideFixture({ omitDocumentedSkill, omitVendorSkill } = {}, check) {
@@ -91,6 +95,11 @@ async function withGuideFixture({ omitDocumentedSkill, omitVendorSkill } = {}, c
       await mkdir(skillRoot, { recursive: true });
       await writeFile(path.join(skillRoot, "SKILL.md"), "# Shared memory skill\n");
     }
+    for (const skillId of sharedReferenceIntelligenceSkills) {
+      const skillRoot = path.join(root, "shared", "reference-intelligence", "skills", skillId);
+      await mkdir(skillRoot, { recursive: true });
+      await writeFile(path.join(skillRoot, "SKILL.md"), "# Shared reference-intelligence skill\n");
+    }
     await writeFile(path.join(root, "README.md"), "# Root\n\nOPENAI_API_KEY=\n");
     for (const [productId, productSkillIds] of Object.entries(sourceSkillIdsByProduct)) {
       const productRoot = path.join(root, "products", productId, "plugin");
@@ -103,11 +112,13 @@ async function withGuideFixture({ omitDocumentedSkill, omitVendorSkill } = {}, c
       const guidesRoot = path.join(root, "guides", productId, "skills");
       await mkdir(guidesRoot, { recursive: true });
       await writeFile(path.join(guidesRoot, "README.md"), "prompt-only select required all gpt-image-2 low\n");
-      for (const skillId of expectedSkillIdsByProduct[productId].filter((id) => !sharedMemorySkills.includes(id))) {
+      for (const skillId of expectedSkillIdsByProduct[productId].filter((id) => !sharedMemorySkills.includes(id) && !sharedReferenceIntelligenceSkills.includes(id))) {
         if (omitDocumentedSkill?.productId === productId && omitDocumentedSkill.skillId === skillId) continue;
         await writeFile(path.join(guidesRoot, `${skillId}.md`), `# ${skillId}\n`);
       }
       await writeFile(path.join(root, "guides", productId, "memory.md"), "# 프로젝트 기억\n");
+      await writeFile(path.join(root, "guides", productId, "reference-analysis.md"), "# 레퍼런스 분석\n");
+      await writeFile(path.join(root, "guides", productId, "glossary.md"), "# 용어 사전\n");
     }
     await check(root);
   } finally {
@@ -170,7 +181,7 @@ async function writeUseCaseValidationFixture(root, manifest) {
   ]);
 }
 
-test("product inventory matches each product's 15 source skills and six shared skills", async () => {
+test("product inventory matches each product's 15 source skills and eight shared skills", async () => {
   for (const productId of Object.keys(sourceSkillIdsByProduct)) {
     const inventory = await collectProductInventory(repoRoot, productId);
     assert.deepEqual(inventory.skillIds, expectedSkillIdsByProduct[productId]);
@@ -750,22 +761,22 @@ test("production guide graph has the exact installed skill IDs and visible link 
       .filter((entry) => entry.isFile() && entry.name !== "README.md" && entry.name.endsWith(".md"))
       .map((entry) => path.basename(entry.name, ".md"))
       .sort();
-    assert.deepEqual(actualSkillIds, expectedSkillIds.filter((id) => !sharedMemorySkills.includes(id)), `${productId}: direct skill guides exclude only the source-bound memory guide`);
+    assert.deepEqual(actualSkillIds, expectedSkillIds.filter((id) => !sharedMemorySkills.includes(id) && !sharedReferenceIntelligenceSkills.includes(id)), `${productId}: direct skill guides exclude source-bound guides`);
   }
   const files = await markdownFiles(path.join(repoRoot, "guides"));
   const links = (await Promise.all(files.map(async (filename) => extractMarkdownLinks(await readFile(filename, "utf8"))))).flat();
   const validation = await validateUserGuides({ repoRoot, requireComplete: true });
   assert.equal(validation.ok, true, "every Markdown guide included in the graph passes the production guide validator");
   assert.equal(files.length, validation.counts.guides, "the visible graph contains exactly the regular Markdown guides scanned by the production validator");
-  assert.equal(links.length, 2362);
+  assert.equal(links.length, 2374);
   assert.equal(links.filter(({ label }) => label === "").length, 0);
-  assert.equal(links.filter(({ target }) => !/^(?:https?|mailto):/iu.test(target)).length, 2350);
+  assert.equal(links.filter(({ target }) => !/^(?:https?|mailto):/iu.test(target)).length, 2362);
 });
 
-test("complete guide validation maps each product memory guide to three source-bound skills", async () => {
+test("complete guide validation maps each product source-bound guide to its installed skills", async () => {
   await withGuideFixture({}, async (root) => {
     const result = await validateUserGuides({ repoRoot: root, requireComplete: true });
-    assert.equal(result.counts.skillGuides, 42);
+    assert.equal(result.counts.skillGuides, 46);
     assert.equal(result.errors.some((error) => error.includes("skill guide inventory mismatch")), false);
   });
 });
