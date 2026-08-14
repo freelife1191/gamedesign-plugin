@@ -27,8 +27,7 @@ export function buildReferenceBrief(input = {}) {
     || !sorted(value.researchScope, id) || !sorted(value.exclusionScope, id) || !sorted(value.forbiddenConclusions, id) || !sorted(value.completionCriteria, id)
     || !text(value.humanReviewer) || !exact(value.constraints, ["time", "materials", "languages", "regions"]) || !text(value.constraints.time)
     || !sorted(value.constraints.materials, id) || !sorted(value.constraints.languages, id) || !sorted(value.constraints.regions, id)) fail("invalid-brief");
-  const { analysisId, ...brief } = value;
-  return freeze(brief);
+  return freeze(value);
 }
 
 function normalizeReferences(input) {
@@ -169,7 +168,7 @@ function verificationQueue(evidence, dives) {
 }
 
 export function buildReferenceAnalysis(input = {}) {
-  const value = copy(input); const analysisId = value.brief?.analysisId; const brief = buildReferenceBrief(value.brief); const referenceSet = normalizeReferences(value.referenceSet); const referenceContexts = normalizeContexts(value.referenceContexts, referenceSet);
+  const value = copy(input); const canonicalBrief = buildReferenceBrief(value.brief); const { analysisId, ...brief } = canonicalBrief; const referenceSet = normalizeReferences(value.referenceSet); const referenceContexts = normalizeContexts(value.referenceContexts, referenceSet);
   const atlasQuestions = mergeSystemAtlas(value.atlas); const atlasSelection = compactAtlas(atlasQuestions); const evidence = registerReferenceEvidence({ records: value.evidence });
   const decisionQuestionIds = new Set(brief.decisionQuestions);
   if (referenceSet.some(({ decisionQuestionIds: ids }) => ids.some((questionId) => !decisionQuestionIds.has(questionId)))) fail("dangling-decision-question");
@@ -192,7 +191,7 @@ export async function writeReferenceAnalysisWorkspace({ artifactRoot, analysis, 
   const safeAnalysis = JSON.parse(canonicalReferenceAnalysis(analysis));
   const outputs = new Map([
     [artifactFiles[0], markdown("Reference brief", ["objective", "decisionQuestions"], [{ objective: safeAnalysis.brief.objective, decisionQuestions: safeAnalysis.brief.decisionQuestions.join("; ") }])],
-    [artifactFiles[1], canonicalJson(safeAnalysis.brief)],
+    [artifactFiles[1], canonicalJson({ analysisId: safeAnalysis.analysisId, ...safeAnalysis.brief })],
     [artifactFiles[2], canonicalJson(safeAnalysis.referenceSet)],
     [artifactFiles[3], canonicalJson({ referenceContexts: safeAnalysis.referenceContexts, evidence: safeAnalysis.evidence, claims: safeAnalysis.claims })],
     [artifactFiles[4], canonicalJson(safeAnalysis.atlasSelection)],

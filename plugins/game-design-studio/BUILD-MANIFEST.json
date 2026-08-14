@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "58e22e105f488a5239f796c4ea86d6f8ac442e268c7c57d424c63936d4b9d456",
+  "treeSha256": "7cee4334068e9916df0b044df7fb71fc6709c7d2e8d744aec2458ec05a06ac77",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -1176,8 +1176,8 @@
     },
     {
       "path": "references/shared/reference-intelligence/templates/brief.json",
-      "sha256": "7cb59ee6228ac2cfce93da5fe7a698e523ff22a19d42548b3a4a3aeb8fa9486f",
-      "size": 607
+      "sha256": "abf94fa8870a9e4b7450067ea0bcb05d881e1b7035ad3428e520df886a883144",
+      "size": 644
     },
     {
       "path": "references/shared/reference-intelligence/templates/brief.md",
@@ -1496,8 +1496,8 @@
     },
     {
       "path": "scripts/analyze-game-design-references.mjs",
-      "sha256": "32499470208c09febdf0fe209289fe8f2255d8aaebe8604563297d280b4d1089",
-      "size": 23697
+      "sha256": "b0f7de214d7fba0dae1b16c9bb74dce912d99303e40e532db3e7d75d6042bc02",
+      "size": 23713
     },
     {
       "path": "scripts/build-image-asset-plan.mjs",
@@ -1641,8 +1641,8 @@
     },
     {
       "path": "scripts/manage-game-design-glossary.mjs",
-      "sha256": "972a2264573321ecbea48414d7522af0b5b94c0b7fd82c8f6f45c50723359983",
-      "size": 22491
+      "sha256": "859b5f87230634b29f6b3f5a0b3fd84acf564205c2d9d884434273c5d8d6f0f7",
+      "size": 23617
     },
     {
       "path": "scripts/quality-source-anchors.mjs",

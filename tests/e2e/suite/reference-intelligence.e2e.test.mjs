@@ -190,7 +190,8 @@ function assertProductProjectionParity({
 test("three-role reference set produces one evidence-bound analysis", async (t) => {
   const artifactRoot = await temporaryArtifactRoot(t, "ri-e2e-three-role-");
   const catalog = await loadBundledReferenceCatalog();
-  const analysis = buildReferenceAnalysis(analysisInput(catalog.atlas));
+  const input = analysisInput(catalog.atlas);
+  const analysis = buildReferenceAnalysis(input);
   const written = await writeReferenceAnalysisWorkspace({ artifactRoot, analysis });
   const [persisted, persistedBrief, persistedAtlas] = await Promise.all([
     readFile(path.join(artifactRoot, "reference-intelligence", "evidence-register.yml"), "utf8").then(JSON.parse),
@@ -205,7 +206,7 @@ test("three-role reference set produces one evidence-bound analysis", async (t) 
   assert.equal(analysis.evidence[0].locator.value, "evidence/loop.png");
   assert.deepEqual(analysis.evidence[0].transformations, [{ from: "original", to: "capture" }, { from: "capture", to: "summary" }]);
   assert.deepEqual(persisted.evidence.map(({ evidenceId }) => evidenceId), ["ev-alpha", "ev-beta", "ev-gamma"]);
-  assert.deepEqual(persistedBrief, analysis.brief);
+  assert.deepEqual(persistedBrief, input.brief);
   assert.deepEqual(persistedAtlas, analysis.atlasSelection);
   assert.equal(written.analysisSha256, sha256Canonical(analysis));
 });
@@ -313,8 +314,10 @@ test("Studio and Career projections preserve claim and evidence IDs", async (t) 
     careerCatalogApi.loadBundledReferenceCatalog({ moduleRoot: path.join(products.career, "references/shared/reference-intelligence") }),
   ]);
   const claim = { claimId: "claim-core-loop", systemIds: ["core-play"], evidenceIds: ["ev-alpha"], kind: "observation", category: "general", causal: false };
-  const studioAnalysis = studioApi.buildReferenceAnalysis(analysisInput(studioCatalog.atlas, { claims: [claim] }));
-  const careerAnalysis = careerApi.buildReferenceAnalysis(analysisInput(careerCatalog.atlas, { claims: [claim] }));
+  const studioInput = analysisInput(studioCatalog.atlas, { claims: [claim] });
+  const careerInput = analysisInput(careerCatalog.atlas, { claims: [claim] });
+  const studioAnalysis = studioApi.buildReferenceAnalysis(studioInput);
+  const careerAnalysis = careerApi.buildReferenceAnalysis(careerInput);
   await Promise.all([
     studioApi.writeReferenceAnalysisWorkspace({ artifactRoot: studioArtifactRoot, analysis: studioAnalysis }),
     careerApi.writeReferenceAnalysisWorkspace({ artifactRoot: careerArtifactRoot, analysis: careerAnalysis }),
@@ -337,8 +340,8 @@ test("Studio and Career projections preserve claim and evidence IDs", async (t) 
     careerRuntimeBytes,
   };
   assertProductProjectionParity(parity);
-  assert.deepEqual(studioBrief, studioAnalysis.brief);
-  assert.deepEqual(careerBrief, careerAnalysis.brief);
+  assert.deepEqual(studioBrief, studioInput.brief);
+  assert.deepEqual(careerBrief, careerInput.brief);
   assert.deepEqual(studioAtlas, studioAnalysis.atlasSelection);
   assert.deepEqual(careerAtlas, careerAnalysis.atlasSelection);
   for (const analysis of [studioAnalysis, careerAnalysis]) {
@@ -375,6 +378,13 @@ test("Studio and Career projections preserve claim and evidence IDs", async (t) 
     const effective = glossaryApi.mergeGameDesignGlossaries({ sharedGlossary: glossaryApi.applyGlossaryDecision({ glossary: current, ...issued }), projectOverlay: { schemaVersion: 1, scope: "project-overlay", version: 1, terms: [] } });
     const receipt = glossaryApi.createGlossarySnapshot({ documentId: "combat-v1", effectiveGlossary: effective, termIds: ["TERM-COMBAT-POWER"] });
     const documents = [{ documentId: "combat-v1", text: "플레이어 파워. 이전 용어." }];
+    const forged = structuredClone(effective); forged.version += 1;
+    Object.assign(forged.terms.find(({ termId }) => termId === "TERM-PLAYER-POWER"), { koPreferred: "조작된 플레이어 파워", definition: "Forged definition.", approver: "Forged Lead", decisionIds: ["forged-decision"], version: 3, changedAt: "2026-08-14T00:00:00.000Z" });
+    const forgedReceipt = glossaryApi.createGlossarySnapshot({ documentId: "combat-v1", effectiveGlossary: forged, termIds: ["TERM-COMBAT-POWER"] });
+    await mkdir(path.join(root, "reference-intelligence", "glossary"), { recursive: true });
+    await writeFile(path.join(root, "reference-intelligence", "glossary", "impact-list.json"), "[]\n");
+    await assert.rejects(() => glossaryApi.writeGameDesignGlossaryArtifacts({ artifactRoot: root, glossary: forged, receipt: forgedReceipt, findings: { ok: true, blocking: [], warnings: [] }, decision: { eventId: issued.receipt.eventId, receipt: issued.receipt, capability: issued.capability }, documents: [{ documentId: "combat-v1", text: "조작된 플레이어 파워" }] }), /glossary/i);
+    assert.equal(await readFile(path.join(root, "reference-intelligence", "glossary", "impact-list.json"), "utf8"), "[]\n");
     await glossaryApi.writeGameDesignGlossaryArtifacts({ artifactRoot: root, glossary: effective, receipt, findings: { ok: true, blocking: [], warnings: [] }, decision: { eventId: issued.receipt.eventId, receipt: issued.receipt, capability: issued.capability }, documents });
     const impact = JSON.parse(await readFile(path.join(root, "reference-intelligence/glossary/impact-list.json"), "utf8"));
     assert.deepEqual(impact.items, glossaryApi.analyzeGlossaryImpact({ documents, effectiveGlossary: effective, transition: { termIds: ["TERM-PLAYER-POWER"], replacementTermId: "TERM-COMBAT-POWER" } }));

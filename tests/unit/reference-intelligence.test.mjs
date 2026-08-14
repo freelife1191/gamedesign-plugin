@@ -806,14 +806,17 @@ test("analysis persists exact claim-to-evidence bindings in the evidence registe
 });
 
 test("workspace persists the complete canonical brief and merged Atlas selection", async (t) => {
-  const analysis = buildReferenceAnalysis(await analysisInputFixture());
+  const input = await analysisInputFixture();
+  const analysis = buildReferenceAnalysis(input);
   const root = await analysisArtifactRoot(t);
   const written = await writeReferenceAnalysisWorkspace({ artifactRoot: root, analysis });
   const [brief, atlas] = await Promise.all([
     readFile(join(root, "reference-intelligence", "brief.json"), "utf8").then(JSON.parse),
     readFile(join(root, "reference-intelligence", "atlas-selection.json"), "utf8").then(JSON.parse),
   ]);
-  assert.deepEqual(brief, analysis.brief);
+  assert.deepEqual(buildReferenceBrief(input.brief), input.brief);
+  assert.deepEqual(brief, input.brief);
+  assert.equal(brief.analysisId, input.brief.analysisId);
   assert.deepEqual(atlas, analysis.atlasSelection);
   assert.equal(written.files.includes("reference-intelligence/brief.json"), true);
   assert.equal(written.files.includes("reference-intelligence/atlas-selection.json"), true);
@@ -906,7 +909,7 @@ test("priority leaves a missing dimension unscored and artifact paths fail close
   await assert.rejects(() => writeReferenceAnalysisWorkspace({ artifactRoot: link, analysis }), /unsafe/i);
   const transfers = buildDesignTransfers({ deepDives: analysis.deepDives, projectConstraints: ["ten-minute-session"], evidence: analysis.evidence, referenceContexts: analysis.referenceContexts, referenceSet: analysis.referenceSet });
   assert.equal(transfers.every(({ reviewState }) => reviewState === "pending-review"), true);
-  assert.deepEqual(buildReferenceBrief(analysisBriefFixture()), analysis.brief);
+  assert.deepEqual(buildReferenceBrief(analysisBriefFixture()), { analysisId: analysis.analysisId, ...analysis.brief });
   assert.equal(inventoryReferenceSystems({ brief: analysis.brief, atlas: analysis.atlasSelection, evidence: analysis.evidence, claims: [] }).length > 0, true);
 });
 

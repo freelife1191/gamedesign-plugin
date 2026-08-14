@@ -14,6 +14,7 @@ const findingCodes = new Set(["multiple-preferred-terms", "ambiguous-concept-lab
 const glossaryDirectory = "reference-intelligence/glossary";
 const fixedPaths = Object.freeze([`${glossaryDirectory}/terms.json`, `${glossaryDirectory}/glossary.ko.md`, `${glossaryDirectory}/glossary.en.md`, `${glossaryDirectory}/terminology-findings.md`, `${glossaryDirectory}/glossary-receipt.json`]);
 const applied = new WeakMap();
+const publicationBindings = new WeakMap();
 
 function fail() { throw new Error("Game design glossary is invalid."); }
 function freeze(value) { if (value && typeof value === "object" && !Object.isFrozen(value)) { for (const child of Object.values(value)) freeze(child); Object.freeze(value); } return value; }
@@ -23,11 +24,13 @@ function safeText(value, max = 65536) { return typeof value === "string" && valu
 function canonicalText(value, max = 65536) { return typeof value === "string" && value.length > 0 && Buffer.byteLength(value, "utf8") <= max && value === value.normalize("NFC") && !control.test(value); }
 function persistedSafe(value, seen = new Set()) { if (value === null || typeof value === "boolean" || typeof value === "number") return true; if (typeof value === "string") return safeText(value, 2 * 1024 * 1024); if (!value || typeof value !== "object" || seen.has(value)) return false; seen.add(value); const result = Array.isArray(value) ? value.every((item) => persistedSafe(item, seen)) : Object.values(value).every((item) => persistedSafe(item, seen)); seen.delete(value); return result; }
 function approved(value) { return value?.state === "approved"; }
+function bindPublication(glossary, bindings) { if (bindings.size > 0) publicationBindings.set(glossary, bindings); }
 function finding(code, termIdValue = undefined) { return Object.freeze(termIdValue ? { code, termId: termIdValue } : { code }); }
 function sortFindings(values) { return freeze(values.sort((left, right) => compare(`${left.code}\0${left.termId ?? ""}`, `${right.code}\0${right.termId ?? ""}`))); }
 function exactTermChanges(shared, overlay) { return overlay.terms.filter((item) => shared.terms.some(({ termId: existing }) => existing === item.termId) && canonicalJson(item) !== canonicalJson(shared.terms.find(({ termId: existing }) => existing === item.termId))).map(({ termId: value }) => value).sort(compare); }
 
 export function mergeGameDesignGlossaries({ sharedGlossary, projectOverlay, overrideReceipt, overrideCapability, changeReason } = {}) {
+  const inheritedBindings = publicationBindings.get(sharedGlossary);
   const shared = copy(sharedGlossary); const overlay = copy(projectOverlay);
   if (!valid(shared) || !valid(overlay) || shared.scope !== "shared" || overlay.scope !== "project-overlay") fail();
   const overrides = exactTermChanges(shared, overlay);
@@ -37,7 +40,13 @@ export function mergeGameDesignGlossaries({ sharedGlossary, projectOverlay, over
   } else if (overrideReceipt !== undefined || overrideCapability !== undefined || changeReason !== undefined) fail();
   const byId = new Map(shared.terms.map((item) => [item.termId, item])); for (const item of overlay.terms) byId.set(item.termId, item);
   const result = { schemaVersion: 1, scope: "effective", version: Math.max(shared.version, overlay.version), terms: [...byId.values()].sort((left, right) => compare(left.termId, right.termId)) };
-  if (!valid(result)) fail(); return freeze(result);
+  if (!valid(result)) fail(); const frozen = freeze(result);
+  if (inheritedBindings) {
+    const byId = new Map(frozen.terms.map((item) => [item.termId, item])); const bindings = new Map();
+    for (const [receipt, binding] of inheritedBindings) if (binding.termBytes.every(([termIdValue, bytes]) => canonicalJson(byId.get(termIdValue)) === bytes)) bindings.set(receipt, { glossarySha256: sha256Canonical(frozen), termBytes: binding.termBytes });
+    bindPublication(frozen, bindings);
+  }
+  return frozen;
 }
 
 export function applyGlossaryDecision({ glossary, receipt, capability } = {}) {
@@ -51,7 +60,9 @@ export function applyGlossaryDecision({ glossary, receipt, capability } = {}) {
     if (decision.action === "approve") { if (item.state !== "proposed") fail(); return { ...item, state: "approved", approver: decision.actor, decisionIds: [...new Set([...item.decisionIds, decision.eventId])].sort(compare), changedAt: decision.changedAt, version: item.version + 1 }; }
     if (item.state !== "approved") fail(); return { ...item, state: "deprecated", approver: decision.actor, replacementTermId: replacement.termId, decisionIds: [...new Set([...item.decisionIds, decision.eventId])].sort(compare), changedAt: decision.changedAt, version: item.version + 1 };
   }).sort((left, right) => compare(left.termId, right.termId));
-  const result = { ...current, version: current.version + 1, terms }; if (!valid(result)) fail(); const frozen = freeze(result); applied.set(receipt, sha256Canonical(frozen)); return frozen;
+  const result = { ...current, version: current.version + 1, terms }; if (!valid(result)) fail(); const frozen = freeze(result); applied.set(receipt, sha256Canonical(frozen));
+  const finalTerms = new Map(frozen.terms.map((item) => [item.termId, item])); bindPublication(frozen, new Map([[decision, { glossarySha256: sha256Canonical(frozen), termBytes: decision.termIds.map((termIdValue) => [termIdValue, canonicalJson(finalTerms.get(termIdValue))]) }]]));
+  return frozen;
 }
 
 export function createGlossarySnapshot({ documentId, effectiveGlossary, termIds } = {}) {
@@ -126,6 +137,7 @@ export async function writeGameDesignGlossaryArtifacts({ artifactRoot, glossary,
   if (Object.keys(unknown).length !== 0 || glossary?.scope !== "effective" || !receiptMatches(receipt, receipt?.documentId, glossary) || !decision || decision.eventId !== decision.receipt?.eventId) fail();
   let liveDecision; try { liveDecision = assertGlossaryHumanDecision(decision.receipt, decision.capability); } catch { fail(); }
   const value = copy(glossary); if (!valid(value) || !persistedSafe(value) || Buffer.byteLength(canonicalJson(value), "utf8") > 2 * 1024 * 1024) fail();
+  const publication = publicationBindings.get(glossary)?.get(liveDecision); if (!publication || publication.glossarySha256 !== sha256Canonical(value)) fail();
   const selected = new Set(liveDecision.termIds); const termsById = new Map(value.terms.map((item) => [item.termId, item])); const replacement = liveDecision.replacementTermId === null ? null : termsById.get(liveDecision.replacementTermId);
   if (liveDecision.action === "approve" ? [...selected].some((termIdValue) => termsById.get(termIdValue)?.state !== "approved") : !replacement || replacement.state !== "approved" || [...selected].some((termIdValue) => { const item = termsById.get(termIdValue); return !item || item.state !== "deprecated" || item.replacementTermId !== replacement.termId; })) fail();
   const safeFindings = validateFindings(findings); const safeDecision = copy(liveDecision); if (!persistedSafe(safeDecision)) fail();
