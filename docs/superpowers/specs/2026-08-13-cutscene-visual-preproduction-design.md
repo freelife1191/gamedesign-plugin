@@ -23,12 +23,12 @@ shot과 variant)를 순서대로 승인한다. 각 wave는 exact asset ID 집합
 live host-user approval, attempt, completion, invalidation을 자신의 record로
 소유한다. 이전 wave가 바뀌면 영향받는 후속 자산만 다시 계산하고 재승인한다.
 
-작업 시작 시 사용자는 `prompt-only`, `estimate-only`,
-`generate-after-approval` 중 하나를 선택할 수 있다. 생성하지 않으면 완성된
-프롬프트 패키지와 나중에 순서대로 이미지를 요청하는 가이드를 제공한다. 생성할
-경우에도 현재 wave의 예상 비용 범위·최대 한도·재시도 reserve를 먼저 보여 주고,
-해당 wave가 live host-user capability와 receipt로 승인된 뒤에만 외부 이미지 생성
-호출을 한다.
+작업 시작 시 사용자는 cutscene plan 루트의 canonical `mode`로 `prompt-only`,
+`estimate-only`, `generate-after-approval` 중 하나를 선택할 수 있다. 생성하지 않으면
+완성된 프롬프트 패키지와 나중에 순서대로 이미지를 요청하는 가이드를 제공한다.
+생성할 경우에도 현재 wave의 예상 비용 범위·최대 한도·재시도 reserve를 먼저 보여
+주고, 해당 wave가 live host-user capability와 receipt로 승인된 뒤에만 외부 이미지
+생성 호출을 한다.
 
 ## 배경과 현재 기능
 

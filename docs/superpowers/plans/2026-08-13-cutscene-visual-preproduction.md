@@ -13,6 +13,7 @@
 ## Global Constraints
 
 - Prompt Only와 Estimate Only는 provider call 0회다. Prompt Only는 image bytes와 invented SHA-256 없이 expected path와 asset ID를 남긴다.
+- Canonical mode location은 Task 1/2의 cutscene plan 루트, 즉 `input.plan.mode` 하나뿐이다. 모든 cutscene runtime public API는 이 값을 읽고 별도 sibling `mode` 인자를 받지 않는다.
 - Generate After Approval은 current wave cost/range disclosure와 opaque live host-user capability+receipt 뒤에만 dispatch한다. attempt마다 ID, ordinal, remaining reserve, accumulated/max possible cost, current prompt/reference/price bindings, current approval을 재검증한다.
 - `liveApprovals.get(capability) === receipt`인 발급 객체 쌍을 그대로 전달한다. receipt/capability는 serializable input 밖에 두고 clone·재구성하지 않으며, plain mutable input만 복제한 뒤 runtime callback과 함께 호출 경계에서 합성한다.
 - cutscene `document-approved`/`production-candidate`는 기존 image asset lifecycle + current continuity receipt + unresolved blocker 없음으로만 derived하며 cutscene code가 independent transition을 만들지 않는다.
@@ -52,7 +53,7 @@ test("four waves own authority and root state is derived", () => {
 ```
 
 - [ ] **Run RED.** `node --test tests/unit/cutscene-visual-preproduction.test.mjs` → FAIL: contracts absent.
-- [ ] **GREEN — implement.** `cutsceneWorkflow` has exactly `schemaVersion,waves,downstream,derived`; each wave has exactly `id,state,assetIds,estimate,approval,attempts,completion,invalidation`, where `state` is `planned|template-ready|generation-ready|cost-estimated|approval-pending|approved|dispatching|completed|blocked|invalidated`. Require nonempty collections before `every`, sorted unique IDs, valid DAG references and forward transitions except `invalidated → cost-estimated`. Template-ready has expected path/no hash; generation-ready has current ID+SHA-256. `deriveCutsceneLifecycle` is implemented here only and derives root lifecycle from image approval, current continuity receipt and blockers.
+- [ ] **GREEN — implement.** The plan root requires exact `mode: "prompt-only"|"estimate-only"|"generate-after-approval"`; no manifest asset owns a mode. `cutsceneWorkflow` has exactly `schemaVersion,waves,downstream,derived`; each wave has exactly `id,state,assetIds,estimate,approval,attempts,completion,invalidation`, where `state` is `planned|template-ready|generation-ready|cost-estimated|approval-pending|approved|dispatching|completed|blocked|invalidated`. Require nonempty collections before `every`, sorted unique IDs, valid DAG references and forward transitions except `invalidated → cost-estimated`. Template-ready has expected path/no hash; generation-ready has current ID+SHA-256. `deriveCutsceneLifecycle` is implemented here only and derives root lifecycle from image approval, current continuity receipt and blockers.
 - [ ] **Run GREEN.** `node --test tests/unit/cutscene-visual-preproduction.test.mjs && node -e 'for (const p of process.argv.slice(1)) JSON.parse(require("node:fs").readFileSync(p,"utf8"))' shared/image-assets/schema/cutscene-*.schema.json` → PASS.
 - [ ] **Commit.** `git add shared/image-assets/schema/cutscene-*.schema.json shared/scripts/validate-cutscene-visual-preproduction.mjs tests/unit/cutscene-visual-preproduction.test.mjs && git commit -m "feat: define cutscene wave contracts"`
 
@@ -97,7 +98,7 @@ test("planImageAssetWorkflow preserves handed-off manifest bytes and general pla
 ```
 
 - [ ] **Run RED.** `node --test --test-name-pattern='prompt-only|handoff|preserves handed-off' tests/unit/cutscene-visual-preproduction.test.mjs tests/unit/image-assets.test.mjs` → FAIL: no cutscene branch; the deliberate invalid general artifact reaches `buildImageAssetPlan`.
-- [ ] **GREEN — implement.** `planCutsceneVisualPreproduction` is the only cutscene caller of `buildImageAssetPlan` and writes stable IDs, DAG, prompt hash, approval binding and `cutsceneWorkflow` once. If `cutsceneManifest` exists, `planImageAssetWorkflow` validates it, safe-writes canonical supplied bytes, and returns without calling `buildImageAssetPlan`, compiling/rebinding prompts, or rewriting IDs/DAG/hashes/binding. If it is absent, retain the existing general branch unchanged. Binding reads master bytes through the secure loader. `findCutsceneImpact` is the one forward-DAG traversal; invalidation calls it and preserves unrelated bytes/state/receipt.
+- [ ] **GREEN — implement.** `planCutsceneVisualPreproduction` copies the validated input mode to `plan.mode` and is the only cutscene caller of `buildImageAssetPlan`; it writes stable IDs, DAG, prompt hash, approval binding and `cutsceneWorkflow` once, never `manifest.assets[*].mode`. If `cutsceneManifest` exists, `planImageAssetWorkflow` validates it, safe-writes canonical supplied bytes, and returns without calling `buildImageAssetPlan`, compiling/rebinding prompts, or rewriting IDs/DAG/hashes/binding. If it is absent, retain the existing general branch unchanged. Binding reads master bytes through the secure loader. `findCutsceneImpact` is the one forward-DAG traversal; invalidation calls it and preserves unrelated bytes/state/receipt.
 - [ ] **Run GREEN.** `node --test tests/unit/cutscene-visual-preproduction.test.mjs tests/unit/image-assets.test.mjs tests/products/studio/image-assets.test.mjs` → PASS: literal bytes/IDs/DAG/prompt hash/approval binding survive handoff and general planning remains unchanged.
 - [ ] **Commit.** `git add shared/image-assets/references/cutscene-generation-policy.md shared/image-assets/templates/cutscene shared/scripts/plan-cutscene-visual-preproduction.mjs shared/scripts/build-image-asset-plan.mjs shared/scripts/run-image-asset-workflow.mjs shared/scripts/validate-image-assets.mjs shared/image-assets/schema/image-assets.schema.json shared/image-assets/prompt-patterns/storyboard.json products/game-design-studio/plugin/skills/plan-image-assets/SKILL.md tests/unit/cutscene-visual-preproduction.test.mjs tests/unit/image-assets.test.mjs tests/products/studio/image-assets.test.mjs && git commit -m "feat: hand off immutable cutscene image manifests"`
 
@@ -341,7 +342,7 @@ test("process key cannot bypass injected default network", async (t) => assert.r
 ```
 
 - [ ] **Run RED.** `node --test --test-name-pattern='500 retry|reserve exhaustion|host cap exhaustion' tests/unit/generate-openai-images.test.mjs tests/unit/cutscene-generation-approval.test.mjs` → FAIL: current `beforeProvider` runs once before the internal `requestImage` loop and host has no retry authorization loop.
-- [ ] **GREEN — implement.** Move `beforeProvider({asset_id,attempt_ordinal})` into `requestImage` immediately before each fetch. The wave wrapper uses this boundary order: closed request/mode/selected-ID/prerequisite checks; Task 3 exact authority plus all current bindings; attempt reserve and accumulated/max-possible cap; provider dispatch. It passes `authorizeProviderAttempt` to every OpenAI and host retry, re-reads bound prompt/master bytes, and validates IDs, reserve, accumulated/max possible USD, current price and live approval. A coded failure invokes neither second fetch nor host callback. Preserve generation/edit endpoints, ordered repeated `image[]`, no `input_fidelity`, size/transparent contract and configurable `gpt-image-2`.
+- [ ] **GREEN — implement.** Move `beforeProvider({asset_id,attempt_ordinal})` into `requestImage` immediately before each fetch. The wave wrapper reads only canonical `plan.mode` and rejects any value other than `generate-after-approval` with exact `{code:"cutscene.mode_generation_forbidden",path:"/mode"}` before authority validation, provider dispatch or artifact write. Its remaining boundary order is closed request/selected-ID/prerequisite checks; Task 3 exact authority plus all current bindings; attempt reserve and accumulated/max-possible cap; provider dispatch. It passes `authorizeProviderAttempt` to every OpenAI and host retry, re-reads bound prompt/master bytes, and validates IDs, reserve, accumulated/max possible USD, current price and live approval. A coded failure invokes neither second fetch nor host callback. Preserve generation/edit endpoints, ordered repeated `image[]`, no `input_fidelity`, size/transparent contract and configurable `gpt-image-2`.
 - [ ] **Run GREEN.** `node --test tests/unit/cutscene-generation-approval.test.mjs tests/unit/generate-openai-images.test.mjs tests/products/studio/image-assets.test.mjs tests/unit/image-assets.test.mjs` → PASS: OpenAI 500→success has two exact authorization callbacks; reserve/cap invalid fixtures have literal code/path and exactly one provider dispatch; process `OPENAI_API_KEY` cannot bypass `env:{}`/failing fetch.
 - [ ] **Commit.** `git add shared/scripts/run-approved-cutscene-image-stage.mjs shared/scripts/run-image-asset-workflow.mjs shared/scripts/generate-openai-images.mjs tests/unit/cutscene-generation-approval.test.mjs tests/unit/generate-openai-images.test.mjs tests/products/studio/image-assets.test.mjs && git commit -m "feat: authorize every cutscene image attempt"`
 
@@ -451,7 +452,7 @@ test("inventory has five new scripts without Studio leakage", async () => assert
 
 **Files:** Create `tests/e2e/suite/cutscene-visual-preproduction.e2e.test.mjs`, `tests/fixtures/cutscene/cutscene-mutation-harness.mjs`, `tests/unit/cutscene-mutation-harness.test.mjs`, `.superpowers/sdd/2026-08-13-cutscene-visual-preproduction/task-report.md`; build generates `plugins/game-design-studio/**` and `plugins/game-design-career/**` only.
 
-**Consumes:** Task 1 `deriveCutsceneLifecycle`, Task 2 `planCutsceneVisualPreproduction`, Task 3 `estimateCutsceneImageCost`/`issueCutsceneHumanApproval`, Task 4 `runApprovedCutsceneImageWave`/`retryCutsceneFailedAssets`/`writeCutsceneUsageReceipt`, and Task 5 `buildVariantOverlay`/`reviewCutsceneContinuity`/`assertCutsceneContinuityGate`. **Produces:** `preproductionPublicApi({mode,input,authority,runtime}):Promise<E2EResult>` and `runCutsceneMutationHarness({name,fixture,mutate}):Promise<{error:{code,path},providerCalls:number,writeObserved:boolean,artifactTreeBefore:TreeEntry[],artifactTreeAfter:TreeEntry[],unaffectedOutputSha256:string}>`. `input` is mutable serializable plain data. `authority:{receipt,capability}` and `runtime` callbacks/counters live outside it; neither authority object nor any callback is cloned or reconstructed.
+**Consumes:** Task 1 `deriveCutsceneLifecycle`, Task 2 `planCutsceneVisualPreproduction`, Task 3 `estimateCutsceneImageCost`/`issueCutsceneHumanApproval`, Task 4 `runApprovedCutsceneImageWave`/`retryCutsceneFailedAssets`/`writeCutsceneUsageReceipt`, and Task 5 `buildVariantOverlay`/`reviewCutsceneContinuity`/`assertCutsceneContinuityGate`. **Produces:** `preproductionPublicApi({input,authority,runtime}):Promise<E2EResult>` and `runCutsceneMutationHarness({name,fixture,mutate}):Promise<{error:{code,path},providerCalls:number,writeObserved:boolean,artifactTreeBefore:TreeEntry[],artifactTreeAfter:TreeEntry[],unaffectedOutputSha256:string}>`. Every public runtime branch reads canonical mode from `input.plan.mode`; there is no sibling mode argument. `input` is mutable serializable plain data. `authority:{receipt,capability}` and `runtime` callbacks/counters live outside it; neither authority object nor any callback is cloned or reconstructed.
 
 - [ ] **RED — write 15 public scenarios with complete fixtures.**
 
@@ -494,7 +495,7 @@ const snapshotArtifactTree = async (artifactRoot) => {
 const makeFixture = async (t) => {
   const artifactRoot = await mkdtemp(path.join(tmpdir(), "cutscene-e2e-")); t.after(() => rm(artifactRoot, { recursive: true, force: true }));
   const outputPath = path.join(artifactRoot, "generated", "storyboard-shot-01.png"); await mkdir(path.dirname(outputPath), { recursive: true }); await writeFile(outputPath, Buffer.from("unaffected storyboard bytes\n"));
-  const plan = { sha256: PLAN, promptPackageSha256: PROMPT, referenceBindings: [{ assetId: ID, sha256: REFERENCE }], waves: [{ id: "style-master", assetIds: [ID] }] };
+  const plan = { mode: "generate-after-approval", sha256: PLAN, promptPackageSha256: PROMPT, referenceBindings: [{ assetId: ID, sha256: REFERENCE }], generatedAssetIds: [], waves: [{ id: "style-master", assetIds: [ID] }] };
   const pricingSnapshot = { sha256: PRICE, retrievedAt: "2026-08-13T00:00:00.000Z", currency: "USD", units: { textInput: 5, cachedTextInput: 1.25, imageInput: 8, cachedImageInput: 2, imageOutput: 30 } };
   const estimate = { sha256: ESTIMATE, waveId: "style-master", assetIds: [ID], planSha256: PLAN, pricingSnapshotSha256: PRICE, retryReserve: 1, maximumUsd: 1.25 };
   const context = { waveId: estimate.waveId, assetIds: estimate.assetIds, planSha256: PLAN, promptPackageSha256: PROMPT, referenceBindings: plan.referenceBindings, pricingSnapshotSha256: PRICE, costEstimateSha256: ESTIMATE, maximumApprovedUsd: 1.25, retryReserve: 1 };
@@ -503,34 +504,50 @@ const makeFixture = async (t) => {
   const input = { artifactRoot, waveId: "style-master", selectedAssetIds: [ID], attemptState: { failedAttempts: 0, accumulatedUsd: 0 }, plan, manifest: { assets: [{ asset_id: ID, prompt_sha256: PROMPT, reference_images: [{ sha256: REFERENCE }] }] }, pricingSnapshot, estimate, approvalEvent, now: "2026-08-13T00:01:00.000Z", waves: [{ id: "style-master", state: "approved", assetIds: [ID], completion: null }], continuityReceipt: { blockingFindingIds: [] } };
   return { artifactRoot, outputPath, authority, input };
 };
-const preproductionPublicApi = async ({ mode, input, authority, runtime }) => {
+const preproductionPublicApi = async ({ input, authority = {}, runtime }) => {
+  const mode = input.plan.mode;
   const planned = planCutsceneVisualPreproduction({ cutsceneId: "cutscene-escape", mode, beats: [{ beatId: "BEAT-01" }], shots: [{ shotId: "SHOT-01", beatId: "BEAT-01" }] });
   if (mode === "prompt-only") return { templatePromptPackage: planned.templatePromptPackage, providerCalls: runtime.calls.fetch + runtime.calls.host };
   if (mode === "estimate-only") return { estimate: estimateCutsceneImageCost({ plan: input.plan, waveId: input.waveId, pricingSnapshot: input.pricingSnapshot, retryReserve: input.estimate.retryReserve }), providerCalls: runtime.calls.fetch + runtime.calls.host };
   return runApprovedCutsceneImageWave({ ...input, ...authority, ...runtime });
 };
 const cloneMutableInput = (input) => structuredClone(input);
-const applyMutation = (input, mutation) => { if (mutation.target === "plan") input.plan[mutation.field] = mutation.value; else if (mutation.target === "attemptState") input.attemptState[mutation.field] = mutation.value; else if (mutation.target === "selection") input.selectedAssetIds = mutation.value; else if (mutation.target === "manifest") input.manifest.assets[0][mutation.field] = mutation.value; else if (mutation.target === "waves") input.waves[mutation.index][mutation.field] = mutation.value; return input; };
-const invokeMutation = async ({ name, input, authority, runtime, mutate }) => {
-  if (name === "usage-completeness") return writeCutsceneUsageReceipt({ waveId: input.waveId, assetId: ID, attemptId: "attempt-01", providerRequestId: "req-style-01", usage: { inputTokens: 8, inputTextTokens: 3, inputImageTokens: mutate.value, outputTokens: 4, totalTokens: 12 }, pricingSnapshot: input.pricingSnapshot });
-  if (name === "variant-overlay") return buildVariantOverlay({ basePlan: { ...input.plan, generatedAssetIds: mutate.value }, triggerState: "QUEST-COMPANION-ABSENT", changes: [{ shotId: "SHOT-04", kind: "dialogue", value: "혼자 가야 해." }] });
-  if (name === "partial-retry") return retryCutsceneFailedAssets({ ...input, ...authority, failedAssetIds: [ID], ...runtime, overwriteOutput: mutate.value });
-  if (name === "continuity-gate") return assertCutsceneContinuityGate({ manifest: input.manifest, waves: input.waves, continuityReceipt: { blockingFindingIds: ["screen-direction-break:SHOT-04"], ignoreBlocking: mutate.value } });
+const mutationState = (input, authority) => ({ input, authority, usage: { inputTokens: 8, inputTextTokens: 3, inputImageTokens: 5, outputTokens: 4, totalTokens: 12 }, retry: { overwriteOutput: false } });
+const setDeclaredField = (owner, mutation) => { assert.equal(Object.getPrototypeOf(owner), Object.prototype); assert.equal(Object.hasOwn(owner, mutation.field), true, `${mutation.target}.${mutation.field} is not declared`); owner[mutation.field] = mutation.value; };
+const applyMutation = (state, mutation) => {
+  switch (mutation.target) {
+    case "capability": state.authority = { receipt: state.authority.receipt, capability: state.authority.capability }; setDeclaredField(state.authority, mutation); break;
+    case "plan": setDeclaredField(state.input.plan, mutation); break;
+    case "attemptState": setDeclaredField(state.input.attemptState, mutation); break;
+    case "selection": setDeclaredField(state.input, mutation); break;
+    case "usage": setDeclaredField(state.usage, mutation); break;
+    case "retry": setDeclaredField(state.retry, mutation); break;
+    case "continuityReceipt": setDeclaredField(state.input.continuityReceipt, mutation); break;
+    default: assert.fail(`undeclared mutation target: ${mutation.target}`);
+  }
+  return state;
+};
+const invokeMutation = async ({ name, state, runtime }) => {
+  const { input, authority, usage, retry } = state;
+  if (name === "usage-completeness") return writeCutsceneUsageReceipt({ waveId: input.waveId, assetId: ID, attemptId: "attempt-01", providerRequestId: "req-style-01", usage, pricingSnapshot: input.pricingSnapshot });
+  if (name === "variant-overlay") return buildVariantOverlay({ basePlan: input.plan, triggerState: "QUEST-COMPANION-ABSENT", changes: [{ shotId: "SHOT-04", kind: "dialogue", value: "혼자 가야 해." }] });
+  if (name === "partial-retry") return retryCutsceneFailedAssets({ ...input, ...authority, failedAssetIds: [ID], ...runtime, overwriteOutput: retry.overwriteOutput });
+  if (name === "continuity-gate") return assertCutsceneContinuityGate({ manifest: input.manifest, waves: input.waves, continuityReceipt: input.continuityReceipt });
   return runApprovedCutsceneImageWave({ ...input, ...authority, ...runtime });
 };
 const runCutsceneMutationHarness = async ({ name, fixture, mutate }) => {
-  const input = applyMutation(cloneMutableInput(fixture.input), mutate); const runtime = makeRuntime();
-  const authority = mutate.target === "capability" ? { receipt: fixture.authority.receipt, capability: mutate.capability } : fixture.authority;
+  const state = applyMutation(mutationState(cloneMutableInput(fixture.input), fixture.authority), mutate); const runtime = makeRuntime();
+  const { input, authority } = state;
   assert.strictEqual(authority.receipt, fixture.authority.receipt);
   if (name !== "approval-authority") assert.strictEqual(authority.capability, fixture.authority.capability);
   const artifactTreeBefore = await snapshotArtifactTree(fixture.artifactRoot); let error;
-  try { await invokeMutation({ name, input, authority, runtime, mutate }); } catch (caught) { error = caught; }
+  try { await invokeMutation({ name, state, runtime }); } catch (caught) { error = caught; }
   if (!error) assert.fail(`${name} unexpectedly completed`);
   const artifactTreeAfter = await snapshotArtifactTree(fixture.artifactRoot); const after = await readFile(fixture.outputPath);
   return { error: errorView(error), providerCalls: runtime.calls.fetch + runtime.calls.host, writeObserved: !isDeepStrictEqual(artifactTreeBefore, artifactTreeAfter), artifactTreeBefore, artifactTreeAfter, unaffectedOutputSha256: sha256(after) };
 };
-test("prompt-only uses expected path without bytes or provider call", async (t) => { const fixture = await makeFixture(t); const runtime = makeRuntime(); const result = await preproductionPublicApi({ mode: "prompt-only", input: fixture.input, runtime }); assert.deepEqual([result.providerCalls, result.templatePromptPackage.references[0].expectedPath, result.templatePromptPackage.references[0].sha256], [0, "cutscene/generated/style-master/style-01.png", undefined]); });
-test("estimate-only calls estimator and provider count remains zero", async (t) => { const fixture = await makeFixture(t); const runtime = makeRuntime(); const result = await preproductionPublicApi({ mode: "estimate-only", input: fixture.input, runtime }); assert.deepEqual([result.estimate.planSha256, result.estimate.pricingSnapshotSha256, result.providerCalls], [PLAN, PRICE, 0]); });
+test("prompt-only uses expected path without bytes or provider call", async (t) => { const fixture = await makeFixture(t); const runtime = makeRuntime(); const input = cloneMutableInput(fixture.input); input.plan.mode = "prompt-only"; const result = await preproductionPublicApi({ input, runtime }); assert.deepEqual([result.providerCalls, result.templatePromptPackage.references[0].expectedPath, result.templatePromptPackage.references[0].sha256], [0, "cutscene/generated/style-master/style-01.png", undefined]); });
+test("estimate-only calls estimator and provider count remains zero", async (t) => { const fixture = await makeFixture(t); const runtime = makeRuntime(); const input = cloneMutableInput(fixture.input); input.plan.mode = "estimate-only"; const result = await preproductionPublicApi({ input, runtime }); assert.deepEqual([result.estimate.planSha256, result.estimate.pricingSnapshotSha256, result.providerCalls], [PLAN, PRICE, 0]); });
 test("host-unavailable returns unavailable estimate", async (t) => { const fixture = await makeFixture(t); const estimate = estimateCutsceneImageCost({ plan: fixture.input.plan, waveId: "style-master", pricingSnapshot: { ...fixture.input.pricingSnapshot, provider: "codex-host", status: "unavailable" }, retryReserve: 1 }); assert.deepEqual(estimate.totals, { minimumUsd: null, expectedUsd: null, maximumUsd: null, status: "unavailable" }); });
 const waveFailures = [
   ["style-approval", (input) => input, false, { code: "cutscene.approval_required", path: "/cutsceneWorkflow/waves/0/approval" }],
@@ -553,17 +570,17 @@ test("usage-unavailable", async (t) => { const { input } = await makeFixture(t);
 
 ```js
 for (const [name, mutate, expected] of [
-  ["approval-authority", { target: "capability", capability: {} }, { code: "cutscene.approval_capability_invalid", path: "/capability" }],
+  ["approval-authority", { target: "capability", field: "capability", value: {} }, { code: "cutscene.approval_capability_invalid", path: "/capability" }],
   ["approval-binding", { target: "plan", field: "promptPackageSha256", value: "6666666666666666666666666666666666666666666666666666666666666666" }, { code: "cutscene.approval_binding_stale", path: "/promptPackageSha256" }],
   ["reference-binding", { target: "plan", field: "referenceBindings", value: [{ assetId: ID, sha256: "0000000000000000000000000000000000000000000000000000000000000000" }] }, { code: "cutscene.approval_binding_stale", path: "/referenceBindings/0/sha256" }],
   ["stage-selection", { target: "selection", field: "selectedAssetIds", value: [ID, "cutscene-escape-storyboard-shot-99"] }, { code: "cutscene.wave_asset_not_approved", path: "/assetIds/1" }],
   ["cost-cap", { target: "attemptState", field: "accumulatedUsd", value: 1.25 }, { code: "cutscene.maximum_possible_cost_exceeded", path: "/cutsceneWorkflow/waves/0/estimate/maximumUsd" }],
   ["retry-reserve", { target: "attemptState", field: "failedAttempts", value: 2 }, { code: "cutscene.retry_reserve_exhausted", path: "/cutsceneWorkflow/waves/0/attempts/1" }],
-  ["mode-boundary", { target: "manifest", field: "mode", value: "prompt-only" }, { code: "cutscene.mode_generation_forbidden", path: "/mode" }],
+  ["mode-boundary", { target: "plan", field: "mode", value: "prompt-only" }, { code: "cutscene.mode_generation_forbidden", path: "/mode" }],
   ["usage-completeness", { target: "usage", field: "inputImageTokens", value: 4 }, { code: "cutscene.usage_input_mismatch", path: "/inputTokens" }],
   ["variant-overlay", { target: "plan", field: "generatedAssetIds", value: [ID] }, { code: "cutscene.variant_duplicate_base_asset", path: "/generatedAssetIds/0" }],
   ["partial-retry", { target: "retry", field: "overwriteOutput", value: true }, { code: "cutscene.successful_asset_overwrite", path: "/assets/0/output" }],
-  ["continuity-gate", { target: "waves", index: 0, field: "ignoreBlocking", value: true }, { code: "cutscene.continuity_blocker_unresolved", path: "/blockingFindingIds/0" }],
+  ["continuity-gate", { target: "continuityReceipt", field: "blockingFindingIds", value: ["screen-direction-break:SHOT-04"] }, { code: "cutscene.continuity_blocker_unresolved", path: "/blockingFindingIds/0" }],
 ]) {
   test(`mutation ${name}`, async (t) => { const fixture = await makeFixture(t); const outcome = await runCutsceneMutationHarness({ name, fixture, mutate }); assert.deepEqual(outcome.error, expected); assert.equal(outcome.providerCalls, 0); assert.equal(outcome.writeObserved, false); assert.deepEqual(outcome.artifactTreeAfter, outcome.artifactTreeBefore); assert.equal(outcome.artifactTreeAfter.some((entry) => entry.failMarker), false); assert.equal(outcome.unaffectedOutputSha256, UNTOUCHED_SHA); });
 }
