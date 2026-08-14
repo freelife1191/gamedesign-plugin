@@ -213,9 +213,10 @@ function applyProviderResults(manifest, providerResult, provider, config, genera
       asset.generation_state = result.generation_state;
       if (result.output) {
         const { path: outputPath, width, height, aspect_ratio: aspectRatio, format, background } = result.output;
+        const targetOutput = asset.planning?.target_output ?? asset.output;
         asset.output = {
-          path: outputPath ?? asset.output.path, width: width ?? asset.output.width, height: height ?? asset.output.height,
-          aspect_ratio: aspectRatio ?? asset.output.aspect_ratio, format: format ?? asset.output.format, background: background ?? asset.output.background,
+          path: outputPath ?? targetOutput.path, width: width ?? targetOutput.width, height: height ?? targetOutput.height,
+          aspect_ratio: aspectRatio ?? targetOutput.aspect_ratio, format: format ?? targetOutput.format, background: background ?? targetOutput.background,
         };
       }
       if (generationReceipts.has(asset.asset_id)) asset.generation_receipts = [...(asset.generation_receipts ?? []), generationReceipts.get(asset.asset_id)];
@@ -686,6 +687,14 @@ export async function generateImageAssetWorkflow({
   } else if (jobs.length > 0 && decision.provider === "unavailable") {
     providerResult = { results: [], failures: jobs.map(({ asset_id }) => ({ asset_id, generation_state: "generation-unavailable", reason: "no-provider-available" })) };
     executedJobs.push(...jobs);
+  }
+  // Some terminal paths (notably host/provider unavailable) never cross the
+  // per-provider authorization callback. They still need the bounded,
+  // create-once attempt reservation that every persisted generation receipt
+  // references. A fail-closed authorization throws before reaching here, so it
+  // continues to leave both reservation and receipt unwritten.
+  if (jobs.length > 0 && !reservation) {
+    reservation = await reserveGenerationAttempt(root, jobs, decision.provider, publicConfig, now, attemptId);
   }
   const generationReceipts = jobs.length > 0
     ? await writeGenerationReceipts(root, executedJobs, providerResult, decision.provider, publicConfig, now, attemptId, reservation)

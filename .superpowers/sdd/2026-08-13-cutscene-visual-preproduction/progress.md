@@ -169,6 +169,23 @@ Task self-consistency:
 - Task 7: source/docs complete — Korean How-to, exact inventories, lifecycle guides, humanize evidence, and the discovered Task 6→7 prompt-template integration repair are complete. Generated `plugins/*` snapshot refresh remains Task 8 ownership.
 - Task 8: implementation complete; final contract review pending.
 
+- Task 8 Fix4 RED: cutscene-style `beforeProvider` plus host/provider-unavailable
+  results skipped the callback and reached receipt writing with no reservation;
+  E10 also exposed a retry that retained stale `asset.output.aspect_ratio`
+  instead of the approved `planning.target_output` aspect ratio.
+- Task 8 Fix4 GREEN: terminal no-callback outcomes lazily create one bounded
+  attempt reservation before receipts, while authorization throws still make
+  zero reservation/receipt writes. Provider-result fallback now persists the
+  full planned target output. E10 pins literal initial/retry OpenAI request
+  order/count, target fields, successful-state/bytes/receipt/outcome invariance,
+  and a bounded changed-path allowlist. Focused 4/4 + 1/1, E2E 15/15, mutation
+  harness 13/13, relevant image/cutscene matrix 146/146. One Fix4 `npm run
+  build` refreshed Studio/Career generated copies and manifests; its one
+  `--check`, runtime syntax checks, JSON parse, and diff check passed. Career
+  remains baseline-identical 29/31 for its two known host-throw failures.
+- Task 8 Fix4 remains pending independent contract review; do not mark final
+  complete from this report update.
+
 ## Task 6 completion evidence
 
 - RED: Studio routing was 13 routes / 22 routed skills and lacked the cutscene

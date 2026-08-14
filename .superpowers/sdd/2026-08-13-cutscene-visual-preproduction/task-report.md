@@ -55,3 +55,54 @@ Exact mutation names: `approval-authority`, `approval-binding`,
 ## Known limits
 
 - Implementation evidence is complete; final contract review remains pending.
+
+## Task 8 — Fix round 4 (reservation and E10 non-vacuity)
+
+### RED
+
+- A public `generateImageAssetWorkflow` temporary-filesystem test supplied the
+  cutscene-style `beforeProvider` callback with no Codex host generator and
+  then with no provider available. Both reached
+  `writeGenerationReceipts` with `reservation === undefined` and failed at
+  `reservation.path`.
+- The strengthened E10 retry fixture keeps `asset.output` at literal
+  `1536×1024, 3:2` while the approved `planning.target_output` is literal
+  `1024×1024, 1:1`. Before the fix, the retry publication retained the stale
+  `3:2` aspect ratio even though the provider request used `1024×1024`.
+
+### GREEN
+
+- The shared workflow now creates exactly one bounded, create-once attempt
+  reservation immediately before persisted receipt creation if a terminal
+  result did not cross `beforeProvider`. A thrown authorization still exits
+  before that point, with zero reservation and receipt writes.
+- Result publication falls back to the planned target output for omitted
+  provider fields, so a cutscene retry persists the approved target path,
+  dimensions, aspect ratio, format, and background rather than stale mutable
+  `asset.output` metadata.
+- E10 records the literal three-call initial OpenAI request order (environment
+  retry, environment success, prop failure), then the literal one-call failed
+  prop retry. It snapshots the successful asset's complete manifest state,
+  output SHA-256, persisted generation receipt, and latest journal outcome;
+  all remain deeply equal after retry. Changed paths are limited to the failed
+  asset plus its bounded receipt/journal paths and manifest update.
+
+### Validation and generated parity
+
+- Focused reservation tests: **4/4** pass. E10 focused test: **1/1** pass.
+- Full cutscene E2E: **15/15** pass. Mutation harness: **13/13** pass.
+- Relevant cutscene/image matrix (approval, image-assets/config/provider,
+  OpenAI generator, Studio image suite): **146/146** pass.
+- `npm run build` ran **exactly once** in this Fix4 and refreshed both generated
+  product runtime copies and BUILD-MANIFEST files. One subsequent
+  `npm run build -- --check` passed. Shared and both generated runtime files
+  pass `node --check`; both BUILD-MANIFEST JSON files parse; `git diff --check`
+  passes.
+- Career image suite is still **29/31**: the two known host-throw cases fail
+  identically at baseline `f020d81` (**29/31**, `host unavailable` and
+  `throw-secret-never-persist`), so they are not attributed to Fix4.
+
+### Remaining lane
+
+- Task 8 is not marked final-complete here. Independent contract review remains
+  the required final lane.
