@@ -14,11 +14,13 @@
 
 - Prompt Only와 Estimate Only는 provider call 0회다. Prompt Only는 image bytes와 invented SHA-256 없이 expected path와 asset ID를 남긴다.
 - Generate After Approval은 current wave cost/range disclosure와 opaque live host-user capability+receipt 뒤에만 dispatch한다. attempt마다 ID, ordinal, remaining reserve, accumulated/max possible cost, current prompt/reference/price bindings, current approval을 재검증한다.
+- `liveApprovals.get(capability) === receipt`인 발급 객체 쌍을 그대로 전달한다. receipt/capability는 serializable input 밖에 두고 clone·재구성하지 않으며, plain mutable input만 복제한 뒤 runtime callback과 함께 호출 경계에서 합성한다.
 - cutscene `document-approved`/`production-candidate`는 기존 image asset lifecycle + current continuity receipt + unresolved blocker 없음으로만 derived하며 cutscene code가 independent transition을 만들지 않는다.
 - `gpt-image-2` supports generation/edit, ordered repeated `image[]`, omits `input_fidelity`, allows size edges divisible by 16/max 3840/aspect <=3:1/pixels 655360..8294400, and rejects transparent. A dated snapshot is never a permanent runtime default.
 - Host-provided official timestamped price snapshot separates text, cached text, image, cached image, output. Usage is per provider request/asset and requires `input=text+image`, `total=input+output`; missing cached breakdown means exact actual USD `unavailable`.
 - Route canonical fields stay exact. A separate closed top-level `cutsceneWorkflow` holds wave/downstream/approval metadata.
 - Inventory baseline: Studio routing 22/installed 23, Career routing 22/installed 23, Studio source 15, shared reference 2, memory 3, vendor `svg-infographic` 1, top-level shared scripts 25. Final: Studio 23/24; Career 22/23; both packages 30 top-level scripts.
+- Hostile no-write proof는 artifact root 전체의 sorted relative path/type/streamed byte SHA-256/size snapshot을 실행 전후 `deepEqual`한다. 한 파일 hash나 write counter는 이를 대체하지 못한다.
 
 ## File Structure
 
@@ -118,16 +120,29 @@ calculateActualCost({ pricingSnapshot, usage })
 // -> {status:"known",usd} | {status:"unavailable",reason:"cached-token-breakdown-unavailable"}
 
 cutsceneApprovalBinding({ plan, pricingSnapshot, estimate })
-// -> {planSha256,promptPackageSha256,referenceBindings,pricingSnapshotSha256,costEstimateSha256}
+// -> {waveId,assetIds,maximumApprovedUsd,retryReserve,planSha256,promptPackageSha256,referenceBindings,pricingSnapshotSha256,costEstimateSha256}
 
 issueCutsceneHumanApproval({ eventId, actor, reviewer, decision, decidedAt, context })
 // context:{waveId,assetIds,planSha256,promptPackageSha256,referenceBindings,pricingSnapshotSha256,costEstimateSha256,maximumApprovedUsd,retryReserve}
 // -> {receipt:ApprovalReceipt, capability:object}; capability is a WeakMap-held opaque object.
 
+// Assertion context adds the current live event identity and clock to the current binding.
 assertCutsceneHumanApproval({ receipt, capability, context }):ApprovalReceipt
-validateHostCutsceneApproval({ receipt, capability, plan, pricingSnapshot, estimate, now }):ApprovalReceipt
+// context:{eventId,actor,reviewer,decidedAt,now,...cutsceneApprovalBinding({plan,pricingSnapshot,estimate})}
+validateHostCutsceneApproval({ receipt, capability, approvalEvent, plan, pricingSnapshot, estimate, now }):ApprovalReceipt
 requiresCutsceneReapproval({ receipt, plan, pricingSnapshot, estimate }):boolean
 ```
+
+`assertCutsceneHumanApproval`의 고정 오류 순서는 (1) missing receipt
+`cutscene.approval_required` `/receipt`, (2) exact live pair
+`cutscene.approval_capability_invalid` `/capability`, (3) event ID·actor·reviewer·decidedAt
+identity의 각 전용 code/path, (4) `waveId` → sorted exact `assetIds` →
+`maximumApprovedUsd` → `retryReserve` → plan → prompt → sorted reference → pricing →
+estimate 순서의 `cutscene.approval_binding_stale`, (5) 15분 approval freshness
+`cutscene.approval_receipt_stale` `/decidedAt`다. 이후 host validation이 24시간 pricing
+freshness를 `cutscene.pricing_snapshot_stale` `/retrievedAt`로 검사한다. Wave wrapper는
+둘 다 없는 authority를 먼저 `cutscene.approval_required`
+`/cutsceneWorkflow/waves/<index>/approval`로 변환한다.
 
 - [ ] **RED — authority/cost tests.**
 
@@ -141,28 +156,44 @@ const coded = (code, path) => Object.assign(new Error(code), { code, path });
 const planFixture = () => ({ sha256: PLAN_SHA, promptPackageSha256: PROMPT_SHA, referenceBindings: [{ assetId: "cutscene-escape-style-master-style-01", sha256: REFERENCE_SHA }], waves: [{ id: "style-master", assetIds: ["cutscene-escape-style-master-style-01"] }] });
 const pricingSnapshotFixture = () => ({ provider: "openai", model: "gpt-image-2", sourceUrl: "https://openai.com/api/pricing/", retrievedAt: "2026-08-13T00:00:00.000Z", currency: "USD", sha256: PRICE_SHA, units: { textInput: 5, cachedTextInput: 1.25, imageInput: 8, cachedImageInput: 2, imageOutput: 30 } });
 const estimateFixture = () => ({ sha256: ESTIMATE_SHA, waveId: "style-master", assetIds: ["cutscene-escape-style-master-style-01"], planSha256: PLAN_SHA, pricingSnapshotSha256: PRICE_SHA, retryReserve: 1, minimumUsd: 0.25, expectedUsd: 0.75, maximumUsd: 1.25 });
-const approvalContext = ({ plan = planFixture(), pricingSnapshot = pricingSnapshotFixture(), estimate = estimateFixture() } = {}) => ({ waveId: estimate.waveId, assetIds: estimate.assetIds, planSha256: plan.sha256, promptPackageSha256: plan.promptPackageSha256, referenceBindings: plan.referenceBindings, pricingSnapshotSha256: pricingSnapshot.sha256, costEstimateSha256: estimate.sha256, maximumApprovedUsd: estimate.maximumUsd, retryReserve: estimate.retryReserve });
-const approvalRequest = (context = approvalContext()) => ({ eventId: "approve-style-01", actor: "Kim", reviewer: "Kim", decision: "approved", decidedAt: "2026-08-13T00:00:00.000Z", context });
+const approvalEvent = () => ({ eventId: "approve-style-01", actor: "Kim", reviewer: "Kim", decidedAt: "2026-08-13T00:00:00.000Z" });
+const approvalContext = ({ plan = planFixture(), pricingSnapshot = pricingSnapshotFixture(), estimate = estimateFixture() } = {}) => ({ waveId: estimate.waveId, assetIds: estimate.assetIds, maximumApprovedUsd: estimate.maximumUsd, retryReserve: estimate.retryReserve, planSha256: plan.sha256, promptPackageSha256: plan.promptPackageSha256, referenceBindings: plan.referenceBindings, pricingSnapshotSha256: pricingSnapshot.sha256, costEstimateSha256: estimate.sha256 });
+const assertionContext = ({ binding = approvalContext(), event = approvalEvent(), now = "2026-08-13T00:01:00.000Z" } = {}) => ({ eventId: event.eventId, actor: event.actor, reviewer: event.reviewer, decidedAt: event.decidedAt, now, ...binding });
+const approvalRequest = (context = approvalContext(), event = approvalEvent()) => ({ ...event, decision: "approved", context });
 const rate = (snapshot, usage) => ((usage.inputTextTokens - usage.cachedTextTokens) * snapshot.units.textInput + usage.cachedTextTokens * snapshot.units.cachedTextInput + (usage.inputImageTokens - usage.cachedImageTokens) * snapshot.units.imageInput + usage.cachedImageTokens * snapshot.units.cachedImageInput + usage.outputTokens * snapshot.units.imageOutput) / 1_000_000;
-test("copied capability and role-like reviewer fail closed", () => {
-  const context = approvalContext(); const issued = issueCutsceneHumanApproval(approvalRequest(context));
-  assert.throws(() => assertCutsceneHumanApproval({ receipt: structuredClone(issued.receipt), capability: issued.capability, context }), { code: "cutscene.approval_capability_invalid" });
-  assert.throws(() => issueCutsceneHumanApproval({ ...approvalRequest(context), reviewer: "image agent" }), { code: "cutscene.reviewer_role_like" });
-  assert.throws(() => issueCutsceneHumanApproval({ ...approvalRequest(context), actor: "Lee" }), { code: "cutscene.approval_actor_mismatch", path: "/actor" });
+test("reconstructed receipt and role-like reviewer fail closed", () => {
+  const binding = approvalContext(); const issued = issueCutsceneHumanApproval(approvalRequest(binding));
+  assert.throws(() => assertCutsceneHumanApproval({ receipt: { ...issued.receipt }, capability: issued.capability, context: assertionContext({ binding }) }), { code: "cutscene.approval_capability_invalid", path: "/capability" });
+  assert.throws(() => issueCutsceneHumanApproval({ ...approvalRequest(binding), actor: "image agent", reviewer: "image agent" }), { code: "cutscene.reviewer_role_like", path: "/reviewer" });
+  assert.throws(() => issueCutsceneHumanApproval({ ...approvalRequest(binding), actor: "Lee" }), { code: "cutscene.approval_actor_mismatch", path: "/actor" });
 });
 test("usage invalidity and absent cached detail are explicit", () => {
   assert.deepEqual(validateCutsceneGenerationUsage({ assetId: "cutscene-escape-style-master-style-01", inputTokens: 8, inputTextTokens: 3, inputImageTokens: 4, outputTokens: 4, totalTokens: 12 }).errors[0], { code: "cutscene.usage_input_mismatch", path: "/inputTokens" });
   assert.deepEqual(calculateActualCost({ pricingSnapshot: pricingSnapshotFixture(), usage: { inputTokens: 8, outputTokens: 4, totalTokens: 12, inputTextTokens: 3, inputImageTokens: 5 } }), { status: "unavailable", reason: "cached-token-breakdown-unavailable" });
 });
-test("every immutable binding uses its literal hash and failure path", () => {
-  const plan = planFixture(); const pricingSnapshot = pricingSnapshotFixture(); const estimate = estimateFixture(); const issued = issueCutsceneHumanApproval(approvalRequest(approvalContext({ plan, pricingSnapshot, estimate })));
-  for (const [override, path] of [
-    [{ plan: { ...plan, sha256: "6666666666666666666666666666666666666666666666666666666666666666" } }, "/planSha256"],
-    [{ receipt: { ...issued.receipt, promptPackageSha256: "6666666666666666666666666666666666666666666666666666666666666666" } }, "/promptPackageSha256"],
-    [{ receipt: { ...issued.receipt, referenceBindings: [{ assetId: "cutscene-escape-style-master-style-01", sha256: "0000000000000000000000000000000000000000000000000000000000000000" }] } }, "/referenceBindings/0/sha256"],
-    [{ receipt: { ...issued.receipt, pricingSnapshotSha256: "0000000000000000000000000000000000000000000000000000000000000000" } }, "/pricingSnapshotSha256"],
-    [{ estimate: { ...estimate, sha256: "6666666666666666666666666666666666666666666666666666666666666666" } }, "/costEstimateSha256"],
-  ]) assert.throws(() => validateHostCutsceneApproval({ receipt: issued.receipt, capability: issued.capability, plan, pricingSnapshot, estimate, now: "2026-08-13T00:01:00.000Z", ...override }), { code: "cutscene.approval_binding_stale", path });
+test("the exact issued pair rejects every changed current binding at its literal path", () => {
+  const binding = approvalContext(); const issued = issueCutsceneHumanApproval(approvalRequest(binding));
+  for (const [mutateCurrent, path] of [
+    [(current) => ({ ...current, waveId: "reference-masters" }), "/waveId"],
+    [(current) => ({ ...current, assetIds: [...current.assetIds, "cutscene-escape-style-master-style-02"] }), "/assetIds"],
+    [(current) => ({ ...current, maximumApprovedUsd: 1.26 }), "/maximumApprovedUsd"],
+    [(current) => ({ ...current, retryReserve: 2 }), "/retryReserve"],
+    [(current) => ({ ...current, planSha256: "6666666666666666666666666666666666666666666666666666666666666666" }), "/planSha256"],
+    [(current) => ({ ...current, promptPackageSha256: "6666666666666666666666666666666666666666666666666666666666666666" }), "/promptPackageSha256"],
+    [(current) => ({ ...current, referenceBindings: [{ assetId: "cutscene-escape-style-master-style-01", sha256: "0000000000000000000000000000000000000000000000000000000000000000" }] }), "/referenceBindings/0/sha256"],
+    [(current) => ({ ...current, pricingSnapshotSha256: "0000000000000000000000000000000000000000000000000000000000000000" }), "/pricingSnapshotSha256"],
+    [(current) => ({ ...current, costEstimateSha256: "6666666666666666666666666666666666666666666666666666666666666666" }), "/costEstimateSha256"],
+  ]) assert.throws(() => assertCutsceneHumanApproval({ receipt: issued.receipt, capability: issued.capability, context: assertionContext({ binding: mutateCurrent(binding) }) }), { code: "cutscene.approval_binding_stale", path });
+});
+test("event identity and approval freshness have deterministic errors after live-pair validation", () => {
+  const binding = approvalContext(); const issued = issueCutsceneHumanApproval(approvalRequest(binding));
+  for (const [context, expected] of [
+    [{ ...assertionContext({ binding }), eventId: "approve-style-02" }, { code: "cutscene.approval_event_mismatch", path: "/eventId" }],
+    [{ ...assertionContext({ binding }), actor: "Lee" }, { code: "cutscene.approval_actor_mismatch", path: "/actor" }],
+    [{ ...assertionContext({ binding }), reviewer: "Lee" }, { code: "cutscene.approval_reviewer_mismatch", path: "/reviewer" }],
+    [{ ...assertionContext({ binding }), decidedAt: "2026-08-13T00:00:01.000Z" }, { code: "cutscene.approval_event_mismatch", path: "/decidedAt" }],
+    [assertionContext({ binding, now: "2026-08-13T00:16:00.001Z" }), { code: "cutscene.approval_receipt_stale", path: "/decidedAt" }],
+  ]) assert.throws(() => assertCutsceneHumanApproval({ receipt: issued.receipt, capability: issued.capability, context }), expected);
 });
 ```
 
@@ -171,8 +202,24 @@ test("every immutable binding uses its literal hash and failure path", () => {
 
 ```js
 const liveApprovals = new WeakMap();
+const APPROVAL_MAX_AGE_MS = 15 * 60_000;
+const coded = (code, path) => Object.assign(new Error(code), { code, path });
+const utf8Compare = (left, right) => Buffer.compare(Buffer.from(left, "utf8"), Buffer.from(right, "utf8"));
+const canonicalAssetIds = (assetIds) => [...assetIds].sort(utf8Compare);
+const canonicalReferences = (referenceBindings) => [...referenceBindings].sort((left, right) => utf8Compare(left.assetId, right.assetId));
+const sameJson = (left, right) => JSON.stringify(left) === JSON.stringify(right);
+const usageUsd = (snapshot, usage) => ((usage.inputTextTokens - usage.cachedTextTokens) * snapshot.units.textInput + usage.cachedTextTokens * snapshot.units.cachedTextInput + (usage.inputImageTokens - usage.cachedImageTokens) * snapshot.units.imageInput + usage.cachedImageTokens * snapshot.units.cachedImageInput + usage.outputTokens * snapshot.units.imageOutput) / 1_000_000;
+const referenceMismatchPath = (issued, current) => {
+  const left = canonicalReferences(issued); const right = canonicalReferences(current);
+  if (left.length !== right.length) return "/referenceBindings";
+  for (let index = 0; index < left.length; index += 1) {
+    if (left[index].assetId !== right[index].assetId) return `/referenceBindings/${index}/assetId`;
+    if (left[index].sha256 !== right[index].sha256) return `/referenceBindings/${index}/sha256`;
+  }
+  return null;
+};
 export function cutsceneApprovalBinding({ plan, pricingSnapshot, estimate }) {
-  return { planSha256: plan.sha256, promptPackageSha256: plan.promptPackageSha256, referenceBindings: plan.referenceBindings, pricingSnapshotSha256: pricingSnapshot.sha256, costEstimateSha256: estimate.sha256 };
+  return { waveId: estimate.waveId, assetIds: canonicalAssetIds(estimate.assetIds), maximumApprovedUsd: estimate.maximumUsd, retryReserve: estimate.retryReserve, planSha256: plan.sha256, promptPackageSha256: plan.promptPackageSha256, referenceBindings: canonicalReferences(plan.referenceBindings), pricingSnapshotSha256: pricingSnapshot.sha256, costEstimateSha256: estimate.sha256 };
 }
 export function estimateCutsceneImageCost({ plan, waveId, pricingSnapshot, retryReserve }) {
   const wave = plan.waves.find(({ id }) => id === waveId);
@@ -185,35 +232,40 @@ export function issueCutsceneHumanApproval({ eventId, actor, reviewer, decision,
   if (!reviewer.trim() || /agent|specialist|reviewer|designer/iu.test(reviewer)) throw coded("cutscene.reviewer_role_like", "/reviewer");
   if (decision !== "approved") throw coded("cutscene.approval_decision_invalid", "/decision");
   if (!eventId) throw coded("cutscene.approval_event_required", "/eventId");
-  const receipt = { eventId, actor, reviewer, decision, decidedAt, ...context };
-  const capability = Object.create(null); liveApprovals.set(capability, receipt); return { receipt, capability };
+  const receipt = Object.freeze({ eventId, actor, reviewer, decision, decidedAt, ...context, assetIds: Object.freeze(canonicalAssetIds(context.assetIds)), referenceBindings: Object.freeze(canonicalReferences(context.referenceBindings).map((binding) => Object.freeze({ ...binding }))) });
+  const capability = Object.freeze(Object.create(null)); liveApprovals.set(capability, receipt); return Object.freeze({ receipt, capability });
 }
 export function assertCutsceneHumanApproval({ receipt, capability, context }) {
+  if (!receipt) throw coded("cutscene.approval_required", "/receipt");
   if (liveApprovals.get(capability) !== receipt) throw coded("cutscene.approval_capability_invalid", "/capability");
+  for (const [actual, expected, code, path] of [[context.eventId, receipt.eventId, "cutscene.approval_event_mismatch", "/eventId"], [context.actor, receipt.actor, "cutscene.approval_actor_mismatch", "/actor"], [context.reviewer, receipt.reviewer, "cutscene.approval_reviewer_mismatch", "/reviewer"], [context.decidedAt, receipt.decidedAt, "cutscene.approval_event_mismatch", "/decidedAt"]]) if (actual !== expected) throw coded(code, path);
+  const referencePath = referenceMismatchPath(receipt.referenceBindings, context.referenceBindings);
+  const stale = [[receipt.waveId, context.waveId, "/waveId"], [canonicalAssetIds(receipt.assetIds), canonicalAssetIds(context.assetIds), "/assetIds", sameJson], [receipt.maximumApprovedUsd, context.maximumApprovedUsd, "/maximumApprovedUsd"], [receipt.retryReserve, context.retryReserve, "/retryReserve"], [receipt.planSha256, context.planSha256, "/planSha256"], [receipt.promptPackageSha256, context.promptPackageSha256, "/promptPackageSha256"], [referencePath, null, referencePath], [receipt.pricingSnapshotSha256, context.pricingSnapshotSha256, "/pricingSnapshotSha256"], [receipt.costEstimateSha256, context.costEstimateSha256, "/costEstimateSha256"]].find(([actual, expected, , equals]) => !(equals ?? Object.is)(actual, expected));
+  if (stale) throw coded("cutscene.approval_binding_stale", stale[2]);
+  const age = Date.parse(context.now) - Date.parse(receipt.decidedAt);
+  if (!Number.isFinite(age) || age < 0 || age > APPROVAL_MAX_AGE_MS) throw coded("cutscene.approval_receipt_stale", "/decidedAt");
   return receipt;
 }
 export function calculateActualCost({ pricingSnapshot, usage }) {
   if (usage.inputTokens !== usage.inputTextTokens + usage.inputImageTokens) throw coded("cutscene.usage_input_mismatch", "/inputTokens");
   if (usage.totalTokens !== usage.inputTokens + usage.outputTokens) throw coded("cutscene.usage_total_mismatch", "/totalTokens");
   if (usage.cachedTextTokens === undefined || usage.cachedImageTokens === undefined) return { status: "unavailable", reason: "cached-token-breakdown-unavailable" };
-  return { status: "known", usd: rate(pricingSnapshot, usage) };
+  return { status: "known", usd: usageUsd(pricingSnapshot, usage) };
 }
-export function validateHostCutsceneApproval({ receipt, capability, plan, pricingSnapshot, estimate, now }) {
+export function validateHostCutsceneApproval({ receipt, capability, approvalEvent, plan, pricingSnapshot, estimate, now }) {
   const current = cutsceneApprovalBinding({ plan, pricingSnapshot, estimate });
-  const context = { waveId: estimate.waveId, assetIds: estimate.assetIds, ...current, maximumApprovedUsd: estimate.maximumUsd, retryReserve: estimate.retryReserve };
+  const context = { eventId: approvalEvent.eventId, actor: approvalEvent.actor, reviewer: approvalEvent.reviewer, decidedAt: approvalEvent.decidedAt, now, ...current };
   assertCutsceneHumanApproval({ receipt, capability, context });
-  const stale = [[receipt.planSha256, current.planSha256, "/planSha256"], [receipt.promptPackageSha256, current.promptPackageSha256, "/promptPackageSha256"], [receipt.referenceBindings[0].sha256, current.referenceBindings[0].sha256, "/referenceBindings/0/sha256"], [receipt.pricingSnapshotSha256, current.pricingSnapshotSha256, "/pricingSnapshotSha256"], [receipt.costEstimateSha256, current.costEstimateSha256, "/costEstimateSha256"]].find(([actual, expected]) => actual !== expected);
-  if (stale) throw coded("cutscene.approval_binding_stale", stale[2]);
   if (Date.parse(now) - Date.parse(pricingSnapshot.retrievedAt) > 86_400_000) throw coded("cutscene.pricing_snapshot_stale", "/retrievedAt");
   return receipt;
 }
 export function requiresCutsceneReapproval({ receipt, plan, pricingSnapshot, estimate }) {
   const current = cutsceneApprovalBinding({ plan, pricingSnapshot, estimate });
-  return ["planSha256", "promptPackageSha256", "pricingSnapshotSha256", "costEstimateSha256"].some((key) => receipt[key] !== current[key]) || JSON.stringify(receipt.referenceBindings) !== JSON.stringify(current.referenceBindings);
+  return receipt.waveId !== current.waveId || !sameJson(canonicalAssetIds(receipt.assetIds), current.assetIds) || receipt.maximumApprovedUsd !== current.maximumApprovedUsd || receipt.retryReserve !== current.retryReserve || receipt.planSha256 !== current.planSha256 || receipt.promptPackageSha256 !== current.promptPackageSha256 || referenceMismatchPath(receipt.referenceBindings, current.referenceBindings) !== null || receipt.pricingSnapshotSha256 !== current.pricingSnapshotSha256 || receipt.costEstimateSha256 !== current.costEstimateSha256;
 }
 ```
 
-- [ ] **Run GREEN.** `node --test tests/unit/cutscene-generation-approval.test.mjs tests/unit/cutscene-visual-preproduction.test.mjs` → PASS: copied capability, role-like/actor mismatch, `PLAN_SHA`/`PROMPT_SHA`/`REFERENCE_SHA`/`PRICE_SHA`/`ESTIMATE_SHA` mutations and usage mismatches assert literal code/path.
+- [ ] **Run GREEN.** `node --test tests/unit/cutscene-generation-approval.test.mjs tests/unit/cutscene-visual-preproduction.test.mjs` → PASS: reconstructed receipt, role-like/actor/event/reviewer/freshness rejection, nine current binding mutations and usage mismatches assert literal code/path while the exact issued pair remains unchanged.
 - [ ] **Commit.** `git add shared/scripts/estimate-cutscene-image-cost.mjs shared/scripts/lib/cutscene-generation-capabilities.mjs shared/scripts/lib/cutscene-generation-approval.mjs tests/unit/cutscene-generation-approval.test.mjs tests/unit/cutscene-visual-preproduction.test.mjs && git commit -m "feat: bind cutscene waves to live approval"`
 
 ### Task 4: Per-attempt dispatch and usage receipts
@@ -222,7 +274,7 @@ export function requiresCutsceneReapproval({ receipt, plan, pricingSnapshot, est
 
 **Files:** Create `shared/scripts/run-approved-cutscene-image-stage.mjs`; modify `shared/scripts/{run-image-asset-workflow,generate-openai-images}.mjs`, `tests/unit/cutscene-generation-approval.test.mjs`, `tests/unit/generate-openai-images.test.mjs`, `tests/products/studio/image-assets.test.mjs`.
 
-**Consumes:** Task 2 immutable manifest and Task 3 current approval/cost. **Produces:** `runConfiguredSelectedImageAssetWorkflow({workspaceRoot,env,manifest,selectedAssetIds,provider,apiKey,fetchFn,hostGenerate}):Promise<ImageWorkflowResult>`; `runApprovedCutsceneImageWave({artifactRoot,waveId,plan,manifest,pricingSnapshot,estimate,receipt,capability,env,fetchFn,hostGenerate,authorizeProviderAttempt}):Promise<CutsceneWaveResult>`; `retryCutsceneFailedAssets({artifactRoot,failedAssetIds,waveId,plan,manifest,pricingSnapshot,estimate,receipt,capability,env,fetchFn,hostGenerate,authorizeProviderAttempt}):Promise<{retriedIds:string[],unaffectedOutputSha256:string}>`; `writeCutsceneUsageReceipt({waveId,assetId,attemptId,providerRequestId,usage,pricingSnapshot}):Promise<{actualCost:ActualCost}>`; `beforeProvider({asset_id,attempt_ordinal})`; one create-once usage receipt per provider request at `cutscene/usage-receipts/<waveId>/<assetId>/<attemptId>-<providerRequestId>.json`, with generated pre-dispatch `attemptId` and validated `providerRequestId` or literal `no-request-id`.
+**Consumes:** Task 2 immutable manifest and Task 3 current approval/cost. **Produces:** `runConfiguredSelectedImageAssetWorkflow({workspaceRoot,env,manifest,selectedAssetIds,provider,apiKey,fetchFn,hostGenerate}):Promise<ImageWorkflowResult>`; `runApprovedCutsceneImageWave({artifactRoot,waveId,selectedAssetIds,attemptState,plan,manifest,pricingSnapshot,estimate,approvalEvent,receipt,capability,now,env,fetchFn,hostGenerate,authorizeProviderAttempt}):Promise<CutsceneWaveResult>`; `retryCutsceneFailedAssets({artifactRoot,failedAssetIds,waveId,attemptState,plan,manifest,pricingSnapshot,estimate,approvalEvent,receipt,capability,now,env,fetchFn,hostGenerate,authorizeProviderAttempt}):Promise<{retriedIds:string[],unaffectedOutputSha256:string}>`; `writeCutsceneUsageReceipt({waveId,assetId,attemptId,providerRequestId,usage,pricingSnapshot}):Promise<{actualCost:ActualCost}>`; `beforeProvider({asset_id,attempt_ordinal})`; one create-once usage receipt per provider request at `cutscene/usage-receipts/<waveId>/<assetId>/<attemptId>-<providerRequestId>.json`, with generated pre-dispatch `attemptId` and validated `providerRequestId` or literal `no-request-id`.
 
 - [ ] **RED — no-call/retry tests.**
 
@@ -249,8 +301,9 @@ const approvedWaveFixture = () => {
   const pricingSnapshot = { sha256: BOUND_PRICE_SHA, retrievedAt: "2026-08-13T00:00:00.000Z", currency: "USD", units: { textInput: 5, cachedTextInput: 1.25, imageInput: 8, cachedImageInput: 2, imageOutput: 30 } };
   const estimate = { sha256: APPROVED_ESTIMATE_SHA, waveId: "style-master", assetIds: [STYLE_ID], planSha256: BOUND_PLAN_SHA, pricingSnapshotSha256: BOUND_PRICE_SHA, retryReserve: 1, maximumUsd: 1.25 };
   const context = { waveId: estimate.waveId, assetIds: estimate.assetIds, planSha256: plan.sha256, promptPackageSha256: plan.promptPackageSha256, referenceBindings: plan.referenceBindings, pricingSnapshotSha256: pricingSnapshot.sha256, costEstimateSha256: estimate.sha256, maximumApprovedUsd: estimate.maximumUsd, retryReserve: estimate.retryReserve };
-  const { receipt, capability } = issueCutsceneHumanApproval({ eventId: "approve-style-01", actor: "Kim", reviewer: "Kim", decision: "approved", decidedAt: "2026-08-13T00:00:00.000Z", context });
-  return { artifactRoot: "/tmp/cutscene", waveId: "style-master", plan, manifest: boundManifest(STYLE_ID, BOUND_PROMPT_SHA, BOUND_REFERENCE_SHA), pricingSnapshot, estimate, receipt, capability, sleepFn: async () => {} };
+  const approvalEvent = { eventId: "approve-style-01", actor: "Kim", reviewer: "Kim", decidedAt: "2026-08-13T00:00:00.000Z" };
+  const { receipt, capability } = issueCutsceneHumanApproval({ ...approvalEvent, decision: "approved", context });
+  return { artifactRoot: "/tmp/cutscene", waveId: "style-master", selectedAssetIds: [STYLE_ID], attemptState: { failedAttempts: 0, accumulatedUsd: 0 }, plan, manifest: boundManifest(STYLE_ID, BOUND_PROMPT_SHA, BOUND_REFERENCE_SHA), pricingSnapshot, estimate, approvalEvent, receipt, capability, now: "2026-08-13T00:01:00.000Z", sleepFn: async () => {} };
 };
 const approvedHostWaveFixture = () => ({ ...approvedWaveFixture(), provider: "codex-host" });
 const coded = (code, path) => Object.assign(new Error(code), { code, path });
@@ -271,13 +324,24 @@ test("host cap exhaustion after first failure prevents second host dispatch", as
   assert.equal(hosts, 1);
 });
 test("stale plan, prompt, reference, price, and estimate bindings dispatch zero providers", async () => {
-  for (const [override, path] of [[{ plan: { sha256: "6666666666666666666666666666666666666666666666666666666666666666" } }, "/planSha256"], [{ receipt: { ...approvedWaveFixture().receipt, promptPackageSha256: "6666666666666666666666666666666666666666666666666666666666666666" } }, "/promptPackageSha256"], [{ receipt: { ...approvedWaveFixture().receipt, referenceBindings: [{ assetId: STYLE_ID, sha256: "0000000000000000000000000000000000000000000000000000000000000000" }] } }, "/referenceBindings/0/sha256"], [{ pricingSnapshot: { sha256: "0000000000000000000000000000000000000000000000000000000000000000" } }, "/pricingSnapshotSha256"], [{ estimate: { sha256: "6666666666666666666666666666666666666666666666666666666666666666", maximumUsd: 1.25 } }, "/costEstimateSha256"]]) { let calls = 0; await assert.rejects(() => runApprovedCutsceneImageWave({ ...approvedWaveFixture(), ...override, env: {}, fetchFn: async () => { calls += 1; return successResponse(); } }), { code: "cutscene.approval_binding_stale", path }); assert.equal(calls, 0); }
+  for (const [mutateCurrent, path] of [
+    [(fixture) => ({ plan: { ...fixture.plan, sha256: "6666666666666666666666666666666666666666666666666666666666666666" } }), "/planSha256"],
+    [(fixture) => ({ plan: { ...fixture.plan, promptPackageSha256: "6666666666666666666666666666666666666666666666666666666666666666" } }), "/promptPackageSha256"],
+    [(fixture) => ({ plan: { ...fixture.plan, referenceBindings: [{ assetId: STYLE_ID, sha256: "0000000000000000000000000000000000000000000000000000000000000000" }] } }), "/referenceBindings/0/sha256"],
+    [(fixture) => ({ pricingSnapshot: { ...fixture.pricingSnapshot, sha256: "0000000000000000000000000000000000000000000000000000000000000000" } }), "/pricingSnapshotSha256"],
+    [(fixture) => ({ estimate: { ...fixture.estimate, sha256: "6666666666666666666666666666666666666666666666666666666666666666" } }), "/costEstimateSha256"],
+  ]) {
+    const fixture = approvedWaveFixture(); const currentInput = mutateCurrent(fixture); let calls = 0;
+    const exactReceipt = fixture.receipt; const exactCapability = fixture.capability;
+    await assert.rejects(() => runApprovedCutsceneImageWave({ ...fixture, ...currentInput, env: {}, fetchFn: async () => { calls += 1; return successResponse(); } }), { code: "cutscene.approval_binding_stale", path });
+    assert.strictEqual(fixture.receipt, exactReceipt); assert.strictEqual(fixture.capability, exactCapability); assert.equal(calls, 0);
+  }
 });
 test("process key cannot bypass injected default network", async (t) => assert.rejects(() => generateOpenAIImages({ ...openAiFixture(await staging(t)), env: {}, fetchFn: failingFetch })));
 ```
 
 - [ ] **Run RED.** `node --test --test-name-pattern='500 retry|reserve exhaustion|host cap exhaustion' tests/unit/generate-openai-images.test.mjs tests/unit/cutscene-generation-approval.test.mjs` → FAIL: current `beforeProvider` runs once before the internal `requestImage` loop and host has no retry authorization loop.
-- [ ] **GREEN — implement.** Move `beforeProvider({asset_id,attempt_ordinal})` into `requestImage` immediately before each fetch. The wave wrapper passes `authorizeProviderAttempt` to every OpenAI and host retry, re-reads bound prompt/master bytes, and validates IDs, reserve, accumulated/max possible USD, current price and live approval. A coded failure invokes neither second fetch nor host callback. Preserve generation/edit endpoints, ordered repeated `image[]`, no `input_fidelity`, size/transparent contract and configurable `gpt-image-2`.
+- [ ] **GREEN — implement.** Move `beforeProvider({asset_id,attempt_ordinal})` into `requestImage` immediately before each fetch. The wave wrapper uses this boundary order: closed request/mode/selected-ID/prerequisite checks; Task 3 exact authority plus all current bindings; attempt reserve and accumulated/max-possible cap; provider dispatch. It passes `authorizeProviderAttempt` to every OpenAI and host retry, re-reads bound prompt/master bytes, and validates IDs, reserve, accumulated/max possible USD, current price and live approval. A coded failure invokes neither second fetch nor host callback. Preserve generation/edit endpoints, ordered repeated `image[]`, no `input_fidelity`, size/transparent contract and configurable `gpt-image-2`.
 - [ ] **Run GREEN.** `node --test tests/unit/cutscene-generation-approval.test.mjs tests/unit/generate-openai-images.test.mjs tests/products/studio/image-assets.test.mjs tests/unit/image-assets.test.mjs` → PASS: OpenAI 500→success has two exact authorization callbacks; reserve/cap invalid fixtures have literal code/path and exactly one provider dispatch; process `OPENAI_API_KEY` cannot bypass `env:{}`/failing fetch.
 - [ ] **Commit.** `git add shared/scripts/run-approved-cutscene-image-stage.mjs shared/scripts/run-image-asset-workflow.mjs shared/scripts/generate-openai-images.mjs tests/unit/cutscene-generation-approval.test.mjs tests/unit/generate-openai-images.test.mjs tests/products/studio/image-assets.test.mjs && git commit -m "feat: authorize every cutscene image attempt"`
 
@@ -387,11 +451,19 @@ test("inventory has five new scripts without Studio leakage", async () => assert
 
 **Files:** Create `tests/e2e/suite/cutscene-visual-preproduction.e2e.test.mjs`, `tests/fixtures/cutscene/cutscene-mutation-harness.mjs`, `tests/unit/cutscene-mutation-harness.test.mjs`, `.superpowers/sdd/2026-08-13-cutscene-visual-preproduction/task-report.md`; build generates `plugins/game-design-studio/**` and `plugins/game-design-career/**` only.
 
-**Consumes:** Task 1 `deriveCutsceneLifecycle`, Task 2 `planCutsceneVisualPreproduction`, Task 3 `estimateCutsceneImageCost`/`issueCutsceneHumanApproval`, Task 4 `runApprovedCutsceneImageWave`/`retryCutsceneFailedAssets`/`writeCutsceneUsageReceipt`, and Task 5 `buildVariantOverlay`/`reviewCutsceneContinuity`/`assertCutsceneContinuityGate`. **Produces:** `preproductionPublicApi({mode,request,capability,runtime}):Promise<E2EResult>` and `runCutsceneMutationHarness({name,fixture,mutate}):Promise<{error:{code,path},providerCalls:number,writeObserved:boolean,unaffectedOutputSha256:string}>`. `request` is serializable data; `runtime` is separately composed injected callbacks/counters, and `fixture.capability` is never cloned.
+**Consumes:** Task 1 `deriveCutsceneLifecycle`, Task 2 `planCutsceneVisualPreproduction`, Task 3 `estimateCutsceneImageCost`/`issueCutsceneHumanApproval`, Task 4 `runApprovedCutsceneImageWave`/`retryCutsceneFailedAssets`/`writeCutsceneUsageReceipt`, and Task 5 `buildVariantOverlay`/`reviewCutsceneContinuity`/`assertCutsceneContinuityGate`. **Produces:** `preproductionPublicApi({mode,input,authority,runtime}):Promise<E2EResult>` and `runCutsceneMutationHarness({name,fixture,mutate}):Promise<{error:{code,path},providerCalls:number,writeObserved:boolean,artifactTreeBefore:TreeEntry[],artifactTreeAfter:TreeEntry[],unaffectedOutputSha256:string}>`. `input` is mutable serializable plain data. `authority:{receipt,capability}` and `runtime` callbacks/counters live outside it; neither authority object nor any callback is cloned or reconstructed.
 
 - [ ] **RED — write 15 public scenarios with complete fixtures.**
 
 ```js
+import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import { createReadStream } from "node:fs";
+import { lstat, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { isDeepStrictEqual } from "node:util";
+
 const ID = "cutscene-escape-style-master-style-01";
 const PLAN = "1111111111111111111111111111111111111111111111111111111111111111";
 const PROMPT = "2222222222222222222222222222222222222222222222222222222222222222";
@@ -402,6 +474,23 @@ const UNTOUCHED_SHA = "a99dbb59b580cea9e6b51ea34000075701f8a0f36cb58c839082053af
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const errorView = (error) => ({ code: error.code, path: error.path });
 const makeRuntime = () => { const calls = { fetch: 0, host: 0 }; return { calls, env: {}, fetchFn: async () => { calls.fetch += 1; throw new Error("live network forbidden"); }, hostGenerate: async () => { calls.host += 1; throw new Error("live host forbidden"); }, authorizeProviderAttempt: () => {} }; };
+const snapshotArtifactTree = async (artifactRoot) => {
+  const rows = [];
+  const walk = async (directory, parent = "") => {
+    const entries = (await readdir(directory, { withFileTypes: true })).sort((left, right) => Buffer.compare(Buffer.from(left.name), Buffer.from(right.name)));
+    for (const entry of entries) {
+      const relativePath = parent ? path.join(parent, entry.name) : entry.name; const absolutePath = path.join(directory, entry.name); const stats = await lstat(absolutePath);
+      if (stats.isSymbolicLink()) { rows.push({ path: relativePath, type: "symlink", sha256: null, size: stats.size, failMarker: "symlink-forbidden" }); continue; }
+      if (stats.isDirectory()) { rows.push({ path: relativePath, type: "directory", sha256: null, size: stats.size }); await walk(absolutePath, relativePath); continue; }
+      if (!stats.isFile()) { rows.push({ path: relativePath, type: "special", sha256: null, size: stats.size, failMarker: "special-entry-forbidden" }); continue; }
+      const hash = createHash("sha256"); let size = 0;
+      for await (const chunk of createReadStream(absolutePath)) { hash.update(chunk); size += chunk.length; }
+      rows.push({ path: relativePath, type: "file", sha256: hash.digest("hex"), size });
+    }
+  };
+  await walk(artifactRoot);
+  return rows.sort((left, right) => Buffer.compare(Buffer.from(left.path), Buffer.from(right.path)));
+};
 const makeFixture = async (t) => {
   const artifactRoot = await mkdtemp(path.join(tmpdir(), "cutscene-e2e-")); t.after(() => rm(artifactRoot, { recursive: true, force: true }));
   const outputPath = path.join(artifactRoot, "generated", "storyboard-shot-01.png"); await mkdir(path.dirname(outputPath), { recursive: true }); await writeFile(outputPath, Buffer.from("unaffected storyboard bytes\n"));
@@ -409,48 +498,55 @@ const makeFixture = async (t) => {
   const pricingSnapshot = { sha256: PRICE, retrievedAt: "2026-08-13T00:00:00.000Z", currency: "USD", units: { textInput: 5, cachedTextInput: 1.25, imageInput: 8, cachedImageInput: 2, imageOutput: 30 } };
   const estimate = { sha256: ESTIMATE, waveId: "style-master", assetIds: [ID], planSha256: PLAN, pricingSnapshotSha256: PRICE, retryReserve: 1, maximumUsd: 1.25 };
   const context = { waveId: estimate.waveId, assetIds: estimate.assetIds, planSha256: PLAN, promptPackageSha256: PROMPT, referenceBindings: plan.referenceBindings, pricingSnapshotSha256: PRICE, costEstimateSha256: ESTIMATE, maximumApprovedUsd: 1.25, retryReserve: 1 };
-  const authority = issueCutsceneHumanApproval({ eventId: "approve-style-01", actor: "Kim", reviewer: "Kim", decision: "approved", decidedAt: "2026-08-13T00:00:00.000Z", context });
-  return { outputPath, capability: authority.capability, request: { artifactRoot, waveId: "style-master", plan, manifest: { assets: [{ asset_id: ID, prompt_sha256: PROMPT, reference_images: [{ sha256: REFERENCE }] }] }, pricingSnapshot, estimate, receipt: authority.receipt, waves: [{ id: "style-master", state: "approved", assetIds: [ID], completion: null }], continuityReceipt: { blockingFindingIds: [] } } };
+  const approvalEvent = { eventId: "approve-style-01", actor: "Kim", reviewer: "Kim", decidedAt: "2026-08-13T00:00:00.000Z" };
+  const authority = issueCutsceneHumanApproval({ ...approvalEvent, decision: "approved", context });
+  const input = { artifactRoot, waveId: "style-master", selectedAssetIds: [ID], attemptState: { failedAttempts: 0, accumulatedUsd: 0 }, plan, manifest: { assets: [{ asset_id: ID, prompt_sha256: PROMPT, reference_images: [{ sha256: REFERENCE }] }] }, pricingSnapshot, estimate, approvalEvent, now: "2026-08-13T00:01:00.000Z", waves: [{ id: "style-master", state: "approved", assetIds: [ID], completion: null }], continuityReceipt: { blockingFindingIds: [] } };
+  return { artifactRoot, outputPath, authority, input };
 };
-const preproductionPublicApi = async ({ mode, request, capability, runtime }) => {
+const preproductionPublicApi = async ({ mode, input, authority, runtime }) => {
   const planned = planCutsceneVisualPreproduction({ cutsceneId: "cutscene-escape", mode, beats: [{ beatId: "BEAT-01" }], shots: [{ shotId: "SHOT-01", beatId: "BEAT-01" }] });
   if (mode === "prompt-only") return { templatePromptPackage: planned.templatePromptPackage, providerCalls: runtime.calls.fetch + runtime.calls.host };
-  if (mode === "estimate-only") return { estimate: estimateCutsceneImageCost({ plan: request.plan, waveId: request.waveId, pricingSnapshot: request.pricingSnapshot, retryReserve: request.estimate.retryReserve }), providerCalls: runtime.calls.fetch + runtime.calls.host };
-  return runApprovedCutsceneImageWave({ ...request, capability, ...runtime });
+  if (mode === "estimate-only") return { estimate: estimateCutsceneImageCost({ plan: input.plan, waveId: input.waveId, pricingSnapshot: input.pricingSnapshot, retryReserve: input.estimate.retryReserve }), providerCalls: runtime.calls.fetch + runtime.calls.host };
+  return runApprovedCutsceneImageWave({ ...input, ...authority, ...runtime });
 };
-const serializableRequestCopy = (request) => structuredClone({ artifactRoot: request.artifactRoot, waveId: request.waveId, plan: request.plan, manifest: request.manifest, pricingSnapshot: request.pricingSnapshot, estimate: request.estimate, receipt: request.receipt, waves: request.waves, continuityReceipt: request.continuityReceipt });
-const applyMutation = (request, mutation) => { if (mutation.target === "receipt") request.receipt[mutation.field] = mutation.value; else if (mutation.target === "plan") request.plan[mutation.field] = mutation.value; else if (mutation.target === "estimate") request.estimate[mutation.field] = mutation.value; else if (mutation.target === "manifest") request.manifest.assets[0][mutation.field] = mutation.value; else if (mutation.target === "waves") request.waves[mutation.index][mutation.field] = mutation.value; return request; };
-const invokeMutation = async ({ name, request, capability, runtime, mutate }) => {
-  if (name === "usage-completeness") return writeCutsceneUsageReceipt({ waveId: request.waveId, assetId: ID, attemptId: "attempt-01", providerRequestId: "req-style-01", usage: { inputTokens: 8, inputTextTokens: 3, inputImageTokens: mutate.value, outputTokens: 4, totalTokens: 12 }, pricingSnapshot: request.pricingSnapshot });
-  if (name === "variant-overlay") return buildVariantOverlay({ basePlan: { ...request.plan, generatedAssetIds: mutate.value }, triggerState: "QUEST-COMPANION-ABSENT", changes: [{ shotId: "SHOT-04", kind: "dialogue", value: "혼자 가야 해." }] });
-  if (name === "partial-retry") return retryCutsceneFailedAssets({ ...request, failedAssetIds: [ID], capability, ...runtime, overwriteOutput: mutate.value });
-  if (name === "continuity-gate") return assertCutsceneContinuityGate({ manifest: request.manifest, waves: request.waves, continuityReceipt: { blockingFindingIds: ["screen-direction-break:SHOT-04"], ignoreBlocking: mutate.value } });
-  return runApprovedCutsceneImageWave({ ...request, capability, ...runtime });
+const cloneMutableInput = (input) => structuredClone(input);
+const applyMutation = (input, mutation) => { if (mutation.target === "plan") input.plan[mutation.field] = mutation.value; else if (mutation.target === "attemptState") input.attemptState[mutation.field] = mutation.value; else if (mutation.target === "selection") input.selectedAssetIds = mutation.value; else if (mutation.target === "manifest") input.manifest.assets[0][mutation.field] = mutation.value; else if (mutation.target === "waves") input.waves[mutation.index][mutation.field] = mutation.value; return input; };
+const invokeMutation = async ({ name, input, authority, runtime, mutate }) => {
+  if (name === "usage-completeness") return writeCutsceneUsageReceipt({ waveId: input.waveId, assetId: ID, attemptId: "attempt-01", providerRequestId: "req-style-01", usage: { inputTokens: 8, inputTextTokens: 3, inputImageTokens: mutate.value, outputTokens: 4, totalTokens: 12 }, pricingSnapshot: input.pricingSnapshot });
+  if (name === "variant-overlay") return buildVariantOverlay({ basePlan: { ...input.plan, generatedAssetIds: mutate.value }, triggerState: "QUEST-COMPANION-ABSENT", changes: [{ shotId: "SHOT-04", kind: "dialogue", value: "혼자 가야 해." }] });
+  if (name === "partial-retry") return retryCutsceneFailedAssets({ ...input, ...authority, failedAssetIds: [ID], ...runtime, overwriteOutput: mutate.value });
+  if (name === "continuity-gate") return assertCutsceneContinuityGate({ manifest: input.manifest, waves: input.waves, continuityReceipt: { blockingFindingIds: ["screen-direction-break:SHOT-04"], ignoreBlocking: mutate.value } });
+  return runApprovedCutsceneImageWave({ ...input, ...authority, ...runtime });
 };
 const runCutsceneMutationHarness = async ({ name, fixture, mutate }) => {
-  const runtime = makeRuntime(); const request = applyMutation(serializableRequestCopy(fixture.request), mutate); const before = await readFile(fixture.outputPath); let error;
-  try { await invokeMutation({ name, request, capability: mutate.capability ?? fixture.capability, runtime, mutate }); } catch (caught) { error = caught; }
+  const input = applyMutation(cloneMutableInput(fixture.input), mutate); const runtime = makeRuntime();
+  const authority = mutate.target === "capability" ? { receipt: fixture.authority.receipt, capability: mutate.capability } : fixture.authority;
+  assert.strictEqual(authority.receipt, fixture.authority.receipt);
+  if (name !== "approval-authority") assert.strictEqual(authority.capability, fixture.authority.capability);
+  const artifactTreeBefore = await snapshotArtifactTree(fixture.artifactRoot); let error;
+  try { await invokeMutation({ name, input, authority, runtime, mutate }); } catch (caught) { error = caught; }
   if (!error) assert.fail(`${name} unexpectedly completed`);
-  const after = await readFile(fixture.outputPath); return { error: errorView(error), providerCalls: runtime.calls.fetch + runtime.calls.host, writeObserved: !before.equals(after), unaffectedOutputSha256: sha256(after) };
+  const artifactTreeAfter = await snapshotArtifactTree(fixture.artifactRoot); const after = await readFile(fixture.outputPath);
+  return { error: errorView(error), providerCalls: runtime.calls.fetch + runtime.calls.host, writeObserved: !isDeepStrictEqual(artifactTreeBefore, artifactTreeAfter), artifactTreeBefore, artifactTreeAfter, unaffectedOutputSha256: sha256(after) };
 };
-test("prompt-only uses expected path without bytes or provider call", async (t) => { const fixture = await makeFixture(t); const runtime = makeRuntime(); const result = await preproductionPublicApi({ mode: "prompt-only", request: fixture.request, runtime }); assert.deepEqual([result.providerCalls, result.templatePromptPackage.references[0].expectedPath, result.templatePromptPackage.references[0].sha256], [0, "cutscene/generated/style-master/style-01.png", undefined]); });
-test("estimate-only calls estimator and provider count remains zero", async (t) => { const fixture = await makeFixture(t); const runtime = makeRuntime(); const result = await preproductionPublicApi({ mode: "estimate-only", request: fixture.request, runtime }); assert.deepEqual([result.estimate.planSha256, result.estimate.pricingSnapshotSha256, result.providerCalls], [PLAN, PRICE, 0]); });
-test("host-unavailable returns unavailable estimate", async (t) => { const fixture = await makeFixture(t); const estimate = estimateCutsceneImageCost({ plan: fixture.request.plan, waveId: "style-master", pricingSnapshot: { ...fixture.request.pricingSnapshot, provider: "codex-host", status: "unavailable" }, retryReserve: 1 }); assert.deepEqual(estimate.totals, { minimumUsd: null, expectedUsd: null, maximumUsd: null, status: "unavailable" }); });
+test("prompt-only uses expected path without bytes or provider call", async (t) => { const fixture = await makeFixture(t); const runtime = makeRuntime(); const result = await preproductionPublicApi({ mode: "prompt-only", input: fixture.input, runtime }); assert.deepEqual([result.providerCalls, result.templatePromptPackage.references[0].expectedPath, result.templatePromptPackage.references[0].sha256], [0, "cutscene/generated/style-master/style-01.png", undefined]); });
+test("estimate-only calls estimator and provider count remains zero", async (t) => { const fixture = await makeFixture(t); const runtime = makeRuntime(); const result = await preproductionPublicApi({ mode: "estimate-only", input: fixture.input, runtime }); assert.deepEqual([result.estimate.planSha256, result.estimate.pricingSnapshotSha256, result.providerCalls], [PLAN, PRICE, 0]); });
+test("host-unavailable returns unavailable estimate", async (t) => { const fixture = await makeFixture(t); const estimate = estimateCutsceneImageCost({ plan: fixture.input.plan, waveId: "style-master", pricingSnapshot: { ...fixture.input.pricingSnapshot, provider: "codex-host", status: "unavailable" }, retryReserve: 1 }); assert.deepEqual(estimate.totals, { minimumUsd: null, expectedUsd: null, maximumUsd: null, status: "unavailable" }); });
 const waveFailures = [
-  ["style-approval", (r) => ({ ...r, receipt: undefined }), { code: "cutscene.approval_required", path: "/cutsceneWorkflow/waves/0/approval" }],
-  ["reference-bound-style", (r) => ({ ...r, plan: { ...r.plan, referenceBindings: [{ assetId: ID, sha256: "0000000000000000000000000000000000000000000000000000000000000000" }] } }), { code: "cutscene.reference_binding_stale", path: "/referenceBindings/0/sha256" }],
-  ["keyframe-stale-master", (r) => ({ ...r, waveId: "keyframes", waves: [{ ...r.waves[0], state: "concept-draft" }] }), { code: "cutscene.prerequisite_wave_incomplete", path: "/cutsceneWorkflow/waves/1/completion" }],
-  ["storyboard-extra-id", (r) => ({ ...r, waveId: "storyboard", estimate: { ...r.estimate, assetIds: [ID, "cutscene-escape-storyboard-shot-99"] } }), { code: "cutscene.wave_asset_not_approved", path: "/assetIds/1" }],
-  ["binding-reapproval", (r) => ({ ...r, plan: { ...r.plan, promptPackageSha256: "6666666666666666666666666666666666666666666666666666666666666666" } }), { code: "cutscene.approval_binding_stale", path: "/promptPackageSha256" }],
-  ["reserve-cap", (r) => ({ ...r, estimate: { ...r.estimate, retryReserve: 0 } }), { code: "cutscene.retry_reserve_exhausted", path: "/cutsceneWorkflow/waves/0/attempts/1" }],
+  ["style-approval", (input) => input, false, { code: "cutscene.approval_required", path: "/cutsceneWorkflow/waves/0/approval" }],
+  ["reference-bound-style", (input) => ({ ...input, plan: { ...input.plan, referenceBindings: [{ assetId: ID, sha256: "0000000000000000000000000000000000000000000000000000000000000000" }] } }), true, { code: "cutscene.approval_binding_stale", path: "/referenceBindings/0/sha256" }],
+  ["keyframe-stale-master", (input) => ({ ...input, waveId: "keyframes", waves: [{ ...input.waves[0], state: "concept-draft" }] }), true, { code: "cutscene.prerequisite_wave_incomplete", path: "/cutsceneWorkflow/waves/1/completion" }],
+  ["storyboard-extra-id", (input) => ({ ...input, selectedAssetIds: [ID, "cutscene-escape-storyboard-shot-99"] }), true, { code: "cutscene.wave_asset_not_approved", path: "/assetIds/1" }],
+  ["binding-reapproval", (input) => ({ ...input, plan: { ...input.plan, promptPackageSha256: "6666666666666666666666666666666666666666666666666666666666666666" } }), true, { code: "cutscene.approval_binding_stale", path: "/promptPackageSha256" }],
+  ["reserve-cap", (input) => ({ ...input, attemptState: { ...input.attemptState, failedAttempts: 2 } }), true, { code: "cutscene.retry_reserve_exhausted", path: "/cutsceneWorkflow/waves/0/attempts/1" }],
 ];
-for (const [name, alter, expected] of waveFailures) test(name, async (t) => { const fixture = await makeFixture(t); const runtime = makeRuntime(); await assert.rejects(() => runApprovedCutsceneImageWave({ ...alter(fixture.request), capability: fixture.capability, ...runtime }), expected); assert.equal(runtime.calls.fetch + runtime.calls.host, 0); });
-test("partial-retry preserves sibling bytes", async (t) => { const fixture = await makeFixture(t); const runtime = makeRuntime(); const result = await retryCutsceneFailedAssets({ ...fixture.request, failedAssetIds: [ID], capability: fixture.capability, ...runtime }); assert.deepEqual([result.retriedIds, sha256(await readFile(fixture.outputPath)), runtime.calls.fetch + runtime.calls.host], [[ID], UNTOUCHED_SHA, 0]); });
-test("dialogue-overlay", async (t) => { const { request } = await makeFixture(t); assert.deepEqual(buildVariantOverlay({ basePlan: request.plan, triggerState: "QUEST-COMPANION-ABSENT", changes: [{ shotId: "SHOT-04", kind: "dialogue", value: "혼자 가야 해." }] }).generatedAssetIds, []); });
-test("visual-overlay", async (t) => { const { request } = await makeFixture(t); assert.deepEqual(buildVariantOverlay({ basePlan: request.plan, triggerState: "QUEST-COMPANION-ABSENT", changes: [{ shotId: "SHOT-04", kind: "blocking", value: "Lyra exits left" }] }).generatedAssetIds, ["cutscene-escape-storyboard-shot-04"]); });
-test("continuity-drift", async (t) => { const { request } = await makeFixture(t); assert.deepEqual(reviewCutsceneContinuity({ plan: request.plan, manifest: request.manifest, observations: [{ shotId: "SHOT-04", finding: "screen-direction-break" }] }).blockingFindingIds, ["screen-direction-break:SHOT-04"]); });
-test("derived-lifecycle", async (t) => { const { request } = await makeFixture(t); assert.equal(deriveCutsceneLifecycle({ manifest: request.manifest, waves: request.waves, continuityReceipt: { blockingFindingIds: ["screen-direction-break:SHOT-04"] } }).productionCandidate, false); });
-test("usage-unavailable", async (t) => { const { request } = await makeFixture(t); assert.deepEqual((await writeCutsceneUsageReceipt({ waveId: "style-master", assetId: ID, attemptId: "attempt-01", providerRequestId: "req-style-01", usage: { inputTokens: 8, inputTextTokens: 3, inputImageTokens: 5, outputTokens: 4, totalTokens: 12 }, pricingSnapshot: request.pricingSnapshot })).actualCost, { status: "unavailable", reason: "cached-token-breakdown-unavailable" }); });
+for (const [name, alter, useAuthority, expected] of waveFailures) test(name, async (t) => { const fixture = await makeFixture(t); const runtime = makeRuntime(); const input = alter(cloneMutableInput(fixture.input)); const authority = useAuthority ? fixture.authority : {}; await assert.rejects(() => runApprovedCutsceneImageWave({ ...input, ...authority, ...runtime }), expected); assert.equal(runtime.calls.fetch + runtime.calls.host, 0); });
+test("partial-retry preserves the complete artifact tree", async (t) => { const fixture = await makeFixture(t); const runtime = makeRuntime(); const before = await snapshotArtifactTree(fixture.artifactRoot); const result = await retryCutsceneFailedAssets({ ...fixture.input, ...fixture.authority, failedAssetIds: [ID], ...runtime }); const after = await snapshotArtifactTree(fixture.artifactRoot); assert.deepEqual(after, before); assert.deepEqual([result.retriedIds, sha256(await readFile(fixture.outputPath)), runtime.calls.fetch + runtime.calls.host], [[ID], UNTOUCHED_SHA, 0]); });
+test("dialogue-overlay", async (t) => { const { input } = await makeFixture(t); assert.deepEqual(buildVariantOverlay({ basePlan: input.plan, triggerState: "QUEST-COMPANION-ABSENT", changes: [{ shotId: "SHOT-04", kind: "dialogue", value: "혼자 가야 해." }] }).generatedAssetIds, []); });
+test("visual-overlay", async (t) => { const { input } = await makeFixture(t); assert.deepEqual(buildVariantOverlay({ basePlan: input.plan, triggerState: "QUEST-COMPANION-ABSENT", changes: [{ shotId: "SHOT-04", kind: "blocking", value: "Lyra exits left" }] }).generatedAssetIds, ["cutscene-escape-storyboard-shot-04"]); });
+test("continuity-drift", async (t) => { const { input } = await makeFixture(t); assert.deepEqual(reviewCutsceneContinuity({ plan: input.plan, manifest: input.manifest, observations: [{ shotId: "SHOT-04", finding: "screen-direction-break" }] }).blockingFindingIds, ["screen-direction-break:SHOT-04"]); });
+test("derived-lifecycle", async (t) => { const { input } = await makeFixture(t); assert.equal(deriveCutsceneLifecycle({ manifest: input.manifest, waves: input.waves, continuityReceipt: { blockingFindingIds: ["screen-direction-break:SHOT-04"] } }).productionCandidate, false); });
+test("usage-unavailable", async (t) => { const { input } = await makeFixture(t); assert.deepEqual((await writeCutsceneUsageReceipt({ waveId: "style-master", assetId: ID, attemptId: "attempt-01", providerRequestId: "req-style-01", usage: { inputTokens: 8, inputTextTokens: 3, inputImageTokens: 5, outputTokens: 4, totalTokens: 12 }, pricingSnapshot: input.pricingSnapshot })).actualCost, { status: "unavailable", reason: "cached-token-breakdown-unavailable" }); });
 ```
 - [ ] **Run RED.** `node --test tests/e2e/suite/cutscene-visual-preproduction.e2e.test.mjs` → FAIL: suite absent.
 - [ ] **GREEN — mutate exactly.**
@@ -458,18 +554,18 @@ test("usage-unavailable", async (t) => { const { request } = await makeFixture(t
 ```js
 for (const [name, mutate, expected] of [
   ["approval-authority", { target: "capability", capability: {} }, { code: "cutscene.approval_capability_invalid", path: "/capability" }],
-  ["approval-binding", { target: "receipt", field: "promptPackageSha256", value: "6666666666666666666666666666666666666666666666666666666666666666" }, { code: "cutscene.approval_binding_stale", path: "/promptPackageSha256" }],
-  ["reference-binding", { target: "plan", field: "referenceBindings", value: [{ assetId: ID, sha256: "0000000000000000000000000000000000000000000000000000000000000000" }] }, { code: "cutscene.reference_binding_stale", path: "/referenceBindings/0/sha256" }],
-  ["stage-selection", { target: "estimate", field: "assetIds", value: [ID, "cutscene-escape-storyboard-shot-99"] }, { code: "cutscene.wave_asset_not_approved", path: "/assetIds/1" }],
-  ["cost-cap", { target: "estimate", field: "maximumUsd", value: 0 }, { code: "cutscene.maximum_possible_cost_exceeded", path: "/cutsceneWorkflow/waves/0/estimate/maximumUsd" }],
-  ["retry-reserve", { target: "estimate", field: "retryReserve", value: 0 }, { code: "cutscene.retry_reserve_exhausted", path: "/cutsceneWorkflow/waves/0/attempts/1" }],
+  ["approval-binding", { target: "plan", field: "promptPackageSha256", value: "6666666666666666666666666666666666666666666666666666666666666666" }, { code: "cutscene.approval_binding_stale", path: "/promptPackageSha256" }],
+  ["reference-binding", { target: "plan", field: "referenceBindings", value: [{ assetId: ID, sha256: "0000000000000000000000000000000000000000000000000000000000000000" }] }, { code: "cutscene.approval_binding_stale", path: "/referenceBindings/0/sha256" }],
+  ["stage-selection", { target: "selection", field: "selectedAssetIds", value: [ID, "cutscene-escape-storyboard-shot-99"] }, { code: "cutscene.wave_asset_not_approved", path: "/assetIds/1" }],
+  ["cost-cap", { target: "attemptState", field: "accumulatedUsd", value: 1.25 }, { code: "cutscene.maximum_possible_cost_exceeded", path: "/cutsceneWorkflow/waves/0/estimate/maximumUsd" }],
+  ["retry-reserve", { target: "attemptState", field: "failedAttempts", value: 2 }, { code: "cutscene.retry_reserve_exhausted", path: "/cutsceneWorkflow/waves/0/attempts/1" }],
   ["mode-boundary", { target: "manifest", field: "mode", value: "prompt-only" }, { code: "cutscene.mode_generation_forbidden", path: "/mode" }],
   ["usage-completeness", { target: "usage", field: "inputImageTokens", value: 4 }, { code: "cutscene.usage_input_mismatch", path: "/inputTokens" }],
   ["variant-overlay", { target: "plan", field: "generatedAssetIds", value: [ID] }, { code: "cutscene.variant_duplicate_base_asset", path: "/generatedAssetIds/0" }],
   ["partial-retry", { target: "retry", field: "overwriteOutput", value: true }, { code: "cutscene.successful_asset_overwrite", path: "/assets/0/output" }],
   ["continuity-gate", { target: "waves", index: 0, field: "ignoreBlocking", value: true }, { code: "cutscene.continuity_blocker_unresolved", path: "/blockingFindingIds/0" }],
 ]) {
-  test(`mutation ${name}`, async (t) => { const fixture = await makeFixture(t); const outcome = await runCutsceneMutationHarness({ name, fixture, mutate }); assert.deepEqual(outcome.error, expected); assert.equal(outcome.providerCalls, 0); assert.equal(outcome.writeObserved, false); assert.equal(outcome.unaffectedOutputSha256, UNTOUCHED_SHA); });
+  test(`mutation ${name}`, async (t) => { const fixture = await makeFixture(t); const outcome = await runCutsceneMutationHarness({ name, fixture, mutate }); assert.deepEqual(outcome.error, expected); assert.equal(outcome.providerCalls, 0); assert.equal(outcome.writeObserved, false); assert.deepEqual(outcome.artifactTreeAfter, outcome.artifactTreeBefore); assert.equal(outcome.artifactTreeAfter.some((entry) => entry.failMarker), false); assert.equal(outcome.unaffectedOutputSha256, UNTOUCHED_SHA); });
 }
 ```
 

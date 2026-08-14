@@ -368,6 +368,20 @@ input, cached image input, image output을 구분한다. 예상 비용은 선택
 때만 얻는 private WeakMap authority이며 복사 가능한 object나 동결된 빈 object로
 대체할 수 없다.
 
+발급된 receipt와 capability는 하나의 live authority pair다. `liveApprovals.get(capability)
+=== receipt`인 정확한 객체 쌍만 유효하며 둘 중 어느 것도 clone·spread reconstruction·
+proxy하지 않는다. 직렬화 가능한 요청 입력에는 두 객체를 넣지 않고, mutable plain
+input만 복제한 뒤 dispatch 경계에서 원래 pair와 주입 callback을 합성한다.
+
+권한 확인 뒤에는 호출 시점의 context를 발급 receipt와 다시 비교한다. 비교 대상은
+current event ID·actor·reviewer, `waveId`, UTF-8 정렬한 exact `assetIds`,
+`maximumApprovedUsd`, `retryReserve`, plan/prompt/reference/pricing/estimate hash 전부다.
+승인 시각은 current `now`보다 미래일 수 없고 15분을 넘긴 receipt는 stale이다. 오류
+우선순위는 missing approval → exact live pair → event/actor/reviewer identity → 위 binding
+필드의 명시된 순서 → approval freshness → pricing freshness다. 따라서 binding 시험은
+발급된 pair를 그대로 두고 current context나 그 context를 만드는 plan/pricing/estimate만
+변경하며 `cutscene.approval_binding_stale`의 정확한 field path까지 검증한다.
+
 호스트 앱의 이미지 생성 기능처럼 API 단가와 usage를 확인할 수 없는 경로는
 `비용 확인 불가 — 호스트 구독 또는 사용량 정책이 적용될 수 있음`으로 표시한다.
 무료라고 추정하지 않으며 이 경우에도 생성 전 승인을 받는다.
@@ -570,6 +584,11 @@ contract, package contents와 memory guide/source inventory test가 이 수치�
 - public E2E는 15 scenarios(usage receipt/actual-cost-unavailable 포함), mutation
   harness는 approval-authority와 usage-completeness를 포함한 11 named mutation을
   검증한다.
+- 모든 hostile mutation은 실행 전후 artifact root 전체를 재귀적으로 stream한다.
+  정렬한 relative path, entry type, byte SHA-256, size가 완전히 같아야 하며 새 파일·
+  디렉터리도 허용하지 않는다. symlink와 special entry는 명시적 fail marker로
+  거절한다. 한 sibling 파일 hash나 주입 write counter만으로 zero-write를 주장하지
+  않는다.
 
 ## 완료 조건
 
