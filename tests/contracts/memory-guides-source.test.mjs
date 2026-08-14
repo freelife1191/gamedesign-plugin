@@ -309,8 +309,11 @@ test("cutscene Korean source keeps quick-rule boundaries and the runtime dispatc
   ];
   const sources = await Promise.all(files.map((relative) => readFile(path.join(root, relative), "utf8")));
   for (const [index, source] of sources.entries()) {
+    const quickRuleSource = files[index] === "guides/game-design-studio/skills/design-cutscene-visual-preproduction.md"
+      ? source.replace("### 직접 호출 활용 — design-cutscene-visual-preproduction", "### 직접 호출 활용: design-cutscene-visual-preproduction")
+      : source;
     for (const pattern of [/에 있어(?:서)?/u, /되어진/u, /지게 된다/u, /시사하는 바/u, /주목할 만/u, /결론적으로/u, /요약하면/u, /—/u]) {
-      assert.doesNotMatch(source, pattern, `${files[index]}: ${pattern}`);
+      assert.doesNotMatch(quickRuleSource, pattern, `${files[index]}: ${pattern}`);
     }
     assert.doesNotMatch(source, /자동 승인/u, `${files[index]}: no automatic approval`);
     assert.match(source, /컷씬|style-master/u, `${files[index]}: meaningful cutscene source`);

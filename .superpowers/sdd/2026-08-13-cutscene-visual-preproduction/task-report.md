@@ -54,7 +54,40 @@ Exact mutation names: `approval-authority`, `approval-binding`,
 
 ## Known limits
 
-- Implementation evidence is complete; final contract review remains pending.
+- Implementation and full-gate evidence are complete; the final independent
+  Task 8 review is the only remaining acceptance step.
+
+## Task 8 — Final gate closure
+
+### Corrections
+
+- The Korean quick-rule contract now exempts only the canonical structural
+  heading `### 직접 호출 활용 — design-cutscene-visual-preproduction` from the
+  prose em-dash rule. All ordinary prose remains subject to the rule.
+- Prompt-guide coverage now pins the exact generated distribution: Studio 17,
+  Career 16, Suite 8, total 41 pages.
+- The generic image workflow persists a bounded, redacted failure result when
+  an ordinary Career host callback throws. Cutscene-authorized calls retain
+  their fail-closed throw/journal behavior. Studio direct routing now pins all
+  13 direct routes, including `cutscene-visual-preproduction`.
+
+### Fresh validation
+
+- Direct cutscene E2E and dedicated-FD mutation harness: **28/28** pass
+  (15 lifecycle scenarios + 13 harness cases, 11 named mutations, skip 0).
+- Full contracts: **328/328** pass. Full products: **421/421** pass.
+- Full unit run: **1,258 pass / 1 fail / 1 explicit skip** out of 1,260. The
+  single failure was the pre-existing design-memory self-tamper child reaching
+  its 30-second wall timeout under the full-suite load; the exact failed test
+  passed alone in **4.94 seconds**. No Task 8 cutscene test failed.
+- Final accepted snapshots: Career **532 files**,
+  `b4f9972a6fd725560533b12c8c01c9b41af31d05c95d009f77a4d2a7f9d2d415`;
+  Studio **544 files**,
+  `255c9266ecc93666a7ef430b43359efe52421f3df2566b413e2bfcad5cf9c7c9`.
+  `npm run build -- --check`, source/package runtime byte parity, runtime
+  syntax, both BUILD-MANIFEST JSON parses, package validators, and
+  `git diff --check` pass.
+- No live provider, credential, image-generation, or network call was made.
 
 ## Task 8 — Fix round 4 (reservation and E10 non-vacuity)
 

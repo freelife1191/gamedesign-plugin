@@ -471,7 +471,7 @@ async function publishHostOutputs(value, jobs, prepared) {
   return { results, failures };
 }
 
-async function generateHostWithRetries({ root, jobs, prepared, hostGenerate, beforeProvider, afterProvider }) {
+async function generateHostWithRetries({ root, jobs, prepared, hostGenerate, beforeProvider, afterProvider, propagateHostErrors = false }) {
   const results = [];
   const failures = [];
   let pending = [...jobs];
@@ -502,7 +502,9 @@ async function generateHostWithRetries({ root, jobs, prepared, hostGenerate, bef
       hostResult = await hostGenerate({ jobs: callback.jobs });
     } catch (error) {
       await Promise.all(pending.map((job, index) => afterProvider?.({ ...dispatches[index], asset_id: job.asset_id, providerRequestId: "no-request-id", providerOutcome: "transport-failure", assetOutcome: "terminal-failure", retryDisposition: "none", usage: undefined })));
-      throw error;
+      if (propagateHostErrors) throw error;
+      failures.push(...pending.map(({ asset_id }) => ({ asset_id, generation_state: "generation-failed", reason: "host-callback-failed", provenance: { provider: "codex-host" } })));
+      break;
     }
     let validated;
     try {
@@ -660,7 +662,7 @@ export async function generateImageAssetWorkflow({
       } else if (typeof hostGenerate !== "function") {
         one = { results: [], failures: [{ asset_id: boundJob.asset_id, generation_state: "generation-unavailable", reason: "host-generator-unavailable" }] };
       } else {
-        one = await generateHostWithRetries({ root, jobs: [boundJob], prepared: preparedHostOutputs, hostGenerate, beforeProvider: beforeAuthorizedProvider, afterProvider });
+        one = await generateHostWithRetries({ root, jobs: [boundJob], prepared: preparedHostOutputs, hostGenerate, beforeProvider: beforeAuthorizedProvider, afterProvider, propagateHostErrors: typeof beforeProvider === "function" });
       }
       providerResult.results.push(...one.results);
       providerResult.failures.push(...one.failures);
@@ -681,7 +683,7 @@ export async function generateImageAssetWorkflow({
     if (typeof hostGenerate !== "function") {
       providerResult = { results: [], failures: jobs.map(({ asset_id }) => ({ asset_id, generation_state: "generation-unavailable", reason: "host-generator-unavailable" })) };
     } else {
-      providerResult = await generateHostWithRetries({ root, jobs, prepared: preparedHostOutputs, hostGenerate, beforeProvider: beforeAuthorizedProvider, afterProvider });
+      providerResult = await generateHostWithRetries({ root, jobs, prepared: preparedHostOutputs, hostGenerate, beforeProvider: beforeAuthorizedProvider, afterProvider, propagateHostErrors: typeof beforeProvider === "function" });
     }
     executedJobs.push(...jobs);
   } else if (jobs.length > 0 && decision.provider === "unavailable") {

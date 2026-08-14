@@ -167,7 +167,14 @@ Task self-consistency:
 - Task 5: complete — one scoped commit follows this ledger entry.
 - Task 6: complete — Fix rounds 1–5 are recorded above; see Task 6 completion evidence.
 - Task 7: source/docs complete — Korean How-to, exact inventories, lifecycle guides, humanize evidence, and the discovered Task 6→7 prompt-template integration repair are complete. Generated `plugins/*` snapshot refresh remains Task 8 ownership.
-- Task 8: implementation complete; final contract review pending.
+- Task 8: implementation and final gates complete; independent scoped review pending.
+
+- Task 8 final-gate closure: direct E2E/FD **28/28**, contracts **328/328**,
+  products **421/421**, final build check Career 532 / Studio 544. Generic
+  Career host exceptions now persist bounded redacted failure output, while
+  cutscene-authorized callbacks retain throw/journal fail-closed semantics.
+  The full unit run was 1,258 pass / 1 timeout / 1 explicit skip; the exact
+  pre-existing design-memory timeout case passed alone in 4.94 seconds.
 
 - Task 8 Fix4 RED: cutscene-style `beforeProvider` plus host/provider-unavailable
   results skipped the callback and reached receipt writing with no reservation;
