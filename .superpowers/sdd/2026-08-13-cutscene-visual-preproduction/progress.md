@@ -167,7 +167,8 @@ Task self-consistency:
 - Task 5: complete — one scoped commit follows this ledger entry.
 - Task 6: complete — Fix rounds 1–5 are recorded above; see Task 6 completion evidence.
 - Task 7: source/docs complete — Korean How-to, exact inventories, lifecycle guides, humanize evidence, and the discovered Task 6→7 prompt-template integration repair are complete. Generated `plugins/*` snapshot refresh remains Task 8 ownership.
-- Task 8: pending
+- Task 8: in progress — public lifecycle E2E, dedicated-FD mutation harness,
+  generated snapshot refresh, and final full-gate evidence are being recorded.
 
 ## Task 6 completion evidence
 

@@ -229,12 +229,33 @@ function requestBody(job, model, quality, referenceInputs) {
   return { endpoint: editEndpoint, headers: {}, body };
 }
 
-async function requestImage({ job, apiKey, model, quality, fetchFn, sleepFn, now, referenceInputs, referenceVerifier, requestTimeoutMs }) {
+function openAiUsage(value) {
+  const usage = value?.usage;
+  if (!usage || !Number.isInteger(usage.input_tokens) || !Number.isInteger(usage.output_tokens) || !Number.isInteger(usage.total_tokens)) return undefined;
+  const details = usage.input_tokens_details ?? {};
+  if (!Number.isInteger(details.text_tokens) || !Number.isInteger(details.image_tokens)) return undefined;
+  return { inputTokens: usage.input_tokens, inputTextTokens: details.text_tokens, inputImageTokens: details.image_tokens, outputTokens: usage.output_tokens, totalTokens: usage.total_tokens,
+    ...(Number.isInteger(details.cached_text_tokens) ? { cachedTextTokens: details.cached_text_tokens } : {}), ...(Number.isInteger(details.cached_image_tokens) ? { cachedImageTokens: details.cached_image_tokens } : {}) };
+}
+
+async function requestImage({ job, apiKey, model, quality, fetchFn, sleepFn, now, referenceInputs, referenceVerifier, requestTimeoutMs, beforeProvider, afterProvider }) {
   let attempts = 0;
   while (attempts < maximumAttempts) {
     try {
       await referenceVerifier?.();
     } catch {
+      return { ok: false, attempts, generationState: "qa-failed", reason: "invalid-generation-reference" };
+    }
+    // Authorization belongs to the dispatch boundary: a retry is a new
+    // provider attempt and must not inherit a previous authorization.
+    const dispatch = await beforeProvider?.({ asset_id: job.asset_id, attempt_ordinal: attempts + 1 });
+    // The authorization hook may take time or deliberately trigger a
+    // filesystem race in a test harness. Verify pinned references once more
+    // before consuming an attempt or delivering bytes to the provider.
+    try {
+      await referenceVerifier?.();
+    } catch {
+      await afterProvider?.({ ...dispatch, asset_id: job.asset_id, providerRequestId: "no-request-id", providerOutcome: "not-called", assetOutcome: "not-attempted", retryDisposition: "none", usage: undefined });
       return { ok: false, attempts, generationState: "qa-failed", reason: "invalid-generation-reference" };
     }
     attempts += 1;
@@ -255,31 +276,39 @@ async function requestImage({ job, apiKey, model, quality, fetchFn, sleepFn, now
       });
     } catch {
       clearTimeout(timeout);
+      await afterProvider?.({ ...dispatch, asset_id: job.asset_id, providerRequestId: "no-request-id", providerOutcome: "transport-failure", assetOutcome: "retryable-failure", retryDisposition: "retryable", usage: undefined });
       if (timedOut) return { ok: false, attempts, generationState: "generation-failed", reason: "provider-timeout" };
       return { ok: false, attempts, generationState: "generation-failed", reason: "provider-request-failed" };
     }
     const parsed = await readBoundedJson(response, controller.signal);
     clearTimeout(timeout);
-    if (timedOut) return { ok: false, attempts, generationState: "generation-failed", reason: "provider-timeout" };
+    const providerRequestId = headerValue(response, "x-request-id");
+    const safeProviderRequestId = providerRequestId && safeRequestId.test(providerRequestId) ? providerRequestId : "no-request-id";
+    if (timedOut) {
+      await afterProvider?.({ ...dispatch, asset_id: job.asset_id, providerRequestId: safeProviderRequestId, providerOutcome: "transport-failure", assetOutcome: "retryable-failure", retryDisposition: "retryable", usage: undefined });
+      return { ok: false, attempts, generationState: "generation-failed", reason: "provider-timeout" };
+    }
     if (!parsed.ok) {
-      if (response?.status >= 500 && attempts < maximumAttempts) {
-        await sleepFn(retryDelay(response, attempts, now));
-        continue;
-      }
+      await afterProvider?.({ ...dispatch, asset_id: job.asset_id, providerRequestId: safeProviderRequestId, providerOutcome: "provider-failure", assetOutcome: "terminal-failure", retryDisposition: "none", usage: undefined });
       return { ok: false, attempts, generationState: "qa-failed", reason: "invalid-provider-response" };
     }
     if (response?.status >= 200 && response.status < 300) {
       if (!Array.isArray(parsed.value.data) || parsed.value.data.length !== 1 || typeof parsed.value.data[0]?.b64_json !== "string") {
+        await afterProvider?.({ ...dispatch, asset_id: job.asset_id, providerRequestId: safeProviderRequestId, providerOutcome: "provider-failure", assetOutcome: "terminal-failure", retryDisposition: "none", usage: openAiUsage(parsed.value) });
         return { ok: false, attempts, generationState: "qa-failed", reason: "invalid-provider-response" };
       }
-      const requestId = headerValue(response, "x-request-id");
-      return { ok: true, attempts, b64: parsed.value.data[0].b64_json, requestId: requestId && safeRequestId.test(requestId) ? requestId : undefined };
+      return { ok: true, attempts, b64: parsed.value.data[0].b64_json, requestId: safeProviderRequestId === "no-request-id" ? undefined : safeProviderRequestId, dispatch, usage: openAiUsage(parsed.value), afterProvider };
     }
     const classified = providerErrorClass(parsed.value);
-    if (classified.policy) return { ok: false, attempts, generationState: "policy-blocked", reason: "policy-blocked" };
+    if (classified.policy) {
+      await afterProvider?.({ ...dispatch, asset_id: job.asset_id, providerRequestId: safeProviderRequestId, providerOutcome: "provider-failure", assetOutcome: "terminal-failure", retryDisposition: "none", usage: openAiUsage(parsed.value) });
+      return { ok: false, attempts, generationState: "policy-blocked", reason: "policy-blocked" };
+    }
     if (classified.noRetry || ![429].includes(response?.status) && !(response?.status >= 500)) {
+      await afterProvider?.({ ...dispatch, asset_id: job.asset_id, providerRequestId: safeProviderRequestId, providerOutcome: "provider-failure", assetOutcome: "terminal-failure", retryDisposition: "none", usage: openAiUsage(parsed.value) });
       return { ok: false, attempts, generationState: "generation-failed", reason: "provider-request-failed" };
     }
+    await afterProvider?.({ ...dispatch, asset_id: job.asset_id, providerRequestId: safeProviderRequestId, providerOutcome: "provider-failure", assetOutcome: "retryable-failure", retryDisposition: "retryable", usage: openAiUsage(parsed.value) });
     if (attempts < maximumAttempts) {
       await sleepFn(retryDelay(response, attempts, now));
       continue;
@@ -305,11 +334,12 @@ export async function generateOpenAIImages({
   stagingRoot,
   requestTimeoutMs = defaultRequestTimeoutMs,
   beforeProvider,
+  afterProvider,
 } = {}) {
   if (!Array.isArray(jobs) || jobs.length > maximumJobs || typeof apiKey !== "string" || apiKey.length === 0
     || !safeModel.test(model) || !qualities.has(quality) || typeof fetchFn !== "function" || typeof sleepFn !== "function"
     || !Number.isInteger(requestTimeoutMs) || requestTimeoutMs < minimumRequestTimeoutMs || requestTimeoutMs > maximumRequestTimeoutMs
-    || (beforeProvider !== undefined && typeof beforeProvider !== "function")) throw requestError();
+    || (beforeProvider !== undefined && typeof beforeProvider !== "function") || (afterProvider !== undefined && typeof afterProvider !== "function")) throw requestError();
   const results = [];
   const failures = [];
   for (const job of jobs) {
@@ -334,33 +364,30 @@ export async function generateOpenAIImages({
       failures.push(failure(job.asset_id, "qa-failed", "invalid-generation-reference", 0));
       continue;
     }
-    try {
-      await beforeProvider?.({ asset_id: job.asset_id });
-      await references.verify?.();
-    } catch {
-      failures.push(failure(job.asset_id, "qa-failed", "invalid-generation-reference", 0));
-      continue;
-    }
-    const requested = await requestImage({ job, apiKey, model, quality, fetchFn, sleepFn, now, referenceInputs: references.inputs, referenceVerifier: references.verify, requestTimeoutMs });
+    const requested = await requestImage({ job, apiKey, model, quality, fetchFn, sleepFn, now, referenceInputs: references.inputs, referenceVerifier: references.verify, requestTimeoutMs, beforeProvider, afterProvider });
     if (!requested.ok) {
       failures.push(failure(job.asset_id, requested.generationState, requested.reason, requested.attempts));
       continue;
     }
+    let image;
     try {
-      const image = await promoteValidatedPng({ prepared, bytes: decodeOpenAIImage(requested.b64) });
-      const output = { ...prepared.output, bytes: image.bytes, digest: image.digest };
-      results.push({
-        asset_id: job.asset_id,
-        generation_state: "generated",
-        output,
-        provenance: {
-          provider: "openai", model, quality, request_id: requested.requestId,
-          generated_at: timestamp(now), prompt_digest: digest(job.prompt), output_digest: image.digest,
-        },
-      });
+      image = await promoteValidatedPng({ prepared, bytes: decodeOpenAIImage(requested.b64) });
     } catch {
+      await requested.afterProvider?.({ ...requested.dispatch, asset_id: job.asset_id, providerRequestId: requested.requestId ?? "no-request-id", providerOutcome: "success", assetOutcome: "terminal-failure", retryDisposition: "none", usage: requested.usage });
       failures.push(failure(job.asset_id, "qa-failed", "invalid-image-output", requested.attempts));
+      continue;
     }
+    const output = { ...prepared.output, bytes: image.bytes, digest: image.digest };
+    await requested.afterProvider?.({ ...requested.dispatch, asset_id: job.asset_id, providerRequestId: requested.requestId ?? "no-request-id", providerOutcome: "success", assetOutcome: "success", retryDisposition: "none", usage: requested.usage });
+    results.push({
+      asset_id: job.asset_id,
+      generation_state: "generated",
+      output,
+      provenance: {
+        provider: "openai", model, quality, request_id: requested.requestId,
+        generated_at: timestamp(now), prompt_digest: digest(job.prompt), output_digest: image.digest,
+      },
+    });
   }
   return { provider: "openai", results, failures };
 }

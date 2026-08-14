@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "6c4abc087c5ed833aba564c97f3cfc447d94b3084a56bb30802ff31a2f41b0a3",
+  "treeSha256": "e9e99e6c1fdc809acadc7c60f395e446e9f581d11aca6d96e8856e1e62307d70",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -21,8 +21,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "e8ecd771050818fe3aff300c15e2636f07ef97bdc5d89edf25b8db91f86b82e5",
-      "size": 63120
+      "sha256": "2313f02efeed0cadf00df6600cda808731a92e6d8094c8516cb771d378d5f693",
+      "size": 63856
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -616,13 +616,13 @@
     },
     {
       "path": "references/prompt-templates.json",
-      "sha256": "a33af887ea8cdf7b0c802aff553cfe150f158a2df6aa538335a42d7177bde5bf",
-      "size": 375683
+      "sha256": "ae23e83673bdf20c7d8c0736599f9f1668dad689e54cd6c76b8cd5906d2b2cc1",
+      "size": 392111
     },
     {
       "path": "references/routing.json",
-      "sha256": "423751a9f613d358e6bd6c1bcc7dbfe8cf33f7b489a35b891db57ab1413bfa48",
-      "size": 18024
+      "sha256": "b80d884f211fae2c6f459988fe0ee39f9ad7dec0073e547facf1025df6b086d7",
+      "size": 19317
     },
     {
       "path": "references/shared/document-quality/game-design-writing-style.md",
@@ -636,8 +636,8 @@
     },
     {
       "path": "references/shared/document-quality/indexes/studio.json",
-      "sha256": "c37e038a9190ee9d21243f40d3986e7018b36a50c399e05fdb49285ee78258dd",
-      "size": 7157
+      "sha256": "2554b939e4122af17ceab1a5d12259026617bbbf0cbac37f1af8dc0ebb6d27d6",
+      "size": 7579
     },
     {
       "path": "references/shared/document-quality/overlays/live-service.json",
@@ -768,6 +768,11 @@
       "path": "references/shared/document-quality/profiles/studio/core-motivation-loop.json",
       "sha256": "1178cc7d25e8f8936eec22b3723dd92605d63826f434aabb178e05ac9a0ca8ce",
       "size": 1456
+    },
+    {
+      "path": "references/shared/document-quality/profiles/studio/cutscene-visual-preproduction.json",
+      "sha256": "8bde6ad4d15acbd806efded4fcdb54414fb0c1c322de3c9c02a047be60865b40",
+      "size": 2273
     },
     {
       "path": "references/shared/document-quality/profiles/studio/data-table-contract.json",
@@ -961,8 +966,8 @@
     },
     {
       "path": "references/shared/image-assets/prompt-patterns/storyboard.json",
-      "sha256": "86ee8f4cdca63c2d1fa3f40ebd0d9cf3e7cde81f1f870c1e342045ac38427bc3",
-      "size": 223
+      "sha256": "9b890505c63369db254a6cf8dca5225ca2b1db44204f0de909a80faffe2d4f4d",
+      "size": 267
     },
     {
       "path": "references/shared/image-assets/prompt-patterns/ui-icon.json",
@@ -985,9 +990,39 @@
       "size": 2922
     },
     {
+      "path": "references/shared/image-assets/references/cutscene-generation-policy.md",
+      "sha256": "8898088bbb612ebb2dc2eaccd27e3bbe293557f8e45d063930ddfeb9ae60e980",
+      "size": 1492
+    },
+    {
+      "path": "references/shared/image-assets/schema/cutscene-continuity-review.schema.json",
+      "sha256": "db3253ad6c0da9478aedf94837eb4292afe3b561e9bf1ceac477eb3488fbbcd0",
+      "size": 1396
+    },
+    {
+      "path": "references/shared/image-assets/schema/cutscene-cost-estimate.schema.json",
+      "sha256": "ad8d47ef857c9ccdb2f4d2dfb3568710f4308e60e63590959141a7dcc6e6eeda",
+      "size": 2714
+    },
+    {
+      "path": "references/shared/image-assets/schema/cutscene-generation-approval.schema.json",
+      "sha256": "6fbcb99ece3daea6b6b0747a676b42f6de5a0733a324d7ff5da9bcf24b2bcb2c",
+      "size": 1574
+    },
+    {
+      "path": "references/shared/image-assets/schema/cutscene-generation-usage.schema.json",
+      "sha256": "2f33784aef1a17089d5f997f3bbb8c7bce969320a4cd1efa87c7bba82f8a328f",
+      "size": 7436
+    },
+    {
+      "path": "references/shared/image-assets/schema/cutscene-visual-plan.schema.json",
+      "sha256": "0b7f2c907c1aa911f7f210917cca35891636fb1edae9e38bbf3fc69048ff9012",
+      "size": 7490
+    },
+    {
       "path": "references/shared/image-assets/schema/image-assets.schema.json",
-      "sha256": "77c9c1e9c1fb2306c2bf529deff8e5bd9d82422aa745e6d8a4b464ef39c0b059",
-      "size": 11504
+      "sha256": "b5a96e3c3cbd81009d63c0d28e3611a2524bd6fce62c3525391306144650fce0",
+      "size": 12514
     },
     {
       "path": "references/shared/image-assets/schema/image-config.schema.json",
@@ -998,6 +1033,36 @@
       "path": "references/shared/image-assets/schema/image-review.schema.json",
       "sha256": "ca9a713383369edb945c51ea488de07b5a5f36a72412db5abda50d1fcbf1b1c8",
       "size": 1703
+    },
+    {
+      "path": "references/shared/image-assets/templates/cutscene/beat-sheet.yml",
+      "sha256": "415c4038769ea3f211bfc1c6e21fd57ab8a26575dbe02781737b40f635072dbf",
+      "size": 292
+    },
+    {
+      "path": "references/shared/image-assets/templates/cutscene/continuity-bible.yml",
+      "sha256": "462be287449f72a4471fd02770d7599fe2623051307618d9a2c907f2cbf368d2",
+      "size": 463
+    },
+    {
+      "path": "references/shared/image-assets/templates/cutscene/cutscene-brief.md",
+      "sha256": "23edc74fb79b0ed7f2aff0545ab3c174ae62a372f3cdcf049b86f52562ece5bb",
+      "size": 609
+    },
+    {
+      "path": "references/shared/image-assets/templates/cutscene/generation-guide.md",
+      "sha256": "4f21c9f5784b6c5daa24b6253ead83fb0b5d5dbab1601998ee8266ef1d930cda",
+      "size": 843
+    },
+    {
+      "path": "references/shared/image-assets/templates/cutscene/master-reference-plan.yml",
+      "sha256": "ef782aa682de108635b48090bb53314123f6cac457c237c6d10a6ee85a047c5b",
+      "size": 745
+    },
+    {
+      "path": "references/shared/image-assets/templates/cutscene/shot-list.yml",
+      "sha256": "a0458c6e61e619308895287b0dc2927bc8855cb8f001f27d8ebc42f77c488836",
+      "size": 564
     },
     {
       "path": "references/shared/knowledge/core/career-and-portfolio.md",
@@ -1516,7 +1581,7 @@
     },
     {
       "path": "scripts/compile-image-prompts.mjs",
-      "sha256": "d077395a4d14f81543e2f7779972e0b872240674389613e2c71e6c0af137e365",
+      "sha256": "b7c8563bdeb3eec883d8d3c8052decbbce7a8f970f40ff29724bc182af21ea44",
       "size": 9482
     },
     {
@@ -1525,14 +1590,24 @@
       "size": 3716
     },
     {
+      "path": "scripts/estimate-cutscene-image-cost.mjs",
+      "sha256": "3af33bb052fbc95856efe383cdaff034aa104d0af2663a5d4fbfacf9d3499ffb",
+      "size": 17733
+    },
+    {
       "path": "scripts/generate-openai-images.mjs",
-      "sha256": "a7bfa9e8a5b6a0217340064d07876c5bf57a88f3f9e37978b6497e147d01d567",
-      "size": 14249
+      "sha256": "cc407f39d0aec714d5d9c0d6435f6f2e1bfe36f14f2524a6804cee981abf4588",
+      "size": 18077
     },
     {
       "path": "scripts/lib/complete-png-validation.mjs",
       "sha256": "609f74e472047c2d87375d2308d8cb51269579f4f2baf40b736565b0e59a9436",
       "size": 8586
+    },
+    {
+      "path": "scripts/lib/cutscene-generation-approval.mjs",
+      "sha256": "f45a8c6e5b5566b062b862667d6aab59af281ea717d1d307dd8bc8cd1ef9a29a",
+      "size": 10818
     },
     {
       "path": "scripts/lib/design-memory-capabilities.mjs",
@@ -1645,6 +1720,11 @@
       "size": 23841
     },
     {
+      "path": "scripts/plan-cutscene-visual-preproduction.mjs",
+      "sha256": "e51e0efe36ba638d2e30174169e3955b09351ab2fb63c14cb496a67de90e7974",
+      "size": 20233
+    },
+    {
       "path": "scripts/quality-source-anchors.mjs",
       "sha256": "7b94aaf5e91c91357bd0318841ebe254a9c50c3a002f5ede80f93e6e2f040215",
       "size": 11183
@@ -1660,14 +1740,24 @@
       "size": 49463
     },
     {
+      "path": "scripts/review-cutscene-continuity.mjs",
+      "sha256": "dedb42eeb9ed14444fb8eab3de8e9035249b848a6cfb6a4d598135a219c7a87a",
+      "size": 4372
+    },
+    {
+      "path": "scripts/run-approved-cutscene-image-stage.mjs",
+      "sha256": "f8e44dc24021e2c91af47fd0feb3ba1931ef1ba7d990b63fa2b0bf167869b8b9",
+      "size": 28064
+    },
+    {
       "path": "scripts/run-game-design-writing-polish.mjs",
       "sha256": "b5cfff90fa856762ae826693c07feb6521251722b304184ffa2c1fc3cd5fc465",
       "size": 1356
     },
     {
       "path": "scripts/run-image-asset-workflow.mjs",
-      "sha256": "52114ebedc0c2c05a36316bb351a5ffd04cfcf111ac8c34b343e113d6dd41e67",
-      "size": 36938
+      "sha256": "904d1fd9d9b5894dca289362644cc5d6e31e47c9eacb345723c16ba7c816fb5e",
+      "size": 41878
     },
     {
       "path": "scripts/stop-artifact-review.mjs",
@@ -1678,6 +1768,11 @@
       "path": "scripts/validate-artifact.mjs",
       "sha256": "98f2a55b00db70478ea5d9562f69d5954acefbbeba196ad96e792c39f3938ca5",
       "size": 26063
+    },
+    {
+      "path": "scripts/validate-cutscene-visual-preproduction.mjs",
+      "sha256": "30274ccf8e3696e1064b406d2086f4deac76185070e45b376c710a1542b1498b",
+      "size": 43257
     },
     {
       "path": "scripts/validate-design-memory.mjs",
@@ -1691,8 +1786,8 @@
     },
     {
       "path": "scripts/validate-image-assets.mjs",
-      "sha256": "43c446e57fd5bc4f8fb2a9e866503f69b874c5b769ee49733d4eeb54a9e5e055",
-      "size": 35683
+      "sha256": "a6e42e8d0a6b92633abe770ed399cbc158df807596697a1c073a238cb9b7ec68",
+      "size": 37855
     },
     {
       "path": "scripts/validate-image-config.mjs",
@@ -2050,9 +2145,19 @@
       "size": 220
     },
     {
+      "path": "skills/design-cutscene-visual-preproduction/SKILL.md",
+      "sha256": "34f69471d2755d11737518fc127f014420aecd2e9480a1e27e81e7eeed67cbd9",
+      "size": 4017
+    },
+    {
+      "path": "skills/design-cutscene-visual-preproduction/agents/openai.yaml",
+      "sha256": "1691c2c94d43c20609ac06837974e11140663568d34686df69cd40b01e4b8516",
+      "size": 252
+    },
+    {
       "path": "skills/design-game-content/SKILL.md",
-      "sha256": "42e95aa571966823e6ba4315e14e99ac81eecb71099dd4a2f61a2c99951b1da1",
-      "size": 4234
+      "sha256": "624ec93a99baa9bef79f6acae701e67cc2fac5e263ad32f4f67ad63bef52d6ca",
+      "size": 4381
     },
     {
       "path": "skills/design-game-content/agents/openai.yaml",
@@ -2116,8 +2221,8 @@
     },
     {
       "path": "skills/generate-image-assets/SKILL.md",
-      "sha256": "bb409aa4bfc4956d363d65961033bd7e858567b30449629bb602b12452af3878",
-      "size": 3732
+      "sha256": "4dbdc82b9b6ea283ffa1ad264e5c9a044b3511159d966b58324ce807f2e73a0c",
+      "size": 4652
     },
     {
       "path": "skills/generate-image-assets/agents/openai.yaml",
@@ -2266,8 +2371,8 @@
     },
     {
       "path": "skills/plan-image-assets/SKILL.md",
-      "sha256": "c5f60b3861c012e8e501c3f018449cc1cee4e3a47655d1b5326cd85c0882be6b",
-      "size": 3523
+      "sha256": "e721171b97b232b4a9f0b4ae3b7207209adbca8a711569ac3664d41f3c984027",
+      "size": 4416
     },
     {
       "path": "skills/plan-image-assets/agents/openai.yaml",
@@ -2306,8 +2411,8 @@
     },
     {
       "path": "skills/review-image-assets/SKILL.md",
-      "sha256": "7f3746dbe5f4660421507cd45ce66c4761da260aef6934032f493a6a2989cebe",
-      "size": 3116
+      "sha256": "a3ee3140f2adcf922064ee3400b4e2b46990ea1a956a21dc43ba6c8a1fc6bceb",
+      "size": 3532
     },
     {
       "path": "skills/review-image-assets/agents/openai.yaml",

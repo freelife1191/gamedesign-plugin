@@ -63,6 +63,29 @@
       ]
     },
     {
+      "profile_id": "cutscene-visual-preproduction",
+      "artifact_types": [
+        "design-document"
+      ],
+      "audiences": [
+        "narrative",
+        "design",
+        "art",
+        "animation",
+        "cinematics",
+        "qa",
+        "production"
+      ],
+      "required_formats": [
+        "md",
+        "pdf",
+        "docx"
+      ],
+      "forbidden_formats": [
+        "pptx"
+      ]
+    },
+    {
       "profile_id": "data-table-contract",
       "artifact_types": [
         "design-document"

@@ -5,6 +5,7 @@
     "define-game-vision",
     "design-game-systems",
     "design-game-content",
+    "design-cutscene-visual-preproduction",
     "design-player-experience",
     "design-game-economy-and-liveops",
     "plan-game-production",
@@ -57,6 +58,7 @@
       "skills/define-game-vision/SKILL.md",
       "skills/design-game-systems/SKILL.md",
       "skills/design-game-content/SKILL.md",
+      "skills/design-cutscene-visual-preproduction/SKILL.md",
       "skills/design-player-experience/SKILL.md",
       "skills/design-game-economy-and-liveops/SKILL.md",
       "skills/plan-game-production/SKILL.md",
@@ -160,6 +162,12 @@
     "outputs": ["reference-system-analysis", "reference-comparison", "design-transfer-decision"],
     "profileIds": ["reference-system-analysis", "reference-comparison", "design-transfer-decision"]
   },
+  "cutsceneWorkflow": {
+    "schemaVersion": 1,
+    "waves": ["style-master", "reference-masters", "keyframes", "storyboard"],
+    "downstream": ["plan-image-assets", "generate-image-assets", "review-image-assets"],
+    "approval": "stage-by-stage-live-host-user"
+  },
   "qualityWorkflow": {
     "skill": "apply-document-quality-profile",
     "role": "document-quality-editor",
@@ -170,6 +178,7 @@
       "accessibility-platform-matrix",
       "character-skill-combat-monster-specification",
       "core-motivation-loop",
+      "cutscene-visual-preproduction",
       "data-table-contract",
       "design-review-decision-log",
       "economy-balance-specification",
@@ -258,6 +267,20 @@
       "references": ["references/methods/content-specification.md"],
       "artifactType": "narrative-quest-npc",
       "completionGates": ["system-inputs-linked", "player-strategy-supported", "production-cost-accounted"]
+    },
+    {
+      "id": "cutscene-visual-preproduction",
+      "triggerIntents": ["컷씬 기획", "스토리보드", "시네마틱 이미지", "마스터 이미지", "컷씬 프롬프트"],
+      "requiredInputs": ["cutscene brief", "game-state return"],
+      "skill": "design-cutscene-visual-preproduction",
+      "eligibleProfiles": ["live-service-rpg", "mobile", "pc-console"],
+      "defaultReviewers": ["content-narrative-designer", "lead-game-designer"],
+      "maxReviewers": 3,
+      "references": ["references/methods/content-specification.md"],
+      "artifactType": "cutscene-visual-preproduction",
+      "completionGates": ["cutscene-continuity-current"],
+      "outputArtifacts": ["cutscene-brief", "cutscene-shot-package", "cutscene-prompt-package", "cutscene-cost-estimate", "cutscene-continuity-review"],
+      "outputTypes": ["cutscene-visual-preproduction"]
     },
     {
       "id": "player-experience",
