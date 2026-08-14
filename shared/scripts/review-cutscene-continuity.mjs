@@ -2,7 +2,9 @@ import {
   assertCutsceneContinuityGate,
   cutsceneContinuityManifestSha256,
   cutsceneDocumentSha256,
+  snapshotCutscenePlainData,
   validateCutsceneVisualPlan,
+  validateCutsceneContinuityReview,
 } from "./validate-cutscene-visual-preproduction.mjs";
 import { isRfc3339DateTime } from "./lib/rfc3339.mjs";
 import { assertCutscenePlanManifestBinding } from "./plan-cutscene-visual-preproduction.mjs";
@@ -20,14 +22,15 @@ function masterAssetIds(plan, manifest) {
   return new Set([...masters].filter((id) => actual.has(id)));
 }
 
-export function reviewCutsceneContinuity({ plan, manifest, observations, reviewedAt } = {}) {
+export function reviewCutsceneContinuity(input = {}) {
+  const { plan, manifest, observations, reviewedAt } = snapshotCutscenePlainData(input);
   if (!validateCutsceneVisualPlan(plan).ok || !plain(manifest) || !Array.isArray(manifest.assets)) throw new TypeError("A valid plan and manifest are required.");
   assertCutscenePlanManifestBinding({ plan, manifest });
   if (!Array.isArray(observations) || !isRfc3339DateTime(reviewedAt)) throw new TypeError("Canonical observations and reviewedAt are required.");
   const sourceMasters = masterAssetIds(plan, manifest);
   const shotIndex = new Map(plan.shots.map(({ shotId }, index) => [shotId, index]));
   const storyboard = plan.cutsceneWorkflow.waves[3].assetIds;
-  const seen = new Set();
+  const observedKinds = new Set();
   const findings = observations.map((observation, index) => {
     if (!exact(observation, ["shotId", "finding", "sourceMasterIds"]) || !record(observation.shotId) || !shotIndex.has(observation.shotId)
       || !exact(observation.finding, ["kind", "blocking"]) || !VISUAL_KINDS.has(observation.finding.kind) || typeof observation.finding.blocking !== "boolean"
@@ -35,6 +38,9 @@ export function reviewCutsceneContinuity({ plan, manifest, observations, reviewe
     const sourceMasterIds = [...new Set(observation.sourceMasterIds)].sort(compare);
     if (sourceMasterIds.length !== observation.sourceMasterIds.length || sourceMasterIds.some((id) => !sourceMasters.has(id))) throw new TypeError(`Invalid continuity source master at index ${index}.`);
     const shotPosition = shotIndex.get(observation.shotId);
+    const observationKey = `${observation.shotId}\0${observation.finding.kind}`;
+    if (observedKinds.has(observationKey)) throw new TypeError(`Duplicate continuity observation at index ${index}.`);
+    observedKinds.add(observationKey);
     const finding = {
       findingId: `continuity-${observation.shotId.toLowerCase()}-${observation.finding.kind}`,
       code: `continuity.${observation.finding.kind}`,
@@ -43,13 +49,12 @@ export function reviewCutsceneContinuity({ plan, manifest, observations, reviewe
       affectedAssetIds: [storyboard[shotPosition]],
       blocking: observation.finding.blocking,
     };
-    const identity = JSON.stringify(finding);
-    if (seen.has(identity)) throw new TypeError(`Duplicate continuity observation at index ${index}.`);
-    seen.add(identity);
     return finding;
   }).sort((left, right) => compare(left.findingId, right.findingId));
   const blockingFindingIds = findings.filter((finding) => finding.blocking).map((finding) => finding.findingId).sort(compare);
-  return { schemaVersion: 1, cutsceneId: plan.cutsceneId, planSha256: cutsceneDocumentSha256(plan), manifestSha256: cutsceneContinuityManifestSha256(manifest), reviewedAt, findings, blockingFindingIds };
+  const receipt = { schemaVersion: 1, cutsceneId: plan.cutsceneId, planSha256: cutsceneDocumentSha256(plan), manifestSha256: cutsceneContinuityManifestSha256(manifest), reviewedAt, findings, blockingFindingIds };
+  if (!validateCutsceneContinuityReview(receipt).ok) throw new TypeError("Generated continuity receipt is invalid.");
+  return receipt;
 }
 
 export { assertCutsceneContinuityGate, cutsceneContinuityManifestSha256 };

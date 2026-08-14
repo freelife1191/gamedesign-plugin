@@ -52,6 +52,41 @@ function safeData(value, seen = new Set()) {
   } catch { return false; } finally { seen.delete(value); }
 }
 
+export function snapshotCutscenePlainData(value) {
+  const hostile = (path) => { throw Object.assign(new TypeError("Cutscene input must be plain data."), { code: "cutscene.hostile_input", path }); };
+  const copy = (current, path, stack = new Set()) => {
+    if (current === null || typeof current === "boolean" || typeof current === "string") return current;
+    if (typeof current === "number") return Number.isFinite(current) ? current : hostile(path);
+    if (typeof current !== "object" || stack.has(current)) hostile(path);
+    let keys; let descriptors; let prototype;
+    try { keys = Reflect.ownKeys(current); descriptors = Object.getOwnPropertyDescriptors(current); prototype = Object.getPrototypeOf(current); } catch { hostile(path); }
+    if (Array.isArray(current)) {
+      const length = descriptors.length;
+      if (!length || "get" in length || "set" in length || !Number.isSafeInteger(length.value) || length.value < 0 || keys.length !== length.value + 1 || !keys.includes("length")) hostile(path);
+      const output = [];
+      stack.add(current);
+      for (let index = 0; index < length.value; index += 1) {
+        const descriptor = descriptors[String(index)];
+        if (!descriptor || !descriptor.enumerable || "get" in descriptor || "set" in descriptor) hostile(`${path}/${index}`);
+        output.push(copy(descriptor.value, `${path}/${index}`, stack));
+      }
+      stack.delete(current);
+      return output;
+    }
+    if (prototype !== Object.prototype) hostile(path);
+    const output = {};
+    stack.add(current);
+    for (const key of keys) {
+      const descriptor = descriptors[key];
+      if (typeof key !== "string" || !descriptor?.enumerable || "get" in descriptor || "set" in descriptor) hostile(`${path}/${String(key)}`);
+      Object.defineProperty(output, key, { value: copy(descriptor.value, `${path}/${key}`, stack), enumerable: true, writable: true, configurable: true });
+    }
+    stack.delete(current);
+    return output;
+  };
+  return copy(value, "");
+}
+
 function resultOf(value, validate) {
   const errors = [];
   const issue = (code, path) => errors.push({ code, path });
@@ -91,8 +126,8 @@ function validateBoundReference(value, path, issue) {
   if (!CUTSCENE_ID.test(value?.assetId ?? "")) issue("cutscene.reference_asset_id_invalid", `${path}/assetId`);
 }
 
-function validateCompletion(value, state, path, issue) {
-  const requiredKind = state === "template-ready" || state === "generation-ready" ? state : undefined;
+function validateCompletion(value, state, path, issue, expectedAssetIds) {
+  const requiredKind = state === "template-ready" || state === "generation-ready" ? state : state === "completed" ? "completed" : undefined;
   if (value === null) { if (requiredKind) issue("cutscene.completion_required", path); return; }
   if (!plainObject(value)) { issue("cutscene.completion_invalid", path); return; }
   const kind = value.kind;
@@ -103,6 +138,7 @@ function validateCompletion(value, state, path, issue) {
   } else if (kind === "completed") {
     closed(value, ["kind", "assetIds"], path, issue, { unknownCode: "cutscene.completion_unknown_key", requiredCode: "cutscene.completion_required" });
     nonEmptySortedUnique(value.assetIds, `${path}/assetIds`, issue, { emptyCode: "cutscene.completion_asset_ids_empty", predicate: (id) => CUTSCENE_ID.test(id ?? "") });
+    if (!Array.isArray(value.assetIds) || !Array.isArray(expectedAssetIds) || value.assetIds.length !== expectedAssetIds.length || value.assetIds.some((id, index) => id !== expectedAssetIds[index])) issue("cutscene.completion_asset_set_mismatch", `${path}/assetIds`);
   } else issue("cutscene.completion_kind_invalid", `${path}/kind`);
   if (requiredKind && kind !== requiredKind) issue("cutscene.completion_kind_required", `${path}/kind`);
   if (!requiredKind && kind !== "completed") issue("cutscene.completion_state_incompatible", `${path}/kind`);
@@ -121,10 +157,18 @@ function validateTransition(value, state, path, issue) {
   if (!allowed) issue("cutscene.transition_invalid", `${path}/toState`);
 }
 
+function validateInvalidationHistory(value, path, issue) {
+  if (!Array.isArray(value)) { issue("cutscene.invalidation_history_invalid", path); return; }
+  value.forEach((entry, index) => {
+    validateTransition(entry, entry?.toState, `${path}/${index}`, issue);
+    if (entry?.toState !== "invalidated") issue("cutscene.transition_invalid", `${path}/${index}/toState`);
+  });
+}
+
 function validateWave(value, index, mode, issue) {
   const path = `/cutsceneWorkflow/waves/${index}`;
   if (!plainObject(value)) { issue("cutscene.wave_object_required", path); return; }
-  const keys = ["id", "state", "assetIds", "estimate", "approval", "attempts", "completion", "invalidation"];
+  const keys = ["id", "state", "assetIds", "estimate", "approval", "attempts", "completion", "invalidation", "invalidationHistory"];
   for (const key of keys) if (!Object.hasOwn(value, key)) issue(key === "state" ? "cutscene.wave_state_required" : "cutscene.wave_required", `${path}/${key}`);
   for (const key of Reflect.ownKeys(value)) if (typeof key !== "string" || !keys.includes(key)) issue("cutscene.wave_unknown_key", `${path}/${String(key)}`);
   if (value.id !== WAVE_IDS[index]) issue("cutscene.wave_order_invalid", `${path}/id`);
@@ -135,8 +179,9 @@ function validateWave(value, index, mode, issue) {
   if (value.approval !== null && !validateCutsceneGenerationApproval(value.approval).ok) issue("cutscene.wave_approval_invalid", `${path}/approval`);
   if (!Array.isArray(value.attempts)) issue("cutscene.wave_attempts_invalid", `${path}/attempts`);
   else value.attempts.forEach((attempt, attemptIndex) => { if (!validateCutsceneGenerationUsage(attempt).ok) issue("cutscene.wave_attempt_invalid", `${path}/attempts/${attemptIndex}`); });
-  validateCompletion(value.completion, value.state, `${path}/completion`, issue);
+  validateCompletion(value.completion, value.state, `${path}/completion`, issue, value.assetIds);
   validateTransition(value.invalidation, value.state, `${path}/invalidation`, issue);
+  validateInvalidationHistory(value.invalidationHistory, `${path}/invalidationHistory`, issue);
   if (mode === "prompt-only" && value.estimate !== null) issue("cutscene.mode_evidence_forbidden", `${path}/estimate`);
   if (mode === "prompt-only" && (value.approval !== null || value.attempts?.length > 0 || value.completion?.kind === "generation-ready" || value.completion?.kind === "completed")) issue("cutscene.mode_evidence_forbidden", `${path}/attempts`);
   if (mode === "estimate-only" && (value.approval !== null || value.attempts?.length > 0 || value.completion?.kind === "completed")) issue("cutscene.mode_evidence_forbidden", `${path}/attempts`);
@@ -413,11 +458,14 @@ export function assertCutsceneContinuityGate({ plan, manifest, waves, continuity
   if (!sameDocument(waves, plan.cutsceneWorkflow.waves)) failure("Cutscene waves are stale.", "cutscene.waves_stale", "/waves");
   if (!manifestMatchesCurrentPlan(plan, manifest)) failure("Cutscene manifest is stale.", "cutscene.manifest_stale", "/manifest");
   if (!validateCutsceneContinuityReview(continuityReceipt).ok) failure("Cutscene continuity receipt is invalid.", "cutscene.continuity_receipt_invalid", "/continuityReceipt");
+  if (continuityReceipt.cutsceneId !== plan.cutsceneId) failure("Cutscene continuity receipt belongs to another cutscene.", "cutscene.continuity_cutscene_stale", "/continuityReceipt/cutsceneId");
   if (continuityReceipt.planSha256 !== cutsceneDocumentSha256(plan)) failure("Cutscene continuity receipt plan is stale.", "cutscene.continuity_plan_stale", "/continuityReceipt/planSha256");
   if (continuityReceipt.manifestSha256 !== cutsceneContinuityManifestSha256(manifest)) failure("Cutscene continuity receipt manifest is stale.", "cutscene.continuity_manifest_stale", "/continuityReceipt/manifestSha256");
   if (continuityReceipt.blockingFindingIds.length > 0) failure("Cutscene continuity has blocking findings.", "cutscene.continuity_blocking_findings", "/continuityReceipt/blockingFindingIds");
   const unfinished = waves.findIndex((wave) => wave.state !== "completed");
   if (unfinished >= 0) failure("Cutscene wave is incomplete.", "cutscene.wave_not_completed", `/waves/${unfinished}/state`);
+  const incomplete = waves.findIndex((wave) => wave.completion?.kind !== "completed" || !sameDocument(wave.completion.assetIds, wave.assetIds));
+  if (incomplete >= 0) failure("Cutscene completion asset set is stale.", "cutscene.wave_completion_asset_set_stale", `/waves/${incomplete}/completion/assetIds`);
   const notCandidate = manifest.assets.findIndex((asset) => asset.approval_state !== "production-candidate");
   if (notCandidate >= 0) failure("Cutscene asset is not production-candidate.", "cutscene.asset_not_production_candidate", `/manifest/assets/${notCandidate}/approval_state`);
 }
@@ -434,7 +482,7 @@ export function deriveCutsceneLifecycle({ plan, manifest, waves, continuityRecei
   const manifestValid = planValid && manifestMatchesCurrentPlan(plan, manifest);
   const receiptValid = validateCutsceneContinuityReview(continuityReceipt).ok;
   const receiptBound = receiptValid && currentPlanSha256 !== undefined && continuityReceipt.planSha256 === currentPlanSha256
-    && manifestValid && continuityReceipt.manifestSha256 === cutsceneContinuityManifestSha256(manifest);
+    && continuityReceipt.cutsceneId === plan?.cutsceneId && manifestValid && continuityReceipt.manifestSha256 === cutsceneContinuityManifestSha256(manifest);
   const blockerIds = receiptBound ? [...continuityReceipt.blockingFindingIds] : [];
   const assets = manifestValid && Array.isArray(manifest.assets) ? manifest.assets : [];
   const documentApproved = manifestValid && wavesValid && receiptBound && blockerIds.length === 0 && listedWaves.every((wave) => wave.state === "completed") && assets.length > 0 && assets.every((asset) => ["document-approved", "production-candidate"].includes(asset.approval_state));

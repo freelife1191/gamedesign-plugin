@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { buildImageAssetPlan } from "./build-image-asset-plan.mjs";
 import { readSecureReferenceFile } from "./lib/image-reference-loader.mjs";
 import { ensureArtifactDirectories, safeWriteArtifactFile } from "./lib/safe-artifact-write.mjs";
-import { canonicalCutsceneDocument, cutsceneDocumentSha256, validateCutsceneVisualPlan } from "./validate-cutscene-visual-preproduction.mjs";
+import { canonicalCutsceneDocument, cutsceneDocumentSha256, snapshotCutscenePlainData, validateCutsceneVisualPlan } from "./validate-cutscene-visual-preproduction.mjs";
 import { validateImageAssetManifest } from "./validate-image-assets.mjs";
 
 const WAVE_IDS = ["style-master", "reference-masters", "keyframes", "storyboard"];
@@ -85,6 +85,7 @@ function planWorkflow(cutsceneId, beats, shots) {
         references: [{ assetId: group.assetIds[0], expectedPath: `assets/generated/${group.assetIds[0]}.png` }],
       } : null,
       invalidation: null,
+      invalidationHistory: [],
     })),
     downstream: forwardEdges(),
     derived: {},
@@ -279,7 +280,8 @@ export async function writeCutscenePromptPackage({ artifactRoot, promptPackage }
   await safeWriteArtifactFile({ artifactRoot: root, relativePath: "cutscene/prompts/README.md", data: `${lines.join("\n")}\n` });
 }
 
-export function buildVariantOverlay({ basePlan, triggerState, changes } = {}) {
+export function buildVariantOverlay(input = {}) {
+  const { basePlan, triggerState, changes } = snapshotCutscenePlainData(input);
   if (!validateCutsceneVisualPlan(basePlan).ok) throw new TypeError("A valid base plan is required.");
   if (!canonicalText(triggerState)) throw new TypeError("A canonical trigger state is required.");
   if (!Array.isArray(changes)) throw new TypeError("Variant changes must be an array.");
@@ -316,15 +318,19 @@ function cutsceneImpactWaves({ plan, changedAssetIds = [] } = {}) {
   for (const wave of plan.cutsceneWorkflow.waves) if (wave.assetIds.some((id) => changed.includes(id))) { affected.add(wave.id); queue.push(wave.id); }
   const downstream = new Map(WAVE_IDS.map((id) => [id, []]));
   for (const edge of plan.cutsceneWorkflow.downstream) downstream.get(edge.fromWaveId).push(edge.toWaveId);
+  const downstreamReached = new Set();
   while (queue.length > 0) {
     const current = queue.shift();
-    for (const next of downstream.get(current)) if (!affected.has(next)) { affected.add(next); queue.push(next); }
+    for (const next of downstream.get(current)) {
+      downstreamReached.add(next);
+      if (!affected.has(next)) { affected.add(next); queue.push(next); }
+    }
   }
   const waveIds = WAVE_IDS.filter((id) => affected.has(id));
   const seedWaves = new Set(plan.cutsceneWorkflow.waves.filter((wave) => wave.assetIds.some((id) => changed.includes(id))).map((wave) => wave.id));
   const waves = plan.cutsceneWorkflow.waves.filter((wave) => affected.has(wave.id)).map((wave) => ({
     id: wave.id,
-    assetIds: seedWaves.has(wave.id) ? wave.assetIds.filter((id) => changed.includes(id)) : [...wave.assetIds],
+    assetIds: seedWaves.has(wave.id) && !downstreamReached.has(wave.id) ? wave.assetIds.filter((id) => changed.includes(id)) : [...wave.assetIds],
   }));
   return { waveIds, assetIds: waves.flatMap((wave) => wave.assetIds), waves };
 }
@@ -340,7 +346,9 @@ export function invalidateCutsceneDependents({ plan, changedAssetIds = [], reaso
   for (const wave of next.cutsceneWorkflow.waves) {
     const affected = impact.waves.find(({ id }) => id === wave.id);
     if (!affected) continue;
-    const fromState = wave.state;
+    const prior = wave.invalidation;
+    if (prior !== null) wave.invalidationHistory.push(prior);
+    const fromState = wave.state === "invalidated" ? prior?.fromState ?? "planned" : wave.state;
     wave.state = "invalidated";
     wave.completion = null;
     wave.invalidation = { fromState, toState: "invalidated", reason, affectedAssetIds: [...affected.assetIds] };

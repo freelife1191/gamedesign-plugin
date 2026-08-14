@@ -202,6 +202,39 @@ test("impact is seed-exact and invalidation preserves each untouched wave and ev
   assert.deepEqual(invalidated.cutsceneWorkflow.waves[2].invalidation.affectedAssetIds, plan.cutsceneWorkflow.waves[2].assetIds);
 });
 
+test("multi-seed impact gives a directly changed downstream wave its complete upstream-reached closure", () => {
+  const { plan } = planCutsceneVisualPreproduction(taskTwoInput({ mode: "generate-after-approval" }));
+  const [styleMaster] = plan.cutsceneWorkflow.waves[0].assetIds;
+  const [directReference] = plan.cutsceneWorkflow.waves[1].assetIds;
+  const impact = findCutsceneImpact({ plan, changedAssetIds: [styleMaster, directReference] });
+  assert.deepEqual(impact.assetIds, [styleMaster, ...plan.cutsceneWorkflow.waves[1].assetIds, ...plan.cutsceneWorkflow.waves[2].assetIds, ...plan.cutsceneWorkflow.waves[3].assetIds]);
+});
+
+test("repeated invalidation preserves prior evidence and returns a valid plan", () => {
+  const { plan } = planCutsceneVisualPreproduction(taskTwoInput({ mode: "generate-after-approval" }));
+  const changed = plan.cutsceneWorkflow.waves[1].assetIds[0];
+  const first = invalidateCutsceneDependents({ plan, changedAssetIds: [changed], reason: "first-master-change" });
+  const second = invalidateCutsceneDependents({ plan: first, changedAssetIds: [changed], reason: "second-master-change" });
+  const wave = second.cutsceneWorkflow.waves[1];
+  assert.equal(validateCutsceneVisualPlan(second).ok, true);
+  assert.equal(wave.invalidation.reason, "second-master-change");
+  assert.deepEqual(wave.invalidationHistory, [{ fromState: "planned", toState: "invalidated", reason: "first-master-change", affectedAssetIds: [changed] }]);
+});
+
+test("overlay and continuity review reject hostile descriptors before executing getters", () => {
+  const { plan, manifest } = planCutsceneVisualPreproduction(taskTwoInput({ mode: "generate-after-approval" }));
+  const changes = [];
+  let changeReads = 0;
+  Object.defineProperty(changes, "0", { enumerable: true, get() { changeReads += 1; throw new Error("must not run"); } });
+  assert.throws(() => buildVariantOverlay({ basePlan: plan, triggerState: "safe", changes }), { code: "cutscene.hostile_input", path: "/changes/0" });
+  assert.equal(changeReads, 0);
+  const observations = [];
+  let observationReads = 0;
+  Object.defineProperty(observations, "0", { enumerable: true, get() { observationReads += 1; throw new Error("must not run"); } });
+  assert.throws(() => reviewCutsceneContinuity({ plan, manifest, observations, reviewedAt: "2026-08-13T00:00:00.000Z" }), { code: "cutscene.hostile_input", path: "/observations/0" });
+  assert.equal(observationReads, 0);
+});
+
 test("binding rejects plan-derived manifest mutations before reference I/O", async (t) => {
   const root = await cutsceneArtifactRoot(t);
   const planned = planCutsceneVisualPreproduction(taskTwoInput({ mode: "generate-after-approval" }));
@@ -287,6 +320,7 @@ const validCutscenePlan = () => ({
       attempts: [],
       completion: index === 0 ? { kind: "template-ready", references: [{ assetId: "cutscene-escape-reference-01", expectedPath: "assets/generated/reference-01.png" }] } : null,
       invalidation: null,
+      invalidationHistory: [],
     })),
     downstream: [],
     derived: {},
@@ -363,7 +397,7 @@ const currentPlan = () => validCutscenePlan();
 
 function completedPlan() {
   const { plan } = planCutsceneVisualPreproduction(taskTwoInput({ mode: "generate-after-approval" }));
-  for (const wave of plan.cutsceneWorkflow.waves) { wave.state = "completed"; wave.completion = null; }
+  for (const wave of plan.cutsceneWorkflow.waves) { wave.state = "completed"; wave.completion = { kind: "completed", assetIds: [...wave.assetIds] }; }
   return plan;
 }
 
@@ -585,6 +619,11 @@ test("continuity review is canonical, source-bound, and excludes later human rev
   forged.assets[0].prompt = "forged prompt";
   assert.throws(() => reviewCutsceneContinuity({ plan, manifest: forged, reviewedAt: "2026-08-13T00:00:00.000Z", observations: [] }));
   assert.throws(() => reviewCutsceneContinuity({ plan, manifest, reviewedAt: "2026-08-13T00:00:00.000Z", observations: [{ shotId: "SHOT-01", finding: { kind: "lighting", blocking: false }, sourceMasterIds: ["cutscene-escape-storyboard-shot-01"] }] }));
+  const referenceMasterId = plan.cutsceneWorkflow.waves[1].assetIds[0];
+  assert.throws(() => reviewCutsceneContinuity({ plan, manifest, reviewedAt: "2026-08-13T00:00:00.000Z", observations: [
+    { shotId: "SHOT-01", finding: { kind: "lighting", blocking: false }, sourceMasterIds: [sourceMasterId] },
+    { shotId: "SHOT-01", finding: { kind: "lighting", blocking: false }, sourceMasterIds: [referenceMasterId] },
+  ] }));
 });
 
 test("continuity gate rejects lifecycle and manifest splice exploits with deterministic currentness", () => {
@@ -607,6 +646,16 @@ test("continuity gate rejects lifecycle and manifest splice exploits with determ
   differingOutput.assets[0].output.aspect_ratio = "1:1";
   const changedReceipt = reviewCutsceneContinuity({ plan, manifest: differingOutput, reviewedAt: "2026-08-13T00:00:00.000Z", observations: [] });
   assert.doesNotThrow(() => assertCutsceneContinuityGate({ plan, manifest: differingOutput, waves: plan.cutsceneWorkflow.waves, continuityReceipt: changedReceipt }));
+  const wrongCutscene = structuredClone(receipt);
+  wrongCutscene.cutsceneId = "cutscene-other";
+  assert.throws(() => assertCutsceneContinuityGate({ plan, manifest, waves: plan.cutsceneWorkflow.waves, continuityReceipt: wrongCutscene }), { code: "cutscene.continuity_cutscene_stale", path: "/continuityReceipt/cutsceneId" });
+  assert.equal(deriveCutsceneLifecycle({ plan, manifest, waves: plan.cutsceneWorkflow.waves, continuityReceipt: wrongCutscene }).productionCandidate, false);
+});
+
+test("completed waves require exact completion asset sets in runtime and gate", () => {
+  const plan = completedPlan();
+  plan.cutsceneWorkflow.waves[1].completion = { kind: "completed", assetIds: [plan.cutsceneWorkflow.waves[1].assetIds[0]] };
+  assert.equal(validateCutsceneVisualPlan(plan).ok, false);
 });
 
 test("derived lifecycle refuses completed waves spliced onto a current partial plan", () => {
@@ -751,9 +800,9 @@ test("runtime and packaged JSON Schema agree on valid and rejected closed fixtur
   assert.equal(schemaAccepts(crossArrayOnly, byName.get("cutscene-continuity-review"), byFile), true, "packaged JSON Schema still validates its expressible structural contract");
 });
 
-test("temporary Studio and Career builds preserve exact cutscene usage and continuity schema bytes", async (t) => {
+test("temporary Studio and Career builds preserve exact cutscene plan, usage, and continuity schema bytes", async (t) => {
   const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
-  for (const schemaName of ["cutscene-generation-usage.schema.json", "cutscene-continuity-review.schema.json"]) for (const productName of ["game-design-studio", "game-design-career"]) {
+  for (const schemaName of ["cutscene-visual-plan.schema.json", "cutscene-generation-usage.schema.json", "cutscene-continuity-review.schema.json"]) for (const productName of ["game-design-studio", "game-design-career"]) {
     const source = await readFile(new URL(`../../shared/image-assets/schema/${schemaName}`, import.meta.url));
     const stagingRoot = await mkdtemp(path.join(tmpdir(), `cutscene-${productName}-`));
     t.after(() => rm(stagingRoot, { recursive: true, force: true }));

@@ -40,3 +40,22 @@ and usage schemas, and `git diff --check` passed.
 - Task 5 intentionally does not dispatch variants or modify Task 4's append-only
   journal. A visual variant remains metadata until a later approved generation
   stage consumes it.
+
+## Fix round 1 — review closure
+
+- A wave with both a direct changed asset and an upstream dependency now receives
+  the conservative full downstream asset set. Repeated invalidation appends the
+  prior record to closed `invalidationHistory`, retaining reason and affected
+  IDs while avoiding an invalid `invalidated → invalidated` transition.
+- Overlay and review begin with descriptor-only plain-data snapshots. Accessor,
+  proxy, symbol, cyclic, and non-finite inputs fail as deterministic hostile
+  input before a getter can run.
+- Completed waves require a closed `completion` whose IDs exactly equal that
+  wave's IDs. Gate also checks that invariant independently. Receipt cutscene
+  identity now binds to the current plan in both gate and derived lifecycle.
+- Continuity review rejects repeated `(shotId, kind)` observations before
+  constructing its canonical, self-validated receipt.
+
+Fix validation: the Task 1–5 plus Task 4 regression matrix passed **193/193**;
+schema parse, runtime syntax checks, temporary Studio/Career schema parity, and
+diff checks passed. Tests use injected fixtures only.
