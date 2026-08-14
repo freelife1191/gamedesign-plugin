@@ -28,6 +28,7 @@ import {
   validateCutsceneManifestHandoff,
 } from "../../shared/scripts/plan-cutscene-visual-preproduction.mjs";
 import { planImageAssetWorkflow } from "../../shared/scripts/run-image-asset-workflow.mjs";
+import { readSecureReferenceFile } from "../../shared/scripts/lib/image-reference-loader.mjs";
 
 const SHA = "a".repeat(64);
 const WAVES = ["style-master", "reference-masters", "keyframes", "storyboard"];
@@ -156,7 +157,7 @@ test("binding rejects plan-derived manifest mutations before reference I/O", asy
   }
 });
 
-test("binding rejects symlink and identity-swapped master bytes", async (t) => {
+test("binding rejects symlink input and the secure loader detects an identity swap", async (t) => {
   const root = await cutsceneArtifactRoot(t);
   const planned = planCutsceneVisualPreproduction(taskTwoInput({ mode: "generate-after-approval" }));
   const { manifest, asset } = markMasterGenerated(planned);
@@ -168,9 +169,34 @@ test("binding rejects symlink and identity-swapped master bytes", async (t) => {
   await assert.rejects(() => bindCutscenePromptPackage({ artifactRoot: root, plan: planned.plan, manifest }), /unsafe reference/i);
   await rm(destination);
   await writeFile(destination, validPng());
+  const pinned = await readSecureReferenceFile({ artifactRoot: root, path: asset.output.path });
   const replacement = path.join(root, "replacement.png");
   await writeFile(replacement, validPng());
-  await assert.rejects(() => bindCutscenePromptPackage({ artifactRoot: root, plan: planned.plan, manifest, beforeReferenceVerification: async () => rename(replacement, destination) }), /reference identity changed/i);
+  await rename(replacement, destination);
+  await assert.rejects(() => pinned.verify(), /reference identity changed/i);
+});
+
+test("binding snapshots authority and rejects an alternate artifact-local output path", async (t) => {
+  const root = await cutsceneArtifactRoot(t);
+  const planned = planCutsceneVisualPreproduction(taskTwoInput({ mode: "generate-after-approval" }));
+  const { manifest, asset } = markMasterGenerated(planned);
+  const destination = path.join(root, asset.output.path);
+  await mkdir(path.dirname(destination), { recursive: true });
+  await writeFile(destination, validPng());
+  const promise = bindCutscenePromptPackage({ artifactRoot: root, plan: planned.plan, manifest });
+  manifest.assets[0].asset_id = "cutscene-escape-mutated-master";
+  manifest.assets[0].prompt = "mutated after binding began";
+  const bound = await promise;
+  assert.equal(bound.references[0].assetId, "cutscene-escape-style-master-style-01");
+  assert.equal(bound.prompts[0].assetId, "cutscene-escape-style-master-style-01");
+
+  const alternate = structuredClone(planned.manifest);
+  alternate.assets[0].generation_state = "generated";
+  alternate.assets[0].output.path = "assets/generated/alternate-master.png";
+  await writeFile(path.join(root, alternate.assets[0].output.path), validPng());
+  await assert.rejects(() => bindCutscenePromptPackage({ artifactRoot: root, plan: planned.plan, manifest: alternate }), /plan-derived binding/i);
+  const source = await readFile(new URL("../../shared/scripts/plan-cutscene-visual-preproduction.mjs", import.meta.url), "utf8");
+  assert.doesNotMatch(source, /beforeReferenceVerification/u);
 });
 
 test("general image planning remains byte-stable without a cutscene manifest", async (t) => {

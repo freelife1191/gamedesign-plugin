@@ -47,3 +47,10 @@ manifest is supplied.
 - Real-FS tests prove the bound digest equals the master PNG bytes, symlink input is rejected, and a deterministic rename identity swap fails at the pinned-reference verification boundary. Only assets already marked `generated` are consumed; future outputs are never created for binding.
 - Public image-manifest runtime validation and JSON Schema now recursively close `cutsceneWorkflow` and wave `{id,assetIds}` records with parity coverage. The no-cutscene general branch is rerun with an existing manifest and retains manifest, summary, and prompt bytes.
 - Re-verified full GREEN: 70 tests, 0 failures; syntax checks, JSON parsing, and `git diff --check` passed.
+
+## Fix 2 — Immutable binding authority and derived paths
+
+- RED: `node --test --test-name-pattern='snapshots authority|symlink input' tests/unit/cutscene-visual-preproduction.test.mjs` showed that a manifest mutated after `bindCutscenePromptPackage()` began could change the returned asset ID. The public `beforeReferenceVerification` hook also remained in the source.
+- GREEN: binding now creates a recursively frozen canonical snapshot synchronously before its first `await`, validates and derives all authority from that snapshot, and does not read a live caller plan or manifest after asynchronous reference loading begins.
+- Every generated source path is derived from the validated closed plan and stable asset identity. The supplied `output.path` must equal that canonical relative path before I/O; an alternate valid local PNG is rejected without reaching the secure loader.
+- The public hook was removed. Deterministic TOCTOU coverage now uses the secure loader's pinned real-filesystem `verify()` boundary and a real rename, with no bind API injection seam.

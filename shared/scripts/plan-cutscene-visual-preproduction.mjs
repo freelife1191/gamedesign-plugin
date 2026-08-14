@@ -14,6 +14,14 @@ const hash = (value) => createHash("sha256").update(typeof value === "string" ||
 const clone = (value) => structuredClone(value);
 const compare = (left, right) => Buffer.compare(Buffer.from(left), Buffer.from(right));
 
+function deepFreeze(value) {
+  if (value && typeof value === "object" && !Object.isFrozen(value)) {
+    for (const child of Object.values(value)) deepFreeze(child);
+    Object.freeze(value);
+  }
+  return value;
+}
+
 function plain(value) {
   try { return value !== null && typeof value === "object" && !Array.isArray(value) && Object.getPrototypeOf(value) === Object.prototype; } catch { return false; }
 }
@@ -139,7 +147,7 @@ function derivedBindings(plan) {
     assets: general.manifest.assets.map((asset) => {
       const prompt = promptFor(asset);
       const promptSha256 = hash(prompt);
-      return { assetId: asset.asset_id, prompt, promptSha256, approvalBindingSha256: hash({ assetId: asset.asset_id, dagSha256, planSha256, promptSha256 }) };
+      return { assetId: asset.asset_id, outputPath: asset.output.path, prompt, promptSha256, approvalBindingSha256: hash({ assetId: asset.asset_id, dagSha256, planSha256, promptSha256 }) };
     }),
   };
 }
@@ -147,14 +155,28 @@ function derivedBindings(plan) {
 function assertPlanDerivedBindings(plan, manifest) {
   const expected = derivedBindings(plan);
   if (manifest.cutsceneWorkflow.dagSha256 !== expected.dagSha256
-    || JSON.stringify(manifest.cutsceneWorkflow.waves) !== JSON.stringify(expected.waves)
+    || canonicalCutsceneDocument(manifest.cutsceneWorkflow.waves) !== canonicalCutsceneDocument(expected.waves)
     || manifest.assets.length !== expected.assets.length) throw new Error("Cutscene plan-derived binding mismatch.");
   const actual = new Map(manifest.assets.map((asset) => [asset.asset_id, asset]));
   for (const binding of expected.assets) {
     const asset = actual.get(binding.assetId);
-    if (!asset || asset.prompt !== binding.prompt || asset.prompt_sha256 !== binding.promptSha256
+    if (!asset || asset.output?.path !== binding.outputPath || asset.prompt !== binding.prompt || asset.prompt_sha256 !== binding.promptSha256
       || asset.approval_binding_sha256 !== binding.approvalBindingSha256) throw new Error("Cutscene plan-derived binding mismatch.");
   }
+}
+
+function bindingAuthority(plan, manifest) {
+  const snapshot = deepFreeze(JSON.parse(canonicalCutsceneDocument({ plan, manifest })));
+  const planned = validateCutsceneVisualPlan(snapshot.plan);
+  if (!planned.ok) throw new Error("Cannot bind an invalid cutscene plan.");
+  validateCutsceneManifestHandoff({ manifest: snapshot.manifest });
+  if (!validateImageAssetManifest(snapshot.manifest).ok) throw new Error("Cannot bind an invalid cutscene image manifest.");
+  assertPlanDerivedBindings(snapshot.plan, snapshot.manifest);
+  const bindings = derivedBindings(snapshot.plan);
+  const byAssetId = new Map(bindings.assets.map((binding) => [binding.assetId, binding]));
+  const sources = snapshot.manifest.assets.filter((asset) => asset.generation_state === "generated").map((asset) => byAssetId.get(asset.asset_id));
+  if (sources.some((source) => source === undefined)) throw new Error("Cutscene plan-derived binding mismatch.");
+  return { plan: snapshot.plan, bindings, sources };
 }
 
 export function validateCutsceneManifestHandoff({ manifest } = {}) {
@@ -212,30 +234,24 @@ export function planCutsceneVisualPreproduction(input = {}) {
   return { plan, manifest, templatePromptPackage: templatePackage(plan, manifest) };
 }
 
-export async function bindCutscenePromptPackage({ artifactRoot, plan, manifest, beforeReferenceVerification } = {}) {
-  const planned = validateCutsceneVisualPlan(plan);
-  if (!planned.ok) throw new Error("Cannot bind an invalid cutscene plan.");
-  const handoff = validateCutsceneManifestHandoff({ manifest });
-  if (!validateImageAssetManifest(manifest).ok) throw new Error("Cannot bind an invalid cutscene image manifest.");
-  assertPlanDerivedBindings(plan, manifest);
+export async function bindCutscenePromptPackage({ artifactRoot, plan, manifest } = {}) {
+  const authority = bindingAuthority(plan, manifest);
   const bound = [];
-  const sources = manifest.assets.filter((asset) => asset.generation_state === "generated");
   const loaded = [];
-  for (const asset of sources) {
+  for (const source of authority.sources) {
     try {
-      const reference = await readSecureReferenceFile({ artifactRoot, path: asset.output.path });
-      loaded.push({ asset, reference });
+      const reference = await readSecureReferenceFile({ artifactRoot, path: source.outputPath });
+      loaded.push({ source, reference });
     } catch (error) {
       if (error?.message === "reference identity changed") throw error;
       throw new Error("unsafe reference input");
     }
   }
-  if (typeof beforeReferenceVerification === "function") await beforeReferenceVerification();
-  for (const { asset, reference } of loaded) { await reference.verify(); bound.push({ assetId: asset.asset_id, sha256: reference.digest }); }
+  for (const { source, reference } of loaded) { await reference.verify(); bound.push({ assetId: source.assetId, sha256: reference.digest }); }
   const result = {
-    kind: "generation-ready", cutsceneId: plan.cutsceneId, planSha256: cutsceneDocumentSha256(plan), dagSha256: handoff.cutsceneWorkflow.dagSha256,
+    kind: "generation-ready", cutsceneId: authority.plan.cutsceneId, planSha256: cutsceneDocumentSha256(authority.plan), dagSha256: authority.bindings.dagSha256,
     references: bound,
-    prompts: manifest.assets.map((asset) => ({ assetId: asset.asset_id, prompt: asset.prompt, promptSha256: asset.prompt_sha256 })),
+    prompts: authority.bindings.assets.map(({ assetId, prompt, promptSha256 }) => ({ assetId, prompt, promptSha256 })),
   };
   return { ...result, promptPackageSha256: hash(result) };
 }
