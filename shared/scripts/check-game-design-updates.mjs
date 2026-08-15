@@ -76,7 +76,7 @@ function unknownResult({ checkedAt, cache, installed = [] }) {
 
 function notificationFor(advisory, previousIds = []) {
   const componentIds = advisory.components.filter(({ status }) => status === "outdated").map(({ id }) => id);
-  if (componentIds.length === 0 || componentIds.length === previousIds.length && componentIds.every((id, index) => id === previousIds[index])) return null;
+  if (componentIds.length === 0 || sameIds(componentIds, previousIds)) return null;
   return Object.freeze({
     kind: "update-available",
     prompt: "플러그인 업데이트를 확인해 줘",
@@ -84,14 +84,25 @@ function notificationFor(advisory, previousIds = []) {
   });
 }
 
+function sameIds(left, right) {
+  return Array.isArray(left) && Array.isArray(right)
+    && left.length === right.length
+    && left.every((id, index) => id === right[index]);
+}
+
 function cacheRecord({ advisory, notification, now, previous }) {
+  const outdatedIds = advisory.components.filter(({ status }) => status === "outdated").map(({ id }) => id);
+  const preserveClaim = notification === null
+    && outdatedIds.length > 0
+    && sameIds(outdatedIds, previous?.lastNotifiedComponentIds)
+    && typeof previous?.lastNotifiedAt === "string";
   return {
     schemaVersion: 1,
     checkedAt: advisory.checkedAt,
     status: advisory.status,
     components: advisory.components.map((component) => ({ ...component })),
-    lastNotifiedAt: notification === null ? previous?.lastNotifiedAt ?? null : now,
-    lastNotifiedComponentIds: notification === null ? previous?.lastNotifiedComponentIds ?? [] : [...notification.componentIds],
+    lastNotifiedAt: notification === null ? (preserveClaim ? previous.lastNotifiedAt : null) : now,
+    lastNotifiedComponentIds: notification === null ? (preserveClaim ? [...previous.lastNotifiedComponentIds] : []) : [...notification.componentIds],
   };
 }
 
@@ -99,7 +110,7 @@ function recordsMatch(left, right) {
   return JSON.stringify(left) === JSON.stringify(right);
 }
 
-function cacheAdvisory(record, policy, installed) {
+function cacheAdvisory(record, policy, installed, now) {
   if (!hasExactKeys(record, CACHE_KEYS)
     || record.schemaVersion !== 1
     || typeof record.checkedAt !== "string"
@@ -127,12 +138,18 @@ function cacheAdvisory(record, policy, installed) {
   }
   if (advisory.status === "unknown" || advisory.status !== record.status || !recordsMatch(advisory.components, record.components)) return null;
   const outdatedIds = advisory.components.filter(({ status }) => status === "outdated").map(({ id }) => id);
-  if (new Set(record.lastNotifiedComponentIds).size !== record.lastNotifiedComponentIds.length
-    || record.lastNotifiedComponentIds.some((id) => !outdatedIds.includes(id))) return null;
-  if (record.lastNotifiedAt !== null) {
-    const notifiedAt = new Date(record.lastNotifiedAt);
-    if (Number.isNaN(notifiedAt.valueOf()) || notifiedAt.toISOString() !== record.lastNotifiedAt) return null;
+  if (outdatedIds.length === 0) {
+    if (record.lastNotifiedComponentIds.length !== 0 || record.lastNotifiedAt !== null) return null;
+    return advisory;
   }
+  if (record.lastNotifiedComponentIds.length === 0) return record.lastNotifiedAt === null ? advisory : null;
+  if (!sameIds(record.lastNotifiedComponentIds, outdatedIds) || typeof record.lastNotifiedAt !== "string") return null;
+  const notifiedAt = new Date(record.lastNotifiedAt);
+  const checkedAt = new Date(record.checkedAt);
+  if (Number.isNaN(notifiedAt.valueOf())
+    || notifiedAt.toISOString() !== record.lastNotifiedAt
+    || notifiedAt.valueOf() < checkedAt.valueOf()
+    || notifiedAt.valueOf() > now) return null;
   return advisory;
 }
 
@@ -169,7 +186,7 @@ async function readRegularJson(cachePath, fsOps) {
 async function readCache({ cachePath, fsOps, policy, installed, now, intervalMs }) {
   const loaded = await readRegularJson(cachePath, fsOps);
   if (loaded.state !== "present") return { state: loaded.state, record: null, advisory: null, fresh: false };
-  const advisory = cacheAdvisory(loaded.value, policy, installed);
+  const advisory = cacheAdvisory(loaded.value, policy, installed, now);
   if (advisory === null) return { state: "invalid", record: null, advisory: null, fresh: false };
   return {
     state: "valid",
@@ -215,6 +232,31 @@ async function waitForCache({ cachePath, fsOps, policy, installed, now, interval
     if (cached.fresh) return cached;
   }
   return null;
+}
+
+async function claimFreshNotification({ cachePath, fsOps, policy, installed, now, intervalMs }) {
+  const lockPath = `${cachePath}.lock`;
+  let locked;
+  try {
+    locked = await acquireLock(lockPath, fsOps);
+  } catch {
+    return null;
+  }
+  if (!locked) {
+    const winner = await waitForCache({ cachePath, fsOps, policy, installed, now, intervalMs });
+    return winner === null ? null : { advisory: winner.advisory, notification: null };
+  }
+  try {
+    const cached = await readCache({ cachePath, fsOps, policy, installed, now, intervalMs });
+    if (!cached.fresh) return null;
+    const notification = notificationFor(cached.advisory, cached.record.lastNotifiedComponentIds);
+    if (notification === null) return { advisory: cached.advisory, notification: null };
+    const record = cacheRecord({ advisory: cached.advisory, notification, now: iso(now), previous: cached.record });
+    if (!(await publishCache({ cachePath, record, fsOps }))) return null;
+    return { advisory: cached.advisory, notification };
+  } finally {
+    await releaseLock(lockPath, fsOps);
+  }
 }
 
 function trustedEndpointFor(component) {
@@ -287,16 +329,22 @@ async function loadJson(pluginRoot, filename, fsOps) {
 
 function installedFromManifest(manifest) {
   if (!hasExactKeys(manifest, ["schemaVersion", "components"]) || manifest.schemaVersion !== 1 || !Array.isArray(manifest.components)) return null;
+  if (manifest.components.length !== Object.keys(RELEASE_ENDPOINTS).length) return null;
   if (!manifest.components.every((component) => hasExactKeys(component, INSTALLED_COMPONENT_KEYS)
     && typeof component.id === "string"
     && typeof component.repository === "string"
     && typeof component.installedTag === "string"
     && typeof component.commit === "string"
     && /^[0-9a-f]{40}$/u.test(component.commit))) return null;
+  const ids = manifest.components.map(({ id }) => id);
+  if (new Set(ids).size !== ids.length || ids.some((id) => !Object.hasOwn(RELEASE_ENDPOINTS, id))) return null;
   return manifest.components.map(({ id, installedTag, repository }) => ({ id, installedTag, repository }));
 }
 
 function trustedConfiguration(policy, installed, checkedAt) {
+  if (policy === null || typeof policy !== "object" || !Array.isArray(policy.components)) return false;
+  const policyRepositories = new Map(policy.components.map((component) => [component?.id, component?.repository]));
+  if (policyRepositories.size !== installed.length || !installed.every(({ id, repository }) => policyRepositories.get(id) === repository)) return false;
   const releases = {};
   for (const component of installed) {
     releases[component.id] = [{
@@ -353,7 +401,14 @@ export async function checkGameDesignUpdates({
   const intervalMs = policy.checkIntervalDays * 24 * 60 * 60 * 1000;
   const cachePath = resolveUpdateCachePath({ env, home, platform });
   const initial = await readCache({ cachePath, fsOps, policy, installed, now, intervalMs });
-  if (initial.fresh) return publicResult({ advisory: initial.advisory, cache: "hit", notification: notificationFor(initial.advisory, initial.record.lastNotifiedComponentIds) });
+  if (initial.fresh) {
+    const notification = notificationFor(initial.advisory, initial.record.lastNotifiedComponentIds);
+    if (notification === null) return publicResult({ advisory: initial.advisory, cache: "hit" });
+    const claimed = await claimFreshNotification({ cachePath, fsOps, policy, installed, now, intervalMs });
+    return claimed === null
+      ? unknownResult({ checkedAt, cache: "hit", installed })
+      : publicResult({ advisory: claimed.advisory, cache: "hit", notification: claimed.notification });
+  }
   if (initial.state === "unsafe") return unknownResult({ checkedAt, cache: "miss", installed });
   if (!(await ensureCacheDirectory(cachePath, fsOps))) return unknownResult({ checkedAt, cache: "miss", installed });
 

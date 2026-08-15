@@ -47,7 +47,7 @@ function currentResponse(url) {
   return response(url, [apiRelease(component.installedTag, component.repository)]);
 }
 
-async function fixture(t) {
+async function fixture(t, { manifest, policyOverrides = {} } = {}) {
   const root = await mkdtemp(path.join(tmpdir(), "game-design-update-check-"));
   const pluginRoot = path.join(root, "plugin");
   const home = path.join(root, "home");
@@ -61,8 +61,9 @@ async function fixture(t) {
     productIds: ["game-design-studio", "game-design-career"],
     components: INSTALLED.map(({ id, repository }) => ({ id, repository })),
     stableReleasesOnly: true,
+    ...policyOverrides,
   })}\n`);
-  await writeFile(path.join(pluginRoot, "shared", "updates", "installed-components.json"), `${JSON.stringify({ schemaVersion: 1, components: INSTALLED })}\n`);
+  await writeFile(path.join(pluginRoot, "shared", "updates", "installed-components.json"), `${JSON.stringify(manifest ?? { schemaVersion: 1, components: INSTALLED })}\n`);
   t.after(() => rm(root, { recursive: true, force: true }));
   return { root, pluginRoot, home };
 }
@@ -95,6 +96,20 @@ function cacheValue({ checkedAt = CHECKED_AT, lastNotifiedComponentIds = [], las
     })),
     lastNotifiedAt,
     lastNotifiedComponentIds,
+  };
+}
+
+function outdatedCacheValue(options = {}) {
+  const value = cacheValue(options);
+  return {
+    ...value,
+    status: "outdated",
+    components: value.components.map((component) => component.id === "archify" ? {
+      ...component,
+      latestTag: "v2.14.0",
+      status: "outdated",
+      releaseUrl: "https://github.com/tt-a1i/archify/releases/tag/v2.14.0",
+    } : component),
   };
 }
 
@@ -132,6 +147,29 @@ test("reuses a six-day cache without network access", async (t) => {
 
   assert.equal(result.cache, "hit");
   assert.equal(result.checkedAt, CHECKED_AT);
+});
+
+test("concurrent fresh outdated cache hits atomically claim one notification without network access", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  const cachePath = await writeCache({ home, value: outdatedCacheValue() });
+  const calls = [];
+  const fetchFn = checkingFetch(calls);
+
+  const results = await Promise.all([
+    checkGameDesignUpdates({ pluginRoot, home, now: SIX_DAYS_LATER, fetchFn }),
+    checkGameDesignUpdates({ pluginRoot, home, now: SIX_DAYS_LATER, fetchFn }),
+  ]);
+
+  assert.equal(calls.length, 0);
+  assert.equal(results.filter(({ notification }) => notification !== null).length, 1);
+  assert.deepEqual(results.find(({ notification }) => notification !== null)?.notification, {
+    kind: "update-available",
+    prompt: "플러그인 업데이트를 확인해 줘",
+    componentIds: ["archify"],
+  });
+  const persisted = JSON.parse(await readFile(cachePath, "utf8"));
+  assert.deepEqual(persisted.lastNotifiedComponentIds, ["archify"]);
+  assert.equal(persisted.lastNotifiedAt, "2026-08-21T00:00:00.000Z");
 });
 
 test("treats exactly seven days as stale and refreshes the cache", async (t) => {
@@ -211,14 +249,62 @@ test("rejects future, truncated JSON, and unknown-key cache evidence before refr
   }
 });
 
-test("fails open to closed unknown evidence for HTTP, timeout, malformed JSON, and hostile redirects", async (t) => {
+test("rejects partial and future notification state before rechecking", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  for (const value of [
+    outdatedCacheValue({ lastNotifiedComponentIds: ["archify"], lastNotifiedAt: null }),
+    outdatedCacheValue({ lastNotifiedComponentIds: [], lastNotifiedAt: CHECKED_AT }),
+    outdatedCacheValue({ lastNotifiedComponentIds: ["archify"], lastNotifiedAt: "2026-08-14T00:00:00.000Z" }),
+    outdatedCacheValue({ lastNotifiedComponentIds: ["archify"], lastNotifiedAt: "2026-08-22T00:00:00.000Z" }),
+    outdatedCacheValue({ lastNotifiedComponentIds: ["skillstead"], lastNotifiedAt: CHECKED_AT }),
+  ]) {
+    await writeCache({ home, value });
+    const calls = [];
+
+    const result = await checkGameDesignUpdates({ pluginRoot, home, now: SIX_DAYS_LATER, fetchFn: checkingFetch(calls) });
+
+    assert.equal(result.cache, "miss");
+    assert.equal(calls.length, 3);
+  }
+});
+
+test("rejects empty, missing, partial, duplicate, and unknown installed manifests without network or cache publication", async (t) => {
+  const manifestCases = [
+    ["empty", { schemaVersion: 1, components: [] }],
+    ["partial", { schemaVersion: 1, components: INSTALLED.slice(0, 2) }],
+    ["duplicate", { schemaVersion: 1, components: [INSTALLED[0], INSTALLED[1], INSTALLED[1]] }],
+    ["unknown-id", { schemaVersion: 1, components: [{ ...INSTALLED[0], id: "untrusted-component" }, INSTALLED[1], INSTALLED[2]] }],
+    ["unknown-key", { schemaVersion: 1, components: INSTALLED, untrusted: true }],
+    ["missing", null],
+  ];
+  for (const [name, manifest] of manifestCases) {
+    const { pluginRoot, home } = await fixture(t, { manifest });
+    if (name === "missing") await rm(path.join(pluginRoot, "shared", "updates", "installed-components.json"));
+    const calls = [];
+    let publications = 0;
+
+    const result = await checkGameDesignUpdates({
+      pluginRoot,
+      home,
+      now: Date.parse(CHECKED_AT),
+      fetchFn: checkingFetch(calls),
+      fsOps: { rename: async () => { publications += 1; } },
+    });
+
+    assert.equal(result.status, "unknown");
+    assert.equal(calls.length, 0);
+    assert.equal(publications, 0);
+    await assert.rejects(lstat(resolveUpdateCachePath({ env: {}, home, platform: process.platform })), { code: "ENOENT" });
+  }
+});
+
+test("fails open to closed unknown evidence for HTTP, malformed JSON, and hostile redirects", async (t) => {
   const { pluginRoot, home } = await fixture(t);
   const hostileCases = [
     ["403", () => response(ENDPOINTS[0], [], { status: 403 })],
     ["404", () => response(ENDPOINTS[0], [], { status: 404 })],
     ["429", () => response(ENDPOINTS[0], [], { status: 429 })],
     ["500", () => response(ENDPOINTS[0], [], { status: 500 })],
-    ["timeout", () => { throw Object.assign(new Error("aborted"), { name: "AbortError" }); }],
     ["malformed", () => response(ENDPOINTS[0], { releases: [] })],
     ["redirect", () => response(ENDPOINTS[0], [], { responseUrl: "https://untrusted.example/releases" })],
   ];
@@ -241,6 +327,25 @@ test("fails open to closed unknown evidence for HTTP, timeout, malformed JSON, a
     }, name);
     assert.equal(calls.length, 1, name);
   }
+});
+
+test("aborts a never-resolving fetch at the policy timeout and returns bounded unknown evidence", async (t) => {
+  const { pluginRoot, home } = await fixture(t, { policyOverrides: { totalTimeoutMs: 20 } });
+  let signal;
+  const startedAt = Date.now();
+  const result = await checkGameDesignUpdates({
+    pluginRoot,
+    home,
+    now: Date.parse(CHECKED_AT),
+    fetchFn: async (_url, options) => {
+      signal = options.signal;
+      return new Promise(() => undefined);
+    },
+  });
+
+  assert.equal(result.status, "unknown");
+  assert.equal(signal?.aborted, true);
+  assert.ok(Date.now() - startedAt < 500);
 });
 
 test("opt-out performs neither cache writes nor network calls", async (t) => {
