@@ -260,10 +260,12 @@ codex plugin marketplace remove game-design-suite
 | `build-image-asset-plan.mjs` | profile과 artifact에서 image asset plan 생성 |
 | `capability-probe.mjs` | 선택 renderer capability 점검 |
 | `capture-design-memory.mjs` | 검증한 작업의 교훈을 검토 대기 후보로 기록 |
+| `check-game-design-updates.mjs` | 고정 번들의 업데이트 정보를 7일 주기 안내로 확인 |
 | `compile-image-prompts.mjs` | Markdown/JSON prompt package 생성 |
 | `data-only-snapshot.mjs` | 신뢰 경계의 data-only snapshot 검증 |
 | `estimate-cutscene-image-cost.mjs` | 현재 컷씬 wave의 비용 범위와 cap 계산 |
 | `generate-openai-images.mjs` | OpenAI Images API bounded adapter |
+| `inspect-game-design-plugin-updates.mjs` | inventory의 비교 가능 여부와 명시적 재설치 계획 확인 |
 | `load-memory-config.mjs` | 프로젝트 기억 설정을 안전한 값으로 읽기 |
 | `maintain-design-memory.mjs` | 후보·사람 결정·충돌·복구 관리 |
 | `manage-game-design-glossary.mjs` | 용어 후보·오버레이·사람 결정 기록 관리 |
@@ -287,7 +289,7 @@ codex plugin marketplace remove game-design-suite
 | `validate-reference-preset.mjs` | neutral reference preset 검증 |
 | `validate-writing-revision.mjs` | protected content와 bounded writing revision 검증 |
 
-이 표는 기존 16개와 기억 스크립트 5개, 레퍼런스 인텔리전스 스크립트 4개, 컷씬 프리프로덕션 스크립트 5개를 합친 최상위 실행 스크립트 30개입니다. `scripts/lib/*.mjs`는 최상위 스크립트가 쓰는 내부 도구이며 직접 실행 목록에 포함하지 않습니다.
+이 표는 기존 16개와 기억 스크립트 5개, 레퍼런스 인텔리전스 스크립트 4개, 컷씬 프리프로덕션 스크립트 5개, 업데이트 검사 스크립트 2개를 합친 최상위 실행 스크립트 32개입니다. `scripts/lib/*.mjs`는 최상위 스크립트가 쓰는 내부 도구이며 직접 실행 목록에 포함하지 않습니다.
 
 ## 프로젝트 기억
 

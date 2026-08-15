@@ -14,6 +14,7 @@ import { sha256 } from "./lib/hash.mjs";
 import { artifactTreeIdentity, runMarketplaceProof, validateRouteReceipt } from "./lib/marketplace-proof-harness.mjs";
 
 const MARKETPLACE = "game-design-suite";
+export const FALLBACK_PLUGIN_VERSION = "0.1.1";
 export const PACKAGED_SKILL_COUNTS = Object.freeze({
   "game-design-career": 23,
   "game-design-studio": 24,
@@ -222,8 +223,31 @@ function mismatch(kind) {
   throw new Error(`${kind} contract mismatch`);
 }
 
-export function validateCliJson(kind, payload, { repoRoot, productName, cacheRoot }) {
+function manifestVersion(manifest, productName) {
+  if (!manifest || typeof manifest !== "object" || Array.isArray(manifest)
+      || manifest.name !== productName || typeof manifest.version !== "string"
+      || !/^\d+\.\d+\.\d+$/u.test(manifest.version)) return null;
+  return manifest.version;
+}
+
+export async function resolveExpectedPluginVersion({ repoRoot, productName }) {
+  try {
+    const [source, snapshot] = await Promise.all([
+      readFile(path.join(repoRoot, "products", productName, "plugin", ".codex-plugin", "plugin.json"), "utf8"),
+      readFile(path.join(repoRoot, "plugins", productName, ".codex-plugin", "plugin.json"), "utf8"),
+    ]);
+    const sourceVersion = manifestVersion(safeJson(source, "source plugin manifest"), productName);
+    const snapshotVersion = manifestVersion(safeJson(snapshot, "snapshot plugin manifest"), productName);
+    if (sourceVersion && sourceVersion === snapshotVersion) return sourceVersion;
+  } catch {
+    // A dirty, incomplete, or invalid manifest must not weaken the smoke contract.
+  }
+  return FALLBACK_PLUGIN_VERSION;
+}
+
+export function validateCliJson(kind, payload, { repoRoot, productName, cacheRoot, expectedVersion = FALLBACK_PLUGIN_VERSION }) {
   const pluginId = `${productName}@${MARKETPLACE}`;
+  const version = /^\d+\.\d+\.\d+$/u.test(expectedVersion) ? expectedVersion : FALLBACK_PLUGIN_VERSION;
   try {
     if (kind === "marketplaceAdd") {
       assertExactKeys(payload, ["marketplaceName", "installedRoot", "alreadyAdded"], kind);
@@ -231,7 +255,7 @@ export function validateCliJson(kind, payload, { repoRoot, productName, cacheRoo
     } else if (kind === "pluginAdd") {
       assertExactKeys(payload, ["pluginId", "name", "marketplaceName", "version", "installedPath", "authPolicy"], kind);
       if (payload.pluginId !== pluginId || payload.name !== productName || payload.marketplaceName !== MARKETPLACE
-          || payload.version !== "0.1.0" || payload.installedPath !== cacheRoot || payload.authPolicy !== "ON_USE") mismatch(kind);
+          || payload.version !== version || payload.installedPath !== cacheRoot || payload.authPolicy !== "ON_USE") mismatch(kind);
     } else if (kind === "pluginList") {
       assertExactKeys(payload, ["installed", "available"], kind);
       if (!Array.isArray(payload.installed) || payload.installed.length !== 1 || !Array.isArray(payload.available) || payload.available.length !== 0) mismatch(kind);
@@ -240,7 +264,7 @@ export function validateCliJson(kind, payload, { repoRoot, productName, cacheRoo
       assertExactKeys(plugin.source, ["source", "path"], kind);
       assertExactKeys(plugin.marketplaceSource, ["sourceType", "source"], kind);
       if (plugin.pluginId !== pluginId || plugin.name !== productName || plugin.marketplaceName !== MARKETPLACE
-          || plugin.version !== "0.1.0" || plugin.installed !== true || plugin.enabled !== true
+          || plugin.version !== version || plugin.installed !== true || plugin.enabled !== true
           || plugin.source.source !== "local" || plugin.source.path !== path.join(repoRoot, "plugins", productName)
           || plugin.marketplaceSource.sourceType !== "local" || plugin.marketplaceSource.source !== repoRoot
           || plugin.installPolicy !== "AVAILABLE" || plugin.authPolicy !== "ON_USE") mismatch(kind);
@@ -653,11 +677,12 @@ export async function runMarketplaceSmoke({
     for (const product of PRODUCTS) {
       const packagedSkillCount = PACKAGED_SKILL_COUNTS[product.name];
       if (!Number.isInteger(packagedSkillCount)) throw new Error("packaged skill inventory missing");
+      const expectedVersion = await resolveExpectedPluginVersion({ repoRoot: canonicalRepoRoot, productName: product.name });
       const added = await runStage({ product: product.name, stage: "plugin-install" }, () => run(
         codex, ["plugin", "add", `${product.name}@${MARKETPLACE}`, "--json"], { cwd: repoRoot, env, json: true },
       ));
-      const cacheRoot = path.join(env.CODEX_HOME, "plugins/cache", MARKETPLACE, product.name, "0.1.0");
-      const cliContext = { repoRoot: canonicalRepoRoot, productName: product.name, cacheRoot };
+      const cacheRoot = path.join(env.CODEX_HOME, "plugins/cache", MARKETPLACE, product.name, expectedVersion);
+      const cliContext = { repoRoot: canonicalRepoRoot, productName: product.name, cacheRoot, expectedVersion };
       await runStage({ product: product.name, stage: "plugin-install" }, () => validateCliJson("pluginAdd", added, cliContext));
       await runStage({ product: product.name, stage: "plugin-package" }, async () => {
         if (await realpath(cacheRoot) !== cacheRoot || await countSkills(cacheRoot) !== packagedSkillCount) throw new Error("cache mismatch");

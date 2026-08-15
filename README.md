@@ -1903,7 +1903,7 @@ Skillstead 미리보기는 **Studio·Career의 결과 경계와 사람 승인·�
 
 ### Studio 설치 패키지 구조
 
-Studio 생성본 (snapshot)은 에이전트 12개, 설치 스킬 24개, 템플릿 15개와 최상위 실행 스크립트 30개를 포함합니다.
+Studio 생성본 (snapshot)은 에이전트 12개, 설치 스킬 24개, 템플릿 15개와 최상위 실행 스크립트 32개를 포함합니다.
 
 ```text
 plugins/game-design-studio/
@@ -1918,7 +1918,7 @@ plugins/game-design-studio/
 │   ├── methods/                # 기획 방법 reference
 │   ├── shared/                 # 공통 계약과 책임 설계
 │   └── source/                 # 근거 문서의 설치 snapshot
-├── scripts/ # 기존 16개와 기억 스크립트 5개, 레퍼런스 인텔리전스 스크립트 4개, 컷씬 프리프로덕션 스크립트 5개, 모두 30개
+├── scripts/ # 기존 16개와 기억 5개, 레퍼런스 인텔리전스 4개, 컷씬 프리프로덕션 5개, 업데이트 검사 2개로 모두 32개
 ├── hooks/hooks.json            # 중단·검토 hook
 ├── .env.example                # 이미지 생성 설정 예시
 ├── README.md
@@ -1930,7 +1930,7 @@ generated snapshot: plugins/game-design-studio/
 
 ### Career 설치 패키지 구조
 
-Career 생성본 (snapshot)은 에이전트 10개, 설치 스킬 23개, 템플릿 15개와 최상위 실행 스크립트 30개를 포함합니다.
+Career 생성본 (snapshot)은 에이전트 10개, 설치 스킬 23개, 템플릿 15개와 최상위 실행 스크립트 32개를 포함합니다.
 
 ```text
 plugins/game-design-career/
@@ -1945,7 +1945,7 @@ plugins/game-design-career/
 │   ├── methods/                # 학습·취업 방법 reference
 │   ├── shared/                 # 공통 계약과 책임 설계
 │   └── source/                 # 근거 문서의 설치 snapshot
-├── scripts/ # 기존 16개와 기억 스크립트 5개, 레퍼런스 인텔리전스 스크립트 4개, 컷씬 프리프로덕션 스크립트 5개, 모두 30개
+├── scripts/ # 기존 16개와 기억 5개, 레퍼런스 인텔리전스 4개, 컷씬 프리프로덕션 5개, 업데이트 검사 2개로 모두 32개
 ├── hooks/hooks.json            # 중단·검토 hook
 ├── .env.example                # 이미지 생성 설정 예시
 ├── README.md
@@ -1983,10 +1983,12 @@ generated snapshot: plugins/game-design-career/
 | `build-image-asset-plan.mjs` | 품질 기준과 기획 결과물에서 이미지 제작 계획을 만듭니다. |
 | `capability-probe.mjs` | 사용할 수 있는 문서·이미지 변환 기능을 확인합니다. |
 | `capture-design-memory.mjs` | 검증된 작업에서 재사용할 교훈을 검토 대기 후보로 기록합니다. |
+| `check-game-design-updates.mjs` | 고정 번들의 업데이트 정보를 7일 주기 안내로 확인합니다. |
 | `compile-image-prompts.mjs` | 이미지 프롬프트 묶음을 Markdown과 JSON으로 만듭니다. |
 | `data-only-snapshot.mjs` | 검토 경계를 넘는 입력이 순수 데이터인지 확인합니다. |
 | `estimate-cutscene-image-cost.mjs` | 현재 컷씬 wave의 비용 범위와 cap을 계산합니다. |
 | `generate-openai-images.mjs` | 설정된 OpenAI Images API 호출을 제한된 범위에서 실행합니다. |
+| `inspect-game-design-plugin-updates.mjs` | 설치·available inventory의 비교 가능 여부와 명시적 재설치 계획을 확인합니다. |
 | `load-memory-config.mjs` | 로컬 기억 사용 범위와 개수·기간·Git 모드를 안전한 값으로 읽습니다. |
 | `maintain-design-memory.mjs` | 후보 목록, 사람 승인·거부·폐기, 충돌과 색인 복구를 관리합니다. |
 | `manage-game-design-glossary.mjs` | 용어 후보, 오버레이와 사람 결정 기록을 관리합니다. |
@@ -2010,7 +2012,7 @@ generated snapshot: plugins/game-design-career/
 | `validate-reference-preset.mjs` | 중립 참고 사전 설정의 허용 범위를 검사합니다. |
 | `validate-writing-revision.mjs` | 글의 핵심 사실과 수치가 바뀌지 않았는지, 수정 기록이 빠지지 않았는지 검사합니다. |
 
-위 표는 기존 16개와 기억 스크립트 5개, 레퍼런스 인텔리전스 스크립트 4개, 컷씬 프리프로덕션 스크립트 5개를 합친 최상위 실행 스크립트 30개입니다. `scripts/lib/*.mjs`는 이 스크립트들이 쓰는 내부 도구이며 직접 실행 목록에 포함하지 않습니다.
+위 표는 기존 16개와 기억 스크립트 5개, 레퍼런스 인텔리전스 스크립트 4개, 컷씬 프리프로덕션 스크립트 5개, 업데이트 검사 스크립트 2개를 합친 최상위 실행 스크립트 32개입니다. `scripts/lib/*.mjs`는 이 스크립트들이 쓰는 내부 도구이며 직접 실행 목록에 포함하지 않습니다.
 
 ### 설치된 문서 품질 경로 (document-quality)
 
@@ -2164,7 +2166,7 @@ Source tree, build·release·검증 명령과 패키지 내부 계약은 기술 
 <details>
 <summary>패키지 기술 inventory</summary>
 
-표준 빌드는 Studio에 전문 에이전트 12개와 설치 스킬 24개, Career에 전문 에이전트 10개와 설치 스킬 23개, 각 제품에 Canonical Artifact 템플릿 15개와 최상위 실행 스크립트 30개를 포함합니다. 공통 변경은 `shared/`, 제품 변경은 `products/<product>/plugin/`에서 작성합니다.
+표준 빌드는 Studio에 전문 에이전트 12개와 설치 스킬 24개, Career에 전문 에이전트 10개와 설치 스킬 23개, 각 제품에 Canonical Artifact 템플릿 15개와 최상위 실행 스크립트 32개를 포함합니다. 공통 변경은 `shared/`, 제품 변경은 `products/<product>/plugin/`에서 작성합니다.
 
 | 기술 경로 | 역할 |
 | --- | --- |

@@ -48,7 +48,7 @@ const EXACT_SKILL_IDS = Object.freeze({
 const EXPECTED_HOOKS = Object.freeze({
   SessionStart: {
     command: 'node "${PLUGIN_ROOT}/scripts/capability-probe.mjs"',
-    timeout: 10,
+    timeout: 25,
     statusMessage: "Detecting optional game-design and image capabilities",
   },
   Stop: {
@@ -295,7 +295,7 @@ async function verifyOne({ repoRoot, productName, isolationRoot, mutateCopy, act
   await mutateCopy?.({ pluginRoot, productName, actualHome });
 
   const manifest = JSON.parse(await readFile(path.join(pluginRoot, ".codex-plugin/plugin.json"), "utf8"));
-  if (manifest.name !== productName || manifest.version !== "0.1.0" || manifest.skills !== "./skills/") {
+  if (manifest.name !== productName || manifest.version !== "0.1.1" || manifest.skills !== "./skills/") {
     throw new Error(`${productName} manifest mismatch`);
   }
   const skillEntries = await readdir(path.join(pluginRoot, "skills"), { withFileTypes: true });

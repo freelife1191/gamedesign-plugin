@@ -18,6 +18,7 @@ import {
   preservePrimarySmokeFailure,
   PROOF_HARNESS_PATH,
   redactFailure,
+  resolveExpectedPluginVersion,
   runArtifactValidation,
   validateCliJson,
 } from "../../tooling/marketplace-smoke.mjs";
@@ -512,6 +513,7 @@ const cliContext = {
   repoRoot: "/repo",
   productName: product,
   cacheRoot: "/temp/cache/game-design-career/0.1.1",
+  expectedVersion: "0.1.1",
 };
 const cliSamples = {
   marketplaceAdd: { marketplaceName: "game-design-suite", installedRoot: "/repo", alreadyAdded: false },
@@ -537,6 +539,28 @@ for (const [kind, sample] of Object.entries(cliSamples)) {
     assert.throws(() => validateCliJson(kind, mutated, cliContext), /contract mismatch/u);
   });
 }
+
+test("marketplace validator derives a clean manifest version and otherwise closes on 0.1.1", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "marketplace-version-"));
+  const sourceManifest = path.join(root, "products", product, "plugin", ".codex-plugin", "plugin.json");
+  const snapshotManifest = path.join(root, "plugins", product, ".codex-plugin", "plugin.json");
+  try {
+    await Promise.all([mkdir(path.dirname(sourceManifest), { recursive: true }), mkdir(path.dirname(snapshotManifest), { recursive: true })]);
+    await Promise.all([
+      writeFile(sourceManifest, JSON.stringify({ name: product, version: "0.1.2" })),
+      writeFile(snapshotManifest, JSON.stringify({ name: product, version: "0.1.2" })),
+    ]);
+    assert.equal(await resolveExpectedPluginVersion({ repoRoot: root, productName: product }), "0.1.2");
+    await writeFile(snapshotManifest, JSON.stringify({ name: product, version: "0.1.3" }));
+    assert.equal(await resolveExpectedPluginVersion({ repoRoot: root, productName: product }), "0.1.1");
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("marketplace validator rejects a previous installed plugin version", () => {
+  const stale = structuredClone(cliSamples.pluginAdd);
+  stale.version = "0.1.0";
+  assert.throws(() => validateCliJson("pluginAdd", stale, cliContext), /contract mismatch/u);
+});
 
 test("local session auth is copied as an opaque regular 0600 file", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "auth-bridge-"));

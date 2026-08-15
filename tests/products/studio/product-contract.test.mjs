@@ -215,7 +215,7 @@ test("Studio product selects the complete shared contract and 49-document corpus
     name: "game-design-studio",
     displayName: "Game Design Studio",
     description: "Professional game design, review, visualization, and export workflows.",
-    sharedModules: ["knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets", "memory", "reference-intelligence"],
+    sharedModules: ["knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets", "memory", "reference-intelligence", "updates"],
     sharedRuntime: true,
     sourceRoots: ["plugin"],
     sourceDocumentCategories: ["career", "fun-intent", "systems", "content", "feedback"],

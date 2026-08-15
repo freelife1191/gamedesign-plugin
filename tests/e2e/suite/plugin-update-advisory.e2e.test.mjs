@@ -164,10 +164,13 @@ test("fresh local products advise without implicit updates and preserve the comp
   assert.deepEqual(await snapshotProjectTree(workspace), before, "cached advisory does not touch project files");
   assert.deepEqual(await snapshotProjectTree(studioCache), cacheBeforeSession, "cached advisory never edits an installed cache");
 
-  const offline = runInstalledSessionStart({ pluginRoot: studioCache, workspace, env: { ...env, HOME: path.join(root, "offline-home"), XDG_CACHE_HOME: path.join(root, "offline-home", "cache") }, offline: true });
+  const updateCachePath = path.join(env.XDG_CACHE_HOME, "game-design-suite", "update-advisory-v1.json");
+  const updateCacheBeforeOffline = await readFile(updateCachePath);
+  const offline = runInstalledSessionStart({ pluginRoot: studioCache, workspace, env, now: checkedAt + (7 * 24 * 60 * 60 * 1000), offline: true });
   assert.equal(offline.result.updates.status, "unknown");
   assert.equal(offline.result.updates.notification, null);
   assert.equal(offline.requests.length, 1, "offline fixture fails closed at the first injected request");
+  assert.deepEqual(await readFile(updateCachePath), updateCacheBeforeOffline, "offline refresh preserves the existing shared cache evidence");
   assert.deepEqual(await snapshotProjectTree(workspace), before, "offline check does not touch project files");
   assert.deepEqual(await snapshotProjectTree(studioCache), cacheBeforeSession, "offline check never edits an installed cache");
   assert.equal(commands.every(({ args }) => !args.includes("upgrade") && !args.includes("exec")), true, "no SessionStart path performs an implicit marketplace update or codex exec");

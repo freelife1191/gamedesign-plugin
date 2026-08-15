@@ -27,7 +27,7 @@ const productSkillIds = Object.freeze({
   ],
 });
 const topLevelScripts = [
-  "analyze-game-design-references.mjs", "build-image-asset-plan.mjs", "capability-probe.mjs", "capture-design-memory.mjs", "compile-image-prompts.mjs", "data-only-snapshot.mjs", "estimate-cutscene-image-cost.mjs", "generate-openai-images.mjs", "load-memory-config.mjs", "maintain-design-memory.mjs", "manage-game-design-glossary.mjs", "plan-cutscene-visual-preproduction.mjs", "quality-source-anchors.mjs", "resolve-quality-profile.mjs", "retrieve-design-memory.mjs", "review-cutscene-continuity.mjs", "run-approved-cutscene-image-stage.mjs", "run-game-design-writing-polish.mjs", "run-image-asset-workflow.mjs", "stop-artifact-review.mjs", "validate-artifact.mjs", "validate-cutscene-visual-preproduction.mjs", "validate-design-memory.mjs", "validate-game-design-writing-language.mjs", "validate-image-assets.mjs", "validate-image-config.mjs", "validate-quality-profile.mjs", "validate-reference-intelligence.mjs", "validate-reference-preset.mjs", "validate-writing-revision.mjs",
+  "analyze-game-design-references.mjs", "build-image-asset-plan.mjs", "capability-probe.mjs", "capture-design-memory.mjs", "check-game-design-updates.mjs", "compile-image-prompts.mjs", "data-only-snapshot.mjs", "estimate-cutscene-image-cost.mjs", "generate-openai-images.mjs", "inspect-game-design-plugin-updates.mjs", "load-memory-config.mjs", "maintain-design-memory.mjs", "manage-game-design-glossary.mjs", "plan-cutscene-visual-preproduction.mjs", "quality-source-anchors.mjs", "resolve-quality-profile.mjs", "retrieve-design-memory.mjs", "review-cutscene-continuity.mjs", "run-approved-cutscene-image-stage.mjs", "run-game-design-writing-polish.mjs", "run-image-asset-workflow.mjs", "stop-artifact-review.mjs", "validate-artifact.mjs", "validate-cutscene-visual-preproduction.mjs", "validate-design-memory.mjs", "validate-game-design-writing-language.mjs", "validate-image-assets.mjs", "validate-image-config.mjs", "validate-quality-profile.mjs", "validate-reference-intelligence.mjs", "validate-reference-preset.mjs", "validate-writing-revision.mjs",
 ];
 const memoryHeadings = [
   "어떤 기록을 기억하는가",
@@ -119,9 +119,9 @@ function assertExactInstallInventory({ product, actualProductSkillIds, actualCom
   assert.deepEqual(actualScripts, [...topLevelScripts].sort(), `${product}: source top-level scripts`);
   const expectedSkillCount = product === "game-design-studio" ? 24 : 23;
   assert.equal(expectedSkills.length, expectedSkillCount, `${product}: expected installed skills`);
-  assert.equal(topLevelScripts.length, 30, `${product}: expected top-level scripts`);
+  assert.equal(topLevelScripts.length, 32, `${product}: expected top-level scripts`);
   assert.deepEqual(listedSkillIds(skillGuide), expectedSkills, `${product}: skill guide lists exactly the installed skill IDs`);
-  assert.deepEqual(listedTopLevelScripts(productReadme), [...topLevelScripts].sort(), `${product}: README lists exactly the 30 top-level scripts`);
+  assert.deepEqual(listedTopLevelScripts(productReadme), [...topLevelScripts].sort(), `${product}: README lists exactly the 32 top-level scripts`);
 }
 
 function assertKoreanMemoryContract(markdown, label, laneHeading) {
@@ -171,8 +171,9 @@ test("memory guides are Korean-first, local-only, human-approved, and fail-open"
 
 test("source inventories and product documentation list the frozen cutscene inventory", async () => {
   const buildSource = await readFile(path.join(root, "tooling/lib/build-product.mjs"), "utf8");
+  const vendorSource = await readFile(path.join(root, "tooling/lib/vendor-components.mjs"), "utf8");
   for (const id of ["svg-infographic", "archify", "humanize-korean"]) {
-    assert.match(buildSource, new RegExp(`skills/${id.replace(/-/gu, "\\-")}`), id);
+    assert.match(vendorSource, new RegExp(`skills/${id.replace(/-/gu, "\\-")}`), id);
   }
   assert.match(buildSource, /\["shared\/memory\/skills", "skills"\]/u);
   assert.match(buildSource, /\["shared\/reference-intelligence\/skills", "skills"\]/u);
@@ -204,8 +205,8 @@ test("source inventories and product documentation list the frozen cutscene inve
     ]) {
       assert.ok(visibleLinks.some((link) => link.label === label && link.target === target), `${product}: visible source link ${label}`);
     }
-    assert.match(productReadme, /기존 16개와 기억 스크립트 5개, 레퍼런스 인텔리전스 스크립트 4개, 컷씬 프리프로덕션 스크립트 5개/u);
-    assert.match(productReadme, /최상위 실행 스크립트 30개/u);
+    assert.match(productReadme, /기존 16개와 기억 스크립트 5개, 레퍼런스 인텔리전스 스크립트 4개, 컷씬 프리프로덕션 스크립트 5개, 업데이트 검사 스크립트 2개/u);
+    assert.match(productReadme, /최상위 실행 스크립트 32개/u);
     assert.match(productReadme, /`scripts\/lib\/\*\.mjs`.*내부 도구/u);
   }
 });
@@ -232,8 +233,8 @@ test("cutscene guide keeps copyable requests and frozen Studio/Career inventorie
     };
   }
   assert.deepEqual(inventories, {
-    studio: { routing: 23, installed: 24, topLevelScripts: 30 },
-    career: { routing: 22, installed: 23, topLevelScripts: 30 },
+    studio: { routing: 23, installed: 24, topLevelScripts: 32 },
+    career: { routing: 22, installed: 23, topLevelScripts: 32 },
   });
 });
 
