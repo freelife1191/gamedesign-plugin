@@ -2,7 +2,7 @@
 
 import { constants } from "node:fs";
 import * as fs from "node:fs/promises";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { homedir } from "node:os";
 import path from "node:path";
 import process from "node:process";
@@ -28,6 +28,8 @@ const NOTIFICATION_IDENTITY_KEYS = Object.freeze(["id", "installedTag", "latestT
 const LOCK_METADATA_KEYS = Object.freeze(["schemaVersion", "owner", "createdAt"]);
 const LOCK_METADATA_FILE = "owner.json";
 const LOCK_OWNER = /^game-design-update-check:(?<pid>[1-9]\d*)-[0-9A-Za-z-]+$/u;
+const RECOVERY_MARKER = ".recovery.";
+const RECOVERY_TYPES = new Set(["claim", "retired", "terminal"]);
 const INSTALLED_COMPONENT_KEYS = Object.freeze(["id", "repository", "installedTag", "commit"]);
 const RELEASE_ENDPOINTS = Object.freeze({
   skillstead: "https://api.github.com/repos/kyungseo/skillstead/releases",
@@ -276,109 +278,259 @@ function sameLock(lock, inspected) {
     && inspected.metadata.owner === lock.owner;
 }
 
-async function staleDeadOwner(inspected, leaseMs) {
-  const age = Date.now() - Date.parse(inspected.metadata.createdAt);
-  if (!Number.isFinite(age) || age < leaseMs) return false;
-  const ownerPid = Number(LOCK_OWNER.exec(inspected.metadata.owner)?.groups?.pid);
-  if (!Number.isSafeInteger(ownerPid)) return false;
+function sameGeneration(lock, inspected) {
+  return sameLock(lock, inspected) && inspected.metadata.createdAt === lock.createdAt;
+}
+
+function recoveryTargetId({ owner, createdAt }) {
+  return createHash("sha256").update(`${owner}\0${createdAt}`, "utf8").digest("hex");
+}
+
+function validIso(value) {
+  if (typeof value !== "string") return false;
+  const parsed = new Date(value);
+  return !Number.isNaN(parsed.valueOf()) && parsed.toISOString() === value;
+}
+
+function ownerPid(owner) {
+  const parsed = LOCK_OWNER.exec(owner)?.groups?.pid;
+  const pid = Number(parsed);
+  return Number.isSafeInteger(pid) ? pid : null;
+}
+
+async function ownerIsProvablyDead(owner) {
+  const pid = ownerPid(owner);
+  if (pid === null) return false;
   try {
-    process.kill(ownerPid, 0);
+    process.kill(pid, 0);
     return false;
   } catch (error) {
     return error?.code === "ESRCH";
   }
 }
 
-async function removeOwnedLock({ lockPath, kind, entry, owner }, fsOps) {
-  let inspected = await inspectOwnedLock(lockPath, fsOps);
-  if (!sameLock({ kind, entry, owner }, inspected)) return false;
-  if (kind === "file" && inspected.entry.nlink === 2) {
-    if (!(await discardLinkedStagingLock(lockPath, { kind, entry, owner }, fsOps))) return false;
-    inspected = await inspectOwnedLock(lockPath, fsOps);
-    if (!sameLock({ kind, entry, owner }, inspected) || inspected.entry.nlink !== 1) return false;
-  }
-  const quarantinePath = `${lockPath}.release.${process.pid}.${randomUUID()}`;
+async function staleDeadOwner(inspected, leaseMs) {
+  const age = Date.now() - Date.parse(inspected.metadata.createdAt);
+  if (!Number.isFinite(age) || age < leaseMs) return false;
+  return ownerIsProvablyDead(inspected.metadata.owner);
+}
+
+function recoveryRecordPath(lockPath, targetId, type, sequence) {
+  return `${lockPath}${RECOVERY_MARKER}${targetId}.${type}.${sequence}`;
+}
+
+function recoveryRecordKeys(type) {
+  return type === "claim"
+    ? ["schemaVersion", "targetId", "sequence", "owner", "createdAt", "claimant", "claimedAt"]
+    : ["schemaVersion", "targetId", "sequence", "owner", "createdAt", "completedAt"];
+}
+
+function validRecoveryRecord(value, { type, targetId, sequence, owner, createdAt }) {
+  if (!hasExactKeys(value, recoveryRecordKeys(type))
+    || value.schemaVersion !== 1
+    || value.targetId !== targetId
+    || value.sequence !== sequence
+    || value.owner !== owner
+    || value.createdAt !== createdAt
+    || recoveryTargetId(value) !== targetId) return false;
+  if (type === "claim") return typeof value.claimant === "string" && LOCK_OWNER.test(value.claimant) && validIso(value.claimedAt);
+  return validIso(value.completedAt);
+}
+
+async function inspectRecoveryRecord(recordPath, fsOps, validation) {
+  let entry;
+  let handle;
   try {
-    await fsOps.rename(lockPath, quarantinePath);
-    const moved = await inspectOwnedLock(quarantinePath, fsOps);
-    if (!sameLock({ kind, entry, owner }, moved)) return false;
-    if (kind === "file") {
-      await fsOps.unlink(quarantinePath);
-    } else {
-      await fsOps.unlink(path.join(quarantinePath, LOCK_METADATA_FILE));
-      await fsOps.rmdir(quarantinePath);
-    }
-    return true;
+    entry = await fsOps.lstat(recordPath);
+    if (!entry.isFile() || entry.isSymbolicLink() || entry.nlink !== 1 || entry.size > 1024 * 1024) return null;
+    handle = await fsOps.open(recordPath, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
+    const opened = await handle.stat();
+    if (!opened.isFile() || opened.nlink !== 1 || !sameFile(entry, opened) || opened.size > 1024 * 1024) return null;
+    const value = JSON.parse(await handle.readFile({ encoding: "utf8" }));
+    const after = await fsOps.lstat(recordPath);
+    if (!sameFile(entry, after) || !validation(value)) return null;
+    return { entry, value };
   } catch {
-    return false;
+    return null;
+  } finally {
+    await handle?.close().catch(() => undefined);
   }
 }
 
-async function reclaimStaleLock(lockPath, fsOps, leaseMs) {
-  const inspected = await inspectOwnedLock(lockPath, fsOps);
-  if (inspected === null) return false;
-  if (!(await staleDeadOwner(inspected, leaseMs))) return false;
-  return removeOwnedLock({ lockPath, kind: inspected.kind, entry: inspected.entry, owner: inspected.metadata.owner }, fsOps);
+async function writeAppendOnlyRecoveryRecord(recordPath, record, fsOps) {
+  const stagingPath = `${recordPath}.staging.${process.pid}.${randomUUID()}`;
+  let handle;
+  let entry;
+  try {
+    handle = await fsOps.open(stagingPath, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW ?? 0), 0o600);
+    entry = await handle.stat();
+    if (!entry.isFile() || entry.nlink !== 1) throw new Error("unsafe recovery staging record");
+    await handle.writeFile(`${JSON.stringify(record)}\n`, { encoding: "utf8" });
+    await handle.sync();
+    await handle.close();
+    handle = null;
+    await fsOps.link(stagingPath, recordPath);
+    await fsOps.unlink(stagingPath);
+    return true;
+  } catch (error) {
+    await handle?.close().catch(() => undefined);
+    if (entry !== undefined) await fsOps.unlink(stagingPath).catch(() => undefined);
+    if (error?.code === "EEXIST") return false;
+    throw error;
+  }
 }
 
-async function inspectStaleEmptyLegacyLock(lockPath, fsOps) {
+async function recoveryState(lockPath, generation, fsOps) {
+  let entries;
   try {
-    const directory = await fsOps.lstat(lockPath);
-    if (!directory.isDirectory() || directory.isSymbolicLink()) return null;
-    if ((await fsOps.readdir(lockPath)).length !== 0) return null;
-    const after = await fsOps.lstat(lockPath);
-    return sameFile(directory, after) ? { directory } : null;
+    entries = await fsOps.readdir(path.dirname(lockPath));
+  } catch {
+    return null;
+  }
+  const base = path.basename(lockPath);
+  const prefix = `${base}${RECOVERY_MARKER}`;
+  const markers = [];
+  for (const name of entries) {
+    if (!name.startsWith(prefix)) continue;
+    const match = /^([0-9a-f]{64})\.(claim|retired|terminal)\.([1-9]\d*)$/u.exec(name.slice(prefix.length));
+    if (match === null || !RECOVERY_TYPES.has(match[2])) return null;
+    markers.push({ targetId: match[1], type: match[2], sequence: Number(match[3]), recordPath: path.join(path.dirname(lockPath), name) });
+  }
+  const targetId = recoveryTargetId(generation);
+  const current = markers.filter((marker) => marker.targetId === targetId);
+  const claims = new Map();
+  const retired = [];
+  const terminals = new Map();
+  for (const marker of current) {
+    if (marker.type === "retired") {
+      const inspected = await inspectOwnedLockFile(marker.recordPath, fsOps, [1, 2, 3]);
+      if (!sameGeneration(generation, inspected)) return null;
+      retired.push({ ...marker, inspected });
+      continue;
+    }
+    const inspected = await inspectRecoveryRecord(marker.recordPath, fsOps, (value) => validRecoveryRecord(value, {
+      type: marker.type,
+      targetId,
+      sequence: marker.sequence,
+      owner: generation.owner,
+      createdAt: generation.createdAt,
+    }));
+    if (inspected === null) return null;
+    if (marker.type === "claim") claims.set(marker.sequence, { ...marker, record: inspected.value });
+    else terminals.set(marker.sequence, { ...marker, record: inspected.value });
+  }
+  if (claims.size === 0 && (retired.length !== 0 || terminals.size !== 0)) return null;
+  const sequences = [...claims.keys()].sort((left, right) => left - right);
+  if (!sequences.every((sequence, index) => sequence === index + 1)) return null;
+  if (retired.length > 1 || [...terminals.keys()].some((sequence) => !claims.has(sequence) || !retired.some((marker) => marker.sequence === sequence))) return null;
+  return { targetId, claims, retired, terminals };
+}
+
+async function claimStaleGeneration(lockPath, generation, fsOps, leaseMs) {
+  const state = await recoveryState(lockPath, generation, fsOps);
+  if (state === null) return null;
+  const latest = [...state.claims.values()].at(-1);
+  if (latest !== undefined) {
+    const claimAge = Date.now() - Date.parse(latest.record.claimedAt);
+    if (!Number.isFinite(claimAge) || claimAge < leaseMs || !(await ownerIsProvablyDead(latest.record.claimant))) return null;
+  }
+  const sequence = state.claims.size + 1;
+  const claimant = `game-design-update-check:${process.pid}-${randomUUID()}`;
+  const record = {
+    schemaVersion: 1,
+    targetId: state.targetId,
+    sequence,
+    owner: generation.owner,
+    createdAt: generation.createdAt,
+    claimant,
+    claimedAt: new Date().toISOString(),
+  };
+  const recordPath = recoveryRecordPath(lockPath, state.targetId, "claim", sequence);
+  try {
+    return (await writeAppendOnlyRecoveryRecord(recordPath, record, fsOps)) ? { ...state, sequence, recordPath } : null;
   } catch {
     return null;
   }
 }
 
-async function reclaimStaleEmptyLegacyLock(lockPath, fsOps, leaseMs) {
-  const inspected = await inspectStaleEmptyLegacyLock(lockPath, fsOps);
-  if (inspected === null || !Number.isFinite(inspected.directory.mtimeMs) || Date.now() - inspected.directory.mtimeMs < leaseMs) return false;
-  try {
-    await fsOps.rmdir(lockPath);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-async function discardLinkedStagingLock(lockPath, lock, fsOps) {
-  const canonical = await inspectOwnedLockFile(lockPath, fsOps, [2]);
-  if (!sameLock(lock, canonical)) return false;
+async function linkedStagingPath(lockPath, generation, fsOps) {
+  const canonical = await inspectOwnedLockFile(lockPath, fsOps, [1, 2]);
+  if (!sameGeneration(generation, canonical)) return null;
+  if (canonical.entry.nlink === 1) return { canonical, stagingPath: null };
   let entries;
   try {
     entries = await fsOps.readdir(path.dirname(lockPath));
   } catch {
-    return false;
+    return null;
   }
-  const prefix = `${path.basename(lockPath)}.staging.`;
-  const candidates = entries.filter((name) => name.startsWith(prefix));
-  if (candidates.length !== 1) return false;
+  const candidates = entries.filter((name) => name.startsWith(`${path.basename(lockPath)}.staging.`));
+  if (candidates.length !== 1) return null;
   const stagingPath = path.join(path.dirname(lockPath), candidates[0]);
   const staging = await inspectOwnedLockFile(stagingPath, fsOps, [2]);
-  if (!sameLock(lock, staging)) return false;
-  const quarantinePath = `${stagingPath}.normalize.${process.pid}.${randomUUID()}`;
+  return sameGeneration(generation, staging) && sameFile(canonical.entry, staging.entry) ? { canonical, stagingPath } : null;
+}
+
+async function reclaimStaleLock(lockPath, fsOps, leaseMs) {
+  const inspected = await inspectOwnedLockFile(lockPath, fsOps, [1, 2]);
+  if (inspected === null || !(await staleDeadOwner(inspected, leaseMs))) return false;
+  const generation = { lockPath, kind: "file", entry: inspected.entry, owner: inspected.metadata.owner, createdAt: inspected.metadata.createdAt };
+  if ((await linkedStagingPath(lockPath, generation, fsOps)) === null) return false;
+  const claimed = await claimStaleGeneration(lockPath, generation, fsOps, leaseMs);
+  if (claimed === null) return false;
+
+  const current = await linkedStagingPath(lockPath, generation, fsOps);
+  const state = await recoveryState(lockPath, generation, fsOps);
+  if (state === null) return false;
+  const retired = state.retired[0];
+  if (current === null || !(await staleDeadOwner(current.canonical, leaseMs))) return retired !== undefined;
+  if (state.terminals.size !== 0) return false;
+  let retiredPath = retired?.recordPath;
+  if (retiredPath === undefined) {
+    retiredPath = recoveryRecordPath(lockPath, state.targetId, "retired", claimed.sequence);
+    try {
+      await fsOps.link(lockPath, retiredPath);
+    } catch {
+      return false;
+    }
+  }
+  const canonicalBeforeUnlink = await inspectOwnedLockFile(lockPath, fsOps, [2, 3]);
+  const retiredBeforeUnlink = await inspectOwnedLockFile(retiredPath, fsOps, [2, 3]);
+  if (!sameGeneration(generation, canonicalBeforeUnlink)
+    || !sameGeneration(generation, retiredBeforeUnlink)
+    || !sameFile(canonicalBeforeUnlink.entry, retiredBeforeUnlink.entry)) return false;
+  if (current.stagingPath !== null) {
+    const staging = await inspectOwnedLockFile(current.stagingPath, fsOps, [3]);
+    if (!sameGeneration(generation, staging) || !sameFile(staging.entry, canonicalBeforeUnlink.entry)) return false;
+    try {
+      await fsOps.unlink(current.stagingPath);
+    } catch {
+      return false;
+    }
+  }
+  const canonical = await inspectOwnedLockFile(lockPath, fsOps, [2]);
+  const retiredAnchor = await inspectOwnedLockFile(retiredPath, fsOps, [2]);
+  if (!sameGeneration(generation, canonical)
+    || !sameGeneration(generation, retiredAnchor)
+    || !sameFile(canonical.entry, retiredAnchor.entry)) return false;
   try {
-    const current = await inspectOwnedLockFile(lockPath, fsOps, [2]);
-    const currentStaging = await inspectOwnedLockFile(stagingPath, fsOps, [2]);
-    if (!sameLock(lock, current) || !sameLock(lock, currentStaging)) return false;
-    await fsOps.rename(stagingPath, quarantinePath);
-    const moved = await inspectOwnedLockFile(quarantinePath, fsOps, [2]);
-    const afterMove = await inspectOwnedLockFile(lockPath, fsOps, [2]);
-    if (!sameLock(lock, moved) || !sameLock(lock, afterMove)) return false;
-    await fsOps.unlink(quarantinePath);
-    return sameLock(lock, await inspectOwnedLock(lockPath, fsOps));
+    await fsOps.unlink(lockPath);
   } catch {
     return false;
   }
-}
-
-async function normalizeLinkedStagingLock(lockPath, fsOps, leaseMs) {
-  const canonical = await inspectOwnedLockFile(lockPath, fsOps, [2]);
-  if (canonical === null || !(await staleDeadOwner(canonical, leaseMs))) return false;
-  return discardLinkedStagingLock(lockPath, { kind: "file", entry: canonical.entry, owner: canonical.metadata.owner }, fsOps);
+  const terminal = {
+    schemaVersion: 1,
+    targetId: state.targetId,
+    sequence: claimed.sequence,
+    owner: generation.owner,
+    createdAt: generation.createdAt,
+    completedAt: new Date().toISOString(),
+  };
+  try {
+    await writeAppendOnlyRecoveryRecord(recoveryRecordPath(lockPath, state.targetId, "terminal", claimed.sequence), terminal, fsOps);
+  } catch {
+    // A retired anchor proves the old canonical inode was already removed.
+  }
+  return true;
 }
 
 async function discardStagingLock({ stagingPath, entry }, fsOps) {
@@ -398,6 +550,7 @@ async function discardStagingLock({ stagingPath, entry }, fsOps) {
 
 async function createOwnedLock(lockPath, fsOps) {
   const owner = `game-design-update-check:${process.pid}-${randomUUID()}`;
+  const createdAt = new Date().toISOString();
   const stagingPath = `${lockPath}.staging.${process.pid}.${randomUUID()}`;
   let entry;
   let handle;
@@ -406,7 +559,7 @@ async function createOwnedLock(lockPath, fsOps) {
     handle = await fsOps.open(stagingPath, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW ?? 0), 0o600);
     entry = await handle.stat();
     if (!entry.isFile() || entry.nlink !== 1) throw new Error("unsafe staging lock");
-    await handle.writeFile(`${JSON.stringify({ schemaVersion: 1, owner, createdAt: new Date().toISOString() })}\n`, { encoding: "utf8" });
+    await handle.writeFile(`${JSON.stringify({ schemaVersion: 1, owner, createdAt })}\n`, { encoding: "utf8" });
     await handle.sync();
     await handle.close();
     handle = null;
@@ -417,7 +570,7 @@ async function createOwnedLock(lockPath, fsOps) {
     await discardStagingLock({ stagingPath, entry }, fsOps);
     const inspected = await inspectOwnedLock(lockPath, fsOps);
     if (!sameLock({ kind: "file", entry, owner }, inspected)) throw new Error("unsafe lock metadata");
-    return { lockPath, kind: "file", entry, owner };
+    return { lockPath, kind: "file", entry, owner, createdAt };
   } catch (error) {
     await handle?.close().catch(() => undefined);
     if (entry !== undefined && !published) await discardStagingLock({ stagingPath, entry }, fsOps);
@@ -429,14 +582,15 @@ async function createOwnedLock(lockPath, fsOps) {
 async function acquireLock(lockPath, fsOps, leaseMs) {
   const created = await createOwnedLock(lockPath, fsOps);
   if (created !== null) return created;
-  await normalizeLinkedStagingLock(lockPath, fsOps, leaseMs);
-  if (!(await reclaimStaleLock(lockPath, fsOps, leaseMs))
-    && !(await reclaimStaleEmptyLegacyLock(lockPath, fsOps, leaseMs))) return null;
+  if (!(await reclaimStaleLock(lockPath, fsOps, leaseMs))) return null;
   return createOwnedLock(lockPath, fsOps);
 }
 
 async function releaseLock(lock, fsOps) {
-  if (lock !== null && lock !== undefined) await removeOwnedLock(lock, fsOps);
+  if (lock === null || lock === undefined || lock.kind !== "file") return;
+  const inspected = await inspectOwnedLockFile(lock.lockPath, fsOps, [1]);
+  if (!sameGeneration(lock, inspected)) return;
+  await fsOps.unlink(lock.lockPath).catch(() => undefined);
 }
 
 function sleep(ms) {

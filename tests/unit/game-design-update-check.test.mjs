@@ -386,6 +386,14 @@ async function writeLock({ home, createdAt, owner = "game-design-update-check:99
   return lockPath;
 }
 
+async function writeFileLock({ home, createdAt, owner = "game-design-update-check:99999999-test-owner" }) {
+  const cachePath = resolveUpdateCachePath({ env: {}, home, platform: process.platform });
+  const lockPath = `${cachePath}.lock`;
+  await mkdir(path.dirname(cachePath), { recursive: true, mode: 0o700 });
+  await writeFile(lockPath, `${JSON.stringify({ schemaVersion: 1, owner, createdAt })}\n`, { mode: 0o600 });
+  return lockPath;
+}
+
 test("preserves an active task-owned lock and does not start a competing check", async (t) => {
   const { pluginRoot, home } = await fixture(t);
   const lockPath = await writeLock({
@@ -402,9 +410,9 @@ test("preserves an active task-owned lock and does not start a competing check",
   assert.equal((await lstat(lockPath)).isDirectory(), true);
 });
 
-test("reclaims a provably stale task-owned lock and completes the check", async (t) => {
+test("reclaims a provably stale file lock and completes the check", async (t) => {
   const { pluginRoot, home } = await fixture(t);
-  const lockPath = await writeLock({ home, createdAt: new Date(Date.now() - 120_000).toISOString() });
+  const lockPath = await writeFileLock({ home, createdAt: new Date(Date.now() - 120_000).toISOString() });
   const calls = [];
 
   const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
@@ -414,7 +422,7 @@ test("reclaims a provably stale task-owned lock and completes the check", async 
   await assert.rejects(lstat(lockPath), { code: "ENOENT" });
 });
 
-test("reclaims only a stale empty legacy lock without exposing an incomplete canonical lock", async (t) => {
+test("keeps stale empty legacy directories unknown because they cannot have a retired hard-link anchor", async (t) => {
   const { pluginRoot, home } = await fixture(t);
   const cachePath = resolveUpdateCachePath({ env: {}, home, platform: process.platform });
   const lockPath = `${cachePath}.lock`;
@@ -422,46 +430,12 @@ test("reclaims only a stale empty legacy lock without exposing an incomplete can
   await mkdir(lockPath, { mode: 0o700 });
   await utimes(lockPath, new Date(Date.now() - 120_000), new Date(Date.now() - 120_000));
   const calls = [];
-  let publication;
-  let linkAttempts = 0;
+  const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
 
-  const result = await checkGameDesignUpdates({
-    pluginRoot,
-    home,
-    now: Date.parse(CHECKED_AT),
-    fetchFn: checkingFetch(calls),
-    fsOps: {
-      link: async (stagingPath, canonicalPath) => {
-        linkAttempts += 1;
-        if (linkAttempts === 1) return link(stagingPath, canonicalPath);
-        publication = { stagingPath, canonicalPath };
-        assert.equal(canonicalPath, lockPath);
-        await assert.rejects(lstat(canonicalPath), { code: "ENOENT" });
-        const staged = JSON.parse(await readFile(stagingPath, "utf8"));
-        assert.equal(staged.schemaVersion, 1);
-        await link(stagingPath, canonicalPath);
-      },
-    },
-  });
-
-  // Catches a mutation that keeps the old mkdir(lockPath) -> owner.json sequence.
-  assert.equal(result.status, "current");
-  assert.equal(calls.length, 3);
-  assert.equal(linkAttempts, 2);
-  assert.equal(publication?.canonicalPath, lockPath);
-  await assert.rejects(lstat(lockPath), { code: "ENOENT" });
-  assert.deepEqual(await readdir(path.dirname(cachePath)), [path.basename(cachePath)]);
-
-  await mkdir(lockPath, { mode: 0o700 });
-  await writeFile(path.join(lockPath, "owner.json"), "{partial", { mode: 0o600 });
-  await utimes(lockPath, new Date(Date.now() - 120_000), new Date(Date.now() - 120_000));
-  const partialCalls = [];
-  const partialResult = await checkGameDesignUpdates({ pluginRoot, home, now: SEVEN_DAYS_LATER, fetchFn: checkingFetch(partialCalls) });
-
-  assert.equal(partialResult.status, "unknown");
-  assert.equal(partialCalls.length, 0);
-  assert.equal(await readFile(path.join(lockPath, "owner.json"), "utf8"), "{partial");
-  assert.deepEqual(await readdir(lockPath), ["owner.json"]);
+  assert.deepEqual(result, expectedUnknownResult());
+  assert.equal(calls.length, 0);
+  assert.equal((await lstat(lockPath)).isDirectory(), true);
+  assert.deepEqual(await readdir(lockPath), []);
 });
 
 test("staging cleanup preserves an externally swapped canonical lock tree", async (t) => {
@@ -600,7 +574,7 @@ test("reclaims an interrupted hard-link publication only after stale owner death
   assert.equal(calls.length, 3);
   await assert.rejects(lstat(lockPath), { code: "ENOENT" });
   await assert.rejects(lstat(stagingPath), { code: "ENOENT" });
-  assert.deepEqual(await readdir(path.dirname(cachePath)), [path.basename(cachePath)]);
+  assert.deepEqual((await readdir(path.dirname(cachePath))).filter((name) => !name.includes(".recovery.")).sort(), [path.basename(cachePath)]);
 });
 
 test("a contender never normalizes a live winner between link publication and cleanup", async (t) => {
@@ -728,50 +702,20 @@ test("preserves a linked owner when PID probing cannot prove ESRCH", async (t) =
   assert.deepEqual((await readdir(path.dirname(cachePath))).sort(), [path.basename(lockPath), path.basename(stagingPath)].sort());
 });
 
-test("empty legacy recovery cannot rename a regular lock published after its inspection", async (t) => {
+test("stale legacy directory recovery performs no canonical mutation", async (t) => {
   const { pluginRoot, home } = await fixture(t);
   const cachePath = resolveUpdateCachePath({ env: {}, home, platform: process.platform });
   const lockPath = `${cachePath}.lock`;
-  const activeLock = `${JSON.stringify({ schemaVersion: 1, owner: `game-design-update-check:${process.pid}-aba-owner`, createdAt: new Date().toISOString() })}\n`;
   await mkdir(path.dirname(cachePath), { recursive: true });
   await mkdir(lockPath, { mode: 0o700 });
   await utimes(lockPath, new Date(Date.now() - 120_000), new Date(Date.now() - 120_000));
   const calls = [];
-  let replaced = false;
+  const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
 
-  const result = await checkGameDesignUpdates({
-    pluginRoot,
-    home,
-    now: Date.parse(CHECKED_AT),
-    fetchFn: checkingFetch(calls),
-    fsOps: {
-      rename: async (from, to) => {
-        if (from === lockPath && to.includes(".legacy-empty.")) {
-          await rm(lockPath, { recursive: true, force: true });
-          await writeFile(lockPath, activeLock, { mode: 0o600 });
-          replaced = true;
-        }
-        return rename(from, to);
-      },
-      rmdir: async (target) => {
-        if (target === lockPath) {
-          await rm(lockPath, { recursive: true, force: true });
-          await writeFile(lockPath, activeLock, { mode: 0o600 });
-          replaced = true;
-        }
-        return fsRmdir(target);
-      },
-    },
-  });
-
-  // Catches verify -> rename ABA that can quarantine a newly published regular lock.
-  assert.equal(replaced, true);
   assert.deepEqual(result, expectedUnknownResult());
   assert.equal(calls.length, 0);
-  assert.equal(await readFile(lockPath, "utf8"), activeLock);
   const activeStat = await lstat(lockPath);
-  assert.equal(activeStat.isFile(), true);
-  assert.equal(activeStat.nlink, 1);
+  assert.equal(activeStat.isDirectory(), true);
   assert.deepEqual(await readdir(path.dirname(cachePath)), [path.basename(lockPath)]);
 });
 
@@ -802,7 +746,7 @@ test("never reclaims symlink or hostile lock directories", async (t) => {
 
 test("concurrent contenders recover one stale lock with one network winner", async (t) => {
   const { pluginRoot, home } = await fixture(t);
-  await writeLock({ home, createdAt: new Date(Date.now() - 120_000).toISOString() });
+  await writeFileLock({ home, createdAt: new Date(Date.now() - 120_000).toISOString() });
   const calls = [];
   const fetchFn = checkingFetch(calls);
 
@@ -813,6 +757,50 @@ test("concurrent contenders recover one stale lock with one network winner", asy
   assert.equal(calls.length, 3);
   assert.deepEqual(results.map(({ status }) => status), ["current", "current"]);
   assert.deepEqual(results.map(({ cache }) => cache).sort(), ["hit", "miss"]);
+});
+
+test("a stale recovery contender cannot move a fresh publisher into its release path", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  const cachePath = resolveUpdateCachePath({ env: {}, home, platform: process.platform });
+  const lockPath = `${cachePath}.lock`;
+  const staleOwner = "game-design-update-check:99999999-dead-owner";
+  const freshOwner = `game-design-update-check:${process.pid}-fresh-publisher`;
+  const freshLock = `${JSON.stringify({ schemaVersion: 1, owner: freshOwner, createdAt: new Date().toISOString() })}\n`;
+  await mkdir(path.dirname(cachePath), { recursive: true });
+  await writeFile(lockPath, `${JSON.stringify({
+    schemaVersion: 1,
+    owner: staleOwner,
+    createdAt: new Date(Date.now() - 120_000).toISOString(),
+  })}\n`, { mode: 0o600 });
+  const calls = [];
+  let legacyReleaseAttempted = false;
+
+  const result = await checkGameDesignUpdates({
+    pluginRoot,
+    home,
+    now: Date.parse(CHECKED_AT),
+    fetchFn: checkingFetch(calls),
+    fsOps: {
+      rename: async (from, to) => {
+        if (from === lockPath && to.includes(".release.")) {
+          legacyReleaseAttempted = true;
+          await unlink(lockPath);
+          await writeFile(lockPath, freshLock, { mode: 0o600 });
+        }
+        return rename(from, to);
+      },
+    },
+  });
+
+  // Catches removeOwnedLock's check-then-rename ABA: a delayed stale contender
+  // must have no operation that can move a newer canonical publisher.
+  assert.equal(result.status, "current");
+  assert.equal(calls.length, 3);
+  if (legacyReleaseAttempted) {
+    assert.equal(await readFile(lockPath, "utf8"), freshLock);
+    assert.equal((await lstat(lockPath)).isFile(), true);
+  }
+  assert.equal((await readdir(path.dirname(cachePath))).some((name) => name.includes(".release.")), false);
 });
 
 test("rejects empty, missing, partial, duplicate, and unknown installed manifests without network or cache publication", async (t) => {

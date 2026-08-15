@@ -149,6 +149,13 @@
 
 - stale empty legacy directory 회수는 metadata가 없는 이전 crash artefact에만 좁게 적용한다. 비어 있지 않거나 symlink인 canonical path는 소유를 추정하지 않고 보존한다.
 
+## Fix5: 세대 claim 기반 stale-lock 회수
+
+- 기존 canonical rename/quarantine 회수는 두 stale contender 중 지연된 쪽이 새 canonical lock을 옮길 수 있었다. 이제 대상 세대 ID `sha256(owner + "\\0" + createdAt)`별 append-only claim record를 stage+fsync하고 고정 sequence 경로에 hard-link한다. 그 link의 단일 성공자가 destructive authority다.
+- winner는 old canonical identity·lease·`ESRCH`를 다시 확인하고 old inode를 retired anchor로 hard-link한 뒤 canonical component만 unlink한다. claim/retired/terminal marker는 재사용·정리하지 않는다. prior claim takeover는 lease 만료와 claimant `ESRCH` 뒤에만 다음 sequence no-replace claim으로 가능하다.
+- valid/empty legacy directory는 directory hard-link anchor를 만들 수 없으므로 자동 회수하지 않고 bounded `unknown`으로 보존한다. malformed marker, sequence gap, mismatched retired inode, symlink, live/EPERM/PID-reuse evidence도 fail-closed다.
+- TDD: `.release.*` 직전 fresh publisher를 주입한 public API RED는 기존 코드에서 `unknown !== current`로 실패했다. GREEN: `node --test tests/unit/game-design-update-check.test.mjs` → 32 pass, 0 fail.
+
 ## Fix3: post-link hard-link recovery와 legacy ABA 제거
 
 ### 수정 내용
