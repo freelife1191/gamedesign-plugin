@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { link, lstat, mkdtemp, mkdir, open, readFile, readdir, rename, rm, symlink, utimes, writeFile } from "node:fs/promises";
+import { link, lstat, mkdtemp, mkdir, open, readFile, readdir, rename, rmdir as fsRmdir, rm, symlink, unlink, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -114,6 +114,17 @@ function outdatedCacheValue(options = {}) {
       status: "outdated",
       releaseUrl: "https://github.com/tt-a1i/archify/releases/tag/v2.14.0",
     } : component),
+  };
+}
+
+function expectedUnknownResult() {
+  return {
+    schemaVersion: 1,
+    checkedAt: CHECKED_AT,
+    cache: "miss",
+    status: "unknown",
+    components: INSTALLED.map(({ id, installedTag }) => ({ id, installedTag, latestTag: null, status: "unknown", releaseUrl: null })),
+    notification: null,
   };
 }
 
@@ -503,6 +514,109 @@ test("staging cleanup preserves an externally swapped canonical lock tree", asyn
   assert.equal(await readFile(externalOwnerPath, "utf8"), beforeOwner);
   assert.equal(await readFile(path.join(externalPath, "keep.txt"), "utf8"), beforeKeep);
   assert.equal((await lstat(lockPath)).isSymbolicLink(), true);
+  assert.deepEqual(await readdir(path.dirname(cachePath)), [path.basename(lockPath)]);
+});
+
+for (const [faultPoint, faults] of [
+  ["staging rename", {
+    rename: async (from, to) => {
+      if (from.includes(".staging.") && to.includes(".cleanup.")) throw Object.assign(new Error("injected staging rename interruption"), { code: "EIO" });
+      return rename(from, to);
+    },
+  }],
+  ["cleanup unlink", {
+    unlink: async (filePath) => {
+      if (filePath.includes(".staging.") && filePath.includes(".cleanup.")) throw Object.assign(new Error("injected cleanup unlink interruption"), { code: "EIO" });
+      return unlink(filePath);
+    },
+  }],
+]) {
+  test(`normalizes a task-owned hard-link pair after ${faultPoint} interruption`, async (t) => {
+    const { pluginRoot, home } = await fixture(t);
+    const cachePath = resolveUpdateCachePath({ env: {}, home, platform: process.platform });
+    const lockPath = `${cachePath}.lock`;
+    const calls = [];
+
+    const interrupted = await checkGameDesignUpdates({
+      pluginRoot,
+      home,
+      now: Date.parse(CHECKED_AT),
+      fetchFn: checkingFetch(calls),
+      fsOps: faults,
+    });
+
+    // Catches the nlink === 1 inspection mutation after successful link publication.
+    assert.deepEqual(interrupted, expectedUnknownResult());
+    assert.equal(calls.length, 0);
+    const interruptedEntries = await readdir(path.dirname(cachePath));
+    const siblingName = interruptedEntries.find((name) => name.startsWith(`${path.basename(lockPath)}.staging.`));
+    assert.deepEqual(interruptedEntries.sort(), [path.basename(lockPath), siblingName].sort());
+    assert.equal(typeof siblingName, "string");
+    const canonicalBefore = await lstat(lockPath);
+    const siblingBefore = await lstat(path.join(path.dirname(cachePath), siblingName));
+    assert.equal(canonicalBefore.isFile(), true);
+    assert.equal(siblingBefore.isFile(), true);
+    assert.equal(canonicalBefore.dev, siblingBefore.dev);
+    assert.equal(canonicalBefore.ino, siblingBefore.ino);
+    assert.equal(canonicalBefore.nlink, 2);
+    assert.equal(siblingBefore.nlink, 2);
+
+    const recoveredCalls = [];
+    const recovered = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(recoveredCalls) });
+
+    assert.deepEqual(recovered, expectedUnknownResult());
+    assert.equal(recoveredCalls.length, 0);
+    const canonicalAfter = await lstat(lockPath);
+    assert.equal(canonicalAfter.isFile(), true);
+    assert.equal(canonicalAfter.nlink, 1);
+    assert.deepEqual(await readdir(path.dirname(cachePath)), [path.basename(lockPath)]);
+  });
+}
+
+test("empty legacy recovery cannot rename a regular lock published after its inspection", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  const cachePath = resolveUpdateCachePath({ env: {}, home, platform: process.platform });
+  const lockPath = `${cachePath}.lock`;
+  const activeLock = `${JSON.stringify({ schemaVersion: 1, owner: `game-design-update-check:${process.pid}-aba-owner`, createdAt: new Date().toISOString() })}\n`;
+  await mkdir(path.dirname(cachePath), { recursive: true });
+  await mkdir(lockPath, { mode: 0o700 });
+  await utimes(lockPath, new Date(Date.now() - 120_000), new Date(Date.now() - 120_000));
+  const calls = [];
+  let replaced = false;
+
+  const result = await checkGameDesignUpdates({
+    pluginRoot,
+    home,
+    now: Date.parse(CHECKED_AT),
+    fetchFn: checkingFetch(calls),
+    fsOps: {
+      rename: async (from, to) => {
+        if (from === lockPath && to.includes(".legacy-empty.")) {
+          await rm(lockPath, { recursive: true, force: true });
+          await writeFile(lockPath, activeLock, { mode: 0o600 });
+          replaced = true;
+        }
+        return rename(from, to);
+      },
+      rmdir: async (target) => {
+        if (target === lockPath) {
+          await rm(lockPath, { recursive: true, force: true });
+          await writeFile(lockPath, activeLock, { mode: 0o600 });
+          replaced = true;
+        }
+        return fsRmdir(target);
+      },
+    },
+  });
+
+  // Catches verify -> rename ABA that can quarantine a newly published regular lock.
+  assert.equal(replaced, true);
+  assert.deepEqual(result, expectedUnknownResult());
+  assert.equal(calls.length, 0);
+  assert.equal(await readFile(lockPath, "utf8"), activeLock);
+  const activeStat = await lstat(lockPath);
+  assert.equal(activeStat.isFile(), true);
+  assert.equal(activeStat.nlink, 1);
   assert.deepEqual(await readdir(path.dirname(cachePath)), [path.basename(lockPath)]);
 });
 

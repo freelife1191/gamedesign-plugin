@@ -232,16 +232,31 @@ function validLockMetadata(value) {
   return !Number.isNaN(createdAt.valueOf()) && createdAt.toISOString() === value.createdAt;
 }
 
-async function inspectOwnedLock(lockPath, fsOps) {
+async function inspectOwnedLockFile(lockPath, fsOps, linkCounts) {
   let entry;
+  let handle;
   try {
     entry = await fsOps.lstat(lockPath);
-    if (entry.isFile() && !entry.isSymbolicLink() && entry.nlink === 1) {
-      const loaded = await readRegularJson(lockPath, fsOps);
-      const after = await fsOps.lstat(lockPath);
-      if (!sameFile(entry, after) || loaded.state !== "present" || !validLockMetadata(loaded.value)) return null;
-      return { kind: "file", entry, metadata: loaded.value };
-    }
+    if (!entry.isFile() || entry.isSymbolicLink() || !linkCounts.includes(entry.nlink) || entry.size > 1024 * 1024) return null;
+    handle = await fsOps.open(lockPath, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
+    const opened = await handle.stat();
+    if (!opened.isFile() || !linkCounts.includes(opened.nlink) || !sameFile(entry, opened) || opened.size > 1024 * 1024) return null;
+    const metadata = JSON.parse(await handle.readFile({ encoding: "utf8" }));
+    const after = await fsOps.lstat(lockPath);
+    if (!sameFile(entry, after) || !validLockMetadata(metadata)) return null;
+    return { kind: "file", entry, metadata };
+  } catch {
+    return null;
+  } finally {
+    await handle?.close().catch(() => undefined);
+  }
+}
+
+async function inspectOwnedLock(lockPath, fsOps) {
+  try {
+    const file = await inspectOwnedLockFile(lockPath, fsOps, [1]);
+    if (file !== null) return file;
+    const entry = await fsOps.lstat(lockPath);
     if (!entry.isDirectory() || entry.isSymbolicLink()) return null;
     const entries = await fsOps.readdir(lockPath);
     if (entries.length !== 1 || entries[0] !== LOCK_METADATA_FILE) return null;
@@ -312,18 +327,47 @@ async function inspectStaleEmptyLegacyLock(lockPath, fsOps) {
 async function reclaimStaleEmptyLegacyLock(lockPath, fsOps, leaseMs) {
   const inspected = await inspectStaleEmptyLegacyLock(lockPath, fsOps);
   if (inspected === null || !Number.isFinite(inspected.directory.mtimeMs) || Date.now() - inspected.directory.mtimeMs < leaseMs) return false;
-  const quarantinePath = `${lockPath}.legacy-empty.${process.pid}.${randomUUID()}`;
   try {
-    const current = await inspectStaleEmptyLegacyLock(lockPath, fsOps);
-    if (current === null || !sameFile(current.directory, inspected.directory)) return false;
-    await fsOps.rename(lockPath, quarantinePath);
-    const moved = await inspectStaleEmptyLegacyLock(quarantinePath, fsOps);
-    if (moved === null || !sameFile(moved.directory, inspected.directory)) return false;
-    await fsOps.rmdir(quarantinePath);
+    await fsOps.rmdir(lockPath);
     return true;
   } catch {
     return false;
   }
+}
+
+async function normalizeLinkedStagingLock(lockPath, fsOps) {
+  const canonical = await inspectOwnedLockFile(lockPath, fsOps, [2]);
+  if (canonical === null) return false;
+  let entries;
+  try {
+    entries = await fsOps.readdir(path.dirname(lockPath));
+  } catch {
+    return false;
+  }
+  const prefix = `${path.basename(lockPath)}.staging.`;
+  for (const name of entries) {
+    if (!name.startsWith(prefix)) continue;
+    const stagingPath = path.join(path.dirname(lockPath), name);
+    const staging = await inspectOwnedLockFile(stagingPath, fsOps, [2]);
+    if (!sameLock({ kind: "file", entry: canonical.entry, owner: canonical.metadata.owner }, staging)) continue;
+    const quarantinePath = `${stagingPath}.normalize.${process.pid}.${randomUUID()}`;
+    try {
+      const current = await inspectOwnedLockFile(lockPath, fsOps, [2]);
+      const currentStaging = await inspectOwnedLockFile(stagingPath, fsOps, [2]);
+      if (!sameLock({ kind: "file", entry: canonical.entry, owner: canonical.metadata.owner }, current)
+        || !sameLock({ kind: "file", entry: canonical.entry, owner: canonical.metadata.owner }, currentStaging)) return false;
+      await fsOps.rename(stagingPath, quarantinePath);
+      const moved = await inspectOwnedLockFile(quarantinePath, fsOps, [2]);
+      const afterMove = await inspectOwnedLockFile(lockPath, fsOps, [2]);
+      if (!sameLock({ kind: "file", entry: canonical.entry, owner: canonical.metadata.owner }, moved)
+        || !sameLock({ kind: "file", entry: canonical.entry, owner: canonical.metadata.owner }, afterMove)) return false;
+      await fsOps.unlink(quarantinePath);
+      return sameLock({ kind: "file", entry: canonical.entry, owner: canonical.metadata.owner }, await inspectOwnedLock(lockPath, fsOps));
+    } catch {
+      return false;
+    }
+  }
+  return false;
 }
 
 async function discardStagingLock({ stagingPath, entry }, fsOps) {
@@ -372,6 +416,7 @@ async function createOwnedLock(lockPath, fsOps) {
 async function acquireLock(lockPath, fsOps, leaseMs) {
   const created = await createOwnedLock(lockPath, fsOps);
   if (created !== null) return created;
+  await normalizeLinkedStagingLock(lockPath, fsOps);
   if (!(await reclaimStaleLock(lockPath, fsOps, leaseMs))
     && !(await reclaimStaleEmptyLegacyLock(lockPath, fsOps, leaseMs))) return null;
   return createOwnedLock(lockPath, fsOps);

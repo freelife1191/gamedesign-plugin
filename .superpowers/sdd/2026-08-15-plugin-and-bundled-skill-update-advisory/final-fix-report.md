@@ -148,3 +148,30 @@
 ### 남은 우려
 
 - stale empty legacy directory 회수는 metadata가 없는 이전 crash artefact에만 좁게 적용한다. 비어 있지 않거나 symlink인 canonical path는 소유를 추정하지 않고 보존한다.
+
+## Fix3: post-link hard-link recovery와 legacy ABA 제거
+
+### 수정 내용
+
+- `link(staging, canonical)` 이후 staging rename 또는 cleanup unlink에서 중단되면 canonical과 staging/cleanup sibling은 같은 inode의 `nlink=2`가 될 수 있다. checker는 이제 exact metadata·owner·inode가 같은 `<lock>.staging.*` regular sibling 하나만 identity-verified quarantine으로 옮겨 제거하고 canonical을 `nlink=1`로 정규화한다.
+- 이 정규화는 canonical과 sibling 모두 regular, non-symlink, 정확히 `nlink=2`, 같은 inode와 owner metadata일 때만 수행한다. 다른 inode, malformed metadata, symlink, nlink 수가 다른 path는 unlink하지 않고 fail-closed `unknown`으로 보존한다.
+- stale empty legacy directory 회수에서 verify→rename→quarantine 경로를 제거했다. 오래된 빈 directory는 `rmdir(canonical)`으로만 회수하며, 이 primitive는 호출 시점에도 empty directory일 때만 성공한다. 검증 뒤 canonical에 새 regular lock이 게시되면 `rmdir`은 실패하고 새 lock은 움직이지 않는다.
+
+### TDD 증거
+
+#### RED
+
+- post-link staging rename interruption과 cleanup unlink interruption 각각에서 첫·둘째 public check가 모두 `unknown`, network 0회이며 canonical+sibling의 same `dev`/`ino`, `nlink=2`가 잔류했다. 기존 nlink=1 inspection은 둘째 check도 정규화하지 못했다.
+- empty legacy ABA probe는 검사 뒤 canonical을 active regular lock으로 교체했다. 기존 rename recovery는 그 새 lock을 `.legacy-empty.*`로 이동시켜 canonical `ENOENT`를 남겼다.
+
+#### GREEN
+
+- 두 interruption point 모두 첫 check는 안전한 literal `unknown`/network 0과 nlink=2 잔류를 보이고, 다음 check는 network 0으로 task-owned sibling만 제거해 canonical `nlink=1`·canonical-only entry set으로 정규화한다.
+- ABA probe는 literal `unknown`/network 0을 유지하면서 active regular lock의 exact bytes·file kind·`nlink=1`과 canonical-only entry set을 보존한다. legacy quarantine entry는 생성되지 않는다.
+- `node --test tests/unit/game-design-update-check.test.mjs`: 27 pass, 0 fail.
+- `node --test tests/unit/update-advisory.test.mjs tests/unit/game-design-update-check.test.mjs`: 35 pass, 0 fail.
+
+### 생성물·정적 검증
+
+- `npm run build && npm run build -- --check` 통과: Career 542 files, Studio 554 files.
+- Fix2의 shared/Studio/Career byte parity, checker `node --check`, manifest JSON parse, `git diff --check`를 Fix3 후에도 재검증했다.
