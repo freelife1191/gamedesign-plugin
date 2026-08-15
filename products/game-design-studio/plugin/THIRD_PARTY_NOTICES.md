@@ -13,7 +13,7 @@ The vendored component retains its upstream `LICENSE.txt`. Game Design Studio se
 ## Archify
 
 - Upstream: https://github.com/tt-a1i/archify
-- Version: 2.13.0 (`v2.13.0`, `2c1f8ac2ca28a26d0b68043ec80c9554e20ff0e3`)
+- Version: 2.14.0 (`v2.14.0`, `a3bf80c25a824f5d5c46dfdbfdb96cc52dd4742a`)
 - License: MIT
 
 The packaged `$archify` skill is a regular-file, SHA-256-locked local release closure. It produces checked architecture HTML and receipts; it does not approve a game-design document.

@@ -101,6 +101,30 @@ test("tree audit permits only the update policy's exact product IDs and rejects 
   }), /sibling package/u);
 });
 
+test("tree audit permits only the shared plugin inspector's exact product IDs and rejects an injected sibling import", async (t) => {
+  const inspector = await readFile(path.join(repoRoot, "shared/scripts/inspect-game-design-plugin-updates.mjs"));
+  const root = await fixture(t, "scripts/inspect-game-design-plugin-updates.mjs", inspector);
+  const inspectorPath = path.join(root, "scripts/inspect-game-design-plugin-updates.mjs");
+
+  for (const [packageName, siblingName] of [
+    ["game-design-studio", "game-design-career"],
+    ["game-design-career", "game-design-studio"],
+  ]) {
+    await assert.doesNotReject(() => auditTree({
+      root,
+      packageName,
+      siblingNames: [siblingName],
+    }));
+  }
+
+  await writeFile(inspectorPath, `${inspector}\nimport sibling from "game-design-career";\n`);
+  await assert.rejects(() => auditTree({
+    root,
+    packageName: "game-design-studio",
+    siblingNames: ["game-design-career"],
+  }), /sibling package/u);
+});
+
 test("immutable vendored Skillstead documentation remains auditable while product files must use wrappers", async (t) => {
   const root = await fixture(t, "skills/svg-infographic/SKILL.md", "node .claude/skills/svg-infographic/scripts/render.mjs in.svg out.png\n");
   await writeFile(path.join(root, "README.md"), "Use the product wrapper.\n");

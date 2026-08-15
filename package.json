@@ -26,6 +26,8 @@
     "check:im-not-ai": "node tooling/sync-im-not-ai.mjs --check",
     "check:im-not-ai-latest": "node tooling/sync-im-not-ai.mjs --check-latest",
     "update:im-not-ai": "node tooling/sync-im-not-ai.mjs --update",
+    "check:updates": "node tooling/check-suite-updates.mjs",
+    "validate:release:latest": "node tooling/check-suite-updates.mjs --require-current && node tooling/validate-suite.mjs --release",
     "check:diagram-skills": "node tooling/sync-diagram-skills.mjs --check",
     "check:diagram-skills-latest": "node tooling/sync-diagram-skills.mjs --check-latest",
     "update:diagram-skillstead": "node tooling/sync-diagram-skills.mjs --update skillstead",

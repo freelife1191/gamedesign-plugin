@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "checkedAt",
+    "status",
+    "components"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "checkedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "enum": [
+        "current",
+        "outdated",
+        "unknown",
+        "disabled"
+      ]
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "installedTag",
+          "latestTag",
+          "status",
+          "releaseUrl"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "skillstead",
+              "archify",
+              "im-not-ai"
+            ]
+          },
+          "installedTag": {
+            "type": "string"
+          },
+          "latestTag": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "enum": [
+              "current",
+              "outdated",
+              "unknown",
+              "disabled"
+            ]
+          },
+          "releaseUrl": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri"
+          }
+        }
+      }
+    }
+  }
+}

@@ -2026,7 +2026,7 @@
       "product": "career",
       "source_document": "plugins/game-design-career/THIRD_PARTY_NOTICES.md",
       "source_section": "Third-Party Notices and Source Provenance",
-      "source_digest": "d116fa7f09716a0fd366fb8b5a4b4277479f19cac15f802b87d4776b027c4c0e",
+      "source_digest": "1c2b6dac3f8230785c1f5f3317055e88648bdc9643cb3311eb38b14b66878e0f",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "이 문서는 products/game-design-career의 배포 mirror이므로 패키지 외부 링크를 만들지 않는다.",
@@ -4598,7 +4598,7 @@
       "product": "studio",
       "source_document": "plugins/game-design-studio/THIRD_PARTY_NOTICES.md",
       "source_section": "Third-Party Notices and Source Provenance",
-      "source_digest": "e03eabbff0719d7be2274d0dbbec970778a2fc2e0ef5ee781d638c2837e7409e",
+      "source_digest": "f7b519a3a0053ac67df97b5569459ec59d37adcbb834bc3a3a1d55f51455550e",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "이 문서는 products/game-design-studio의 배포 mirror이므로 패키지 외부 링크를 만들지 않는다.",
@@ -7234,7 +7234,7 @@
       "product": "career",
       "source_document": "products/game-design-career/plugin/THIRD_PARTY_NOTICES.md",
       "source_section": "Third-Party Notices and Source Provenance",
-      "source_digest": "d116fa7f09716a0fd366fb8b5a4b4277479f19cac15f802b87d4776b027c4c0e",
+      "source_digest": "1c2b6dac3f8230785c1f5f3317055e88648bdc9643cb3311eb38b14b66878e0f",
       "decision": "excluded",
       "exclusion_code": "excluded-package-surface",
       "decision_reason": "이 package surface는 배포 경계이므로 패키지 외부 링크를 만들지 않고 분석 기록만 유지한다.",
@@ -8530,7 +8530,7 @@
       "product": "studio",
       "source_document": "products/game-design-studio/plugin/THIRD_PARTY_NOTICES.md",
       "source_section": "Third-Party Notices and Source Provenance",
-      "source_digest": "e03eabbff0719d7be2274d0dbbec970778a2fc2e0ef5ee781d638c2837e7409e",
+      "source_digest": "f7b519a3a0053ac67df97b5569459ec59d37adcbb834bc3a3a1d55f51455550e",
       "decision": "excluded",
       "exclusion_code": "excluded-package-surface",
       "decision_reason": "이 package surface는 배포 경계이므로 패키지 외부 링크를 만들지 않고 분석 기록만 유지한다.",
@@ -10358,7 +10358,7 @@
       "product": "career",
       "source_document": "plugins/game-design-career/skills/archify/SKILL.md",
       "source_section": "Archify",
-      "source_digest": "4946d2fb2af9cb84461b1b98b732b44833e6a1ceaebfe8cd9e9d9ca4e939e12e",
+      "source_digest": "fe4445b1c33706e8dc70c805cd1609272c1194a6dff1c5c8251abda3ca88cf4b",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "“Archify”은 plugins/game-design-career/skills/archify/SKILL.md에 설치되는 package mirror이며 공유 build mapping 원본은 구조화된 origin_source에 고정한다. Create a self-contained, interactive HTML diagram from a small typed JSON specification. Static output is the default; enable motion only when the user asks for a demo or presentation.라는 현재 배포 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
@@ -10369,7 +10369,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.13.0/SKILL.md",
+        "source_document": "shared/vendor/archify/archify/2.14.0/SKILL.md",
         "build_mapping": "archify"
       }
     },
@@ -10378,7 +10378,7 @@
       "product": "career",
       "source_document": "plugins/game-design-career/skills/archify/references/authoring-contract.md",
       "source_section": "Authoring contract",
-      "source_digest": "06c0045075aa96f10923c87b6cc8ccf2d63bd8b2475da54c928e78ea5b5ffaa9",
+      "source_digest": "35220be7dee5792d630e0b5d5a3e4d57ddf16a497015a4674d0fdb0910f7811b",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "“Authoring contract”은 plugins/game-design-career/skills/archify/references/authoring-contract.md에 설치되는 package mirror이며 공유 build mapping 원본은 구조화된 origin_source에 고정한다. Read this reference only after the Fast authoring path calls for more detail. The schemas and examples remain authoritative.라는 현재 배포 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
@@ -10389,7 +10389,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.13.0/references/authoring-contract.md",
+        "source_document": "shared/vendor/archify/archify/2.14.0/references/authoring-contract.md",
         "build_mapping": "archify"
       }
     },
@@ -10398,7 +10398,7 @@
       "product": "career",
       "source_document": "plugins/game-design-career/skills/archify/references/delivery-contract.md",
       "source_section": "Delivery contract",
-      "source_digest": "149846891358a328565d5efc75a69c3f42715ef3e01560f479096ce9d80568a9",
+      "source_digest": "15d2fb47412288c5a489c402877bf92e774d10f481f16f9d1af2fdd907fc0ba6",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "“Delivery contract”은 plugins/game-design-career/skills/archify/references/delivery-contract.md에 설치되는 package mirror이며 공유 build mapping 원본은 구조화된 origin_source에 고정한다. node bin/archify.mjs deliver <type> <candidate.json> <output.html> --quality showcase --json라는 현재 배포 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
@@ -10409,7 +10409,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.13.0/references/delivery-contract.md",
+        "source_document": "shared/vendor/archify/archify/2.14.0/references/delivery-contract.md",
         "build_mapping": "archify"
       }
     },
@@ -10429,7 +10429,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.13.0/references/viewer-runtime.md",
+        "source_document": "shared/vendor/archify/archify/2.14.0/references/viewer-runtime.md",
         "build_mapping": "archify"
       }
     },
@@ -10438,7 +10438,7 @@
       "product": "career",
       "source_document": "plugins/game-design-career/skills/archify/renderers/dataflow/README.md",
       "source_section": "Data Flow Renderer",
-      "source_digest": "602ce170c0b1e37a527f8ffebaf3c4b82e2cf7f635a85ee108b4ae758c435c26",
+      "source_digest": "18c4f86ba62fcee371d9fe38094625b3a68cc76231c36ab8c8124acb4c1ffa42",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "“Data Flow Renderer”은 plugins/game-design-career/skills/archify/renderers/dataflow/README.md에 설치되는 package mirror이며 공유 build mapping 원본은 구조화된 origin_source에 고정한다. node archify/renderers/dataflow/render-dataflow.mjs input.dataflow.json output.html라는 현재 배포 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
@@ -10449,7 +10449,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.13.0/renderers/dataflow/README.md",
+        "source_document": "shared/vendor/archify/archify/2.14.0/renderers/dataflow/README.md",
         "build_mapping": "archify"
       }
     },
@@ -10458,7 +10458,7 @@
       "product": "career",
       "source_document": "plugins/game-design-career/skills/archify/renderers/lifecycle/README.md",
       "source_section": "Lifecycle Renderer",
-      "source_digest": "8cb753d4bcf11a2914e6a016598e10249c7eb931ce99860c14cd5929dddb59e7",
+      "source_digest": "ec9b27ebf4c6a8fa675f11995c47753d3283423bac09980a4cd476d6bae9a9f8",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "“Lifecycle Renderer”은 plugins/game-design-career/skills/archify/renderers/lifecycle/README.md에 설치되는 package mirror이며 공유 build mapping 원본은 구조화된 origin_source에 고정한다. node archify/renderers/lifecycle/render-lifecycle.mjs input.lifecycle.json output.html라는 현재 배포 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
@@ -10469,7 +10469,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.13.0/renderers/lifecycle/README.md",
+        "source_document": "shared/vendor/archify/archify/2.14.0/renderers/lifecycle/README.md",
         "build_mapping": "archify"
       }
     },
@@ -10478,7 +10478,7 @@
       "product": "career",
       "source_document": "plugins/game-design-career/skills/archify/renderers/sequence/README.md",
       "source_section": "Sequence Renderer",
-      "source_digest": "8a2c52eb248b18767d0a9179f08b3f0f370136df6b63beb528eae02ff400ad20",
+      "source_digest": "c18894766441faa0d1c88fe02a96f0eabe05e1d477463f8ec52b94728cec3b88",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "“Sequence Renderer”은 plugins/game-design-career/skills/archify/renderers/sequence/README.md에 설치되는 package mirror이며 공유 build mapping 원본은 구조화된 origin_source에 고정한다. node archify/renderers/sequence/render-sequence.mjs input.sequence.json output.html라는 현재 배포 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
@@ -10489,7 +10489,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.13.0/renderers/sequence/README.md",
+        "source_document": "shared/vendor/archify/archify/2.14.0/renderers/sequence/README.md",
         "build_mapping": "archify"
       }
     },
@@ -10498,7 +10498,7 @@
       "product": "career",
       "source_document": "plugins/game-design-career/skills/archify/renderers/workflow/README.md",
       "source_section": "Workflow Renderer",
-      "source_digest": "55abf36513f5cd4c1b06fa0cc2aa158375527b9de45bf45d96cca00a98b6bc51",
+      "source_digest": "dea221f672ce8cc2d8c7bdd850ee10d75cc7289915d3ab58ce2fdedf1a145592",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "“Workflow Renderer”은 plugins/game-design-career/skills/archify/renderers/workflow/README.md에 설치되는 package mirror이며 공유 build mapping 원본은 구조화된 origin_source에 고정한다. node archify/renderers/workflow/render-workflow.mjs input.workflow.json output.html라는 현재 배포 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
@@ -10509,7 +10509,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.13.0/renderers/workflow/README.md",
+        "source_document": "shared/vendor/archify/archify/2.14.0/renderers/workflow/README.md",
         "build_mapping": "archify"
       }
     },
@@ -10529,7 +10529,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.13.0/schemas/README.md",
+        "source_document": "shared/vendor/archify/archify/2.14.0/schemas/README.md",
         "build_mapping": "archify"
       }
     },
@@ -10842,7 +10842,7 @@
       "product": "studio",
       "source_document": "plugins/game-design-studio/skills/archify/SKILL.md",
       "source_section": "Archify",
-      "source_digest": "4946d2fb2af9cb84461b1b98b732b44833e6a1ceaebfe8cd9e9d9ca4e939e12e",
+      "source_digest": "fe4445b1c33706e8dc70c805cd1609272c1194a6dff1c5c8251abda3ca88cf4b",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "“Archify”은 plugins/game-design-studio/skills/archify/SKILL.md에 설치되는 package mirror이며 공유 build mapping 원본은 구조화된 origin_source에 고정한다. Create a self-contained, interactive HTML diagram from a small typed JSON specification. Static output is the default; enable motion only when the user asks for a demo or presentation.라는 현재 배포 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
@@ -10853,7 +10853,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.13.0/SKILL.md",
+        "source_document": "shared/vendor/archify/archify/2.14.0/SKILL.md",
         "build_mapping": "archify"
       }
     },
@@ -10862,7 +10862,7 @@
       "product": "studio",
       "source_document": "plugins/game-design-studio/skills/archify/references/authoring-contract.md",
       "source_section": "Authoring contract",
-      "source_digest": "06c0045075aa96f10923c87b6cc8ccf2d63bd8b2475da54c928e78ea5b5ffaa9",
+      "source_digest": "35220be7dee5792d630e0b5d5a3e4d57ddf16a497015a4674d0fdb0910f7811b",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "“Authoring contract”은 plugins/game-design-studio/skills/archify/references/authoring-contract.md에 설치되는 package mirror이며 공유 build mapping 원본은 구조화된 origin_source에 고정한다. Read this reference only after the Fast authoring path calls for more detail. The schemas and examples remain authoritative.라는 현재 배포 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
@@ -10873,7 +10873,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.13.0/references/authoring-contract.md",
+        "source_document": "shared/vendor/archify/archify/2.14.0/references/authoring-contract.md",
         "build_mapping": "archify"
       }
     },
@@ -10882,7 +10882,7 @@
       "product": "studio",
       "source_document": "plugins/game-design-studio/skills/archify/references/delivery-contract.md",
       "source_section": "Delivery contract",
-      "source_digest": "149846891358a328565d5efc75a69c3f42715ef3e01560f479096ce9d80568a9",
+      "source_digest": "15d2fb47412288c5a489c402877bf92e774d10f481f16f9d1af2fdd907fc0ba6",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "“Delivery contract”은 plugins/game-design-studio/skills/archify/references/delivery-contract.md에 설치되는 package mirror이며 공유 build mapping 원본은 구조화된 origin_source에 고정한다. node bin/archify.mjs deliver <type> <candidate.json> <output.html> --quality showcase --json라는 현재 배포 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
@@ -10893,7 +10893,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.13.0/references/delivery-contract.md",
+        "source_document": "shared/vendor/archify/archify/2.14.0/references/delivery-contract.md",
         "build_mapping": "archify"
       }
     },
@@ -10913,7 +10913,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.13.0/references/viewer-runtime.md",
+        "source_document": "shared/vendor/archify/archify/2.14.0/references/viewer-runtime.md",
         "build_mapping": "archify"
       }
     },
@@ -10922,7 +10922,7 @@
       "product": "studio",
       "source_document": "plugins/game-design-studio/skills/archify/renderers/dataflow/README.md",
       "source_section": "Data Flow Renderer",
-      "source_digest": "602ce170c0b1e37a527f8ffebaf3c4b82e2cf7f635a85ee108b4ae758c435c26",
+      "source_digest": "18c4f86ba62fcee371d9fe38094625b3a68cc76231c36ab8c8124acb4c1ffa42",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "“Data Flow Renderer”은 plugins/game-design-studio/skills/archify/renderers/dataflow/README.md에 설치되는 package mirror이며 공유 build mapping 원본은 구조화된 origin_source에 고정한다. node archify/renderers/dataflow/render-dataflow.mjs input.dataflow.json output.html라는 현재 배포 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
@@ -10933,7 +10933,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.13.0/renderers/dataflow/README.md",
+        "source_document": "shared/vendor/archify/archify/2.14.0/renderers/dataflow/README.md",
         "build_mapping": "archify"
       }
     },
@@ -10942,7 +10942,7 @@
       "product": "studio",
       "source_document": "plugins/game-design-studio/skills/archify/renderers/lifecycle/README.md",
       "source_section": "Lifecycle Renderer",
-      "source_digest": "8cb753d4bcf11a2914e6a016598e10249c7eb931ce99860c14cd5929dddb59e7",
+      "source_digest": "ec9b27ebf4c6a8fa675f11995c47753d3283423bac09980a4cd476d6bae9a9f8",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "“Lifecycle Renderer”은 plugins/game-design-studio/skills/archify/renderers/lifecycle/README.md에 설치되는 package mirror이며 공유 build mapping 원본은 구조화된 origin_source에 고정한다. node archify/renderers/lifecycle/render-lifecycle.mjs input.lifecycle.json output.html라는 현재 배포 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
@@ -10953,7 +10953,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.13.0/renderers/lifecycle/README.md",
+        "source_document": "shared/vendor/archify/archify/2.14.0/renderers/lifecycle/README.md",
         "build_mapping": "archify"
       }
     },
@@ -10962,7 +10962,7 @@
       "product": "studio",
       "source_document": "plugins/game-design-studio/skills/archify/renderers/sequence/README.md",
       "source_section": "Sequence Renderer",
-      "source_digest": "8a2c52eb248b18767d0a9179f08b3f0f370136df6b63beb528eae02ff400ad20",
+      "source_digest": "c18894766441faa0d1c88fe02a96f0eabe05e1d477463f8ec52b94728cec3b88",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "“Sequence Renderer”은 plugins/game-design-studio/skills/archify/renderers/sequence/README.md에 설치되는 package mirror이며 공유 build mapping 원본은 구조화된 origin_source에 고정한다. node archify/renderers/sequence/render-sequence.mjs input.sequence.json output.html라는 현재 배포 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
@@ -10973,7 +10973,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.13.0/renderers/sequence/README.md",
+        "source_document": "shared/vendor/archify/archify/2.14.0/renderers/sequence/README.md",
         "build_mapping": "archify"
       }
     },
@@ -10982,7 +10982,7 @@
       "product": "studio",
       "source_document": "plugins/game-design-studio/skills/archify/renderers/workflow/README.md",
       "source_section": "Workflow Renderer",
-      "source_digest": "55abf36513f5cd4c1b06fa0cc2aa158375527b9de45bf45d96cca00a98b6bc51",
+      "source_digest": "dea221f672ce8cc2d8c7bdd850ee10d75cc7289915d3ab58ce2fdedf1a145592",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "“Workflow Renderer”은 plugins/game-design-studio/skills/archify/renderers/workflow/README.md에 설치되는 package mirror이며 공유 build mapping 원본은 구조화된 origin_source에 고정한다. node archify/renderers/workflow/render-workflow.mjs input.workflow.json output.html라는 현재 배포 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
@@ -10993,7 +10993,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.13.0/renderers/workflow/README.md",
+        "source_document": "shared/vendor/archify/archify/2.14.0/renderers/workflow/README.md",
         "build_mapping": "archify"
       }
     },
@@ -11013,7 +11013,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.13.0/schemas/README.md",
+        "source_document": "shared/vendor/archify/archify/2.14.0/schemas/README.md",
         "build_mapping": "archify"
       }
     },

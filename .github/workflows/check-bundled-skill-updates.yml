@@ -1,0 +1,38 @@
+name: Check bundled skill updates
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-updates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check trusted bundled releases
+        run: |
+          summary="$(mktemp)"
+          trap 'rm -f "$summary"' EXIT
+          set +e
+          node tooling/check-suite-updates.mjs > "$summary"
+          status=$?
+          set -e
+          {
+            echo "## Bundled skill update audit"
+            echo ""
+            echo '```json'
+            cat "$summary"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$status" -eq 1 ]; then
+            exit 1
+          fi

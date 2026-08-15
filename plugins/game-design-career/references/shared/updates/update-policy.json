@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "checkIntervalDays": 7,
+  "totalTimeoutMs": 5000,
+  "marketplaceName": "game-design-suite",
+  "productIds": [
+    "game-design-studio",
+    "game-design-career"
+  ],
+  "components": [
+    {
+      "id": "skillstead",
+      "repository": "https://github.com/kyungseo/skillstead"
+    },
+    {
+      "id": "archify",
+      "repository": "https://github.com/tt-a1i/archify"
+    },
+    {
+      "id": "im-not-ai",
+      "repository": "https://github.com/epoko77-ai/im-not-ai"
+    }
+  ],
+  "stableReleasesOnly": true
+}

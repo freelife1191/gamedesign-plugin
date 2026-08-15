@@ -6,7 +6,7 @@
           {
             "type": "command",
             "command": "node \"${PLUGIN_ROOT}/scripts/capability-probe.mjs\"",
-            "timeout": 10,
+            "timeout": 25,
             "statusMessage": "Detecting optional game-design and image capabilities"
           }
         ]

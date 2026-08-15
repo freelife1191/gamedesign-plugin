@@ -321,7 +321,7 @@ async function verifyOne({ repoRoot, productName, isolationRoot, mutateCopy, act
   const vendorComponents = new Map(loadVendorComponents({ repoRoot }).map((component) => [component.id, component]));
   const vendors = await Promise.all([
     verifyVendor(pluginRoot, { component: vendorComponents.get("skillstead"), files: 55 }),
-    verifyVendor(pluginRoot, { component: vendorComponents.get("archify"), files: 60 }),
+    verifyVendor(pluginRoot, { component: vendorComponents.get("archify"), files: 62 }),
   ]);
   const hooks = JSON.parse(await readFile(path.join(pluginRoot, "hooks/hooks.json"), "utf8"));
   exactHookCommand(hooks, "SessionStart");

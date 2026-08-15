@@ -31,7 +31,7 @@ Studio와 Career는 `sourceDocumentCategories`에 `career`, `fun-intent`, `syste
 | `responsible-design` | `shared/responsible-design/` | `references/shared/responsible-design/` |
 | `export` | `shared/export/` | `references/shared/export/` |
 | `vendor` | `shared/vendor/skillstead/svg-infographic/0.9.0/` | `skills/svg-infographic/` |
-| `archify` | `shared/vendor/archify/archify/2.13.0/` | `skills/archify/` |
+| `archify` | `shared/vendor/archify/archify/2.14.0/` | `skills/archify/` |
 | `im-not-ai` | `shared/vendor/im-not-ai/humanize-korean/v2.3.0/` | `skills/humanize-korean/` |
 | `memory` | `shared/memory/skills/`, `shared/memory/schema/`, `shared/memory/references/`, `shared/memory/templates/` | `skills/`, `references/shared/memory/schema/`, `references/shared/memory/references/`, `references/shared/memory/templates/` |
 | shared runtime | `shared/hooks/`, `shared/scripts/` | `hooks/`, `scripts/` |

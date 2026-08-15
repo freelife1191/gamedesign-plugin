@@ -8,6 +8,7 @@ import { homedir } from 'node:os';
 import { delimiter, isAbsolute, join, relative, resolve, sep, win32 as pathWin32 } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { checkGameDesignUpdates } from './check-game-design-updates.mjs';
 import { loadImageConfig, toPublicImageConfig } from './validate-image-config.mjs';
 
 const MAX_STDIN_BYTES = 64 * 1024;
@@ -482,18 +483,41 @@ export async function probeCapabilities({ platform = process.platform, env = pro
   return { capabilities, warnings };
 }
 
-export async function runCapabilityProbe() {
+function closedUnknownUpdates() {
+  return {
+    schemaVersion: 1,
+    checkedAt: new Date().toISOString(),
+    cache: 'miss',
+    status: 'unknown',
+    components: [],
+    notification: null,
+  };
+}
+
+async function safelyCheckGameDesignUpdates(updateOptions) {
+  try {
+    return await checkGameDesignUpdates(updateOptions);
+  } catch {
+    return closedUnknownUpdates();
+  }
+}
+
+export async function runCapabilityProbe({ updateOptions } = {}) {
   const input = await readHookInput();
-  const result = await probeCapabilities();
   const workspaceRoot = safeAbsoluteCandidate(input.value?.cwd) ?? process.cwd();
-  const imageConfig = toPublicImageConfig(await loadImageConfig({ workspaceRoot }));
+  const [result, imageConfig, updates] = await Promise.all([
+    probeCapabilities(),
+    loadImageConfig({ workspaceRoot }).then(toPublicImageConfig),
+    safelyCheckGameDesignUpdates(updateOptions),
+  ]);
   if (input.warning) result.warnings.unshift(input.warning);
   return {
     hookSpecificOutput: {
       hookEventName: 'SessionStart',
-      additionalContext: JSON.stringify({ capabilities: result.capabilities, imageConfig }),
+      additionalContext: JSON.stringify({ capabilities: result.capabilities, imageConfig, updates }),
     },
     imageConfig,
+    updates,
     ...result,
   };
 }

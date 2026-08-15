@@ -15,6 +15,10 @@ const sharedUpdateIdentityMatchers = new Map([
     "scripts/lib/update-advisory.mjs",
     /policy\.productIds\[0\]\s*!==\s*"game-design-studio"\s*\|\|\s*policy\.productIds\[1\]\s*!==\s*"game-design-career"/u,
   ],
+  [
+    "scripts/inspect-game-design-plugin-updates.mjs",
+    /const PLUGINS = new Set\(\["game-design-studio", "game-design-career"\]\);/u,
+  ],
 ]);
 
 function inside(root, candidate) {
