@@ -123,6 +123,16 @@ function unknownAdvisory(checkedAt, installed) {
   });
 }
 
+export function createDisabledUpdateAdvisory({ checkedAt } = {}) {
+  if (!validCheckedAt(checkedAt)) throw new TypeError("checkedAt must be an RFC 3339 instant");
+  return freezeAdvisory({
+    schemaVersion: 1,
+    checkedAt,
+    status: "disabled",
+    components: [],
+  });
+}
+
 function validInstalledComponent(component) {
   const rule = componentRule(component);
   return hasExactKeys(component, INSTALLED_KEYS)
