@@ -4,18 +4,22 @@
   "title": "Public image generation configuration",
   "type": "object",
   "additionalProperties": false,
-  "required": ["mode", "model", "quality", "apiKeyPresent", "sources", "warnings"],
+  "required": ["mode", "providerPreference", "embeddedTextLocale", "model", "quality", "apiKeyPresent", "sources", "warnings"],
   "properties": {
     "mode": { "enum": ["required", "all", "select", "prompt-only"] },
+    "providerPreference": { "enum": ["codex-first", "openai"] },
+    "embeddedTextLocale": { "enum": ["none", "ko-KR"] },
     "model": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
     "quality": { "enum": ["low", "medium", "high", "auto"] },
     "apiKeyPresent": { "type": "boolean" },
     "sources": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["mode", "model", "quality", "apiKey"],
+      "required": ["mode", "providerPreference", "embeddedTextLocale", "model", "quality", "apiKey"],
       "properties": {
         "mode": { "enum": ["environment", ".env", "default"] },
+        "providerPreference": { "enum": ["environment", ".env", "default"] },
+        "embeddedTextLocale": { "enum": ["environment", ".env", "default"] },
         "model": { "enum": ["environment", ".env", "default"] },
         "quality": { "enum": ["environment", ".env", "default"] },
         "apiKey": { "enum": ["environment", ".env", "none"] }

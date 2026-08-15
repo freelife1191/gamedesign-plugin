@@ -27,6 +27,17 @@
 4. [결과물 카탈로그](output-catalog.md)에서 최소·선택·확장 결과와 handoff 경계를 확인합니다.
 5. 막히면 [Studio FAQ](../game-design-studio/faq.md), [Career FAQ](../game-design-career/faq.md)와 이 문서의 [공통 FAQ](#공통-faq)에서 재개 경로를 찾습니다.
 
+## 설계 지능과 일관성 도구 선택하기
+
+| 필요한 작업 | Studio | Career | 경계 |
+| --- | --- | --- | --- |
+| 승인된 프로젝트 교훈 재사용 | [Studio 프로젝트 기억](../game-design-studio/memory.md) | [Career 프로젝트 기억](../game-design-career/memory.md) | 승인된 기록만 적용하고 후보는 자동 승인하지 않음 |
+| 경쟁작·레퍼런스 시스템 분석 | [Studio 레퍼런스 분석](../game-design-studio/reference-analysis.md) | [Career 레퍼런스 분석](../game-design-career/reference-analysis.md) | 관찰·추론·설계 전환 제안을 분리하고 미확인 규칙은 `미정`으로 둠 |
+| 한국어·영어 용어 일관성 | [Studio 용어 사전](../game-design-studio/glossary.md) | [Career 용어 사전](../game-design-career/glossary.md) | 영향 목록과 후보를 먼저 만들고 사람 승인 전 원문을 자동 치환하지 않음 |
+| 컷씬 이미지 프리프로덕션 | [Studio 컷씬 비주얼 프리프로덕션](../game-design-studio/cutscene-visual-preproduction.md) | Career에는 컷씬 생성 경로 없음 | 프롬프트만 제공하거나 비용을 먼저 공개하고, 이름이 기록된 승인 뒤에만 생성 |
+
+이 네 경로는 Canonical Artifact를 대신하지 않습니다. 기억·레퍼런스·용어 결과는 현재 작업의 검토 자료이고, 컷씬 결과는 Studio 이미지 자산의 별도 승인·연속성 관문을 통과해야 합니다.
+
 ## 작업 규모 선택하기
 
 입문은 개념 하나와 짧은 실습, 기초는 하나의 기획 문제 문서화, 응용은 여러 요소와 검토 기록 연결입니다. 포트폴리오는 공개 가능한 판단·검증 근거를 별도 Career Artifact로 정리하며, 전체 프로젝트는 제품 오케스트레이터와 사람 결정 지점을 포함합니다. 이 단계는 기간이나 품질을 보장하지 않습니다.

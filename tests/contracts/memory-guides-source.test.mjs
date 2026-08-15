@@ -212,7 +212,13 @@ test("source inventories and product documentation list the frozen cutscene inve
 
 test("cutscene guide keeps copyable requests and frozen Studio/Career inventories", async () => {
   const guide = parseCutsceneGuide(await readFile(path.join(root, "guides/game-design-studio/cutscene-visual-preproduction.md"), "utf8"));
-  assert.deepEqual(guide.headings.slice(0, 4), ["컷씬 비주얼 프리프로덕션", "Prompt Only", "Estimate Only", "Generate After Approval"]);
+  assert.deepEqual(guide.headings.slice(0, 5), [
+    "제공자와 품질을 먼저 고르기",
+    "컷씬 비주얼 프리프로덕션",
+    "Prompt Only",
+    "Estimate Only",
+    "Generate After Approval",
+  ]);
   assert.deepEqual(guide.requestBlocks, cutsceneGuideRequests);
 
   const inventories = {};

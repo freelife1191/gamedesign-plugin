@@ -132,15 +132,20 @@ test("Career generate-image-assets uses stable user choices and the configured p
   assert.match(skill, /selectGenerationJobs/u);
   assert.match(skill, /stable asset IDs?/u);
   assert.match(skill, /OPENAI_API_KEY/u);
+  assert.match(skill, /IMAGE_PROVIDER.*codex-first|codex-first.*IMAGE_PROVIDER/isu);
+  assert.match(skill, /IMAGE_EMBEDDED_TEXT_LOCALE.*ko-KR/isu);
+  assert.match(skill, /한글.*gpt-image-2|Korean.*gpt-image-2/isu);
+  assert.match(skill, /low.*(?:default|기본).*medium.*(?:master|마스터).*high.*(?:exception|예외)/isu);
   assert.match(skill, /generate-openai-images\.mjs/u);
-  assert.match(skill, /OpenAI only|only.*OpenAI/is);
-  assert.match(skill, /never.*Codex fallback|no.*Codex fallback/is);
+  assert.match(skill, /explicit.*OpenAI|OpenAI.*명시/isu);
+  assert.match(skill, /never.*auto-fallback|Do not change provider automatically/is);
   assert.match(skill, /host image capability/u);
   assert.match(skill, /prompts.*placeholders/is);
   assert.match(skill, /prompt-only/u);
   assert.match(skill, /select.*explicit.*stable/is);
   assert.match(skill, /do not.*model.*quality|must not.*model.*quality/is);
   assert.match(skill, /concept-draft/u);
+  assert.doesNotMatch(skill, /OPENAI_API_KEY.*(?:present|있으면).{0,40}(?:OpenAI only|OpenAI만)/isu);
 });
 
 test("Career review-image-assets keeps approval with named humans and blocks unapproved derivatives", async () => {
@@ -243,7 +248,7 @@ test("Career executes a selected host workflow with truthful unreported applied 
 test("Career configured workflow keeps the private OpenAI key internal while routing the compiled prompt", async (t) => {
   const root = await workflowRoot(t, "career-configured-openai-");
   const secret = "configured-openai-secret";
-  await writeFile(path.join(root, ".env"), `IMAGE_GEN_MODE=select\nOPENAI_API_KEY=${secret}\n`);
+  await writeFile(path.join(root, ".env"), `IMAGE_GEN_MODE=select\nIMAGE_PROVIDER=openai\nOPENAI_API_KEY=${secret}\n`);
   let observed;
   const result = await runConfiguredImageAssetWorkflow({
     workspaceRoot: await realpath(root), env: {}, artifactRoot: root, artifact, qualityProfile: profile, patternCatalog: injectedPatternCatalog,
@@ -267,7 +272,7 @@ test("Career public-only OpenAI configuration fails before any provider call", a
   const root = await workflowRoot(t, "career-public-openai-");
   let calls = 0;
   await assert.rejects(() => runImageAssetWorkflow({
-    artifactRoot: root, artifact, qualityProfile: profile, config: { mode: "select", model: "gpt-image-2", quality: "low", apiKeyPresent: true },
+    artifactRoot: root, artifact, qualityProfile: profile, config: { mode: "select", providerPreference: "openai", embeddedTextLocale: "none", model: "gpt-image-2", quality: "low", apiKeyPresent: true },
     selectedAssetIds: ["hero"], selectionReceipt: { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-public-openai", asset_ids: ["hero"] },
     generateOpenAIImagesFn: async () => { calls += 1; return { results: [], failures: [] }; },
   }), /API key/i);
@@ -626,7 +631,7 @@ test("Career records a redacted failure manifest when a selected host callback t
 
 test("Career appends immutable retry attempts and leaves OpenAI failure applied settings unreported", async (t) => {
   const root = await workflowRoot(t, "career-openai-retry-");
-  const config = { mode: "select", model: "gpt-image-2", quality: "low", apiKeyPresent: true, apiKey: "test-only-key" };
+  const config = { mode: "select", providerPreference: "openai", embeddedTextLocale: "none", model: "gpt-image-2", quality: "low", apiKeyPresent: true, apiKey: "test-only-key" };
   let openAiCalls = 0;
   const openAiFailure = async ({ jobs }) => { openAiCalls += 1; return { results: [], failures: jobs.map(({ asset_id }) => ({ asset_id, generation_state: "generation-failed", reason: "provider-request-failed" })) }; };
   const first = await runImageAssetWorkflow({

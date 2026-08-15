@@ -17,6 +17,15 @@ const statusRoutes = Object.freeze([
   "guides/game-design-studio/README.md",
   "guides/game-design-career/README.md",
 ]);
+const featureGuideRoutes = Object.freeze([
+  "guides/game-design-studio/memory.md",
+  "guides/game-design-studio/reference-analysis.md",
+  "guides/game-design-studio/glossary.md",
+  "guides/game-design-studio/cutscene-visual-preproduction.md",
+  "guides/game-design-career/memory.md",
+  "guides/game-design-career/reference-analysis.md",
+  "guides/game-design-career/glossary.md",
+]);
 
 function visibleLinks(markdown) {
   return extractMarkdownLinks(markdown).map((link) => link.target);
@@ -211,6 +220,32 @@ test("curated Archify guide routing exposes only published, visually passed prod
     assert.equal(receipt.input, entry.spec, `${entry.id} receipt must bind its catalog spec`);
     assert.equal(receipt.output, entry.html, `${entry.id} receipt must bind its catalog HTML`);
     assert.equal(receipt.type, entry.diagram_type, `${entry.id} receipt must bind its catalog type`);
+  }
+});
+
+test("guide hubs expose every published Archify view and the new design-intelligence workflows", async () => {
+  const catalog = await loadArchifyCatalog({ repoRoot });
+  const published = catalog.entries.filter((entry) => entry.delivery_status === "published" && entry.visual_review === "passed");
+  const guidesReadme = await readFile(path.join(repoRoot, "guides", "README.md"), "utf8");
+  const useCasesReadme = await readFile(path.join(repoRoot, "guides", "use-cases", "README.md"), "utf8");
+
+  assert.match(guidesReadme, new RegExp(`현재 공개된 한국어 Archify diagram은 \\*\\*${published.length}개\\*\\*`, "u"));
+  for (const entry of published) {
+    assert.ok(
+      visibleLinks(guidesReadme).some((destination) => resolveDestination("guides/README.md", destination) === entry.html),
+      `guides/README.md must link ${entry.id}`,
+    );
+  }
+  for (const target of featureGuideRoutes) {
+    for (const [filename, markdown] of [
+      ["guides/README.md", guidesReadme],
+      ["guides/use-cases/README.md", useCasesReadme],
+    ]) {
+      assert.ok(
+        visibleLinks(markdown).some((destination) => resolveDestination(filename, destination) === target),
+        `${filename} must route to ${target}`,
+      );
+    }
   }
 });
 

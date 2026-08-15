@@ -133,7 +133,7 @@ required mode의 declared finite jobs만 처리하고 key가 없는 host capabil
 
 ### 간단 요청 예시
 ```text
-@Game Design Studio required finite assets만 처리해. key가 없고 host capability가 available이면 해당 jobs만 사용하고 unknown 또는 unavailable이면 호출하지 말고 prompt와 placeholder를 보존해.
+@Game Design Studio required finite assets만 처리해. IMAGE_PROVIDER=codex-first로 API key와 관계없이 available host image_gen을 먼저 사용하고, unavailable이면 유료 전환 제안만 남긴 뒤 호출하지 말고 prompt와 placeholder를 보존해.
 ```
 
 ### 짧은 흐름
@@ -175,7 +175,7 @@ manifest의 required finite jobs와 redacted capability snapshot이 있을 때 �
 
 ### Codex App 재사용 템플릿
 ```text
-@Game Design Studio [Canonical Artifact]의 [declared required stable IDs]를 required mode로 처리해. [capability snapshot]에서 key가 없고 host가 available일 때만 jobs를 사용하고 unknown 또는 unavailable이면 호출하지 말고 prompt와 placeholder를 보존해.
+@Game Design Studio [Canonical Artifact]의 [declared required stable IDs]를 required mode로 처리해. [capability snapshot]에서 IMAGE_PROVIDER=codex-first로 host가 available일 때 jobs를 사용하고, unavailable이면 explicit OpenAI 비용 제안만 남긴 뒤 호출하지 말고 prompt와 placeholder를 보존해.
 ```
 
 ### Codex CLI 완성 예시
@@ -185,7 +185,7 @@ $game-design-studio:generate-image-assets artifact=game-design/coop/brief mode=r
 
 ### Codex CLI 재사용 템플릿
 ```text
-$game-design-studio:generate-image-assets artifact=[Canonical Artifact] mode=required assetIds=[declared required stable IDs] capability=[capability snapshot] key가 없고 host가 available일 때만 jobs를 사용하고 아니면 호출 없이 보존해.
+$game-design-studio:generate-image-assets artifact=[Canonical Artifact] mode=required assetIds=[declared required stable IDs] capability=[capability snapshot] IMAGE_PROVIDER=codex-first로 available host image_gen을 먼저 사용하고 아니면 유료 전환 제안만 남긴 뒤 호출 없이 보존해.
 ```
 
 ### 스킬·전문 역할 흐름
@@ -252,11 +252,11 @@ generate-standard의 prompt·placeholder와 unavailable receipt를 보존하고 
 
 **전체 생성 모드에서 이미지 생성 서비스(OpenAI) 실패와 출처 기록 분리**
 
-all mode의 declared required·recommended·variant jobs만 실행하고 API key가 있으면 OpenAI only failure를 Codex fallback 없이 provenance에 남긴다.
+all mode의 declared required·recommended·variant jobs만 실행한다. codex-first host image_gen을 먼저 쓰고, 한글 삽입은 explicit OpenAI gpt-image-2, low 기본·medium 선택·high 예외 정책으로 비용 승인 뒤 실행한다.
 
 ### 간단 요청 예시
 ```text
-@Game Design Studio all mode에서 declared required·recommended·variant jobs만 처리해. OPENAI_API_KEY가 있으면 OpenAI only로 시도하고 auth·quota·policy·network 실패 후 Codex fallback은 금지하며 provenance를 분리해.
+@Game Design Studio all mode에서 declared required·recommended·variant jobs만 처리해. IMAGE_PROVIDER=codex-first로 host image_gen을 먼저 시도해. 만족스럽지 않으면 low OpenAI 비용을 제안하고 승인 뒤에만 explicit OpenAI를 실행해. 이미지 안 한글은 IMAGE_EMBEDDED_TEXT_LOCALE=ko-KR과 gpt-image-2가 필수야. medium은 master, high는 예외적인 video hero frame이나 production concept art에만 비용 승인 뒤 사용해.
 ```
 
 ### 짧은 흐름
@@ -280,6 +280,9 @@ API key가 있을 때 다른 provider로 fallback하거나 선언되지 않은 a
 - validated image manifest
 - compiled prompt package
 - IMAGE_GEN_MODE=all
+- IMAGE_PROVIDER=codex-first 또는 승인된 openai
+- IMAGE_EMBEDDED_TEXT_LOCALE=none 또는 ko-KR
+- IMAGE_QUALITY=low 또는 승인된 medium/high
 - redacted provider configuration
 - capability snapshot
 - declared finite jobs
@@ -298,17 +301,17 @@ API key가 있을 때 다른 provider로 fallback하거나 선언되지 않은 a
 
 ### Codex App 재사용 템플릿
 ```text
-@Game Design Studio [Canonical Artifact]의 [declared finite jobs]만 all mode로 처리해. [provider failure state]를 asset별 provenance로 보존하고 key가 있으면 OpenAI only이며 실패 후 Codex fallback은 금지해.
+@Game Design Studio [Canonical Artifact]의 [declared finite jobs]만 all mode로 처리해. [provider failure state]를 보존하고 host 우선, explicit OpenAI 승인, 한글 ko-KR + gpt-image-2, low 기본·medium master·high 예외 정책을 지켜.
 ```
 
 ### Codex CLI 완성 예시
 ```text
-$game-design-studio:generate-image-assets artifact=game-design/coop/brief mode=all declared=required,recommended,variant provider=OpenAI OpenAI only failure를 보존하고 fallback 없이 provenance를 분리해.
+$game-design-studio:generate-image-assets artifact=game-design/coop/brief mode=all declared=required,recommended,variant provider=OpenAI 승인된 OpenAI failure를 보존하고 자동 fallback 없이 provenance를 분리해.
 ```
 
 ### Codex CLI 재사용 템플릿
 ```text
-$game-design-studio:generate-image-assets artifact=[Canonical Artifact] mode=all assetIds=[declared finite jobs] failureState=[provider failure state] OpenAI only failure를 보존하고 Codex fallback 없이 provenance를 분리해.
+$game-design-studio:generate-image-assets artifact=[Canonical Artifact] mode=all assetIds=[declared finite jobs] failureState=[provider failure state] IMAGE_PROVIDER=codex-first로 host image_gen을 먼저 시도해. 만족스럽지 않거나 실패하면 결과를 보존하고 low 유료 비용을 제안하되 승인 전에는 호출하지 마. 이미지 안 한글은 IMAGE_EMBEDDED_TEXT_LOCALE=ko-KR과 explicit OpenAI gpt-image-2를 사용하고, medium은 master/key image, high는 예외적인 video hero frame이나 production concept art에만 비용 승인 뒤 사용해.
 ```
 
 ### 스킬·전문 역할 흐름
@@ -322,7 +325,7 @@ $game-design-studio:generate-image-assets artifact=[Canonical Artifact] mode=all
 ### 예상 결과물
 #### 최소 결과물
 - all declared finite job list
-- OpenAI only or host decision
+- codex-first host or explicitly approved OpenAI decision
 - per-asset provenance
 - explicit failure state
 - concept-draft result

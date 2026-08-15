@@ -101,10 +101,10 @@ $game-design-studio:design-cutscene-visual-preproduction artifact=[컷씬 목적
 - game-design/studio-cutscene/beginner/export-manifest.yml
 
 ### 도식 바인딩
-- ID: st-s11
-- SVG: guides/assets/game-design-studio/skills/plan-image-assets.svg
-- PNG: guides/assets/game-design-studio/skills/plan-image-assets.png
-- 대체 텍스트: 컷씬 이미지 계획과 승인 경계
+- ID: st-s16
+- SVG: guides/assets/game-design-studio/skills/design-cutscene-visual-preproduction.svg
+- PNG: guides/assets/game-design-studio/skills/design-cutscene-visual-preproduction.png
+- 대체 텍스트: 컷씬 비주얼 프리프로덕션 흐름
 
 ### 사람 검토
 #### 승인 경계
@@ -232,10 +232,10 @@ $game-design-studio:design-cutscene-visual-preproduction artifact=[컷씬 brief]
 - game-design/studio-cutscene/standard/assets/prompts/image-prompts.json
 
 ### 도식 바인딩
-- ID: st-s11
-- SVG: guides/assets/game-design-studio/skills/plan-image-assets.svg
-- PNG: guides/assets/game-design-studio/skills/plan-image-assets.png
-- 대체 텍스트: 컷씬 prompt package와 연속성 흐름
+- ID: st-s16
+- SVG: guides/assets/game-design-studio/skills/design-cutscene-visual-preproduction.svg
+- PNG: guides/assets/game-design-studio/skills/design-cutscene-visual-preproduction.png
+- 대체 텍스트: 컷씬 비주얼 프리프로덕션 흐름
 
 ### 사람 검토
 #### 승인 경계
@@ -264,7 +264,7 @@ style-master, reference-masters, keyframes, storyboard의 순차 비용·승인�
 
 ### 간단 요청 예시
 ```text
-@Game Design Studio 컷씬의 style-master 비용과 승인 계획을 계산해. count, model, quality, size, USD min/expected/max, finite cap, retryReserve, pricing time, costStatus를 공개하고 이미지는 생성하지 마.
+@Game Design Studio 컷씬의 style-master 비용과 승인 계획을 계산해. 한글이 없는 프레임은 host image_gen 우선, 유료 기본은 low, 선택한 master만 medium으로 두고 high는 사용하지 마. count, model, quality, size, USD min/expected/max, finite cap, retryReserve, pricing time, costStatus를 공개하고 이미지는 생성하지 마.
 ```
 
 ### 짧은 흐름
@@ -317,17 +317,17 @@ style-master 1건의 비용 범위와 cap, retryReserve를 공개했고 costStat
 
 ### Codex App 재사용 템플릿
 ```text
-@Game Design Studio [current wave]의 [count], [model], [quality], [size], USD 범위와 [finite cap]을 비용 계획으로 공개해. [named approval] 전에는 provider를 호출하지 마.
+@Game Design Studio [current wave]의 [count], [model], [quality], [size], USD 범위와 [finite cap]을 비용 계획으로 공개해. 한글 픽셀 텍스트는 gpt-image-2, 그 밖에는 host 우선·low 기본·medium 선택·high 예외 정책을 적용하고 [named approval] 전에는 provider를 호출하지 마.
 ```
 
 ### Codex CLI 완성 예시
 ```text
-$game-design-studio:design-cutscene-visual-preproduction artifact=game-design/island/opening mode=estimate-only wave=style-master count=1 model=gpt-image-2 quality=high size=1536x1024 capUsd=20 비용과 named approval 요구만 기록해.
+$game-design-studio:design-cutscene-visual-preproduction artifact=game-design/island/opening mode=estimate-only wave=style-master count=1 provider=codex-first quality=medium size=1536x1024 capUsd=20 비용과 named approval 요구만 기록해.
 ```
 
 ### Codex CLI 재사용 템플릿
 ```text
-$game-design-studio:design-cutscene-visual-preproduction artifact=[current wave] mode=estimate-only count=[count] model=[model] quality=[quality] size=[size] capUsd=[finite cap] namedApproval=[named approval] 비용 계획만 기록해.
+$game-design-studio:design-cutscene-visual-preproduction artifact=[current wave] mode=estimate-only count=[count] provider=[provider] model=[model] quality=[quality] size=[size] capUsd=[finite cap] namedApproval=[named approval] host 우선·low 기본·medium 선택·high 예외 비용 계획만 기록해.
 ```
 
 ### 스킬·전문 역할 흐름
@@ -369,10 +369,10 @@ $game-design-studio:design-cutscene-visual-preproduction artifact=[current wave]
 - game-design/studio-cutscene/advanced/assets/receipts/image-generation-<asset-id>-<attempt-id>.json
 
 ### 도식 바인딩
-- ID: st-s11
-- SVG: guides/assets/game-design-studio/skills/plan-image-assets.svg
-- PNG: guides/assets/game-design-studio/skills/plan-image-assets.png
-- 대체 텍스트: 컷씬 wave 비용과 승인 gate
+- ID: st-s16
+- SVG: guides/assets/game-design-studio/skills/design-cutscene-visual-preproduction.svg
+- PNG: guides/assets/game-design-studio/skills/design-cutscene-visual-preproduction.png
+- 대체 텍스트: 컷씬 비주얼 프리프로덕션 흐름
 
 ### 사람 검토
 #### 승인 경계

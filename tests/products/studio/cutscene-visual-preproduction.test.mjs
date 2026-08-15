@@ -69,7 +69,11 @@ test("cutscene skill makes each mode and paid-wave gate explicit under pressure"
     "partial success", "latest retryable failed stable IDs", "same still-current full-wave estimate", "pricing snapshot", "request schedule", "remaining approved worst-case", "remaining retryReserve", "fresh named live host-user approval", "new journal epoch", "unsupported by the current runtime", "provider calls: 0", "continuity gate",
     "document-approved", "production-candidate", "dialogue-only", "no image", "no provider", "no approval",
     "new derivative IDs", "planner", "never overwrite base",
+    "image_gen", "gpt-image-2", "low", "medium", "high",
   ]) assert.match(skill, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "iu"), phrase);
+  assert.match(skill, /(?:한글|Korean).*gpt-image-2/isu);
+  assert.match(skill, /low.*(?:default|기본).*medium.*(?:style-master|마스터).*high.*(?:exception|예외)/isu);
+  assert.match(skill, /(?:unsatisfactory|만족스럽지|실패).*(?:제안|propose).*(?:승인|approval)/isu);
 });
 
 test("cutscene discovery corpus requires qualified cinematic visual-preproduction intent and excludes content work", async () => {

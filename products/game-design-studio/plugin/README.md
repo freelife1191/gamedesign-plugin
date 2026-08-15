@@ -600,12 +600,14 @@ package-local 파일은 설치한 플러그인에서 바로 열 수 있습니다
 
 ```dotenv
 IMAGE_GEN_MODE=prompt-only
+IMAGE_PROVIDER=codex-first
+IMAGE_EMBEDDED_TEXT_LOCALE=none
 IMAGE_MODEL=gpt-image-2
 IMAGE_QUALITY=low
 OPENAI_API_KEY=
 ```
 
-`IMAGE_GEN_MODE`는 정확히 `prompt-only`(기본값), `select`, `required`, `all`만 허용합니다. `IMAGE_MODEL=gpt-image-2`, `IMAGE_QUALITY=low`가 기본값이며 quality는 `low`, `medium`, `high`, `auto`만 허용합니다. `OPENAI_API_KEY`가 있으면 OpenAI only이며 API/auth/quota/request/policy/network 실패 후 Codex fallback은 금지됩니다. 키가 없고 host capability가 `available`이면 Codex/host를 사용할 수 있고, `unknown` 또는 `unavailable`이면 provider를 추측하지 않고 prompts/placeholders만 보존합니다.
+`IMAGE_GEN_MODE`는 정확히 `prompt-only`(기본값), `select`, `required`, `all`만 허용합니다. `IMAGE_PROVIDER=codex-first`는 API key가 있어도 available Codex/host `image_gen`을 먼저 쓰며 유료 API로 자동 전환하지 않습니다. `IMAGE_PROVIDER=openai`는 비용 안내와 현재 사용자 승인 뒤에만 선택합니다. 이미지 안 한글은 `IMAGE_EMBEDDED_TEXT_LOCALE=ko-KR`과 `IMAGE_MODEL=gpt-image-2`가 필수입니다. 유료 quality는 `low`가 기본, `medium`은 선택된 마스터, `high`는 예외적인 영상 핵심 프레임·게임 원화에만 비용 승인 뒤 사용합니다.
 
 | mode | 실행 | provider/실패 경계 |
 | --- | --- | --- |

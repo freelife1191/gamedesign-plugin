@@ -24,8 +24,9 @@
 
 ## Curated Archify 상태
 
-[Curated Archify 상태 인덱스](archify-diagrams/README.md)는 검증된 Archify HTML 공개물과 차단된 후보의 근거·재시도 경계를 분리해 기록합니다. 현재 공개된 한국어 Archify diagram은 **3개**입니다.
+[Curated Archify 상태 인덱스](archify-diagrams/README.md)는 검증된 Archify HTML 공개물과 차단된 후보의 근거·재시도 경계를 분리해 기록합니다. 현재 공개된 한국어 Archify diagram은 **4개**입니다.
 
+- [플러그인 모음 전체 시스템 구조](assets/archify/suite/suite-plugin-system-architecture.html)
 - [Studio 전체 프로젝트 워크플로](assets/archify/studio/studio-project-workflow.html)
 - [Career 증거·포트폴리오 워크플로](assets/archify/career/career-evidence-workflow.html)
 - [Studio → Career 공개 근거 handoff](assets/archify/suite/suite-studio-career-handoff.html)
@@ -40,7 +41,10 @@
 | --- | --- | --- | --- |
 | 작은 규칙·루프·시스템·UX를 학습 | [Studio 활용 사례 인덱스](game-design-studio/use-cases/README.md) | 작게 검토할 가정, 규칙 또는 UX 초안 | [Studio 스킬 워크벤치](game-design-studio/use-cases/skill-workbench.md) · [Studio FAQ](game-design-studio/faq.md) |
 | 전체 GDD와 제작 검토를 연결 | [Game Design Studio 가이드](game-design-studio/README.md) | 범위·검토 게이트가 있는 Studio Artifact | [결과물 카탈로그](use-cases/output-catalog.md) |
-| 컷씬의 shot·프롬프트·이미지 비용을 분리해 준비 | [컷씬 비주얼 프리프로덕션](game-design-studio/cutscene-visual-preproduction.md) | 승인 전 provider 호출 0회의 컷씬 패키지와 wave별 비용·연속성 검토 | [Studio 이미지 자산](game-design-studio/image-assets.md) |
+| 승인된 프로젝트 교훈을 재사용 | [Studio 프로젝트 기억](game-design-studio/memory.md) 또는 [Career 프로젝트 기억](game-design-career/memory.md) | 출처·범위·만료가 확인된 적용 기록과 검토 대기 후보 | [공통 활용 허브](use-cases/README.md) |
+| 경쟁작·레퍼런스의 게임 시스템을 분석 | [Studio 레퍼런스 분석](game-design-studio/reference-analysis.md) 또는 [Career 레퍼런스 분석](game-design-career/reference-analysis.md) | 관찰 근거, 시스템 지도, 비교와 검토 대기 설계 전환 제안 | [공통 활용 허브](use-cases/README.md) |
+| 한국어·영어 기획 용어를 일관되게 관리 | [Studio 용어 사전](game-design-studio/glossary.md) 또는 [Career 용어 사전](game-design-career/glossary.md) | 문서 영향 목록, 승인 전 후보와 사람 승인 스냅샷 | [공통 활용 허브](use-cases/README.md) |
+| 컷씬의 장면(shot)·프롬프트·이미지 비용을 분리해 준비 | [컷씬 비주얼 프리프로덕션](game-design-studio/cutscene-visual-preproduction.md) | 승인 전 생성 제공자(provider) 호출 0회의 컷씬 패키지와 단계(wave)별 비용·연속성 검토 | [Studio 이미지 자산](game-design-studio/image-assets.md) |
 | 직무 탐색·역기획·포트폴리오·면접 준비 | [Career 활용 사례 인덱스](game-design-career/use-cases/README.md) | 근거·개인 기여·다음 증거 작업 | [Career 스킬 워크벤치](game-design-career/use-cases/skill-workbench.md) · [Career FAQ](game-design-career/faq.md) |
 | 현재 상황과 결과 경계를 먼저 확인 | [사용자 경로](use-cases/audience-paths.md) | 권장 시작점, 최소 결과와 사람 검토 경계 | [공통 활용 허브](use-cases/README.md) · [결과물 카탈로그](use-cases/output-catalog.md) |
 
@@ -78,8 +82,8 @@ Studio 인덱스는 설치 스킬 24개, Career 인덱스는 설치 스킬 23개
 
 | 제품 | 시작 | 전체 카탈로그 | 목적별 작업 |
 | --- | --- | --- | --- |
-| Studio | [제품 인덱스](game-design-studio/README.md) · [설치](game-design-studio/installation.md) · [5분 시작](game-design-studio/quick-start.md) | [스킬 24개](game-design-studio/skills/README.md) · [컷씬 비주얼 프리프로덕션](game-design-studio/cutscene-visual-preproduction.md) · [템플릿 15개](game-design-studio/templates.md) | [레시피 6개](game-design-studio/README.md#목적별-레시피) |
-| Career | [제품 인덱스](game-design-career/README.md) · [설치](game-design-career/installation.md) · [5분 시작](game-design-career/quick-start.md) | [스킬 23개](game-design-career/skills/README.md) · [템플릿 15개](game-design-career/templates.md) | [레시피 6개](game-design-career/README.md#목적별-레시피) |
+| Studio | [제품 인덱스](game-design-studio/README.md) · [설치](game-design-studio/installation.md) · [5분 시작](game-design-studio/quick-start.md) | [스킬 24개](game-design-studio/skills/README.md) · [기억](game-design-studio/memory.md) · [레퍼런스 분석](game-design-studio/reference-analysis.md) · [용어 사전](game-design-studio/glossary.md) · [컷씬](game-design-studio/cutscene-visual-preproduction.md) · [템플릿 15개](game-design-studio/templates.md) | [레시피 6개](game-design-studio/README.md#목적별-레시피) |
+| Career | [제품 인덱스](game-design-career/README.md) · [설치](game-design-career/installation.md) · [5분 시작](game-design-career/quick-start.md) | [스킬 23개](game-design-career/skills/README.md) · [기억](game-design-career/memory.md) · [레퍼런스 분석](game-design-career/reference-analysis.md) · [용어 사전](game-design-career/glossary.md) · [템플릿 15개](game-design-career/templates.md) | [레시피 6개](game-design-career/README.md#목적별-레시피) |
 
 ---
 
@@ -139,6 +143,10 @@ Studio 인덱스는 설치 스킬 24개, Career 인덱스는 설치 스킬 23개
 | Canonical Artifact | `content.md`를 내용 기준으로 삼고 근거, 결정, 자산과 내보내기 상태를 함께 보존하는 작업 폴더 |
 | Quality Profile | 문서 목적과 청중에 맞춰 필수 섹션, 표, 검토 기준과 승인 게이트를 정하는 계약 |
 | 도식 | Skillstead로 만드는 구조적 SVG와 검증된 2× PNG 파생본 |
+| 프로젝트 기억 | 출처·적용 범위·검토 시점과 사람 승인 상태에 묶인 로컬 프로젝트 기록 |
+| 레퍼런스 분석 | 관찰 근거와 추론을 분리해 시스템 지도·비교·설계 전환 제안을 만드는 절차 |
+| 용어 사전 | 한국어·영어 선호 용어와 문서 영향을 검토하고 이름이 기록된 사람의 결정으로 스냅샷을 갱신하는 계약 |
+| 컷씬 비주얼 프리프로덕션 | 장면(shot)·마스터 프롬프트·비용 견적·생성 승인·연속성 검토를 네 단계(wave)로 분리하는 Studio 절차 |
 | 이미지 승인 | 생성 또는 렌더 결과를 이름이 기록된 사람이 권리·품질 근거와 함께 승인하는 별도 결정 |
 | UX | 사용자가 화면·입력·피드백을 이해하고 작업을 마칠 수 있게 만드는 경험 설계입니다. |
 | LiveOps | 출시 뒤 이벤트·실험·밸런스 변경을 측정하고 되돌릴 수 있게 운영하는 일입니다. |

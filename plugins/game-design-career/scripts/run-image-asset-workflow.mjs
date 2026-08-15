@@ -567,6 +567,8 @@ export async function runConfiguredSelectedImageAssetWorkflow({ dispatchSnapshot
   }
   const config = {
     mode: "select",
+    providerPreference: dispatchSnapshot.provider === "openai" ? "openai" : "codex-first",
+    embeddedTextLocale: "none",
     model: dispatchSnapshot.model,
     quality: dispatchSnapshot.quality,
     requestTimeoutMs: 30_000,
@@ -629,7 +631,14 @@ export async function generateImageAssetWorkflow({
   if (receipt) await safeWriteArtifactFile({
     artifactRoot: root, relativePath: `assets/prompts/image-generation-selection-${receipt.event_id}.json`, data: `${JSON.stringify(selection, null, 2)}\n`, policy: "create-once",
   });
-  const decision = resolveImageProvider({ mode: publicConfig.mode, apiKeyPresent: publicConfig.apiKeyPresent, codexCapability });
+  const decision = resolveImageProvider({
+    mode: publicConfig.mode,
+    providerPreference: publicConfig.providerPreference,
+    embeddedTextLocale: publicConfig.embeddedTextLocale,
+    model: publicConfig.model,
+    apiKeyPresent: publicConfig.apiKeyPresent,
+    codexCapability,
+  });
   const preparedHostOutputs = jobs.length > 0 && decision.provider === "codex" ? await prepareHostOutputs(root, jobs) : undefined;
   let attemptId;
   let reservation;

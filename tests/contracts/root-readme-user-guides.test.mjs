@@ -1955,8 +1955,13 @@ function assertRootContentContract(markdown) {
   assert.match(markdown, /Career 템플릿 15개/);
   for (const mode of ["prompt-only", "select", "required", "all"]) assert.match(images, new RegExp(mode));
   assert.match(images, /OPENAI_API_KEY/);
-  assert.match(images, /OpenAI Images API만 사용/);
-  assert.match(images, /prompt-only fallback/);
+  assert.match(images, /IMAGE_PROVIDER=codex-first/u);
+  assert.match(images, /IMAGE_EMBEDDED_TEXT_LOCALE=ko-KR/u);
+  assert.match(images, /image_gen|호스트 이미지 기능/u);
+  assert.match(images, /한글.*gpt-image-2/su);
+  assert.match(images, /low.*medium.*high/su);
+  assert.match(images, /명시.*OpenAI.*승인|OpenAI.*명시.*승인/su);
+  assert.doesNotMatch(images, /비어 있지 않은 `OPENAI_API_KEY`가 있으면 OpenAI Images API만/u);
   for (const status of ["not-requested", "blocked", "pending", "unavailable"]) assert.match(exports, new RegExp(status));
   assert.match(exports, /MD.*renderer capability와 무관/);
   assert.match(exports, /fail-closed/);

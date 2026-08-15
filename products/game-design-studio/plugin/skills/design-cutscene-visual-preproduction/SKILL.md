@@ -13,6 +13,12 @@ Create the complete cutscene package before any paid image work. Keep the planne
 2. Run `plan-cutscene-visual-preproduction.mjs` to produce the brief, beat sheet, shot list, continuity bible, master-reference plan, prompt package, immutable manifest, and generation guide. Keep stable IDs, DAG bindings, prompt lineage, and expected relative paths intact.
 3. Use `apply-document-quality-profile` with `cutscene-visual-preproduction`; report its structural checklist separately from image approval.
 
+## Choose provider and paid quality conservatively
+
+For frames without Korean on-image text, try the available host `image_gen` capability first. An API key does not authorize paid generation. If the host result is unavailable, repeatedly fails, or is unsatisfactory, preserve the draft and propose `gpt-image-2` with a fresh cost estimate and named live approval; never auto-fallback to a paid call.
+
+If Korean characters must be rendered inside the image, use `gpt-image-2` through the explicit OpenAI route. Keep dialogue/subtitles outside generated pixels when a composited text layer is acceptable. For paid generation, `low` is the default for most frames and variants. Use `medium` selectively for `style-master`, another approved master/key image, or an explicit high-fidelity need. Recommend `high` only as an exceptional choice for a justified video hero frame or production concept art, with its incremental cost disclosed and approved.
+
 ## Select one mode
 
 ### Prompt Only

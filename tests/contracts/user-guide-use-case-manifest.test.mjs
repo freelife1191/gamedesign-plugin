@@ -870,7 +870,7 @@ const STUDIO_COMPETENCY_SEMANTIC_CONTRACT = Object.freeze({
     ["capacity 근거 없는 일정", "production-ready"],
     ["capacity evidence", "named-human decision receipt"],
     ["prototype / defer / exclude", "stable asset ID"],
-    ["`prompt-only`", "OpenAI only"],
+    ["`prompt-only`", "`IMAGE_PROVIDER=codex-first`"],
     ["NDA", "권리 불명 자산"],
     ["IMAGE_GEN_MODE=prompt-only", "renderer-neutral"],
     ["artifact=game-design/exploration-prototype/production-scope-risk", "export-game-design-documents"],
@@ -1180,8 +1180,9 @@ function assertStudioCompetencySemantics({ competencyPaths, entries, inventory }
   for (const [mode, clause] of Object.entries(STUDIO_IMAGE_MODE_SCOPE_CONTRACT)) {
     assert.ok(productionPractice.includes(clause), `ST-C08 ${mode} exact generation scope`);
   }
-  assert.match(productionPractice, /non-empty `OPENAI_API_KEY`가 있으면 OpenAI only/);
-  assert.match(productionPractice, /실패 후 Codex fallback을 하지 않습니다/);
+  assert.match(productionPractice, /`IMAGE_PROVIDER=codex-first`/);
+  assert.match(productionPractice, /유료 API로 자동 전환하지 않습니다/);
+  assert.match(productionPractice, /한글.*`gpt-image-2`/);
   const productionReview = sectionByHeading(productionCase, 3, "검토와 승인");
   for (const term of ["production owner", "rights/asset owner", "실제 format QA", "자동 승인하지 않습니다"]) {
     assert.ok(productionReview.includes(term), `ST-C08 review boundary: ${term}`);
@@ -3000,8 +3001,8 @@ test("each Studio competency case preserves its anchored case-card and executabl
   for (const mode of ["prompt-only", "select", "required", "all"]) {
     assert.match(productionPractice, new RegExp("`" + mode + "`"), `ST-C08 IMAGE_GEN_MODE ${mode}`);
   }
-  assert.match(productionPractice, /OpenAI only/);
-  assert.match(productionPractice, /fallback을 하지 않습니다/);
+  assert.match(productionPractice, /`IMAGE_PROVIDER=codex-first`/);
+  assert.match(productionPractice, /자동 전환하지 않습니다/);
   assertStudioCompetencySemantics({ competencyPaths, entries, inventory });
 });
 
@@ -3084,6 +3085,7 @@ test("common use-case hub has the exact H2 navigation and twelve FAQ IDs", async
       "누구를 위한 가이드인가요",
       "역량·콘셉트·스킬 중 선택하기",
       "탐색 순서",
+      "설계 지능과 일관성 도구 선택하기",
       "작업 규모 선택하기",
       "결과물 먼저 보기",
       "사용자 유형·난이도별 요청문",

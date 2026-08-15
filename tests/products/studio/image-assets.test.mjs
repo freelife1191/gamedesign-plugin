@@ -231,8 +231,13 @@ test("Studio generate-image-assets routes by actual configuration without invent
   assert.match(skill, /selectGenerationJobs/u);
   assert.match(skill, /stable asset IDs?/u);
   assert.match(skill, /OPENAI_API_KEY/u);
+  assert.match(skill, /IMAGE_PROVIDER.*codex-first|codex-first.*IMAGE_PROVIDER/isu);
+  assert.match(skill, /API key.*(?:유료|paid).*승인|key.*does not.*consent/isu);
+  assert.match(skill, /IMAGE_EMBEDDED_TEXT_LOCALE.*ko-KR/isu);
+  assert.match(skill, /한글.*gpt-image-2|Korean.*gpt-image-2/isu);
+  assert.match(skill, /low.*(?:default|기본).*medium.*(?:master|마스터).*high.*(?:exception|예외)/isu);
   assert.match(skill, /generate-openai-images\.mjs/u);
-  assert.match(skill, /OpenAI only|only.*OpenAI/is);
+  assert.match(skill, /explicit.*OpenAI|OpenAI.*명시/isu);
   assert.match(skill, /no.*Codex fallback|never.*fallback/is);
   assert.match(skill, /host image capability/u);
   assert.match(skill, /prompts.*placeholders/is);
@@ -240,6 +245,7 @@ test("Studio generate-image-assets routes by actual configuration without invent
   assert.match(skill, /select.*explicit.*stable/is);
   assert.match(skill, /do not.*model.*quality|must not.*model.*quality/is);
   assert.match(skill, /concept-draft/u);
+  assert.doesNotMatch(skill, /OPENAI_API_KEY.*(?:present|있으면).{0,40}(?:OpenAI only|OpenAI만)/isu);
 });
 
 test("Studio review-image-assets requires named human evidence for ordered lifecycle transitions", async () => {
@@ -288,7 +294,7 @@ test("Studio executes selected OpenAI workflow into artifact-local prompts, mani
   let calls = 0;
   const result = await runImageAssetWorkflow({
     artifactRoot: root, artifact, qualityProfile: profile,
-    config: { mode: "select", model: "gpt-image-2", quality: "low", apiKey: "secret-never-written", apiKeyPresent: true },
+    config: { mode: "select", providerPreference: "openai", embeddedTextLocale: "none", model: "gpt-image-2", quality: "low", apiKey: "secret-never-written", apiKeyPresent: true },
     selectedAssetIds: ["hero"], selectionReceipt: { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-studio-openai", asset_ids: ["hero"] },
     codexCapability: { status: "available" }, now: () => "2026-08-06T00:00:00.000Z", sleepFn: async () => {},
     fetchFn: async () => {
@@ -305,6 +311,45 @@ test("Studio executes selected OpenAI workflow into artifact-local prompts, mani
   assert.equal(JSON.parse(await readFile(path.join(root, "assets/image-assets.yml"), "utf8")).assets[0].generation_state, "generated");
   assert.match(await readFile(path.join(root, "assets/prompts/image-prompts.md"), "utf8"), /Expected count: 1/u);
   assert.equal((await readFile(path.join(root, "assets/image-assets.yml"), "utf8")).includes("secret-never-written"), false);
+});
+
+test("Studio keeps API key presence separate from paid routing and fails Korean text closed", async (t) => {
+  const hostFirst = await plannedSingleAssetGeneration(t, "studio-host-first-with-key-");
+  let hostCalls = 0;
+  let openAiCalls = 0;
+  const hostResult = await generateImageAssetWorkflow({
+    artifactRoot: hostFirst.root, manifest: hostFirst.manifest,
+    config: {
+      mode: "select", providerPreference: "codex-first", embeddedTextLocale: "none",
+      model: "gpt-image-2", quality: "low", apiKey: "present-but-not-consent", apiKeyPresent: true,
+    },
+    codexCapability: { status: "available" }, selectedAssetIds: [hostFirst.assetId], internalSelection: true,
+    hostGenerate: async ({ jobs }) => {
+      hostCalls += 1;
+      return { results: [{ asset_id: hostFirst.assetId, generation_state: "generated", bytes: png(), provenance: { provider: "codex-host", prompt_digest: digest(jobs[0].prompt) } }], failures: [] };
+    },
+    generateOpenAIImagesFn: async () => { openAiCalls += 1; return { results: [], failures: [] }; },
+  });
+  assert.equal(hostResult.decision.provider, "codex");
+  assert.equal(hostCalls, 1);
+  assert.equal(openAiCalls, 0);
+
+  const korean = await plannedSingleAssetGeneration(t, "studio-korean-text-route-");
+  let koreanHostCalls = 0;
+  let koreanOpenAiCalls = 0;
+  const blocked = await generateImageAssetWorkflow({
+    artifactRoot: korean.root, manifest: korean.manifest,
+    config: {
+      mode: "select", providerPreference: "codex-first", embeddedTextLocale: "ko-KR",
+      model: "gpt-image-2", quality: "low", apiKey: "present-but-not-consent", apiKeyPresent: true,
+    },
+    codexCapability: { status: "available" }, selectedAssetIds: [korean.assetId], internalSelection: true,
+    hostGenerate: async () => { koreanHostCalls += 1; return { results: [], failures: [] }; },
+    generateOpenAIImagesFn: async () => { koreanOpenAiCalls += 1; return { results: [], failures: [] }; },
+  });
+  assert.deepEqual(blocked.decision, { provider: "unavailable", reason: "korean-text-requires-openai" });
+  assert.equal(koreanHostCalls, 0);
+  assert.equal(koreanOpenAiCalls, 0);
 });
 
 test("Studio review requires an artifact-local host-user receipt rather than an agent decision", async (t) => {
@@ -360,7 +405,7 @@ test("Studio generates an image_needs-declared master before binding its derivat
   const calls = [];
   const result = await runImageAssetWorkflow({
     artifactRoot: root, artifact: declared, qualityProfile: profile,
-    config: { mode: "all", model: "gpt-image-2", quality: "low", apiKey: "secret-never-written", apiKeyPresent: true },
+    config: { mode: "all", providerPreference: "openai", embeddedTextLocale: "none", model: "gpt-image-2", quality: "low", apiKey: "secret-never-written", apiKeyPresent: true },
     codexCapability: { status: "unavailable" }, sleepFn: async () => {},
     fetchFn: async (url, options) => {
       calls.push({ url, options });

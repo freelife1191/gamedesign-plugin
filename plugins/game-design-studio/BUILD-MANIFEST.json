@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "ccefa51aaf427e0f4491e42cc4ffb726061a5ec168ba00985e41a2d5e497f580",
+  "treeSha256": "7a5e982772c246f8453ec722e125b51c016672a4e907cfc01734d222a926831b",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -11,8 +11,8 @@
     },
     {
       "path": ".env.example",
-      "sha256": "dff68d154a530c0dbbb234676e9d90815c92a664c017fa5139c8d179a7fd9e18",
-      "size": 3060
+      "sha256": "3a1b20c15844c0612b1c495727f24f17c69e1b21b537e3c3760f486181d381b9",
+      "size": 3891
     },
     {
       "path": "LICENSE",
@@ -21,8 +21,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "2313f02efeed0cadf00df6600cda808731a92e6d8094c8516cb771d378d5f693",
-      "size": 63856
+      "sha256": "f90196afb9df668ba433b72a47171c54bc7a9e0b488e0e7cb9fb9f59db756349",
+      "size": 63982
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -616,8 +616,8 @@
     },
     {
       "path": "references/prompt-templates.json",
-      "sha256": "ae23e83673bdf20c7d8c0736599f9f1668dad689e54cd6c76b8cd5906d2b2cc1",
-      "size": 392111
+      "sha256": "85687ce3ea384d2528ce8c4fddb733a08437ca6add3af7a3cbe6e01967bee7ae",
+      "size": 393623
     },
     {
       "path": "references/routing.json",
@@ -936,8 +936,8 @@
     },
     {
       "path": "references/shared/image-assets/.env.example",
-      "sha256": "dff68d154a530c0dbbb234676e9d90815c92a664c017fa5139c8d179a7fd9e18",
-      "size": 3060
+      "sha256": "3a1b20c15844c0612b1c495727f24f17c69e1b21b537e3c3760f486181d381b9",
+      "size": 3891
     },
     {
       "path": "references/shared/image-assets/prompt-patterns/base.json",
@@ -986,8 +986,8 @@
     },
     {
       "path": "references/shared/image-assets/qa-contracts/provider-routing.md",
-      "sha256": "c2d7ef27d1392632cb200f0573c0fa26e37cc98084444facb1212b13c2a8bde1",
-      "size": 2922
+      "sha256": "db552eec649cc02d1260333cc436acfc4ab8c4597a004891ff406f1822d27018",
+      "size": 3747
     },
     {
       "path": "references/shared/image-assets/references/cutscene-generation-policy.md",
@@ -1026,8 +1026,8 @@
     },
     {
       "path": "references/shared/image-assets/schema/image-config.schema.json",
-      "sha256": "2b9a3e0370f292049d21598756c0e4c763e03bf981f51cc8ee3f510eb7797f08",
-      "size": 1148
+      "sha256": "126bd40dae8a274725ad3f0222764e21987da73229e920ff61e9548929ae6372",
+      "size": 1514
     },
     {
       "path": "references/shared/image-assets/schema/image-review.schema.json",
@@ -1636,8 +1636,8 @@
     },
     {
       "path": "scripts/lib/image-provider.mjs",
-      "sha256": "ff5150674f9ef072f319ff52c6e2c0969d9b676696dba02329730e70b63a72b4",
-      "size": 1140
+      "sha256": "fc577a0c718f998579335d6b427050a989d0c9356e7db61321b4c49bc5e959aa",
+      "size": 2266
     },
     {
       "path": "scripts/lib/image-reference-loader.mjs",
@@ -1756,8 +1756,8 @@
     },
     {
       "path": "scripts/run-image-asset-workflow.mjs",
-      "sha256": "0a61f861271fa630c5390f7b18212f6e46e7a848a103577c0ab249675b473e3f",
-      "size": 44551
+      "sha256": "fef4c204932b8a984e956bedeb4f2b3c169134556848f7897327e609724e1804",
+      "size": 44834
     },
     {
       "path": "scripts/stop-artifact-review.mjs",
@@ -1791,8 +1791,8 @@
     },
     {
       "path": "scripts/validate-image-config.mjs",
-      "sha256": "8278612bb17f325a85b1cb28aeb3b9addc94f32566c088820a0679871586b4c3",
-      "size": 4375
+      "sha256": "4990aa1685003d3172de47573c4b27f966b5625861959d4dc65a30e40103a3ae",
+      "size": 5364
     },
     {
       "path": "scripts/validate-quality-profile.mjs",
@@ -2146,8 +2146,8 @@
     },
     {
       "path": "skills/design-cutscene-visual-preproduction/SKILL.md",
-      "sha256": "34f69471d2755d11737518fc127f014420aecd2e9480a1e27e81e7eeed67cbd9",
-      "size": 4017
+      "sha256": "aba2c91b8f75d4fd4326a7d84229cc6b804a129598df2c32fae51b980e1d5fbe",
+      "size": 4966
     },
     {
       "path": "skills/design-cutscene-visual-preproduction/agents/openai.yaml",
@@ -2221,8 +2221,8 @@
     },
     {
       "path": "skills/generate-image-assets/SKILL.md",
-      "sha256": "4dbdc82b9b6ea283ffa1ad264e5c9a044b3511159d966b58324ce807f2e73a0c",
-      "size": 4652
+      "sha256": "7d236749597536a752e197240e4873d865f6827c8796452705b0701f5ef3a52b",
+      "size": 5293
     },
     {
       "path": "skills/generate-image-assets/agents/openai.yaml",

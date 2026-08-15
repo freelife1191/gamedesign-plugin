@@ -4841,7 +4841,7 @@
       <p class="subtitle">비전은 기준 설계 문서가 되고, 사람의 결정과 자산 근거를 거쳐 보존된 맥락에서 다시 시작합니다.</p>
     </div>
 
-    <script id="archify-guided-views-data" type="application/json">[{"id":"vision-to-review","label":"비전에서 사람 결정까지","focus":["vision_approval","canonical_artifact","domain_design","specialist_review","finding_decision"],"note":"승인된 플레이어 경험은 전문 검토 결과가 사람의 결정으로 돌아오기 전에 기준 문서가 됩니다."},{"id":"asset-evidence","label":"이미지와 형식 근거","focus":["image_asset_plan","image_asset_review","format_qa_export"],"note":"이미지 계획과 사람 승인은 내보낸 형식에 필요한 렌더러별 품질 검토와 분리합니다."},{"id":"resume-contract","label":"맥락에서 재개","focus":["canonical_artifact","image_asset_review","resume_context"],"note":"기준 경로를 보존하고, 다음 요청은 문서를 새로 만들지 않고 보류된 이미지 승인으로 돌아갑니다."}]</script>
+    <script id="archify-guided-views-data" type="application/json">[{"id":"vision-to-review","label":"비전에서 사람 결정까지","focus":["vision_approval","canonical_artifact","domain_design","specialist_review","finding_decision"],"note":"승인된 플레이어 경험은 전문 검토 결과가 사람의 결정으로 돌아오기 전에 기준 문서가 됩니다."},{"id":"asset-evidence","label":"이미지와 형식 근거","focus":["image_asset_plan","image_asset_review","format_qa_export"],"note":"이미지는 호스트 image_gen을 먼저 사용하고, 한글 픽셀 텍스트만 gpt-image-2로 보냅니다. 유료 전환과 품질은 비용 안내 뒤 사람이 승인합니다."},{"id":"resume-contract","label":"맥락에서 재개","focus":["canonical_artifact","image_asset_review","resume_context"],"note":"기준 경로를 보존하고, 다음 요청은 문서를 새로 만들지 않고 보류된 이미지 승인으로 돌아갑니다."}]</script>
 
     <div class="guided-views no-print" id="guided-views" hidden aria-label="Guided diagram views">
       <button id="guided-view-prev" type="button" aria-label="Previous guided view" title="Previous guided view ([)">&#8592;</button>
@@ -4946,7 +4946,7 @@
         <path data-edge-from="domain_design" data-edge-to="specialist_review" data-edge-key="2" data-composition-points="326,243;326,290;384,290;384,367" d="M 326 243 L 326 290 L 384 290 L 384 367" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
         <path data-edge-from="specialist_review" data-edge-to="finding_decision" data-edge-key="3" data-composition-points="476,367;476,228;454,228;454,119" d="M 476 367 L 476 228 L 454 228 L 454 119" class="a-security" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
         <path data-edge-from="finding_decision" data-edge-to="image_asset_plan" data-edge-key="4" data-composition-points="500,153;500,290;500,290;500,465" d="M 500 153 L 500 290 L 500 290 L 500 465" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
-        <path data-edge-from="image_asset_plan" data-edge-to="image_asset_review" data-edge-key="5" data-composition-points="534,491;534,290;579,290;579,119" d="M 534 491 L 534 290 L 579 290 L 579 119" class="a-security" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
+        <path data-edge-from="image_asset_plan" data-edge-to="image_asset_review" data-edge-key="5" data-composition-points="546,491;546,290;579,290;579,119" d="M 546 491 L 546 290 L 579 290 L 579 119" class="a-security" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
         <path data-edge-from="image_asset_review" data-edge-to="format_qa_export" data-edge-key="6" data-composition-points="625,145;625,290;625,290;625,465" d="M 625 145 L 625 290 L 625 290 L 625 465" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         <path data-edge-from="image_asset_review" data-edge-to="resume_context" data-edge-label="보류" data-edge-key="7" data-composition-points="671,119;704,119;704,615;536,615" d="M 671 119 L 704 119 L 704 615 L 536 615" class="a-dashed" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
         <path data-edge-from="resume_context" data-edge-to="image_asset_review" data-edge-label="재개" data-edge-key="8" data-composition-points="536,615;736,615;736,119;671,119" d="M 536 615 L 736 615 L 736 119 L 671 119" class="a-dashed" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
@@ -4978,8 +4978,8 @@
           <text data-detail="context" x="500" y="627" class="t-muted" font-size="7.6" text-anchor="middle">같은 보류 작업</text>
         </g>
 
-        <g id="node-canonical_artifact" data-node-id="canonical_artifact" data-node-label="기준" tabindex="0" role="button" aria-label="Focus 기준, 결정 기록, 게임 디자인 스튜디오 › 방향 설정" aria-pressed="false" data-node-kind="database" data-node-sublabel="결정 기록" data-node-context="게임 디자인 스튜디오 › 방향 설정">
-          <title>기준 · 결정 기록 · 게임 디자인 스튜디오 › 방향 설정</title>
+        <g id="node-canonical_artifact" data-node-id="canonical_artifact" data-node-label="기준" tabindex="0" role="button" aria-label="Focus 기준, 승인 맥락, 게임 디자인 스튜디오 › 방향 설정" aria-pressed="false" data-node-kind="database" data-node-sublabel="승인 맥락" data-node-context="게임 디자인 스튜디오 › 방향 설정">
+          <title>기준 · 승인 맥락 · 게임 디자인 스튜디오 › 방향 설정</title>
           <rect x="194" y="217" width="52" height="52" rx="6" class="c-mask"/>
           <rect x="194" y="217" width="52" height="52" rx="6" class="c-database" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="database" class="semantic-sigil s-database" transform="translate(200 223) scale(0.6875)">
@@ -4987,7 +4987,7 @@
             <path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/>
           </g>
           <text data-detail-anchor x="220" y="238" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">기준</text>
-          <text data-detail="context" x="220" y="255" class="t-muted" font-size="8" text-anchor="middle">결정 기록</text>
+          <text data-detail="context" x="220" y="255" class="t-muted" font-size="8" text-anchor="middle">승인 맥락</text>
         </g>
 
         <g id="node-domain_design" data-node-id="domain_design" data-node-label="범위" tabindex="0" role="button" aria-label="Focus 범위, 설계 영역, 게임 디자인 스튜디오 › 설계와 결정" aria-pressed="false" data-node-kind="backend" data-node-sublabel="설계 영역" data-node-context="게임 디자인 스튜디오 › 설계와 결정">
@@ -5026,15 +5026,15 @@
         <text data-detail="fine" x="500" y="141" class="t-external" font-size="7" text-anchor="middle">사람 결정</text>
         </g>
 
-        <g id="node-image_asset_plan" data-node-id="image_asset_plan" data-node-label="자산 계획" tabindex="0" role="button" aria-label="Focus 자산 계획, 요청문, 자산과 렌더러 › 자산과 내보내기 근거" aria-pressed="false" data-node-kind="cloud" data-node-sublabel="요청문" data-node-context="자산과 렌더러 › 자산과 내보내기 근거">
-          <title>자산 계획 · 요청문 · 자산과 렌더러 › 자산과 내보내기 근거</title>
-          <rect x="466" y="465" width="68" height="52" rx="6" class="c-mask"/>
-          <rect x="466" y="465" width="68" height="52" rx="6" class="c-cloud" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="cloud" class="semantic-sigil s-cloud" transform="translate(472 471) scale(0.6875)">
+        <g id="node-image_asset_plan" data-node-id="image_asset_plan" data-node-label="자산 계획" tabindex="0" role="button" aria-label="Focus 자산 계획, 호스트 우선·한글 유료, 자산과 렌더러 › 자산과 내보내기 근거" aria-pressed="false" data-node-kind="cloud" data-node-sublabel="호스트 우선·한글 유료" data-node-context="자산과 렌더러 › 자산과 내보내기 근거">
+          <title>자산 계획 · 호스트 우선·한글 유료 · 자산과 렌더러 › 자산과 내보내기 근거</title>
+          <rect x="454" y="465" width="92" height="52" rx="6" class="c-mask"/>
+          <rect x="454" y="465" width="92" height="52" rx="6" class="c-cloud" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="cloud" class="semantic-sigil s-cloud" transform="translate(460 471) scale(0.6875)">
             <path d="M4.3 12.5h7.3a2.4 2.4 0 0 0 .2-4.8 4 4 0 0 0-7.5-1.3A3.1 3.1 0 0 0 4.3 12.5Z"/>
           </g>
           <text data-detail-anchor x="500" y="486" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">자산 계획</text>
-          <text data-detail="context" x="500" y="503" class="t-muted" font-size="8" text-anchor="middle">요청문</text>
+          <text data-detail="context" x="500" y="503" class="t-muted" font-size="6.6" text-anchor="middle">호스트 우선·한글 유료</text>
         </g>
 
         <g id="node-image_asset_review" data-node-id="image_asset_review" data-node-label="이미지 승인" tabindex="0" role="button" aria-label="Focus 이미지 승인, 이미지, 사람의 결정 › 자산과 내보내기 근거" aria-pressed="false" data-node-kind="external" data-node-sublabel="이미지" data-node-context="사람의 결정 › 자산과 내보내기 근거">
@@ -5303,11 +5303,25 @@
 
       <div class="card">
         <div class="card-header">
+          <div class="card-dot cyan"></div>
+          <h3>설계 지능 입력</h3>
+        </div>
+        <ul>
+          <li>&bull; 승인된 기억만 출처·적용 범위·검토 시점을 다시 확인해 사용합니다</li>
+          <li>&bull; 레퍼런스 근거는 관찰과 추론을 분리하고 설계 전환 제안은 사람이 결정합니다</li>
+          <li>&bull; 용어 사전 후보는 문서 영향 목록을 먼저 만들고 승인 전 원문을 자동 치환하지 않습니다</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
           <div class="card-dot amber"></div>
           <h3>자산과 내보내기 경계</h3>
         </div>
         <ul>
-          <li>&bull; 이미지 계획은 제공자 작업 전에 안정된 자산 ID와 요청문을 보존합니다</li>
+          <li>&bull; 일반·컷씬 이미지는 image_gen을 먼저 쓰고 한글 픽셀 텍스트만 gpt-image-2로 보냅니다</li>
+          <li>&bull; 유료 품질은 low 기본, medium 선택, high 예외이며 비용 승인 전에는 호출하지 않습니다</li>
+          <li>&bull; 컷씬 프리프로덕션은 네 wave의 프롬프트·비용·승인을 분리하며 승인 전 provider 호출 0회입니다</li>
           <li>&bull; 이미지 승인은 사람 검토 단계로 남깁니다</li>
           <li>&bull; 내보내기 형식에는 렌더러별 품질 검토 근거가 필요합니다</li>
         </ul>

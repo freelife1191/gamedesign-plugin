@@ -12,7 +12,7 @@
       {
         "id": "evidence-path",
         "label": "근거 경로",
-        "focus": ["evidence_project"],
+        "focus": ["evidence_research", "evidence_project"],
         "note": "현재 범위의 주장은 작고 검토 가능한 프로젝트와 날짜가 있는 근거로만 바꿉니다."
       },
       {
@@ -43,15 +43,15 @@
   ],
   "phases": [
     { "id": "frame", "label": "진단", "fromCol": 0, "toCol": 1, "variant": "emphasis" },
-    { "id": "evidence", "label": "근거 만들기", "fromCol": 2, "toCol": 3 },
-    { "id": "review_export", "label": "검토와 내보내기", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+    { "id": "evidence", "label": "근거 만들기", "fromCol": 2, "toCol": 4 },
+    { "id": "review_export", "label": "검토와 내보내기", "fromCol": 5, "toCol": 5, "variant": "dashed" }
   ],
   "mainPath": ["stage_diagnosis", "disclosure_approval", "evidence_research", "evidence_project", "portfolio_case", "human_review", "export_prepare"],
   "nodes": [
     { "id": "stage_diagnosis", "lane": "human", "col": 0, "type": "external", "label": "단계 선택", "sublabel": "역할·제약" },
     { "id": "disclosure_approval", "lane": "human", "col": 1, "width": 52, "type": "external", "label": "범위", "sublabel": "권리" },
     { "id": "held_context", "lane": "career", "col": 0, "width": 52, "type": "messagebus", "label": "보류", "sublabel": "주장" },
-    { "id": "evidence_research", "lane": "career", "col": 2, "width": 52, "type": "database", "label": "주장", "sublabel": "날짜 기록" },
+    { "id": "evidence_research", "lane": "career", "col": 2, "width": 68, "type": "database", "label": "근거 조사", "sublabel": "날짜·시스템 지도" },
     { "id": "evidence_project", "lane": "career", "col": 3, "width": 72, "type": "backend", "label": "프로젝트", "sublabel": "1–12주" },
     { "id": "portfolio_case", "lane": "career", "col": 5, "type": "backend", "label": "포트폴리오", "sublabel": "사례 연구" },
     { "id": "growth_experiment", "lane": "human", "col": 4, "width": 52, "type": "backend", "label": "성장" },
@@ -78,6 +78,15 @@
         "모든 주장에 출처·기준 날짜·범위·한계를 함께 남깁니다",
         "기록한 공백 하나를 1–12주의 검토 가능한 작업으로 바꿉니다",
         "빠진 공고 하나를 일반적인 직무 요건으로 바꾸지 않습니다"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "검토된 설계 맥락",
+      "items": [
+        "승인된 기억만 출처·범위·검토 시점을 확인해 학습과 포트폴리오 작업에 사용합니다",
+        "레퍼런스 근거는 관찰과 추론을 나누며 설계 전환 제안에는 사람의 검토 결정이 필요합니다",
+        "용어 사전은 한국어·영어 후보와 문서 영향을 먼저 보여 주고 승인 전 원문을 바꾸지 않습니다"
       ]
     },
     {

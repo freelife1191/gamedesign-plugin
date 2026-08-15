@@ -277,7 +277,16 @@ function assertSessionStartOutput(output) {
   }
   assert.ok(["available", "unavailable", "unknown"].includes(output.capabilities.image_generation.status));
   if (output.capabilities.image_generation.status === "available") assert.equal(typeof output.capabilities.image_generation.provider, "string");
-  assert.deepEqual(Object.keys(output.imageConfig).sort(), ["apiKeyPresent", "mode", "model", "quality", "sources", "warnings"]);
+  assert.deepEqual(Object.keys(output.imageConfig).sort(), [
+    "apiKeyPresent",
+    "embeddedTextLocale",
+    "mode",
+    "model",
+    "providerPreference",
+    "quality",
+    "sources",
+    "warnings",
+  ]);
   assert.equal(typeof output.imageConfig.apiKeyPresent, "boolean");
   assert.doesNotMatch(JSON.stringify(output.imageConfig), /sk-[A-Za-z0-9]/u);
   assert.ok(Array.isArray(output.warnings));

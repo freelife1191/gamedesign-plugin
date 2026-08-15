@@ -11,16 +11,18 @@ Apply the packaged policy rather than inventing a provider path. Generation chan
 
 ## Required input
 
-Require a validated artifact-local `assets/image-assets.yml`, both prompt files, `IMAGE_GEN_MODE`, redacted configuration, capability snapshot, and actual user stable asset IDs when the mode is `select`. Names, positions, inferred intent, and agent selections are not stable user choices.
+Require a validated artifact-local `assets/image-assets.yml`, both prompt files, `IMAGE_GEN_MODE`, `IMAGE_PROVIDER`, `IMAGE_EMBEDDED_TEXT_LOCALE`, redacted configuration, capability snapshot, and actual user stable asset IDs when the mode is `select`. Names, positions, inferred intent, and agent selections are not stable user choices.
 
 ## Workflow
 
 1. Run `scripts/run-image-asset-workflow.mjs` through `runConfiguredImageAssetWorkflow({ workspaceRoot, ... })`. It loads the private configuration internally and returns only `toPublicImageConfig` output; preflight may display that public configuration but must not discard the private configuration before the internal OpenAI call. Run `scripts/capability-probe.mjs` read-only to check the host image capability; neither preflight may call a network service or guess a private endpoint.
 2. Validate the manifest with `scripts/validate-image-assets.mjs` and choose jobs through `selectGenerationJobs`. `prompt-only` always has zero jobs. In `select`, require the user's explicit stable asset IDs and reject unknown, duplicate, or non-prompt-ready choices.
-3. When `OPENAI_API_KEY` is present, use OpenAI only through `scripts/generate-openai-images.mjs`. Never use a Codex fallback after an API, authentication, quota, policy, invalid-request, or network failure. Keep prompts, placeholders, staged successes, and truthful per-asset failure states.
-4. With no key and an available host image capability, send only selected jobs to that host capability. Record only returned provider evidence. Do not claim a model or quality applied to the host path unless it was returned as evidence.
-5. With no key and no available host image capability, call no generator. Preserve prompts and placeholders and report the unavailable provider decision with a resumable handoff.
-6. Keep provider, prompt/output digest, and failure evidence separate from named-human review. A resulting image remains `concept-draft`; hand its stable ID and artifact-local evidence paths to `review-image-assets`.
+3. `IMAGE_PROVIDER=codex-first` is the default. Use the available host `image_gen` capability for selected jobs even when `OPENAI_API_KEY` exists. API key presence does not grant paid consent. Record only returned provider evidence.
+4. If host generation is unavailable, repeatedly fails, or the result is unsatisfactory, preserve it and propose an explicit paid OpenAI attempt. Do not change provider automatically.
+5. Use `IMAGE_PROVIDER=openai` only after the user explicitly chooses the paid route for the finite jobs. Call it only through `scripts/generate-openai-images.mjs`, and never auto-fallback after failure.
+6. Korean characters inside the image require `IMAGE_EMBEDDED_TEXT_LOCALE=ko-KR`, `IMAGE_PROVIDER=openai`, and `IMAGE_MODEL=gpt-image-2`. Korean prose describing an image is not by itself an on-image text declaration.
+7. Paid quality stays `low` by default. Reserve `medium` for a selected master/key image or explicit fidelity need. Recommend `high` only as an exceptional justified choice for a video hero frame or production concept art after cost disclosure and current approval.
+8. Keep provider, prompt/output digest, and failure evidence separate from named-human review. A resulting image remains `concept-draft`; hand its stable ID and artifact-local evidence paths to `review-image-assets`.
 
 Use the packaged `scripts/run-image-asset-workflow.mjs` composition: `runConfiguredImageAssetWorkflow` invokes `planImageAssetWorkflow` and internally invokes `generateImageAssetWorkflow` with private configuration. Host callbacks receive only the selected compiled jobs and return bounded PNG bytes plus closed provenance; they never receive a final artifact path, workspace root, full configuration, or API key.
 

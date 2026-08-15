@@ -188,7 +188,44 @@ const suiteInterfaceCards = [
       "내보내기 목록(export-manifest.yml)은 전달 전 점검 맥락을 기록합니다.",
     ],
   },
+  {
+    title: "공유 설계 안전망",
+    items: [
+      "프로젝트 기억은 출처·범위가 맞고 사람이 승인한 기록만 다음 작업에 적용합니다.",
+      "레퍼런스 분석은 관찰·추론·설계 전환 제안을 분리하고, 용어 사전은 승인 전 원문을 바꾸지 않습니다.",
+      "Studio 컷씬은 프롬프트·비용·생성 승인을 분리하고, 승인 전에는 이미지 제공자를 호출하지 않습니다.",
+    ],
+  },
 ];
+
+function assertStudioDesignIntelligence(spec) {
+  assertEdge(spec, "canonical_artifact", "domain_design");
+  assertEdge(spec, "finding_decision", "image_asset_plan");
+  assert.match(spec.nodes.find((node) => node.id === "canonical_artifact")?.sublabel ?? "", /승인 맥락/u);
+  assert.match(spec.nodes.find((node) => node.id === "image_asset_plan")?.sublabel ?? "", /호스트 우선.*한글 유료/u);
+  const visibleText = JSON.stringify(spec);
+  for (const phrase of ["승인된 기억", "레퍼런스 근거", "용어 사전", "컷씬 프리프로덕션", "승인 전 provider 호출 0회", "image_gen", "한글 픽셀 텍스트만 gpt-image-2", "low 기본, medium 선택, high 예외"]) {
+    assert.match(visibleText, new RegExp(phrase, "u"));
+  }
+}
+
+function assertCareerDesignIntelligence(spec) {
+  assertEdge(spec, "disclosure_approval", "evidence_research");
+  assert.match(spec.nodes.find((node) => node.id === "evidence_research")?.sublabel ?? "", /시스템 지도/u);
+  const visibleText = JSON.stringify(spec);
+  for (const phrase of ["승인된 기억", "레퍼런스 근거", "용어 사전", "사람의 검토 결정이 필요합니다"]) {
+    assert.match(visibleText, new RegExp(phrase, "u"));
+  }
+}
+
+function assertHandoffDesignIntelligence(spec) {
+  const visibleText = JSON.stringify(spec);
+  for (const phrase of [
+    "프로젝트 기억 원문은 제품 경계를 넘기지 않습니다",
+    "검증한 출처와 승인된 용어만 공개 요약에 포함합니다",
+    "컷씬 원본 이미지와 생성 승인 기록은 자동으로 전달하지 않습니다",
+  ]) assert.match(visibleText, new RegExp(phrase, "u"));
+}
 
 function architecturePathExists(spec, from, to, excluded = new Set()) {
   const adjacent = new Map();
@@ -248,7 +285,7 @@ function assertSuitePluginSystemArchitecture(spec) {
   assert.deepEqual(
     spec.cards.map(({ title, items }) => ({ title, items })),
     suiteInterfaceCards,
-    "interface cards must remain two independent visible contracts",
+    "interface cards must remain independent visible contracts",
   );
   assert.equal(spec.components.some((component) => suiteInterfaceCards.some((card) => card.title === component.label)), false, "interface cards must not masquerade as topology nodes");
   for (const [from, to] of [
@@ -449,7 +486,7 @@ test("Suite plugin system architecture rejects missing, swapped, merged, or subl
   const withoutSkillCard = { ...spec, cards: spec.cards.filter((card) => card.title !== "전문 작업 도구") };
   const swappedCards = {
     ...spec,
-    cards: suiteInterfaceCards.map((card, index) => ({ ...card, items: suiteInterfaceCards[1 - index].items })),
+    cards: suiteInterfaceCards.map((card, index) => ({ ...card, items: suiteInterfaceCards[(index + 1) % suiteInterfaceCards.length].items })),
   };
   const mergedCards = {
     ...spec,
@@ -469,6 +506,37 @@ test("Suite plugin system architecture rejects missing, swapped, merged, or subl
   for (const mutated of [withoutSkillCard, swappedCards, mergedCards, sublabelOnly]) {
     assert.throws(() => assertSuitePluginSystemArchitecture(mutated), /interface cards|Expected values|기준 기획 결과물/u);
   }
+});
+
+test("curated Archify specs expose memory, reference, glossary, and cutscene boundaries", async () => {
+  const { specsById: suiteSpecs } = await loadProductionSpecs(repoRoot, "suite");
+  const { specsById: studioSpecs } = await loadProductionSpecs(repoRoot, "studio");
+  const { specsById: careerSpecs } = await loadProductionSpecs(repoRoot, "career");
+  assertSuitePluginSystemArchitecture(suitePluginSystemArchitecture(suiteSpecs));
+  assertStudioDesignIntelligence(studioWorkflowSpec(studioSpecs));
+  assertCareerDesignIntelligence(careerWorkflowSpec(careerSpecs));
+  assertHandoffDesignIntelligence(suiteSpecs.get("suite-studio-career-handoff"));
+});
+
+test("curated Archify design-intelligence semantics reject missing boundaries", async () => {
+  const { specsById: studioSpecs } = await loadProductionSpecs(repoRoot, "studio");
+  const { specsById: careerSpecs } = await loadProductionSpecs(repoRoot, "career");
+  const studio = studioWorkflowSpec(studioSpecs);
+  const career = careerWorkflowSpec(careerSpecs);
+  assert.throws(
+    () => assertStudioDesignIntelligence({
+      ...studio,
+      nodes: studio.nodes.map((node) => node.id === "canonical_artifact" ? { ...node, sublabel: "결정 기록" } : node),
+    }),
+    /승인 맥락/u,
+  );
+  assert.throws(
+    () => assertCareerDesignIntelligence({
+      ...career,
+      cards: career.cards.map((card) => ({ ...card, items: card.items.map((item) => item.replaceAll("사람의 검토 결정이 필요합니다", "검토 없이 적용합니다")) })),
+    }),
+    /사람의 검토 결정이 필요합니다/u,
+  );
 });
 
 test("Suite specs exist only for questions that cross both product boundaries", async () => {
@@ -620,6 +688,7 @@ test("Career workflow preserves evidence, human review, disclosure, and the actu
   assertCareerHoldResumesEvidenceResearch(spec);
   assert.equal(spec.nodes.find((node) => node.id === "human_review")?.type, "external");
   assertCareerSafetyLanguage(spec);
+  assertCareerDesignIntelligence(spec);
 });
 
 test("selected workflow group labels never share node cells", async () => {
@@ -701,6 +770,7 @@ test("Studio workflow preserves the source-backed vision, review, asset, export,
   assertEdge(spec, "image_asset_review", "format_qa_export");
   assertEdge(spec, "image_asset_review", "resume_context");
   assertResumeReturnsToBlockedImageReview(spec);
+  assertStudioDesignIntelligence(spec);
 });
 
 test("Studio workflow contract rejects a resume mutation that restarts the canonical document", async () => {

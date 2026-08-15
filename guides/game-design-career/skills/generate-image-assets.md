@@ -88,7 +88,7 @@ $game-design-career:generate-image-assets artifact=artifacts/system-portfolio, m
 
 ## 내부 진행 흐름
 
-packaged preflight로 private config를 내부에 유지한 채 manifest와 finite jobs를 검증합니다. `prompt-only`는 0 jobs, `select`는 user receipt의 stable IDs만 처리합니다. key가 있으면 OpenAI only, key 없이 host image capability가 available이면 selected jobs만 전달하며, 둘 다 없으면 generator를 호출하지 않습니다.
+packaged preflight로 private config를 내부에 유지한 채 manifest와 finite jobs를 검증합니다. `prompt-only`는 0 jobs, `select`는 user receipt의 stable IDs만 처리합니다. 기본값은 `IMAGE_PROVIDER=codex-first`이며 API key 유무와 관계없이 사용 가능한 호스트 `image_gen`을 먼저 사용합니다. 호스트 결과가 만족스럽지 않거나 반복 실패하면 결과를 보존하고 유료 `gpt-image-2`의 비용·품질을 제안하되, 명시적 승인 전에는 호출하지 않습니다. 이미지 안에 한글이 필요하면 `IMAGE_EMBEDDED_TEXT_LOCALE=ko-KR`과 explicit OpenAI `gpt-image-2`가 필수입니다.
 
 ## 생성 파일과 결과 구조
 

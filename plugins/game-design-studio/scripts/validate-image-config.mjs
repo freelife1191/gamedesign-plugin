@@ -2,6 +2,8 @@ import { readWorkspaceEnv } from "./lib/load-workspace-env.mjs";
 
 const supportedKeys = Object.freeze({
   IMAGE_GEN_MODE: "mode",
+  IMAGE_PROVIDER: "providerPreference",
+  IMAGE_EMBEDDED_TEXT_LOCALE: "embeddedTextLocale",
   IMAGE_MODEL: "model",
   IMAGE_QUALITY: "quality",
   IMAGE_REQUEST_TIMEOUT_MS: "requestTimeoutMs",
@@ -9,10 +11,12 @@ const supportedKeys = Object.freeze({
 });
 const legacyKeys = Object.freeze(["IMAGE_GEN_ENABLE", "IMAGE_GENERATOR"]);
 const allowedModes = new Set(["required", "all", "select", "prompt-only"]);
+const allowedProviderPreferences = new Set(["codex-first", "openai"]);
+const allowedEmbeddedTextLocales = new Set(["none", "ko-KR"]);
 const allowedQualities = new Set(["low", "medium", "high", "auto"]);
 const safeModelPattern = /^[A-Za-z0-9](?:[A-Za-z0-9._:-]{0,127})$/u;
 const safeSecretPattern = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,511}$/u;
-const defaults = Object.freeze({ mode: "prompt-only", model: "gpt-image-2", quality: "low", requestTimeoutMs: "30000" });
+const defaults = Object.freeze({ mode: "prompt-only", providerPreference: "codex-first", embeddedTextLocale: "none", model: "gpt-image-2", quality: "low", requestTimeoutMs: "30000" });
 
 function validationError(code, pathName, message) {
   return { code, path: pathName, message };
@@ -25,6 +29,12 @@ export function validateImageConfig(value) {
   }
   if (!allowedModes.has(value.mode)) {
     errors.push(validationError("invalid_mode", "mode", "Image generation mode is not allowed."));
+  }
+  if (value.providerPreference !== undefined && !allowedProviderPreferences.has(value.providerPreference)) {
+    errors.push(validationError("invalid_provider_preference", "providerPreference", "Image provider preference is not allowed."));
+  }
+  if (value.embeddedTextLocale !== undefined && !allowedEmbeddedTextLocales.has(value.embeddedTextLocale)) {
+    errors.push(validationError("invalid_embedded_text_locale", "embeddedTextLocale", "Image embedded text locale is not allowed."));
   }
   if (typeof value.model !== "string" || !safeModelPattern.test(value.model)) {
     errors.push(validationError("invalid_model", "model", "Image model identifier is not safe."));
@@ -96,6 +106,8 @@ export async function loadImageConfig({
 
   return {
     mode: resolved.mode,
+    providerPreference: resolved.providerPreference,
+    embeddedTextLocale: resolved.embeddedTextLocale,
     model: resolved.model,
     quality: resolved.quality,
     requestTimeoutMs: resolved.requestTimeoutMs,
@@ -112,6 +124,8 @@ export async function loadImageConfig({
 export function toPublicImageConfig(config) {
   return {
     mode: config.mode,
+    providerPreference: config.providerPreference,
+    embeddedTextLocale: config.embeddedTextLocale,
     model: config.model,
     quality: config.quality,
     apiKeyPresent: config.apiKeyPresent,

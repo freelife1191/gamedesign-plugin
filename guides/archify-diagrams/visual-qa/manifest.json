@@ -3,8 +3,8 @@
   "entries": [
     {
       "id": "studio-project-workflow",
-      "specification_sha256": "383f050bfa8c6f3ab2275ec08ac9fb288fa4a66df9f100eede76a9d6c2776ec0",
-      "artifact_sha256": "613b010779911b41ad178016d92491fe84d89402b8c949de536a5e700f0b1bdc",
+      "specification_sha256": "e76bdba90046bac8f87a0d65b98c8f5871ecf5c1dcd99819a47e172f752b1d92",
+      "artifact_sha256": "d43d1bca6f0fd8d2aafd222f51b140652b51a73d2a7f6c9d6aced5f1138de226",
       "reviewer": "Codex 헤드리스 시각 QA",
       "review_method": "headless-original-and-fit",
       "correction_rounds": 2,
@@ -12,43 +12,43 @@
       "renders": {
         "read": {
           "path": "renders/studio/studio-project-workflow/read.png",
-          "sha256": "d80e0579cac14ac1ea55caf0c77a89abf1df139f9d456c4c23c79e5eac83ff61",
+          "sha256": "0da5c0bc5b861533bd7853fe495c0683bb4b48811aaf96f2c6a0ef1e6e96e12d",
           "width": 1600,
-          "height": 1930
-        },
-        "light": {
-          "path": "renders/studio/studio-project-workflow/light.png",
-          "sha256": "8cbb461a4f639a14851ba5867d1b9fe8a5edf24f469ae4a7144c6e381aaf0f1b",
-          "width": 1600,
-          "height": 1930
+          "height": 2038
         },
         "dark": {
           "path": "renders/studio/studio-project-workflow/dark.png",
-          "sha256": "3f8dd40124ec630305f044d4fc48fd382158793b5bc71da41acbf62d2d969317",
+          "sha256": "67c53dcdec0fa640d6a0e30805eba56d97ddf55038718871f241224d388618b2",
           "width": 1600,
-          "height": 1930
+          "height": 2038
+        },
+        "light": {
+          "path": "renders/studio/studio-project-workflow/light.png",
+          "sha256": "6a631be7afebdc4e28f4568fc1562f889e9a73b0870bf1bc2dc2d8a7844b8785",
+          "width": 1600,
+          "height": 2038
         },
         "guided_views": [
           {
             "id": "view-vision-to-review",
             "path": "renders/studio/studio-project-workflow/view-vision-to-review.png",
-            "sha256": "6bca9428aa8a0303fa065e5b7eac16eece93bf443d60664bcac9f59a09efd6be",
+            "sha256": "2556c9e61737b9536e65efee0523721e8e72d8863b7744866026ff8e470a628e",
             "width": 1600,
-            "height": 2030
+            "height": 2138
           },
           {
             "id": "view-asset-evidence",
             "path": "renders/studio/studio-project-workflow/view-asset-evidence.png",
-            "sha256": "f6d6434080cc4f74d33d57928e6d5f189ca9d6042daf868200fe4bde7a10185d",
+            "sha256": "afa82ad5f86b2cff788572959f1f36dc5c6791272778dd01d491f2d22413d351",
             "width": 1600,
-            "height": 2030
+            "height": 2138
           },
           {
             "id": "view-resume-contract",
             "path": "renders/studio/studio-project-workflow/view-resume-contract.png",
-            "sha256": "830f0bcaf428725b2618629afa1005444f113d651d54110f68f2ed0ea941408d",
+            "sha256": "a10f77bfc315b4df7783514de6d9f94fb174f2d4ddc87637624dcfe7e1a198e1",
             "width": 1600,
-            "height": 2030
+            "height": 2138
           }
         ]
       },
@@ -89,8 +89,8 @@
     },
     {
       "id": "career-evidence-workflow",
-      "specification_sha256": "13232250cdafce35732199dc1e2f8a04dca65b3e8bcd9a4cb66e82849292b766",
-      "artifact_sha256": "627c492b3012781bcc6340d675a406f5e74e30ebbb24a236f4953e6f37e07271",
+      "specification_sha256": "83fdc3f09d4f55c4e15928af716358f2392ebf37e7d3ea513be5e941b8cd0ac9",
+      "artifact_sha256": "7a3caf0cfa58b4591a13573b37b636512e38ce6829ed6f0269ef56a7f76775f8",
       "reviewer": "Codex 헤드리스 시각 QA",
       "review_method": "headless-original-and-fit",
       "correction_rounds": 2,
@@ -98,50 +98,50 @@
       "renders": {
         "read": {
           "path": "renders/career/career-evidence-workflow/read.png",
-          "sha256": "b932272832a8f9876297c2abfe1b1b84696979237817ea15dcd91fd73e67d0ac",
+          "sha256": "0931a8b3ee55f2aff8688459b0c58025154eaaa1ada9979216c085e8e6a45647",
           "width": 1600,
-          "height": 1731
-        },
-        "light": {
-          "path": "renders/career/career-evidence-workflow/light.png",
-          "sha256": "78e217e720c9dad59703f598e1d56abe07720dad7c76c4d5eecb548ce87ad81d",
-          "width": 1600,
-          "height": 1731
+          "height": 1926
         },
         "dark": {
           "path": "renders/career/career-evidence-workflow/dark.png",
-          "sha256": "b932272832a8f9876297c2abfe1b1b84696979237817ea15dcd91fd73e67d0ac",
+          "sha256": "0931a8b3ee55f2aff8688459b0c58025154eaaa1ada9979216c085e8e6a45647",
           "width": 1600,
-          "height": 1731
+          "height": 1926
+        },
+        "light": {
+          "path": "renders/career/career-evidence-workflow/light.png",
+          "sha256": "5476927e2e4e191848c6bcdd539a8f86f4df486563954bd92388b13f01bd705e",
+          "width": 1600,
+          "height": 1926
         },
         "guided_views": [
           {
             "id": "view-evidence-path",
             "path": "renders/career/career-evidence-workflow/view-evidence-path.png",
-            "sha256": "4f9bf9845eeab742543884aacc6569d250c833a95baff049ed45ee35a12ae422",
+            "sha256": "aa7729e1d42eb03608b6514acc215ee0ff8f72ea6b242b2666f842155ab33274",
             "width": 1600,
-            "height": 1831
+            "height": 2026
           },
           {
             "id": "view-career-routes",
             "path": "renders/career/career-evidence-workflow/view-career-routes.png",
-            "sha256": "8a24cc9de55a8b6959d5ba1edad005948fe6c4056f7bd8019c2cddc45f3a060e",
+            "sha256": "0fecb1afd20cda44cbacba3d38e2deb80bf3939337129454b0b701aa73661a2c",
             "width": 1600,
-            "height": 1831
+            "height": 2026
           },
           {
             "id": "view-review-layers",
             "path": "renders/career/career-evidence-workflow/view-review-layers.png",
-            "sha256": "24cd528f7385283446262bd64703f4847dbaaf88abea8462b361c2d7d73c3057",
+            "sha256": "02f37a543dbc7b004a397aa568f1613dad4d1aea23e3c73311ff0bc1e3fa7cec",
             "width": 1600,
-            "height": 1831
+            "height": 2026
           },
           {
             "id": "view-resume-contract",
             "path": "renders/career/career-evidence-workflow/view-resume-contract.png",
-            "sha256": "79e5dee599c186a314504b72cbf906492fd4141662e9e8e428d4712df1c4eadb",
+            "sha256": "b9ccc3c18a5835feefef695d65802eb21782abc316d385b5cf7c51eb2e7ccece",
             "width": 1600,
-            "height": 1831
+            "height": 2026
           }
         ]
       },
@@ -182,8 +182,8 @@
     },
     {
       "id": "suite-studio-career-handoff",
-      "specification_sha256": "cbd81d4ce71e00082a226d094e5aafa1f9b2fdaf53754080a412df94ae717368",
-      "artifact_sha256": "7e00481489d73135d700779edc2cb512c5fc63e8bcee1a77ee67e5ea84530a92",
+      "specification_sha256": "fca90b4f9a1bfdb6e679543c393fdff3eaa249b90a3173fa480663da4d27e7ba",
+      "artifact_sha256": "755c8c6ec97c9dc0a838e5ec615a21c5f12a77c9fb7b4cf1c83dbdfc62ce3267",
       "reviewer": "Codex 헤드리스 시각 QA",
       "review_method": "headless-original-and-fit",
       "correction_rounds": 2,
@@ -191,19 +191,19 @@
       "renders": {
         "read": {
           "path": "renders/suite/suite-studio-career-handoff/read.png",
-          "sha256": "e779bce6706a59e7edc5f5dd79916949839049ea3612c238d37dd37fd5d66fed",
-          "width": 1600,
-          "height": 1200
-        },
-        "light": {
-          "path": "renders/suite/suite-studio-career-handoff/light.png",
-          "sha256": "a3588cf0ad0b13baf04d615ab78b4f2f38de249079d92fe600c3211c0e1462d0",
+          "sha256": "2f9076142a6021eafc604515e21154f8988cae60fa1353c8c5c8a7c3b2063066",
           "width": 1600,
           "height": 1200
         },
         "dark": {
           "path": "renders/suite/suite-studio-career-handoff/dark.png",
-          "sha256": "e779bce6706a59e7edc5f5dd79916949839049ea3612c238d37dd37fd5d66fed",
+          "sha256": "0874426f22044a757d73f7fce9a77a0e196fc0627623cd070fa8a0bc758650f8",
+          "width": 1600,
+          "height": 1200
+        },
+        "light": {
+          "path": "renders/suite/suite-studio-career-handoff/light.png",
+          "sha256": "68d3d3a8051ae6d16a9fff7da04c74a65cb28cef93ef726ba90dd7162bec552b",
           "width": 1600,
           "height": 1200
         },
@@ -211,23 +211,23 @@
           {
             "id": "view-bounded-handoff",
             "path": "renders/suite/suite-studio-career-handoff/view-bounded-handoff.png",
-            "sha256": "16d63dd2e81455bc1dff9a9deed5b13629b8c53e19c349e262531894ed479895",
+            "sha256": "31b9aa642ceba043a05dd86715c3a6dc8c0c5bd56f49aecdf05de005ed93ca22",
             "width": 1600,
-            "height": 1200
+            "height": 1228
           },
           {
             "id": "view-human-approval",
             "path": "renders/suite/suite-studio-career-handoff/view-human-approval.png",
-            "sha256": "983e1e2a5672d8a66d1fa2f65fd75fe9f31f35d2048998c81f986552d172e7da",
+            "sha256": "fb62a21e347b39b1926fc89bfd859aae30e62be0e7d8e2ea76b2f60679d0cefd",
             "width": 1600,
-            "height": 1200
+            "height": 1228
           },
           {
             "id": "view-resume-held-review",
             "path": "renders/suite/suite-studio-career-handoff/view-resume-held-review.png",
-            "sha256": "dcca85e852538b4dd93b76b2110c0bdc6672ef43a80a521f99794069d71b622e",
+            "sha256": "a2d05b940bdd32b26321fb0960a049b00a904e72c6fe22bdcf7ac695435094df",
             "width": 1600,
-            "height": 1200
+            "height": 1228
           }
         ]
       },
@@ -268,8 +268,8 @@
     },
     {
       "id": "suite-plugin-system-architecture",
-      "specification_sha256": "f32a1cef7643a1fb735b282ea76d5f72782c221e7a165be0c032fa2f8d60280d",
-      "artifact_sha256": "99666868e06c47ee86310e35049ce4d9ae6e46ecd9301fa7e7b496e43a52fcf9",
+      "specification_sha256": "6e0b5b757307dd462d1c6a3f7cee9718970833f2546c65a1fc3a52afa8a9680f",
+      "artifact_sha256": "6cca42d252db93c52526f1fe3306b4f79a6ffe1a0c2f8103dc01b97ec92ce4af",
       "reviewer": "Codex 헤드리스 시각 QA",
       "review_method": "headless-original-and-fit",
       "correction_rounds": 1,
@@ -277,19 +277,19 @@
       "renders": {
         "read": {
           "path": "renders/suite/suite-plugin-system-architecture/read.png",
-          "sha256": "04d02579449555132dce73673624082d49c48cc87fdc2f0f8123eeba9cbb63a2",
-          "width": 1600,
-          "height": 1200
-        },
-        "light": {
-          "path": "renders/suite/suite-plugin-system-architecture/light.png",
-          "sha256": "58df291a6fc211c57e9d6b55c1a7fd23897a36ce34a598906eab5d2ae821a99b",
+          "sha256": "014a13165ae0df536ea56605236dd23b2d1dc43a68faf394b7d5071b30bb883b",
           "width": 1600,
           "height": 1200
         },
         "dark": {
           "path": "renders/suite/suite-plugin-system-architecture/dark.png",
-          "sha256": "04d02579449555132dce73673624082d49c48cc87fdc2f0f8123eeba9cbb63a2",
+          "sha256": "014a13165ae0df536ea56605236dd23b2d1dc43a68faf394b7d5071b30bb883b",
+          "width": 1600,
+          "height": 1200
+        },
+        "light": {
+          "path": "renders/suite/suite-plugin-system-architecture/light.png",
+          "sha256": "60fcaf71e5e5544d31fc893dcecfea66c5efaeeeb9515053c27f22f517ff8ba2",
           "width": 1600,
           "height": 1200
         },
@@ -297,21 +297,21 @@
           {
             "id": "view-plugin-boundaries",
             "path": "renders/suite/suite-plugin-system-architecture/view-plugin-boundaries.png",
-            "sha256": "290630cc4a65458f4b7fdc6573f6d8864210b9a9b84436591b66393e80137513",
+            "sha256": "5a15574c245a29a7ec433c6ca8e161eb63f45a465b369840e9d363aac3a9a8ef",
             "width": 1600,
             "height": 1200
           },
           {
             "id": "view-artifact-validation",
             "path": "renders/suite/suite-plugin-system-architecture/view-artifact-validation.png",
-            "sha256": "3d432271a6dacf14d3f5c27018e6774917a3652eb5e4cfd4c6d07e0234fd4cb3",
+            "sha256": "d2cadddbf4b3e098968d274c405c2b2489961605d12488b6b0f1734680c1d864",
             "width": 1600,
             "height": 1200
           },
           {
             "id": "view-human-approval",
             "path": "renders/suite/suite-plugin-system-architecture/view-human-approval.png",
-            "sha256": "991f6b375fd726428e475a55db40df21ab4b8eff676ab78ddde13281785c59ca",
+            "sha256": "b84cc7555a324e9bf5cc9af17e550f07574191c39f6205bd30e54252b4c58654",
             "width": 1600,
             "height": 1200
           }
@@ -319,9 +319,9 @@
       },
       "readme_preview": {
         "path": "renders/suite/suite-plugin-system-architecture/readme-preview.png",
-        "sha256": "46643dbc54555fbf01c78f4f319685fd0ba8c0efbe1359c56bc70d9cdb4f841d",
-        "width": 1600,
-        "height": 900
+        "sha256": "f6a5e428a3a5c08df670994cea6753a0a72369329cae9be3a027e8465c02a5fb",
+        "width": 1200,
+        "height": 630
       },
       "checks": {
         "text_clipping": "passed",
@@ -353,84 +353,84 @@
   "contact_sheets": [
     {
       "html": "all.html",
-      "html_sha256": "8321b4a72e89782ddea0cc210492c2b6312bc9184af7d25dfa61b84817f2c22d",
+      "html_sha256": "daa2840bb83b598f3192fe14621ef384a72eaaa0e45443813b93981582215fee",
       "png": "all.png",
-      "png_sha256": "a5896e9577f07bad1893c97b4e665438670ca71af52a331411fa21341e9167fc",
+      "png_sha256": "586d15655bdbaef409d3c8762f62bee746180cfe0f58156bdecd83996843e687",
       "width": 1800,
-      "height": 6930,
+      "height": 7233,
       "source_read_sha256": [
-        "d80e0579cac14ac1ea55caf0c77a89abf1df139f9d456c4c23c79e5eac83ff61",
-        "b932272832a8f9876297c2abfe1b1b84696979237817ea15dcd91fd73e67d0ac",
-        "e779bce6706a59e7edc5f5dd79916949839049ea3612c238d37dd37fd5d66fed",
-        "04d02579449555132dce73673624082d49c48cc87fdc2f0f8123eeba9cbb63a2"
+        "014a13165ae0df536ea56605236dd23b2d1dc43a68faf394b7d5071b30bb883b",
+        "0931a8b3ee55f2aff8688459b0c58025154eaaa1ada9979216c085e8e6a45647",
+        "0da5c0bc5b861533bd7853fe495c0683bb4b48811aaf96f2c6a0ef1e6e96e12d",
+        "2f9076142a6021eafc604515e21154f8988cae60fa1353c8c5c8a7c3b2063066"
       ]
     },
     {
       "html": "product-career.html",
-      "html_sha256": "7796d568aea648d300590f4a5a974324e463f3a49c7b894f343c926e3a71fdce",
+      "html_sha256": "a28b4f0c7a24adb79f1031b509e84210305070eec39bf1df01a36f5d2fd21c63",
       "png": "product-career.png",
-      "png_sha256": "0c50c9274f44ed8da329860ff2c8119b3af74280c3335a47a5a208f53571d405",
+      "png_sha256": "834162ad8f3160dda7f27d4c2f6162b08f267825af1ca57286ee04d0d37d9562",
       "width": 1800,
-      "height": 2007,
+      "height": 2202,
       "source_read_sha256": [
-        "b932272832a8f9876297c2abfe1b1b84696979237817ea15dcd91fd73e67d0ac"
+        "0931a8b3ee55f2aff8688459b0c58025154eaaa1ada9979216c085e8e6a45647"
       ]
     },
     {
       "html": "product-studio.html",
-      "html_sha256": "5d667c9d0b0208b08a9f036f659880646b32a5f272fe5f6c3e82b4950f2158de",
+      "html_sha256": "07ecd332e76446e68d074648e023b8657f4f8bac732096f8f72eb9fd39e479cf",
       "png": "product-studio.png",
-      "png_sha256": "8357f5ca435ea4d06a9aeccb1a37912fc4b616fcbca12579ebd249d49e907b9e",
+      "png_sha256": "bf81ff0eaf914fab5f878429589706547d8c325c53ae1783216fe89086ce98f5",
       "width": 1800,
-      "height": 2206,
+      "height": 2314,
       "source_read_sha256": [
-        "d80e0579cac14ac1ea55caf0c77a89abf1df139f9d456c4c23c79e5eac83ff61"
+        "0da5c0bc5b861533bd7853fe495c0683bb4b48811aaf96f2c6a0ef1e6e96e12d"
       ]
     },
     {
       "html": "product-suite.html",
       "html_sha256": "4738ffe68709a2f26a6ec563e41dc8018863710e5950d56e7a39d5e5ac5a972b",
       "png": "product-suite.png",
-      "png_sha256": "cc61eab12d6f891cfc1836fdc433c635f6d1579bb3cde4e74c523f8fae95ab0a",
+      "png_sha256": "c7c94e65d2fce1348767b11b60ffba187c7ee159d7fa9fa148bfdbe53c6debbb",
       "width": 1800,
       "height": 2874,
       "source_read_sha256": [
-        "e779bce6706a59e7edc5f5dd79916949839049ea3612c238d37dd37fd5d66fed",
-        "04d02579449555132dce73673624082d49c48cc87fdc2f0f8123eeba9cbb63a2"
+        "014a13165ae0df536ea56605236dd23b2d1dc43a68faf394b7d5071b30bb883b",
+        "2f9076142a6021eafc604515e21154f8988cae60fa1353c8c5c8a7c3b2063066"
       ]
     },
     {
       "html": "type-architecture.html",
       "html_sha256": "aba168bd542cf3dda2c57f2138926e703ca89b6559377435c93c30e62c017ade",
       "png": "type-architecture.png",
-      "png_sha256": "0540f55510ef2c4efe5abd141f92026c21bf07b4ecbefc0bb62fb7ae0b9f08fe",
+      "png_sha256": "e0d53630d02dfcd995973e3720fe26a137cc353b951f143bbaa96995de72385c",
       "width": 1800,
       "height": 1476,
       "source_read_sha256": [
-        "04d02579449555132dce73673624082d49c48cc87fdc2f0f8123eeba9cbb63a2"
+        "014a13165ae0df536ea56605236dd23b2d1dc43a68faf394b7d5071b30bb883b"
       ]
     },
     {
       "html": "type-dataflow.html",
       "html_sha256": "fa93bd122af0798527ebc84fe8ab5b94a8701b0a24a157a3ef4a2f9992081655",
       "png": "type-dataflow.png",
-      "png_sha256": "36c93d2646ad60ff5eb0ad2797c09e7d194b0764859052b32045eba889a82a33",
+      "png_sha256": "7576c51fcf0d3aa9df4aaadd1ec24aebc6b4de1f30ce21913ec91b26db421127",
       "width": 1800,
       "height": 1476,
       "source_read_sha256": [
-        "e779bce6706a59e7edc5f5dd79916949839049ea3612c238d37dd37fd5d66fed"
+        "2f9076142a6021eafc604515e21154f8988cae60fa1353c8c5c8a7c3b2063066"
       ]
     },
     {
       "html": "type-workflow.html",
-      "html_sha256": "fbd5f7d124e124f51b3dffb817f3b906de899a44f2ab9be229b46b963b82bfeb",
+      "html_sha256": "2da27604ec2aa23d73b8f0f6ebacd7d613771f175517b542e57d7865bada8b69",
       "png": "type-workflow.png",
-      "png_sha256": "1fc6d260ff0ffc74ecd228c74bb5473c635212f7f0f98b86c81d9253c564a38e",
+      "png_sha256": "1c89e4395f556a04024a097eeda66781da125ed4c0bf02776cd0a6ee2b56a641",
       "width": 1800,
-      "height": 4135,
+      "height": 4438,
       "source_read_sha256": [
-        "d80e0579cac14ac1ea55caf0c77a89abf1df139f9d456c4c23c79e5eac83ff61",
-        "b932272832a8f9876297c2abfe1b1b84696979237817ea15dcd91fd73e67d0ac"
+        "0931a8b3ee55f2aff8688459b0c58025154eaaa1ada9979216c085e8e6a45647",
+        "0da5c0bc5b861533bd7853fe495c0683bb4b48811aaf96f2c6a0ef1e6e96e12d"
       ]
     }
   ]

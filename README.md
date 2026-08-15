@@ -99,12 +99,13 @@ Studio에는 제품 스킬 16개와 공통 스킬 8개, 설치 스킬 24개가 �
 | 흐름과 구조 설명하기 | [Skillstead](https://github.com/kyungseo/skillstead)로 편집 가능한 SVG와 검증용 2배 PNG를 만들고 [Archify](https://github.com/tt-a1i/archify)로 관계를 따라가며 살펴볼 수 있는 HTML 구조도를 제작 | SVG·PNG 도식, Archify HTML, 렌더·검수 기록 |
 | 문서 형식으로 전달하기 | 기준 결과와 승인된 자산을 보존한 채 MD·PDF·DOCX·PPTX 형식별 준비와 화면 검수를 분리 | 원본 MD, 검증된 PDF·DOCX·PPTX, 형식별 결과 기록 |
 | 경쟁작·레퍼런스 분석과 용어 사전 | [Studio 분석](guides/game-design-studio/reference-analysis.md)·[Studio 용어 사전](guides/game-design-studio/glossary.md), [Career 분석](guides/game-design-career/reference-analysis.md)·[Career 용어 사전](guides/game-design-career/glossary.md)에서 관찰 근거, 설계 전환 제안과 승인 전 용어 후보를 분리 | 비교작 근거 등록부, 시스템 지도, 검토 대기 제안, 승인된 용어 스냅샷 |
+| 컷씬 장면·프롬프트·이미지 준비 | [컷씬 비주얼 프리프로덕션](guides/game-design-studio/cutscene-visual-preproduction.md)에서 Prompt Only, Estimate Only, Generate After Approval을 분리하고 `style-master → reference-masters → keyframes → storyboard` 순서를 검토 | 컷씬 브리프(brief), 장면(shot)·연속성 패키지, 단계(wave)별 비용·승인 기록과 검토된 이미지 후보 |
 
 #### 🎨 게임 이미지는 먼저 기준부터 정합니다
 
 이미지가 필요하다고 곧바로 생성부터 시작하지 않습니다. 문서의 용도와 품질 기준을 먼저 확인하고 필요한 이미지마다 고정 식별자, 수량, 들어갈 위치, 대체 텍스트, 유지할 요소와 제외할 요소를 정리합니다. 캐릭터나 세계관의 모습이 계속 이어져야 하면 마스터 이미지를 기준으로 삼습니다. 파생 이미지는 어떤 원본을 참조했는지와 프롬프트 계보를 함께 기록합니다.
 
-기본 설정은 외부 호출이 없는 `prompt-only`입니다. 사용자가 `.env`에 `OPENAI_API_KEY`와 생성 범위를 설정한 경우에만 `gpt-image-2` 작업을 실행합니다. 생성 중 일부가 실패해도 작성한 프롬프트, 성공한 파일과 재개 지점은 남습니다. 생성된 이미지는 모두 검토 전 초안으로 시작합니다. 검토 담당자가 문서 안에서의 쓰임, 읽기 쉬움, 대체 텍스트, 출처, 권리와 사용 범위를 확인해 승인해야 최종 MD·PDF·DOCX·PPTX에 넣을 수 있습니다.
+기본 설정은 외부 호출이 없는 `prompt-only`이고, 생성할 때도 `IMAGE_PROVIDER=codex-first`로 Codex의 호스트 `image_gen`을 먼저 사용합니다. API key가 있어도 유료 호출 승인으로 간주하지 않습니다. 호스트 결과가 만족스럽지 않거나 반복 실패하면 결과를 보존한 뒤 비용과 품질을 알려 주고 `gpt-image-2` 전환을 제안하며, 사용자가 명시적으로 승인한 경우에만 실행합니다. 이미지 픽셀 안에 한글 문자가 반드시 들어가야 할 때는 `IMAGE_EMBEDDED_TEXT_LOCALE=ko-KR`과 `gpt-image-2`를 사용합니다. 생성 중 일부가 실패해도 작성한 프롬프트, 성공한 파일과 재개 지점은 남습니다. 생성된 이미지는 모두 검토 전 초안으로 시작합니다. 검토 담당자가 문서 안에서의 쓰임, 읽기 쉬움, 대체 텍스트, 출처, 권리와 사용 범위를 확인해 승인해야 최종 MD·PDF·DOCX·PPTX에 넣을 수 있습니다.
 
 ### 💬 처음에는 이렇게 물어보세요
 
@@ -2064,7 +2065,16 @@ cp .env.example .env
 - `IMAGE_GEN_MODE=required`: 필수 자산만 생성하되 이미지 제공자 (provider)가 없으면 차단
 - `IMAGE_GEN_MODE=all`: 목록 (manifest)의 모든 생성 가능한 자산을 후보로 전달
 
-비어 있지 않은 `OPENAI_API_KEY`가 있으면 OpenAI Images API만 사용합니다. 키가 없고 호스트 이미지 기능 (host capability)이 `available`일 때만 호스트 대체 경로 (fallback)를 사용합니다. 그 외에는 프롬프트만 보존하는 `prompt-only`로 유지합니다.
+```dotenv
+IMAGE_PROVIDER=codex-first
+IMAGE_EMBEDDED_TEXT_LOCALE=none
+IMAGE_MODEL=gpt-image-2
+IMAGE_QUALITY=low
+```
+
+`codex-first`는 API key 보유 여부와 관계없이 사용 가능한 호스트 `image_gen`을 먼저 선택합니다. 호스트 실패나 품질 불만족 뒤에 유료 API로 자동 전환하지 않습니다. `IMAGE_PROVIDER=openai`를 선택하고 비용 안내와 현재 승인을 마친 경우에만 OpenAI를 사용합니다. 이미지 안에 한글 문자가 필요하면 `IMAGE_EMBEDDED_TEXT_LOCALE=ko-KR`, `IMAGE_PROVIDER=openai`, `IMAGE_MODEL=gpt-image-2`가 필수입니다.
+
+유료 품질은 대부분 `low`로 충분합니다. `medium`은 마스터 키 이미지나 선택된 고품질 결과에만 사용하고, `high`는 영상용 핵심 프레임이나 게임 원화처럼 세부 묘사가 반드시 필요한 예외에만 추가 비용을 알리고 승인받아 사용합니다. 모든 결과에 `high`를 권하지 않습니다.
 
 ### 편집 가능한 도식
 
