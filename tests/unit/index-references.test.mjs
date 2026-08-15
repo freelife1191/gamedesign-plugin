@@ -67,6 +67,18 @@ test("source discovery walks nested directories without the recursive readdir op
   assert.deepEqual(calls, ["docs", "docs/03. 게임 시스템 기획", "docs/03. 게임 시스템 기획/nested"]);
 });
 
+test("source discovery preserves user-owned LLM WIKI documents outside the product reference corpus", async (t) => {
+  const repoRoot = await createFixture(t);
+  await writeSource(repoRoot, "docs/03. 게임 시스템 기획/rules.md", "# Rules\n");
+  await writeSource(repoRoot, "docs/LLM WIKI/notes.md", "# Personal notes\n");
+
+  const files = await discoverSourceFiles({ repoRoot });
+
+  assert.deepEqual(files.map(({ sourcePath }) => sourcePath), [
+    "docs/03. 게임 시스템 기획/rules.md",
+  ]);
+});
+
 test("new source groups without an explicit category mapping are rejected", async (t) => {
   const repoRoot = await createFixture(t);
   await writeSource(repoRoot, "docs/unmapped/new.md", "# New source\n");

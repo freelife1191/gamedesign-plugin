@@ -9,6 +9,10 @@ const INDEX_PATH = "shared/knowledge/reference-index.json";
 const AUTHORING_ONLY_SOURCE_PATHS = new Set([
   "docs/research/2026-08-05-neutral-game-design-preset-evidence.md",
 ]);
+const AUTHORING_ONLY_SOURCE_ROOTS = [
+  "docs/LLM WIKI",
+  "docs/superpowers",
+];
 
 const CATEGORY_BY_SOURCE_ROOT = new Map([
   ["docs/01. 게임 기획자 취업 튜토리얼", "career"],
@@ -84,7 +88,7 @@ export async function discoverSourceFiles({ repoRoot, readDirectory = readdir })
   for (const absolutePath of absolutePaths) {
     const rawPath = path.relative(repoRoot, absolutePath).split(path.sep).join("/");
     const sourcePath = rawPath.normalize("NFC");
-    if (sourcePath.startsWith("docs/superpowers/")) continue;
+    if (AUTHORING_ONLY_SOURCE_ROOTS.some((sourceRoot) => sourcePath.startsWith(`${sourceRoot}/`))) continue;
     if (AUTHORING_ONLY_SOURCE_PATHS.has(sourcePath)) continue;
     rawPaths.push(rawPath);
     files.push({ absolutePath, sourcePath });
