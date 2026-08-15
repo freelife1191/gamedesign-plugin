@@ -9,7 +9,7 @@
 
 ## 회귀 범위
 
-41개 단위 테스트에는 unsorted latest claim, retire→unlink resume, unrelated prefix, claim staging unlink fault, normal nlink=2 release, same-PID EIO+abort retry, fresh-publisher barrier와 malformed/seq-gap/symlink/mismatched retired/EPERM/crash-resume 케이스가 포함된다.
+46개 단위 테스트에는 unsorted latest claim, retire→unlink resume, unrelated prefix, claim staging unlink fault, normal nlink=2 release, same-PID EIO+abort retry, fresh-publisher barrier와 malformed/seq-gap/symlink/mismatched retired/EPERM/crash-resume 케이스가 포함된다. Fix7은 nlink=3 crash resume, unrelated historical anchor, fresh/expired dead claim lease, release EIO pair preservation을 추가한다.
 
 ## 제한
 

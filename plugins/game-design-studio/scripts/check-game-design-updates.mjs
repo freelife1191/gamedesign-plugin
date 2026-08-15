@@ -442,7 +442,9 @@ async function claimStaleGeneration(lockPath, generation, fsOps, leaseMs) {
   const latestSequence = Math.max(0, ...state.claims.keys());
   const latest = state.claims.get(latestSequence);
   if (latest !== undefined) {
-    if (!state.aborts.has(latestSequence) && !(await ownerIsProvablyDead(latest.record.claimant))) return null;
+    const claimAge = Date.now() - Date.parse(latest.record.claimedAt);
+    if (!state.aborts.has(latestSequence)
+      && (!Number.isFinite(claimAge) || claimAge < leaseMs || !(await ownerIsProvablyDead(latest.record.claimant)))) return null;
   }
   const sequence = latestSequence + 1;
   const claimant = `game-design-update-check:${process.pid}-${randomUUID()}`;
@@ -463,7 +465,7 @@ async function claimStaleGeneration(lockPath, generation, fsOps, leaseMs) {
   }
 }
 
-async function ownerAnchorPath(lockPath, generation, fsOps, linkCount) {
+async function ownerAnchorPath(lockPath, generation, canonical, fsOps, linkCount) {
   let entries;
   try {
     entries = await fsOps.readdir(path.dirname(lockPath));
@@ -471,10 +473,13 @@ async function ownerAnchorPath(lockPath, generation, fsOps, linkCount) {
     return null;
   }
   const candidates = entries.filter((name) => name.startsWith(`${path.basename(lockPath)}.staging.`));
-  if (candidates.length !== 1) return null;
-  const anchorPath = path.join(path.dirname(lockPath), candidates[0]);
-  const anchor = await inspectOwnedLockFile(anchorPath, fsOps, [linkCount]);
-  return sameGeneration(generation, anchor) ? { anchorPath, anchor } : null;
+  const matches = [];
+  for (const name of candidates) {
+    const anchorPath = path.join(path.dirname(lockPath), name);
+    const anchor = await inspectOwnedLockFile(anchorPath, fsOps, [linkCount]);
+    if (sameGeneration(generation, anchor) && sameFile(canonical.entry, anchor.entry)) matches.push({ anchorPath, anchor });
+  }
+  return matches.length === 1 ? matches[0] : null;
 }
 
 async function recoveryAuthority(lockPath, generation, claim, fsOps) {
@@ -504,16 +509,22 @@ async function publishRecoveryAbort(lockPath, generation, claim, fsOps) {
 }
 
 async function reclaimStaleLock(lockPath, fsOps, leaseMs) {
-  const inspected = await inspectOwnedLockFile(lockPath, fsOps, [1, 2]);
+  const inspected = await inspectOwnedLockFile(lockPath, fsOps, [1, 2, 3]);
   if (inspected === null || !(await staleDeadOwner(inspected, leaseMs))) return false;
   const generation = { lockPath, kind: "file", entry: inspected.entry, owner: inspected.metadata.owner, createdAt: inspected.metadata.createdAt };
   const previous = await recoveryState(lockPath, generation, fsOps);
   if (previous === null) return false;
   if (previous.retired !== null) {
     if (!sameFile(inspected.entry, previous.retired.inspected.entry)) return false;
+    if (inspected.entry.nlink === 3) {
+      const anchor = await ownerAnchorPath(lockPath, generation, inspected, fsOps, 3);
+      if (anchor === null) return false;
+    }
   } else if (inspected.entry.nlink === 2) {
-    const anchor = await ownerAnchorPath(lockPath, generation, fsOps, 2);
+    const anchor = await ownerAnchorPath(lockPath, generation, inspected, fsOps, 2);
     if (anchor === null || !sameFile(anchor.anchor.entry, inspected.entry)) return false;
+  } else if (inspected.entry.nlink !== 1) {
+    return false;
   }
   const claimed = await claimStaleGeneration(lockPath, generation, fsOps, leaseMs);
   if (claimed === null) return false;
@@ -535,7 +546,7 @@ async function reclaimStaleLock(lockPath, fsOps, leaseMs) {
     const retired = await inspectOwnedLockFile(state.retired.recordPath, fsOps, [2, 3]);
     if (!sameGeneration(generation, canonical) || !sameGeneration(generation, retired) || !sameFile(canonical.entry, retired.entry)) throw new Error("canonical changed");
     if (canonical.entry.nlink === 3) {
-      const anchor = await ownerAnchorPath(lockPath, generation, fsOps, 3);
+      const anchor = await ownerAnchorPath(lockPath, generation, canonical, fsOps, 3);
       if (anchor === null || !sameFile(anchor.anchor.entry, canonical.entry)) throw new Error("missing owner anchor");
     }
     state = await recoveryAuthority(lockPath, generation, claimed, fsOps);
@@ -605,8 +616,18 @@ async function releaseLock(lock, fsOps) {
   const canonical = await inspectOwnedLockFile(lock.lockPath, fsOps, [2]);
   const anchor = await inspectOwnedLockFile(lock.ownerAnchor, fsOps, [2]);
   if (!sameGeneration(lock, canonical) || !sameGeneration(lock, anchor) || !sameFile(canonical.entry, anchor.entry)) return;
-  await fsOps.unlink(lock.lockPath).catch(() => undefined);
-  await fsOps.unlink(lock.ownerAnchor).catch(() => undefined);
+  let canonicalAbsent = false;
+  try {
+    await fsOps.unlink(lock.lockPath);
+    canonicalAbsent = true;
+  } catch {
+    try {
+      await fsOps.lstat(lock.lockPath);
+    } catch (error) {
+      canonicalAbsent = error?.code === "ENOENT";
+    }
+  }
+  if (canonicalAbsent) await fsOps.unlink(lock.ownerAnchor).catch(() => undefined);
 }
 
 function sleep(ms) {

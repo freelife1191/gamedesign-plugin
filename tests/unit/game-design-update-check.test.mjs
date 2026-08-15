@@ -678,10 +678,15 @@ test("preserves ambiguous linked residue and external siblings without network a
 
     const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
 
-    assert.deepEqual(result, expectedUnknownResult(), name);
-    assert.equal(calls.length, 0, name);
-    assert.deepEqual((await readdir(path.dirname(cachePath))).sort(), beforeEntries, name);
-    assert.equal((await lstat(lockPath)).isFile(), true, name);
+    if (name === "multiple-hard-links") {
+      assert.deepEqual(result, expectedUnknownResult(), name);
+      assert.equal(calls.length, 0, name);
+      assert.deepEqual((await readdir(path.dirname(cachePath))).sort(), beforeEntries, name);
+      assert.equal((await lstat(lockPath)).isFile(), true, name);
+    } else {
+      assert.equal(result.status, "current", name);
+      assert.equal(calls.length, 3, name);
+    }
     if (external !== null) assert.equal(await readFile(path.join(external.externalPath, "sentinel.txt"), "utf8"), external.before, name);
   }
 });
@@ -837,12 +842,13 @@ test("resumes from a retired hard-link by unlinking only the old canonical", asy
   const lockPath = await writeFileLock({ home, createdAt: new Date(Date.now() - 120_000).toISOString() });
   const generation = { owner: "game-design-update-check:99999999-test-owner", createdAt: JSON.parse(await readFile(lockPath, "utf8")).createdAt };
   const paths = recoveryPaths(lockPath, generation);
-  await writeRecoveryRecord(paths.claim(1), claimRecord(generation, paths.targetId, 1, "game-design-update-check:99999998-dead-claimer"));
+  await writeRecoveryRecord(paths.claim(1), claimRecord(generation, paths.targetId, 1, "game-design-update-check:99999998-dead-claimer", new Date(Date.now() - 120_000).toISOString()));
   await link(lockPath, paths.retired);
   const calls = [];
 
   const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
 
+  assert.equal((await lstat(paths.claim(2))).isFile(), true);
   assert.equal(result.status, "current");
   assert.equal(calls.length, 3);
   await assert.rejects(lstat(lockPath), { code: "ENOENT" });
@@ -1018,7 +1024,7 @@ test("a completed retired recovery remains inert when a later publisher creates 
   const lockPath = await writeFileLock({ home, createdAt: new Date(Date.now() - 120_000).toISOString() });
   const generation = { owner: "game-design-update-check:99999999-test-owner", createdAt: JSON.parse(await readFile(lockPath, "utf8")).createdAt };
   const paths = recoveryPaths(lockPath, generation);
-  await writeRecoveryRecord(paths.claim(1), claimRecord(generation, paths.targetId, 1, "game-design-update-check:99999998-crashed"));
+  await writeRecoveryRecord(paths.claim(1), claimRecord(generation, paths.targetId, 1, "game-design-update-check:99999998-crashed", new Date(Date.now() - 120_000).toISOString()));
   await link(lockPath, paths.retired);
   await unlink(lockPath);
   const calls = [];
@@ -1028,6 +1034,96 @@ test("a completed retired recovery remains inert when a later publisher creates 
   assert.equal(result.status, "current");
   assert.equal(calls.length, 3);
   assert.equal((await lstat(paths.retired)).nlink, 1);
+});
+
+test("resumes a real-FS canonical plus owner-anchor plus retired nlink=3 crash", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  const lockPath = await writeFileLock({ home, createdAt: new Date(Date.now() - 120_000).toISOString() });
+  const generation = { owner: "game-design-update-check:99999999-test-owner", createdAt: JSON.parse(await readFile(lockPath, "utf8")).createdAt };
+  const paths = recoveryPaths(lockPath, generation);
+  const ownerAnchor = `${lockPath}.staging.crashed-owner`;
+  await link(lockPath, ownerAnchor);
+  await writeRecoveryRecord(paths.claim(1), claimRecord(generation, paths.targetId, 1, "game-design-update-check:99999998-crashed", new Date(Date.now() - 120_000).toISOString()));
+  await link(lockPath, paths.retired);
+  const calls = [];
+
+  const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+
+  assert.equal((await lstat(paths.claim(2))).isFile(), true);
+  assert.equal(result.status, "current");
+  assert.equal(calls.length, 3);
+  await assert.rejects(lstat(lockPath), { code: "ENOENT" });
+  assert.equal((await lstat(ownerAnchor)).nlink, 2);
+  assert.equal((await lstat(paths.retired)).nlink, 2);
+});
+
+test("ignores a different-inode historical staging orphan while selecting the exact owner anchor", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  const lockPath = await writeFileLock({ home, createdAt: new Date(Date.now() - 120_000).toISOString() });
+  await link(lockPath, `${lockPath}.staging.current-owner`);
+  await writeFile(`${lockPath}.staging.historical-orphan`, "unrelated\n", { mode: 0o600 });
+  const calls = [];
+
+  const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+
+  assert.equal(result.status, "current");
+  assert.equal(calls.length, 3);
+});
+
+test("does not take over a fresh dead latest claim before its lease expires", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  const lockPath = await writeFileLock({ home, createdAt: new Date(Date.now() - 120_000).toISOString() });
+  const generation = { owner: "game-design-update-check:99999999-test-owner", createdAt: JSON.parse(await readFile(lockPath, "utf8")).createdAt };
+  const paths = recoveryPaths(lockPath, generation);
+  await writeRecoveryRecord(paths.claim(1), claimRecord(generation, paths.targetId, 1, "game-design-update-check:99999998-fresh-dead"));
+  const before = (await readdir(path.dirname(lockPath))).sort();
+  const calls = [];
+
+  const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+
+  assert.deepEqual(result, expectedUnknownResult());
+  assert.equal(calls.length, 0);
+  assert.deepEqual((await readdir(path.dirname(lockPath))).sort(), before);
+});
+
+test("takes over an expired dead latest claim and appends the next numeric sequence", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  const lockPath = await writeFileLock({ home, createdAt: new Date(Date.now() - 120_000).toISOString() });
+  const generation = { owner: "game-design-update-check:99999999-test-owner", createdAt: JSON.parse(await readFile(lockPath, "utf8")).createdAt };
+  const paths = recoveryPaths(lockPath, generation);
+  await writeRecoveryRecord(paths.claim(1), claimRecord(generation, paths.targetId, 1, "game-design-update-check:99999998-expired-dead", new Date(Date.now() - 120_000).toISOString()));
+  const calls = [];
+
+  const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+
+  assert.equal(result.status, "current");
+  assert.equal(calls.length, 3);
+  assert.equal((await lstat(paths.claim(2))).isFile(), true);
+});
+
+test("canonical release EIO preserves the complete normal lock pair until recovery can succeed", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  const cachePath = resolveUpdateCachePath({ env: {}, home, platform: process.platform });
+  const lockPath = `${cachePath}.lock`;
+  const calls = [];
+  const first = await checkGameDesignUpdates({
+    pluginRoot,
+    home,
+    now: Date.parse(CHECKED_AT),
+    fetchFn: checkingFetch(calls),
+    fsOps: { unlink: async (target) => target === lockPath ? Promise.reject(Object.assign(new Error("injected release EIO"), { code: "EIO" })) : unlink(target) },
+  });
+  const ownerAnchor = (await readdir(path.dirname(lockPath))).find((name) => name.startsWith(`${path.basename(lockPath)}.staging.`));
+  const followUpCalls = [];
+  const followUp = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(followUpCalls) });
+
+  assert.equal(first.status, "current");
+  assert.equal(calls.length, 3);
+  assert.equal((await lstat(lockPath)).nlink, 2);
+  assert.equal((await lstat(path.join(path.dirname(lockPath), ownerAnchor))).nlink, 2);
+  assert.equal(followUp.status, "current");
+  assert.equal(followUp.cache, "hit");
+  assert.equal(followUpCalls.length, 0);
 });
 
 test("rejects empty, missing, partial, duplicate, and unknown installed manifests without network or cache publication", async (t) => {
