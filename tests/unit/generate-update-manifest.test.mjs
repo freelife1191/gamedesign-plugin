@@ -4,11 +4,12 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { generateUpdateManifest } from "../../tooling/generate-update-manifest.mjs";
 
-const generatorUrl = pathToFileURL(path.resolve(import.meta.dirname, "../../tooling/generate-update-manifest.mjs")).href;
+const generatorPath = fileURLToPath(new URL("../../tooling/generate-update-manifest.mjs", import.meta.url));
+const generatorUrl = pathToFileURL(generatorPath).href;
 
 const installed = Object.freeze([Object.freeze({
   id: "archify",
@@ -58,7 +59,7 @@ test("consumer process imports the manifest module with unrelated argv", () => {
 
 test("direct manifest CLI rejects invalid arguments", () => {
   const result = spawnSync(process.execPath, [
-    path.resolve(import.meta.dirname, "../../tooling/generate-update-manifest.mjs"),
+    generatorPath,
     "--invalid",
   ], { encoding: "utf8" });
 
