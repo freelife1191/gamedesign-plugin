@@ -167,6 +167,65 @@ test("returns unknown rather than current when a matching release response is ma
   });
 });
 
+test("returns unknown for a malformed numeric prerelease identifier rather than treating installed evidence as current", () => {
+  const got = evaluateUpdateAdvisory({
+    policy,
+    installed: [installed[1]],
+    releases: {
+      archify: [
+        currentReleases.archify[0],
+        {
+          tag: "v2.14.0-01",
+          draft: false,
+          prerelease: true,
+          url: releaseUrl("https://github.com/tt-a1i/archify", "v2.14.0-01"),
+        },
+      ],
+    },
+    checkedAt,
+  });
+
+  assert.deepEqual(got, {
+    schemaVersion: 1,
+    checkedAt,
+    status: "unknown",
+    components: [{
+      id: "archify",
+      installedTag: "v2.13.0",
+      latestTag: null,
+      status: "unknown",
+      releaseUrl: null,
+    }],
+  });
+});
+
+test("excludes a valid prerelease with build metadata without poisoning stable current evidence", () => {
+  const got = evaluateUpdateAdvisory({
+    policy,
+    installed: [installed[1]],
+    releases: {
+      archify: [
+        currentReleases.archify[0],
+        {
+          tag: "v2.14.0-rc.1+build.7",
+          draft: false,
+          prerelease: true,
+          url: releaseUrl("https://github.com/tt-a1i/archify", "v2.14.0-rc.1+build.7"),
+        },
+      ],
+    },
+    checkedAt,
+  });
+
+  assert.deepEqual(got.components[0], {
+    id: "archify",
+    installedTag: "v2.13.0",
+    latestTag: "v2.13.0",
+    status: "current",
+    releaseUrl: "https://github.com/tt-a1i/archify/releases/tag/v2.13.0",
+  });
+});
+
 test("returns unknown for a policy with an unrecognized key rather than allowing it into output", () => {
   const got = evaluateUpdateAdvisory({
     policy: { ...policy, untrustedEndpoint: "https://example.test/releases" },

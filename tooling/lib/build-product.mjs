@@ -30,6 +30,7 @@ const sharedMappings = {
     ["shared/reference-intelligence/references", "references/shared/reference-intelligence/references"],
     ["shared/reference-intelligence/templates", "references/shared/reference-intelligence/templates"],
   ],
+  updates: [["shared/updates", "references/shared/updates"]],
 };
 const sharedMemoryInventory = Object.freeze({
   "shared/memory/skills": Object.freeze([

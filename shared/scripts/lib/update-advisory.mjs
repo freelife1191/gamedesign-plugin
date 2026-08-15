@@ -17,8 +17,8 @@ const INSTALLED_KEYS = Object.freeze(["id", "installedTag", "repository"]);
 const RELEASE_KEYS = Object.freeze(["tag", "draft", "prerelease", "url"]);
 const ADVISORY_KEYS = Object.freeze(["schemaVersion", "checkedAt", "status", "components"]);
 const COMPONENT_ADVISORY_KEYS = Object.freeze(["id", "installedTag", "latestTag", "status", "releaseUrl"]);
-const STABLE_SEMVER = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/u;
-const PRERELEASE_SEMVER = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)-(?:[0-9A-Za-z-]+)(?:\.[0-9A-Za-z-]+)*$/u;
+const SEMVER_IDENTIFIER = "(?:0|[1-9]\\d*|\\d*[A-Za-z-][0-9A-Za-z-]*)";
+const SEMVER = new RegExp(`^(?<major>0|[1-9]\\d*)\\.(?<minor>0|[1-9]\\d*)\\.(?<patch>0|[1-9]\\d*)(?:-(?<prerelease>${SEMVER_IDENTIFIER}(?:\\.${SEMVER_IDENTIFIER})*))?(?:\\+(?<build>[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?$`, "u");
 
 function hasExactKeys(value, keys) {
   if (value === null || typeof value !== "object" || Array.isArray(value) || Object.getPrototypeOf(value) !== Object.prototype) return false;
@@ -37,11 +37,11 @@ function compareTextIntegers(left, right) {
 }
 
 function compareVersions(left, right) {
-  const leftParts = left.match(STABLE_SEMVER);
-  const rightParts = right.match(STABLE_SEMVER);
+  const leftParts = left.match(SEMVER)?.groups;
+  const rightParts = right.match(SEMVER)?.groups;
   if (!leftParts || !rightParts) return null;
-  for (let index = 1; index <= 3; index += 1) {
-    const compared = compareTextIntegers(leftParts[index], rightParts[index]);
+  for (const key of ["major", "minor", "patch"]) {
+    const compared = compareTextIntegers(leftParts[key], rightParts[key]);
     if (compared !== 0) return compared;
   }
   return 0;
@@ -50,7 +50,8 @@ function compareVersions(left, right) {
 function stableVersionFor(rule, tag) {
   if (typeof tag !== "string" || !tag.startsWith(rule.prefix)) return null;
   const version = tag.slice(rule.prefix.length);
-  return STABLE_SEMVER.test(version) ? version : null;
+  const parsed = version.match(SEMVER)?.groups;
+  return parsed && parsed.prerelease === undefined ? version : null;
 }
 
 function canonicalReleaseUrl(repository, tag) {
@@ -83,7 +84,8 @@ function inspectReleases(component, releases) {
     const version = stableVersionFor(rule, release.tag);
     if (version === null) {
       const suffix = release.tag.startsWith(rule.prefix) ? release.tag.slice(rule.prefix.length) : null;
-      if (suffix !== null && !(release.prerelease && PRERELEASE_SEMVER.test(suffix))) {
+      const parsed = suffix === null ? null : suffix.match(SEMVER)?.groups;
+      if (suffix !== null && !(release.prerelease && parsed?.prerelease !== undefined)) {
         return { valid: false, latest: null };
       }
       continue;

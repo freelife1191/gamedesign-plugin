@@ -6,6 +6,10 @@ import { comparePaths, normalizeRelativePath } from "./paths.mjs";
 const utf8 = new TextDecoder("utf-8", { fatal: true });
 const relativeReference = /(?:^|[('"`\s])((?:\.\.[/\\])+[^)'"`\s]+)/gu;
 const vendorCliPath = /(?:^|\/)(?:\.claude\/skills\/svg-infographic|\.agents\/skills\/svg-infographic|skills\/svg-infographic)\/scripts\/(?:check-svg|render)\.mjs$/u;
+const sharedUpdateIdentityPaths = new Set([
+  "references/shared/updates/update-policy.json",
+  "scripts/lib/update-advisory.mjs",
+]);
 
 function inside(root, candidate) {
   const relative = path.relative(root, candidate);
@@ -160,8 +164,11 @@ function containsRawVendorCli(text) {
 }
 
 function assertTextIsSafe({ text, relativePath, packageRoot, siblingNames, forbiddenAbsolutePaths, inactiveRelativeReferenceTuples, usedInactiveRelativeReferenceTuples }) {
+  const siblingCheckedText = sharedUpdateIdentityPaths.has(relativePath)
+    ? text.replaceAll('"game-design-studio"', "").replaceAll('"game-design-career"', "")
+    : text;
   for (const sibling of siblingNames) {
-    if (relativePath.includes(sibling) || text.includes(sibling)) {
+    if (relativePath.includes(sibling) || siblingCheckedText.includes(sibling)) {
       throw new Error(`${relativePath} references sibling package ${sibling}`);
     }
   }
