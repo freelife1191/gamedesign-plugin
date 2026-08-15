@@ -1,13 +1,15 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
+const SEMVER_NUMBER = "(?:0|[1-9]\\d*)";
+const STABLE_SEMVER = `${SEMVER_NUMBER}\\.${SEMVER_NUMBER}\\.${SEMVER_NUMBER}`;
 const COMPONENTS = Object.freeze([
   Object.freeze({
     id: "skillstead",
     module: "vendor",
     repository: "https://github.com/kyungseo/skillstead",
     destinationRoot: "skills/svg-infographic",
-    tag: /^svg-infographic\/v(?<version>\d+\.\d+\.\d+)$/u,
+    tag: new RegExp(`^svg-infographic\\/v(?<version>${STABLE_SEMVER})$`, "u"),
     treeRoot: (version) => `svg-infographic/${version}`,
   }),
   Object.freeze({
@@ -15,7 +17,7 @@ const COMPONENTS = Object.freeze([
     module: "archify",
     repository: "https://github.com/tt-a1i/archify",
     destinationRoot: "skills/archify",
-    tag: /^v(?<version>\d+\.\d+\.\d+)$/u,
+    tag: new RegExp(`^v(?<version>${STABLE_SEMVER})$`, "u"),
     treeRoot: (version) => `archify/${version}`,
   }),
   Object.freeze({
@@ -23,7 +25,7 @@ const COMPONENTS = Object.freeze([
     module: "im-not-ai",
     repository: "https://github.com/epoko77-ai/im-not-ai",
     destinationRoot: "skills/humanize-korean",
-    tag: /^v(?<version>\d+\.\d+\.\d+)$/u,
+    tag: new RegExp(`^v(?<version>${STABLE_SEMVER})$`, "u"),
     treeRoot: (version) => `humanize-korean/v${version}`,
   }),
 ]);

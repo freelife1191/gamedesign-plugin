@@ -152,6 +152,11 @@ test("production Archify catalog covers the complete declared Markdown corpus", 
   );
 });
 
+test("production Archify catalog keeps vendor mirror schema valid without repoRoot", async () => {
+  const catalog = JSON.parse(await readFile(path.join(repoRoot, "guides/archify-diagrams/catalog.json"), "utf8"));
+  assert.deepEqual((await validateArchifyCatalog(catalog)).errors, []);
+});
+
 async function assertStateAwareMaterialization(entry) {
   const spec = path.join(repoRoot, entry.spec);
   if (entry.delivery_status === "planned") {

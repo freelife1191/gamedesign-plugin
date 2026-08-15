@@ -109,3 +109,23 @@ test("vendor lock rejects a tree root outside its vendor directory before copyin
     (error) => error?.code === "VENDOR_COMPONENT_TREE_ROOT_INVALID" && error.message === "archify tree root must be contained",
   );
 });
+
+test("vendor lock rejects stable tags with leading-zero SemVer numeric parts", async (t) => {
+  for (const [id, tag] of [
+    ["skillstead", "svg-infographic/v00.9.0"],
+    ["archify", "v02.14.0"],
+    ["im-not-ai", "v2.03.0"],
+  ]) {
+    const repoRoot = await fixture(t, async (root) => {
+      const lockPath = path.join(root, "shared/vendor", id, "vendor.lock.json");
+      const lock = vendorLock(components.find((component) => component.id === id));
+      lock.upstream.tag = tag;
+      await writeFile(lockPath, `${JSON.stringify(lock)}\n`);
+    });
+    assert.throws(
+      () => loadVendorComponents({ repoRoot }),
+      (error) => error?.code === "VENDOR_COMPONENT_TAG_INVALID",
+      `${id}: ${tag}`,
+    );
+  }
+});

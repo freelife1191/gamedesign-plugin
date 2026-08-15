@@ -4,6 +4,7 @@ import { mkdtemp, mkdir, readFile, rm, symlink, writeFile } from "node:fs/promis
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
 import {
   discoverArchifySourceDocuments,
@@ -12,6 +13,9 @@ import {
   publishableArchifyEntries,
   validateArchifyCatalog,
 } from "../../tooling/lib/archify-catalog.mjs";
+import { vendorMappings } from "../../tooling/lib/vendor-components.mjs";
+
+const productionRoot = fileURLToPath(new URL("../..", import.meta.url));
 
 const SCAN_ROOTS = [
   "README.md", "guides", "products/game-design-studio", "products/game-design-career",
@@ -333,6 +337,23 @@ test("safe discovery and hashing return normalized repository-relative Markdown 
     "README.md", "guides/café.md",
   ]);
   assert.equal(await hashArchifySource(path.join(repoRoot, "README.md")), digest(SOURCE_TEXT));
+});
+
+test("catalog resolves vendor mappings once when validating multiple package mirrors", async () => {
+  const catalog = JSON.parse(await readFile(path.join(productionRoot, "guides/archify-diagrams/catalog.json"), "utf8"));
+  const mappings = vendorMappings({ repoRoot: productionRoot });
+  let calls = 0;
+
+  const result = await validateArchifyCatalog(catalog, {
+    resolveVendorMappings: ({ repoRoot }) => {
+      calls += 1;
+      assert.equal(repoRoot, productionRoot);
+      return mappings;
+    },
+  });
+
+  assert.deepEqual(result.errors, []);
+  assert.equal(calls, 1);
 });
 
 test("validation projects only reviewed passed and published selected entries", async (t) => {

@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { lstat, readdir, readFile } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { comparePaths, joinWithin, normalizeRelativePath } from "./paths.mjs";
 import { findStructuralDuplicates } from "./archify-signature.mjs";
@@ -42,6 +43,8 @@ const PRODUCT_PACKAGE_NAMES = Object.freeze({
   studio: "game-design-studio",
   career: "game-design-career",
 });
+const DEFAULT_REPO_ROOT = fileURLToPath(new URL("../..", import.meta.url));
+const VENDOR_MIRROR_MODULES = new Set(["archify", "im-not-ai"]);
 const SHARED_PACKAGE_MIRROR_MAPPINGS = Object.freeze([
   Object.freeze({
     id: "document-quality",
@@ -292,7 +295,7 @@ function validateSelectedState(entry, label, errors) {
   }
 }
 
-function packageMirrorMappingFor(entry, repoRoot) {
+function packageMirrorMappingFor(entry, vendorMirrorMappings = []) {
   const productName = PRODUCT_PACKAGE_NAMES[entry.product];
   if (productName === undefined || !isNonemptyString(entry.source_document)) return undefined;
   let sourceDocument;
@@ -310,23 +313,42 @@ function packageMirrorMappingFor(entry, repoRoot) {
       return { ...mapping, sourceDocument, suffix: packageRelative.slice(destinationPrefix.length) };
     }
   }
-  if (repoRoot === undefined) return undefined;
-  for (const [module, mappings] of Object.entries(vendorMappings({ repoRoot })).filter(([module]) => module !== "vendor")) {
-    for (const [sourceRoot, destinationRoot] of mappings) {
-      const destinationPrefix = `${destinationRoot}/`;
-      if (packageRelative.startsWith(destinationPrefix)) {
-        return {
-          id: module === "vendor" ? "skillstead" : module,
-          module,
-          sourceRoot,
-          destinationRoot,
-          sourceDocument,
-          suffix: packageRelative.slice(destinationPrefix.length),
-        };
-      }
+  for (const mapping of vendorMirrorMappings) {
+    const destinationPrefix = `${mapping.destinationRoot}/`;
+    if (packageRelative.startsWith(destinationPrefix)) {
+      return {
+        ...mapping,
+        sourceDocument,
+        suffix: packageRelative.slice(destinationPrefix.length),
+      };
     }
   }
   return undefined;
+}
+
+function hasVendorPackageMirror(entries) {
+  return entries.some((entry) => {
+    const productName = PRODUCT_PACKAGE_NAMES[entry?.product];
+    if (productName === undefined || !isNonemptyString(entry?.source_document)) return false;
+    const prefix = `plugins/${productName}/`;
+    return [...VENDOR_MIRROR_MODULES].some((module) => {
+      const destination = module === "archify" ? "skills/archify/" : "skills/humanize-korean/";
+      return entry.source_document.startsWith(`${prefix}${destination}`);
+    });
+  });
+}
+
+function resolveVendorMirrorMappings({ repoRoot, entries, resolveVendorMappings }) {
+  if (!hasVendorPackageMirror(entries)) return [];
+  const mappings = resolveVendorMappings({ repoRoot: repoRoot ?? DEFAULT_REPO_ROOT });
+  return Object.entries(mappings)
+    .filter(([module]) => VENDOR_MIRROR_MODULES.has(module))
+    .flatMap(([module, values]) => values.map(([sourceRoot, destinationRoot]) => ({
+      id: module,
+      module,
+      sourceRoot,
+      destinationRoot,
+    })));
 }
 
 function validateOriginSource(entry, mapping, label, errors) {
@@ -342,9 +364,9 @@ function validateOriginSource(entry, mapping, label, errors) {
   }
 }
 
-function validateExcludedEntry(entry, index, errors, seenIds, seenRecords, repoRoot) {
+function validateExcludedEntry(entry, index, errors, seenIds, seenRecords, vendorMirrorMappings) {
   const label = `entry[${index}]`;
-  const mapping = packageMirrorMappingFor(entry, repoRoot);
+  const mapping = packageMirrorMappingFor(entry, vendorMirrorMappings);
   if (!assertExactKeys(entry, mapping === undefined ? EXCLUDED_KEYS : EXCLUDED_ORIGIN_KEYS, label, errors)) return;
   validateCommonEntry(entry, label, errors, seenIds, seenRecords);
   if (entry.decision !== "excluded") errors.push(`${label}.decision must be excluded`);
@@ -385,8 +407,7 @@ async function assertRegularContained(repoRoot, relativePath, label, { required 
   return filename;
 }
 
-async function assertPackageMirrorOrigin(repoRoot, entry) {
-  const mapping = packageMirrorMappingFor(entry, repoRoot);
+async function assertPackageMirrorOrigin(repoRoot, entry, mapping) {
   if (mapping === undefined) return;
   const label = `entry ${entry.id}`;
   const product = await loadProductContract({ repoRoot, productName: PRODUCT_PACKAGE_NAMES[entry.product] });
@@ -471,7 +492,7 @@ export function publishableArchifyEntries(catalog) {
     && entry.visual_review === "passed");
 }
 
-export async function validateArchifyCatalog(catalog, { repoRoot } = {}) {
+export async function validateArchifyCatalog(catalog, { repoRoot, resolveVendorMappings = vendorMappings } = {}) {
   const errors = [];
   const uncovered = [];
   const specsById = new Map();
@@ -489,6 +510,13 @@ export async function validateArchifyCatalog(catalog, { repoRoot } = {}) {
     errors.push("catalog.entries must be an array");
     return { ok: false, errors, uncovered };
   }
+  let vendorMirrorMappings;
+  try {
+    vendorMirrorMappings = resolveVendorMirrorMappings({ repoRoot, entries: catalog.entries, resolveVendorMappings });
+  } catch (error) {
+    errors.push(error instanceof Error ? error.message : String(error));
+    vendorMirrorMappings = [];
+  }
   const seenIds = new Set();
   const seenRecords = new Set();
   const priorities = new Set();
@@ -498,7 +526,7 @@ export async function validateArchifyCatalog(catalog, { repoRoot } = {}) {
       continue;
     }
     if (entry.decision === "selected") validateSelectedEntry(entry, index, errors, seenIds, seenRecords, priorities);
-    else if (entry.decision === "excluded") validateExcludedEntry(entry, index, errors, seenIds, seenRecords, repoRoot);
+    else if (entry.decision === "excluded") validateExcludedEntry(entry, index, errors, seenIds, seenRecords, vendorMirrorMappings);
     else errors.push(`entry[${index}].decision is invalid`);
   }
   if (repoRoot !== undefined && errors.length === 0) {
@@ -529,9 +557,10 @@ export async function validateArchifyCatalog(catalog, { repoRoot } = {}) {
       } catch (error) {
         errors.push(error instanceof Error ? error.message : String(error));
       }
-      if (entry.decision === "excluded" && packageMirrorMappingFor(entry, repoRoot) !== undefined) {
+      const mapping = entry.decision === "excluded" ? packageMirrorMappingFor(entry, vendorMirrorMappings) : undefined;
+      if (mapping !== undefined) {
         try {
-          await assertPackageMirrorOrigin(repoRoot, entry);
+          await assertPackageMirrorOrigin(repoRoot, entry, mapping);
         } catch (error) {
           errors.push(error instanceof Error ? error.message : String(error));
         }
