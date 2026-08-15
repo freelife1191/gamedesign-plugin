@@ -407,7 +407,7 @@ $game-design-career:build-game-design-portfolio
 
 처음 사용하는 사람은 아래의 간단한 요청 표에서 목적에 맞는 문장을 골라 시작하세요. 세부 카드는 같은 작업을 반복하거나 경로를 직접 고정할 때 참고하면 됩니다.
 
-[![요청문에서 기획 결과와 다음 요청으로 이어지는 흐름](guides/assets/readme/prompt-to-result-flow.png)](guides/assets/readme/prompt-to-result-flow.svg)
+[![요청문에서 기획 결과와 다음 요청으로 이어지는 흐름](guides/assets/readme/prompt-to-result-flow.png?v=20260815-humanized-1)](guides/assets/readme/prompt-to-result-flow.svg)
 
 ### Studio 기획 사례 7개
 
