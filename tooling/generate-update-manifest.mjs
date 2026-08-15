@@ -54,9 +54,9 @@ export async function generateUpdateManifest({
   return expected;
 }
 
-if (process.argv.length > 2 && !(process.argv.length === 3 && process.argv[2] === "--check")) {
-  throw new Error("usage: node tooling/generate-update-manifest.mjs [--check]");
-}
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  if (process.argv.length > 2 && !(process.argv.length === 3 && process.argv[2] === "--check")) {
+    throw new Error("usage: node tooling/generate-update-manifest.mjs [--check]");
+  }
   await generateUpdateManifest({ check: process.argv[2] === "--check" });
 }

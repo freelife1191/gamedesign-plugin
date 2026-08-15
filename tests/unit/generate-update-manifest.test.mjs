@@ -1,10 +1,14 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { pathToFileURL } from "node:url";
 
 import { generateUpdateManifest } from "../../tooling/generate-update-manifest.mjs";
+
+const generatorUrl = pathToFileURL(path.resolve(import.meta.dirname, "../../tooling/generate-update-manifest.mjs")).href;
 
 const installed = Object.freeze([Object.freeze({
   id: "archify",
@@ -37,4 +41,27 @@ test("manifest check propagates an injected non-missing read failure", async () 
     }),
     (error) => error === denied,
   );
+});
+
+test("consumer process imports the manifest module with unrelated argv", () => {
+  const result = spawnSync(process.execPath, [
+    "--input-type=module",
+    "--eval",
+    `import ${JSON.stringify(generatorUrl)}; process.stdout.write("imported");`,
+    "consumer.mjs",
+    "--consumer-flag",
+  ], { encoding: "utf8" });
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout, "imported");
+});
+
+test("direct manifest CLI rejects invalid arguments", () => {
+  const result = spawnSync(process.execPath, [
+    path.resolve(import.meta.dirname, "../../tooling/generate-update-manifest.mjs"),
+    "--invalid",
+  ], { encoding: "utf8" });
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /usage: node tooling\/generate-update-manifest\.mjs \[--check\]/u);
 });
