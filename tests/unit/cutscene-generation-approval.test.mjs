@@ -86,6 +86,17 @@ function promptPackageFixture(plan = planFixture(), manifest = manifestFixture(p
   return { ...promptPackage, promptPackageSha256: digest(promptPackage) };
 }
 
+function promptPackageForWave(plan, manifest, waveId) {
+  const promptPackage = promptPackageFixture(plan, manifest);
+  const targetIndex = plan.cutsceneWorkflow.waves.findIndex((wave) => wave.id === waveId);
+  const requiredReferences = plan.cutsceneWorkflow.waves.slice(0, targetIndex).flatMap((wave) => wave.assetIds);
+  for (const assetId of requiredReferences) if (!promptPackage.references.some((reference) => reference.assetId === assetId)) {
+    promptPackage.references.push({ assetId, sha256: createHash("sha256").update(`fixture-reference:${assetId}`).digest("hex") });
+  }
+  promptPackage.promptPackageSha256 = digest(Object.fromEntries(Object.entries(promptPackage).filter(([key]) => key !== "promptPackageSha256")));
+  return promptPackage;
+}
+
 function markPredecessorsCompleted(plan, waveId) {
   const targetIndex = plan.cutsceneWorkflow.waves.findIndex(({ id }) => id === waveId);
   for (const wave of plan.cutsceneWorkflow.waves.slice(0, targetIndex)) {
@@ -138,11 +149,33 @@ const context = (binding, overrides = {}) => ({ ...approvalEvent(), now: "2026-0
 function stageFixture({ waveId = "style-master", retryReserve = 1, provider = "openai", ceilings, plan = planFixture(), completePredecessors = true } = {}) {
   if (completePredecessors) markPredecessorsCompleted(plan, waveId);
   const manifest = manifestBoundToPlan(plan);
-  const promptPackage = promptPackageFixture(plan, manifest);
+  const promptPackage = promptPackageForWave(plan, manifest, waveId);
   const pricingSnapshot = pricingSnapshotFixture({ provider });
   const assetIds = [...plan.cutsceneWorkflow.waves.find(({ id }) => id === waveId).assetIds].sort();
   const attemptCeilings = assetIds.map((assetId, index) => ({ assetId, maximumUsd: ceilings?.[index] ?? 0.4 }));
   const estimate = estimateCutsceneImageCost({ plan, promptPackage, manifest, waveId, pricingSnapshot, retryReserve, attemptCeilings });
+  const event = approvalEvent();
+  const issued = issueCutsceneHumanApproval({ ...event, decision: "approved", plan, promptPackage, manifest, pricingSnapshot, estimate });
+  return { waveId, selectedAssetIds: assetIds, plan, manifest, promptPackage, pricingSnapshot, estimate, approvalEvent: event, receipt: issued.receipt, capability: issued.capability, now: "2026-08-13T00:01:00.000Z", env: {}, apiKey: "sk-local-test", sleepFn: async () => {} };
+}
+
+async function materializedStageFixture({ artifactRoot, ...options }) {
+  const waveId = options.waveId ?? "style-master";
+  const plan = options.plan ?? planFixture();
+  if (options.completePredecessors !== false) markPredecessorsCompleted(plan, waveId);
+  const manifest = manifestBoundToPlan(plan);
+  const targetIndex = plan.cutsceneWorkflow.waves.findIndex((wave) => wave.id === waveId);
+  for (const sourceId of plan.cutsceneWorkflow.waves.slice(0, targetIndex).flatMap((wave) => wave.assetIds)) {
+    const source = manifest.assets.find((asset) => asset.asset_id === sourceId);
+    source.generation_state = "generated";
+    await mkdir(path.dirname(path.join(artifactRoot, source.output.path)), { recursive: true });
+    await writeFile(path.join(artifactRoot, source.output.path), validPng());
+  }
+  const promptPackage = await bindCutscenePromptPackage({ artifactRoot, plan, manifest });
+  const pricingSnapshot = pricingSnapshotFixture({ provider: options.provider ?? "openai" });
+  const assetIds = [...plan.cutsceneWorkflow.waves.find((wave) => wave.id === waveId).assetIds].sort();
+  const attemptCeilings = assetIds.map((assetId, index) => ({ assetId, maximumUsd: options.ceilings?.[index] ?? 0.4 }));
+  const estimate = estimateCutsceneImageCost({ plan, promptPackage, manifest, waveId, pricingSnapshot, retryReserve: options.retryReserve ?? 1, attemptCeilings });
   const event = approvalEvent();
   const issued = issueCutsceneHumanApproval({ ...event, decision: "approved", plan, promptPackage, manifest, pricingSnapshot, estimate });
   return { waveId, selectedAssetIds: assetIds, plan, manifest, promptPackage, pricingSnapshot, estimate, approvalEvent: event, receipt: issued.receipt, capability: issued.capability, now: "2026-08-13T00:01:00.000Z", env: {}, apiKey: "sk-local-test", sleepFn: async () => {} };
@@ -369,7 +402,7 @@ test("actual cost never invents cached usage", () => {
 test("v2 journal keeps a wave-global sequence across internal and explicit retries without resetting spent reserve", async (t) => {
   const artifactRoot = await mkdtemp(path.join(tmpdir(), "cutscene-journal-"));
   t.after(() => rm(artifactRoot, { recursive: true, force: true }));
-  const fixture = stageFixture({ waveId: "reference-masters", retryReserve: 2, ceilings: [0.3, 0.5] });
+  const fixture = await materializedStageFixture({ artifactRoot, waveId: "reference-masters", retryReserve: 2, ceilings: [0.3, 0.5] });
   assert.deepEqual(fixture.plan.cutsceneWorkflow.waves[0].completion, { kind: "completed", assetIds: [...fixture.plan.cutsceneWorkflow.waves[0].assetIds] });
   let calls = 0;
   const first = await runApprovedCutsceneImageWave({
@@ -408,7 +441,7 @@ test("v2 journal keeps a wave-global sequence across internal and explicit retri
 test("a retry rejects a changed full-wave estimate or pricing journal epoch before provider access and without writes", async (t) => {
   const artifactRoot = await mkdtemp(path.join(tmpdir(), "cutscene-retry-drift-"));
   t.after(() => rm(artifactRoot, { recursive: true, force: true }));
-  const fixture = stageFixture({ waveId: "reference-masters", retryReserve: 2, ceilings: [0.3, 0.5] });
+  const fixture = await materializedStageFixture({ artifactRoot, waveId: "reference-masters", retryReserve: 2, ceilings: [0.3, 0.5] });
   let firstCalls = 0;
   const first = await runApprovedCutsceneImageWave({
     ...fixture, artifactRoot, workspaceRoot: artifactRoot,
@@ -468,7 +501,7 @@ test("a retry rejects a changed full-wave estimate or pricing journal epoch befo
 test("a fresh named approval for the still-current full-wave retry preserves prior successes", async (t) => {
   const artifactRoot = await mkdtemp(path.join(tmpdir(), "cutscene-retry-current-"));
   t.after(() => rm(artifactRoot, { recursive: true, force: true }));
-  const fixture = stageFixture({ waveId: "reference-masters", retryReserve: 2, ceilings: [0.3, 0.5] });
+  const fixture = await materializedStageFixture({ artifactRoot, waveId: "reference-masters", retryReserve: 2, ceilings: [0.3, 0.5] });
   let firstCalls = 0;
   const first = await runApprovedCutsceneImageWave({
     ...fixture, artifactRoot, workspaceRoot: artifactRoot,
@@ -583,7 +616,7 @@ test("retry rejects an uncompleted predecessor before reading or changing the jo
 test("storyboard dispatch remains available when every predecessor has an exact completed asset set", async (t) => {
   const artifactRoot = await mkdtemp(path.join(tmpdir(), "cutscene-storyboard-complete-"));
   t.after(() => rm(artifactRoot, { recursive: true, force: true }));
-  const fixture = stageFixture({ waveId: "storyboard", ceilings: [0.4] });
+  const fixture = await materializedStageFixture({ artifactRoot, waveId: "storyboard", ceilings: [0.4] });
   for (const wave of fixture.plan.cutsceneWorkflow.waves.slice(0, 3)) {
     assert.equal(wave.state, "completed");
     assert.deepEqual(wave.completion, { kind: "completed", assetIds: [...wave.assetIds] });

@@ -167,7 +167,8 @@ Task self-consistency:
 - Task 5: complete — one scoped commit follows this ledger entry.
 - Task 6: complete — Fix rounds 1–5 are recorded above; see Task 6 completion evidence.
 - Task 7: source/docs complete — Korean How-to, exact inventories, lifecycle guides, humanize evidence, and the discovered Task 6→7 prompt-template integration repair are complete. Generated `plugins/*` snapshot refresh remains Task 8 ownership.
-- Task 8: implementation and final gates complete; independent scoped review pending.
+- Task 8: implementation and final gates complete; independent review correction
+  implemented and scoped rereview pending.
 
 - Task 8 final-gate closure: direct E2E/FD **28/28**, contracts **328/328**,
   products **421/421**, final build check Career 532 / Studio 544. Generic
@@ -229,6 +230,27 @@ Task self-consistency:
   JSON parses, and `git diff --check` pass.
 - Task 8 unit-contract closure remains pending independent final review; do
   not mark Task 8 final-complete from this progress update.
+
+- Task 8 independent review returned C0/I2/M2. The planner lacked actual wave
+  reference lineage, so paid reference-master requests did not consume the
+  bound style-master bytes. The report also overstated a global build count,
+  misstated the worker timeout, and used a nonportable URL pathname conversion.
+- Task 8 independent-review correction RED/GREEN: the planner now binds exact
+  ordered predecessor `reference_asset_ids`; E10 uses actual master bytes and
+  asserts ordered `/v1/images/edits` multipart SHA-256 evidence for initial and
+  failed-only retry requests; the secure loader rereads and rehashes the exact
+  file before every provider attempt while retaining nested rename-away
+  detection. The cutscene stage prepares its bounded generic receipt directory
+  before reference pinning, and the FD launcher uses `fileURLToPath`.
+- Correction validation: reviewer-focused 3/3, relevant 269/269, full contracts
+  328/328, and full products 421/421 pass. Final accepted snapshots are Career 532
+  (`e0a23b793eefabf4040f63eee66800ddef08a712b3277e58d355d6262c5aa7b0`)
+  and Studio 544
+  (`b8806fd7ea63b17272dedcfc3e7104cfd8942595251bb6964c52f5ca1716edbf`);
+  `npm run build -- --check`, 2 plugin validators, 47 skill validators,
+  three shared/product runtime parity checks, changed-module syntax,
+  BUILD-MANIFEST JSON parsing, and diff check pass. Task 8 remains pending
+  independent C0/I0/M0 rereview and is not self-approved here.
 
 ## Task 6 completion evidence
 

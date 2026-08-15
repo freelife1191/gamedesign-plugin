@@ -74,7 +74,7 @@ test("a valid re-bound prompt package with an old approval pair fails the exact 
 });
 
 test("valid-journal retry reserve stops before provider dispatch or any tree write", async (t) => {
-  const fixture = await makeFixture(t, { waveId: "reference-masters", retryReserve: 1 }); let request = 0;
+  const fixture = await makeFixture(t, { waveId: "reference-masters", retryReserve: 1, actualMasterBinding: true }); let request = 0;
   const initial = makeRuntime({ fetchFn: async () => { request += 1; if (request === 1) return imageResponse({ status: 500, requestId: "reserve-500" }); if (request === 2) return imageResponse({ requestId: "reserve-success" }); throw new Error("reserve transport failure"); } });
   const first = await runApprovedCutsceneImageWave({ ...generationInput(fixture.input), ...generationRuntime(initial) });
   const failedId = first.providerResult.failures[0].asset_id; const before = await snapshotArtifactTree(fixture.artifactRoot); const runtime = makeRuntime(); const authority = freshAuthority(fixture);
@@ -89,9 +89,15 @@ test("valid-journal retry reserve stops before provider dispatch or any tree wri
 });
 
 test("failed-only reference retry preserves the successful master state and sends only the failed target request", async (t) => {
-  const fixture = await makeFixture(t, { waveId: "reference-masters", retryReserve: 2 });
+  const fixture = await makeFixture(t, { waveId: "reference-masters", retryReserve: 2, actualMasterBinding: true });
   const [environmentId, propId] = fixture.input.selectedAssetIds;
   const byId = new Map(fixture.input.manifest.assets.map((asset) => [asset.asset_id, asset]));
+  const styleMasterId = fixture.input.plan.cutsceneWorkflow.waves[0].assetIds[0];
+  const styleMaster = byId.get(styleMasterId);
+  const styleMasterPath = `${fixture.artifactRoot}/${styleMaster.output.path}`;
+  const styleMasterBytes = await readFile(styleMasterPath);
+  const styleMasterSha256 = sha256(styleMasterBytes);
+  assert.deepEqual(fixture.input.promptPackage.references, [{ assetId: styleMasterId, sha256: styleMasterSha256 }]);
   for (const assetId of fixture.input.selectedAssetIds) {
     const asset = byId.get(assetId);
     asset.output = { ...asset.output, width: 1536, height: 1024, aspect_ratio: "3:2" };
@@ -106,26 +112,37 @@ test("failed-only reference retry preserves the successful master state and send
     plan: fixture.input.plan, promptPackage: fixture.input.promptPackage, manifest: fixture.input.manifest, waveId: fixture.input.waveId,
     pricingSnapshot: fixture.input.pricingSnapshot, selectedAssetIds: fixture.input.selectedAssetIds,
   });
-  assert.deepEqual(dispatch.requests.map(({ assetId, provider, model, quality, output }) => ({ assetId, provider, model, quality, output })), [
-    { assetId: environmentId, provider: "openai", model: "gpt-image-2", quality: "low", output: expectedEnvironmentTarget },
-    { assetId: propId, provider: "openai", model: "gpt-image-2", quality: "low", output: expectedPropTarget },
+  assert.deepEqual(dispatch.requests.map(({ assetId, provider, model, quality, output, request }) => ({ assetId, provider, model, quality, output, referenceDigests: request.referenceDigests })), [
+    { assetId: environmentId, provider: "openai", model: "gpt-image-2", quality: "low", output: expectedEnvironmentTarget, referenceDigests: [styleMasterSha256] },
+    { assetId: propId, provider: "openai", model: "gpt-image-2", quality: "low", output: expectedPropTarget, referenceDigests: [styleMasterSha256] },
   ]);
   const initialRequests = [];
-  const parseRequest = (endpoint, options) => ({ endpoint, method: options.method, body: JSON.parse(options.body) });
+  const parseRequest = async (endpoint, options) => ({
+    endpoint,
+    method: options.method,
+    body: options.body instanceof FormData ? {
+      model: options.body.get("model"), quality: options.body.get("quality"), prompt: options.body.get("prompt"), size: options.body.get("size"), n: options.body.get("n"),
+      images: await Promise.all(options.body.getAll("image[]").map(async (file) => ({ name: file.name, sha256: sha256(Buffer.from(await file.arrayBuffer())) }))),
+    } : JSON.parse(options.body),
+  });
   const initial = makeRuntime({ fetchFn: async (endpoint, options) => {
-    initialRequests.push(parseRequest(endpoint, options));
-    if (initialRequests.length === 1) return imageResponse({ status: 500, requestId: "retryable-500" });
-    if (initialRequests.length === 2) return imageResponse({ requestId: "recovered-success" });
-    throw new Error("transport failure");
+    initialRequests.push(await parseRequest(endpoint, options));
+    if (initialRequests.length === 1) return imageResponse({ status: 500, requestId: "environment-retryable-500" });
+    if (initialRequests.length === 2) return imageResponse({ requestId: "environment-success" });
+    throw new Error("prop transport failure");
   } });
   const first = await runApprovedCutsceneImageWave({ ...generationInput(fixture.input), ...generationRuntime(initial) });
+  const environmentPrompt = byId.get(environmentId).prompt;
+  const propPrompt = byId.get(propId).prompt;
+  const styleImage = [{ name: `${styleMasterId}.png`, sha256: styleMasterSha256 }];
   assert.deepEqual(initialRequests, [
-    { endpoint: "https://api.openai.com/v1/images/generations", method: "POST", body: { model: "gpt-image-2", quality: "low", prompt: "Cutscene asset: cutscene-escape-reference-master-environment-01\nPurpose: Cutscene asset cutscene-escape-reference-master-environment-01. Scene direction: A planned cutscene frame with continuity controls.\nPreserve: slot purpose and placement; Cutscene asset cutscene-escape-reference-master-environment-01.\nKeep camera direction, character state, environment landmarks, prop placement, lighting, and subtitle-safe space consistent.\nExclude: logo; watermark; unrequested text; third-party intellectual property; branded source identity", size: "1024x1024", n: 1 } },
-    { endpoint: "https://api.openai.com/v1/images/generations", method: "POST", body: { model: "gpt-image-2", quality: "low", prompt: "Cutscene asset: cutscene-escape-reference-master-environment-01\nPurpose: Cutscene asset cutscene-escape-reference-master-environment-01. Scene direction: A planned cutscene frame with continuity controls.\nPreserve: slot purpose and placement; Cutscene asset cutscene-escape-reference-master-environment-01.\nKeep camera direction, character state, environment landmarks, prop placement, lighting, and subtitle-safe space consistent.\nExclude: logo; watermark; unrequested text; third-party intellectual property; branded source identity", size: "1024x1024", n: 1 } },
-    { endpoint: "https://api.openai.com/v1/images/generations", method: "POST", body: { model: "gpt-image-2", quality: "low", prompt: "Cutscene asset: cutscene-escape-reference-master-prop-01\nPurpose: Cutscene asset cutscene-escape-reference-master-prop-01. Scene direction: A planned cutscene frame with continuity controls.\nPreserve: slot purpose and placement; Cutscene asset cutscene-escape-reference-master-prop-01.\nKeep camera direction, character state, environment landmarks, prop placement, lighting, and subtitle-safe space consistent.\nExclude: logo; watermark; unrequested text; third-party intellectual property; branded source identity", size: "1024x1024", n: 1 } },
+    { endpoint: "https://api.openai.com/v1/images/edits", method: "POST", body: { model: "gpt-image-2", quality: "low", prompt: environmentPrompt, size: "1024x1024", n: "1", images: styleImage } },
+    { endpoint: "https://api.openai.com/v1/images/edits", method: "POST", body: { model: "gpt-image-2", quality: "low", prompt: environmentPrompt, size: "1024x1024", n: "1", images: styleImage } },
+    { endpoint: "https://api.openai.com/v1/images/edits", method: "POST", body: { model: "gpt-image-2", quality: "low", prompt: propPrompt, size: "1024x1024", n: "1", images: styleImage } },
   ]);
   const succeededId = first.providerResult.results[0].asset_id; const failedId = first.providerResult.failures[0].asset_id;
   assert.equal(succeededId, environmentId); assert.equal(failedId, propId);
+  assert.equal(first.providerResult.failures[0].reason, "provider-request-failed");
   const successfulAssetBefore = structuredClone(first.manifest.assets.find((asset) => asset.asset_id === succeededId));
   const succeededOutput = successfulAssetBefore.planning.target_output.path;
   const successOutputSha256 = sha256(await readFile(`${fixture.artifactRoot}/${succeededOutput}`));
@@ -136,13 +153,13 @@ test("failed-only reference retry preserves the successful master state and send
   const authority = freshAuthority(fixture);
   const retried = await retryCutsceneFailedAssets({
     ...generationInput(fixture.input),
-    ...generationRuntime(makeRuntime({ fetchFn: async (endpoint, options) => { retryRequests.push(parseRequest(endpoint, options)); return imageResponse({ requestId: "failed-only-retry" }); } })),
+    ...generationRuntime(makeRuntime({ fetchFn: async (endpoint, options) => { retryRequests.push(await parseRequest(endpoint, options)); return imageResponse({ requestId: "failed-only-retry" }); } })),
     failedAssetIds: [failedId], ...authority, now: "2026-08-13T00:03:00.000Z",
   });
   const after = await snapshotArtifactTree(fixture.artifactRoot);
   const failedTarget = expectedPropTarget;
   assert.deepEqual(byId.get(failedId).planning.target_output, failedTarget);
-  assert.deepEqual(retryRequests, [{ endpoint: "https://api.openai.com/v1/images/generations", method: "POST", body: { model: "gpt-image-2", quality: "low", prompt: "Cutscene asset: cutscene-escape-reference-master-prop-01\nPurpose: Cutscene asset cutscene-escape-reference-master-prop-01. Scene direction: A planned cutscene frame with continuity controls.\nPreserve: slot purpose and placement; Cutscene asset cutscene-escape-reference-master-prop-01.\nKeep camera direction, character state, environment landmarks, prop placement, lighting, and subtitle-safe space consistent.\nExclude: logo; watermark; unrequested text; third-party intellectual property; branded source identity", size: "1024x1024", n: 1 } }]);
+  assert.deepEqual(retryRequests, [{ endpoint: "https://api.openai.com/v1/images/edits", method: "POST", body: { model: "gpt-image-2", quality: "low", prompt: propPrompt, size: "1024x1024", n: "1", images: styleImage } }]);
   const retriedAsset = retried.output.manifest.assets.find((asset) => asset.asset_id === failedId);
   assert.deepEqual(retriedAsset.output, failedTarget);
   assert.notDeepEqual(retriedAsset.output, byId.get(failedId).output);

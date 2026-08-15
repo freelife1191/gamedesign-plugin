@@ -285,6 +285,9 @@ async function runApprovedCutsceneImageWaveInternal(rawInput, explicitRetry = fa
     });
     executionDispatch = deepFreeze({ ...current.dispatch, manifest });
   }
+  if (executionDispatch.requests.some(({ request }) => request.referenceDigests.length > 0)) {
+    await ensureArtifactDirectories({ artifactRoot: currentInput.artifactRoot, directories: ["assets", "assets/receipts"] });
+  }
   const result = await runConfiguredSelectedImageAssetWorkflow({
     artifactRoot: currentInput.artifactRoot, dispatchSnapshot: executionDispatch, apiKey: currentInput.apiKey ?? currentInput.env?.OPENAI_API_KEY,
     fetchFn: currentInput.fetchFn, hostGenerate: currentInput.hostGenerate, beforeProvider, afterProvider, now: () => currentInput.now, sleepFn: currentInput.sleepFn,

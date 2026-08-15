@@ -245,6 +245,22 @@ test("generateOpenAIImages sends master-referenced gpt-image-2 jobs as ordered m
   assert.deepEqual(Buffer.from(await calls[0].options.body.getAll("image[]")[0].arrayBuffer()), png());
 });
 
+test("generateOpenAIImages revalidates the exact master file before every internal retry", async (t) => {
+  const root = await staging(t);
+  const masterPath = path.join(root, "assets", "generated", "hero-master.png");
+  await mkdir(path.dirname(masterPath), { recursive: true });
+  await writeFile(masterPath, png());
+  let calls = 0;
+  const result = await generateOpenAIImages({
+    jobs: [derivativeJob()], apiKey: key, model: "gpt-image-2", quality: "low", now, stagingRoot: root,
+    fetchFn: async () => { calls += 1; return response({ status: 500, body: { error: { type: "server_error" } } }); },
+    sleepFn: async () => { await writeFile(masterPath, png(1024, 1008)); },
+  });
+
+  assert.equal(calls, 1);
+  assert.deepEqual(result.failures, [{ asset_id: "hero-derivative", generation_state: "qa-failed", reason: "invalid-generation-reference", attempts: 1 }]);
+});
+
 test("generateOpenAIImages pins root-to-leaf identities and rejects deterministic root or parent swaps before provider delivery", async (t) => {
   for (const swap of ["root", "parent-symlink"]) {
     const root = await staging(t);

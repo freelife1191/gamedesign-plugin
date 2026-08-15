@@ -104,13 +104,34 @@ function cutsceneProfile(assetIds) {
   };
 }
 
-function cutsceneArtifact(cutsceneId, assetIds) {
+function cutsceneLineage(plan) {
+  const waves = new Map(plan.cutsceneWorkflow.waves.map((wave) => [wave.id, wave]));
+  const styleIds = waves.get("style-master").assetIds;
+  const referenceIds = waves.get("reference-masters").assetIds;
+  const keyframeIds = waves.get("keyframes").assetIds;
+  const storyboardIds = waves.get("storyboard").assetIds;
+  const keyframeByBeat = new Map(plan.beats.map((beat, index) => [beat.beatId, keyframeIds[index]]));
+  const lineage = new Map(styleIds.map((assetId) => [assetId, []]));
+  for (const assetId of referenceIds) lineage.set(assetId, [...styleIds]);
+  for (const assetId of keyframeIds) lineage.set(assetId, [...styleIds, ...referenceIds]);
+  for (const [index, assetId] of storyboardIds.entries()) {
+    const keyframeId = keyframeByBeat.get(plan.shots[index].beatId);
+    lineage.set(assetId, [...styleIds, ...referenceIds, ...(keyframeId ? [keyframeId] : [])]);
+  }
+  return { lineage, styleIds };
+}
+
+function cutsceneArtifact(plan) {
+  const assetIds = plan.cutsceneWorkflow.waves.flatMap((wave) => wave.assetIds);
+  const { lineage, styleIds } = cutsceneLineage(plan);
   return {
-    artifact_id: cutsceneId,
+    artifact_id: plan.cutsceneId,
     image_needs: assetIds.map((assetId) => ({
       slot_id: assetId, type: "story-storyboard", scene: "A planned cutscene frame with continuity controls.", subject: `Cutscene asset ${assetId}.`,
       composition: "Production storyboard framing with readable screen direction.", visual_style: "Original game-cinematic concept art.",
       readability: "The scene purpose, action, and continuity anchors remain readable.", width: 1024, height: 1024,
+      reference_asset_ids: lineage.get(assetId),
+      style_anchor_asset_ids: lineage.get(assetId).includes(styleIds[0]) ? [...styleIds] : [],
     })),
   };
 }
@@ -146,7 +167,7 @@ function templatePackage(plan, manifest) {
 
 function derivedBindings(plan) {
   const assetIds = plan.cutsceneWorkflow.waves.flatMap((wave) => wave.assetIds);
-  const general = buildImageAssetPlan({ artifact: cutsceneArtifact(plan.cutsceneId, assetIds), qualityProfile: cutsceneProfile(assetIds) });
+  const general = buildImageAssetPlan({ artifact: cutsceneArtifact(plan), qualityProfile: cutsceneProfile(assetIds) });
   const dagSha256 = hash(plan.cutsceneWorkflow.downstream);
   const planSha256 = cutsceneDocumentSha256(plan);
   return {
@@ -155,7 +176,7 @@ function derivedBindings(plan) {
     assets: general.manifest.assets.map((asset) => {
       const prompt = promptFor(asset);
       const promptSha256 = hash(prompt);
-      return { assetId: asset.asset_id, outputPath: asset.output.path, prompt, promptSha256, approvalBindingSha256: hash({ assetId: asset.asset_id, dagSha256, planSha256, promptSha256 }) };
+      return { assetId: asset.asset_id, outputPath: asset.output.path, referenceAssetIds: asset.reference_asset_ids, prompt, promptSha256, approvalBindingSha256: hash({ assetId: asset.asset_id, dagSha256, planSha256, promptSha256 }) };
     }),
   };
 }
@@ -168,7 +189,8 @@ function assertPlanDerivedBindings(plan, manifest) {
   const actual = new Map(manifest.assets.map((asset) => [asset.asset_id, asset]));
   for (const binding of expected.assets) {
     const asset = actual.get(binding.assetId);
-    if (!asset || asset.output?.path !== binding.outputPath || asset.prompt !== binding.prompt || asset.prompt_sha256 !== binding.promptSha256
+    if (!asset || asset.output?.path !== binding.outputPath || canonicalCutsceneDocument(asset.reference_asset_ids) !== canonicalCutsceneDocument(binding.referenceAssetIds)
+      || asset.prompt !== binding.prompt || asset.prompt_sha256 !== binding.promptSha256
       || asset.approval_binding_sha256 !== binding.approvalBindingSha256) throw new Error("Cutscene plan-derived binding mismatch.");
   }
 }
@@ -226,7 +248,7 @@ export function planCutsceneVisualPreproduction(input = {}) {
   const planValidation = validateCutsceneVisualPlan(plan);
   if (!planValidation.ok) throw new Error(`Invalid cutscene plan: ${planValidation.errors.map(({ code }) => code).join(", ")}`);
   const assetIds = plan.cutsceneWorkflow.waves.flatMap((wave) => wave.assetIds);
-  const general = buildImageAssetPlan({ artifact: cutsceneArtifact(plan.cutsceneId, assetIds), qualityProfile: cutsceneProfile(assetIds) });
+  const general = buildImageAssetPlan({ artifact: cutsceneArtifact(plan), qualityProfile: cutsceneProfile(assetIds) });
   const dagSha256 = hash(plan.cutsceneWorkflow.downstream);
   const planSha256 = cutsceneDocumentSha256(plan);
   const assets = general.manifest.assets.map((asset) => {

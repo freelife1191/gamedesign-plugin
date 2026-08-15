@@ -68,12 +68,18 @@ function pricingSnapshot(provider = "openai") {
   return { ...value, sha256: digest(value) };
 }
 
-function promptPackage(plan, manifest) {
+function promptPackage(plan, manifest, waveId) {
   const ids = plan.cutsceneWorkflow.waves.flatMap((wave) => wave.assetIds);
+  const targetIndex = plan.cutsceneWorkflow.waves.findIndex((wave) => wave.id === waveId);
+  const requiredReferences = plan.cutsceneWorkflow.waves.slice(0, targetIndex).flatMap((wave) => wave.assetIds);
   const assets = new Map(manifest.assets.map((asset) => [asset.asset_id, asset]));
+  const references = [{ assetId: ids[0], sha256: SHA }, { assetId: ids[1], sha256: "4".repeat(64) }];
+  for (const assetId of requiredReferences) if (!references.some((reference) => reference.assetId === assetId)) {
+    references.push({ assetId, sha256: createHash("sha256").update(`fixture-reference:${assetId}`).digest("hex") });
+  }
   const value = {
     kind: "generation-ready", cutsceneId: plan.cutsceneId, planSha256: digest(plan), dagSha256: digest(plan.cutsceneWorkflow.downstream),
-    references: [{ assetId: ids[0], sha256: SHA }, { assetId: ids[1], sha256: "4".repeat(64) }],
+    references,
     prompts: ids.map((assetId) => ({ assetId, prompt: assets.get(assetId).prompt, promptSha256: assets.get(assetId).prompt_sha256 })),
   };
   return { ...value, promptPackageSha256: digest(value) };
@@ -110,10 +116,15 @@ export async function makeFixture(t, { waveId = "style-master", retryReserve = 1
   if (completeAll) for (const wave of plan.cutsceneWorkflow.waves) { wave.state = "completed"; wave.completion = { kind: "completed", assetIds: [...wave.assetIds] }; }
   const manifest = bindManifest(plan, structuredClone(planned.manifest));
   if (actualMasterBinding) {
-    const master = manifest.assets[0]; master.generation_state = "generated";
-    await mkdir(path.dirname(path.join(artifactRoot, master.output.path)), { recursive: true }); await writeFile(path.join(artifactRoot, master.output.path), validPng());
+    const targetIndex = plan.cutsceneWorkflow.waves.findIndex((wave) => wave.id === waveId);
+    const sourceIds = plan.cutsceneWorkflow.waves.slice(0, targetIndex).flatMap((wave) => wave.assetIds);
+    if (sourceIds.length === 0) sourceIds.push(plan.cutsceneWorkflow.waves[0].assetIds[0]);
+    for (const sourceId of sourceIds) {
+      const master = manifest.assets.find((asset) => asset.asset_id === sourceId); master.generation_state = "generated";
+      await mkdir(path.dirname(path.join(artifactRoot, master.output.path)), { recursive: true }); await writeFile(path.join(artifactRoot, master.output.path), validPng());
+    }
   }
-  const packageValue = actualMasterBinding ? await bindCutscenePromptPackage({ artifactRoot, plan, manifest }) : promptPackage(plan, manifest); const pricing = pricingSnapshot();
+  const packageValue = actualMasterBinding ? await bindCutscenePromptPackage({ artifactRoot, plan, manifest }) : promptPackage(plan, manifest, waveId); const pricing = pricingSnapshot();
   const assetIds = [...plan.cutsceneWorkflow.waves.find((wave) => wave.id === waveId).assetIds].sort(compare);
   const estimate = estimateCutsceneImageCost({ plan, promptPackage: packageValue, manifest, waveId, pricingSnapshot: pricing, retryReserve, attemptCeilings: assetIds.map((assetId) => ({ assetId, maximumUsd: 0.4 })) });
   const approvalEvent = { eventId: `approve-${waveId}`, actor: "Kim", reviewer: "Kim", decidedAt: "2026-08-13T00:00:00.000Z" };
@@ -204,7 +215,7 @@ function parseEvidence(text, name) {
 
 export async function launchMutationEvidence(name, { tamper = "normal", orphanPidPath } = {}) {
   if (!MUTATIONS.includes(name)) throw harnessError("unknown-mutation");
-  const child = spawn(process.execPath, [new URL(import.meta.url).pathname, name, "--worker", tamper], { cwd: root, env: allowlistedEnvironment(orphanPidPath ? { CUTSCENE_MUTATION_ORPHAN_PID_PATH: orphanPidPath } : {}), detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe", "pipe"] });
+  const child = spawn(process.execPath, [fileURLToPath(import.meta.url), name, "--worker", tamper], { cwd: root, env: allowlistedEnvironment(orphanPidPath ? { CUTSCENE_MUTATION_ORPHAN_PID_PATH: orphanPidPath } : {}), detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe", "pipe"] });
   const evidence = []; const stdout = []; const stderr = []; let evidenceBytes = 0; let outputBytes = 0;
   return await new Promise((resolve, reject) => {
     let done = false; let closeTimer; let pendingReason;
@@ -224,7 +235,7 @@ export async function launchMutationEvidence(name, { tamper = "normal", orphanPi
 }
 
 if (process.argv[2] && process.argv[3] === "--worker") {
-  const fixture = await makeFixture(null, process.argv[2] === "retry-reserve" ? { waveId: "reference-masters", retryReserve: 1 } : process.argv[2] === "cost-cap" ? { retryReserve: 3 } : ["approval-binding", "reference-binding"].includes(process.argv[2]) ? { actualMasterBinding: true } : undefined);
+  const fixture = await makeFixture(null, process.argv[2] === "retry-reserve" ? { waveId: "reference-masters", retryReserve: 1, actualMasterBinding: true } : process.argv[2] === "cost-cap" ? { retryReserve: 3 } : ["approval-binding", "reference-binding"].includes(process.argv[2]) ? { actualMasterBinding: true } : undefined);
   const tamper = process.argv[4] ?? "normal";
   try {
     if (tamper === "inside-wrapper-unrelated-error") throw new TypeError("unrelated wrapper error");

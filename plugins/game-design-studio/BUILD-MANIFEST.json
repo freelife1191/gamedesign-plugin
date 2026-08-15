@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "255c9266ecc93666a7ef430b43359efe52421f3df2566b413e2bfcad5cf9c7c9",
+  "treeSha256": "b8806fd7ea63b17272dedcfc3e7104cfd8942595251bb6964c52f5ca1716edbf",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -1641,8 +1641,8 @@
     },
     {
       "path": "scripts/lib/image-reference-loader.mjs",
-      "sha256": "e571cfdc088b6a99450cffeed398b8368843980dcd4dae8da4121ea6c85116b3",
-      "size": 5954
+      "sha256": "6e4c98ddd04128b8bc0fb2aefcd683d744a3df264213442e67db1ce32fbca3cb",
+      "size": 7420
     },
     {
       "path": "scripts/lib/load-workspace-env.mjs",
@@ -1721,8 +1721,8 @@
     },
     {
       "path": "scripts/plan-cutscene-visual-preproduction.mjs",
-      "sha256": "e51e0efe36ba638d2e30174169e3955b09351ab2fb63c14cb496a67de90e7974",
-      "size": 20233
+      "sha256": "52502c9e0456ca04996e893c5840f7d35fe021df86b328cdc4ea6b6ba590699d",
+      "size": 21575
     },
     {
       "path": "scripts/quality-source-anchors.mjs",
@@ -1746,8 +1746,8 @@
     },
     {
       "path": "scripts/run-approved-cutscene-image-stage.mjs",
-      "sha256": "f8e44dc24021e2c91af47fd0feb3ba1931ef1ba7d990b63fa2b0bf167869b8b9",
-      "size": 28064
+      "sha256": "bf7fd989a3ff70cb7406268a6cc35bc3f7587284a8d7823c12760d9a9fc34bdc",
+      "size": 28289
     },
     {
       "path": "scripts/run-game-design-writing-polish.mjs",
