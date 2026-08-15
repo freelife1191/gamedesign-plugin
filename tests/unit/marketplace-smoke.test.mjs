@@ -540,19 +540,26 @@ for (const [kind, sample] of Object.entries(cliSamples)) {
   });
 }
 
-test("marketplace validator derives a clean manifest version and otherwise closes on 0.1.1", async () => {
+test("marketplace version preflight requires matching release manifests", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "marketplace-version-"));
   const sourceManifest = path.join(root, "products", product, "plugin", ".codex-plugin", "plugin.json");
   const snapshotManifest = path.join(root, "plugins", product, ".codex-plugin", "plugin.json");
   try {
     await Promise.all([mkdir(path.dirname(sourceManifest), { recursive: true }), mkdir(path.dirname(snapshotManifest), { recursive: true })]);
     await Promise.all([
-      writeFile(sourceManifest, JSON.stringify({ name: product, version: "0.1.2" })),
-      writeFile(snapshotManifest, JSON.stringify({ name: product, version: "0.1.2" })),
+      writeFile(sourceManifest, JSON.stringify({ name: product, version: "0.1.1" })),
+      writeFile(snapshotManifest, JSON.stringify({ name: product, version: "0.1.1" })),
     ]);
-    assert.equal(await resolveExpectedPluginVersion({ repoRoot: root, productName: product }), "0.1.2");
-    await writeFile(snapshotManifest, JSON.stringify({ name: product, version: "0.1.3" }));
     assert.equal(await resolveExpectedPluginVersion({ repoRoot: root, productName: product }), "0.1.1");
+    await writeFile(snapshotManifest, JSON.stringify({ name: product, version: "0.1.3" }));
+    await assert.rejects(resolveExpectedPluginVersion({ repoRoot: root, productName: product }), /marketplace version preflight failed/u);
+    await writeFile(snapshotManifest, "{");
+    await assert.rejects(resolveExpectedPluginVersion({ repoRoot: root, productName: product }), /marketplace version preflight failed/u);
+    await rm(snapshotManifest);
+    await assert.rejects(resolveExpectedPluginVersion({ repoRoot: root, productName: product }), /marketplace version preflight failed/u);
+    await writeFile(snapshotManifest, JSON.stringify({ name: product, version: "0.1.1" }));
+    await writeFile(sourceManifest, JSON.stringify({ name: product, version: "0.1.2" }));
+    await assert.rejects(resolveExpectedPluginVersion({ repoRoot: root, productName: product }), /marketplace version preflight failed/u);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 

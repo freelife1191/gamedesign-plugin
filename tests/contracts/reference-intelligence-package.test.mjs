@@ -73,6 +73,13 @@ async function writeJson(root, relativePath, value) {
   await writeText(root, relativePath, `${JSON.stringify(value, null, 2)}\n`);
 }
 
+async function writeVendorLock(root, { id, repository, tag, treeRoot }) {
+  await writeJson(root, `shared/vendor/${id}/vendor.lock.json`, {
+    upstream: { repository, tag, commit: "0".repeat(40) },
+    tree: { root: treeRoot },
+  });
+}
+
 async function buildFixture(t) {
   const temporaryRoot = await mkdtemp(path.join(tmpdir(), "reference-intelligence-package-"));
   t.after(() => rm(temporaryRoot, { recursive: true, force: true }));
@@ -95,6 +102,17 @@ async function buildFixture(t) {
   await writeText(repoRoot, "shared/templates/template.md", "template\n");
   await writeText(repoRoot, "shared/responsible-design/safety.md", "safety\n");
   await writeText(repoRoot, "shared/export/export.md", "export\n");
+  await Promise.all([
+    writeVendorLock(repoRoot, {
+      id: "skillstead", repository: "https://github.com/kyungseo/skillstead", tag: "svg-infographic/v0.9.0", treeRoot: "svg-infographic/0.9.0",
+    }),
+    writeVendorLock(repoRoot, {
+      id: "archify", repository: "https://github.com/tt-a1i/archify", tag: "v2.14.0", treeRoot: "archify/2.14.0",
+    }),
+    writeVendorLock(repoRoot, {
+      id: "im-not-ai", repository: "https://github.com/epoko77-ai/im-not-ai", tag: "v2.3.0", treeRoot: "humanize-korean/v2.3.0",
+    }),
+  ]);
   await writeText(repoRoot, "shared/vendor/skillstead/svg-infographic/0.9.0/SKILL.md", "vendor\n");
   await writeText(repoRoot, "shared/hooks/runtime.mjs", "export default {};\n");
   await writeText(repoRoot, "shared/scripts/check.mjs", "export default true;\n");

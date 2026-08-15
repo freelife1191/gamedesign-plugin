@@ -52,6 +52,18 @@ async function readJson(relativePath) {
   return JSON.parse(await readFile(path.join(repoRoot, relativePath), "utf8"));
 }
 
+test("shared contract documentation names all twelve modules and current SessionStart contract", async () => {
+  const documentation = await readFile(path.join(repoRoot, "shared/contracts/README.md"), "utf8");
+  const modules = [
+    "knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets", "memory", "reference-intelligence", "updates",
+  ];
+  const declared = documentation.match(/`(?:knowledge|templates|responsible-design|export|vendor|archify|im-not-ai|document-quality|image-assets|memory|reference-intelligence|updates)`/gu) ?? [];
+  assert.equal(new Set(declared.map((entry) => entry.slice(1, -1))).size, modules.length);
+  assert.match(documentation, /SessionStart는 `capability-probe\.mjs`, timeout `25`, status message `Detecting optional game-design and image capabilities`/u);
+  assert.match(documentation, /top-level output은 `hookSpecificOutput`, `capabilities`, `imageConfig`, `updates`, `warnings`/u);
+  assert.match(documentation, /`additionalContext`.*`capabilities`.*`imageConfig`.*`updates`/u);
+});
+
 async function mappedTreeFiles(sourceRoot, source, destination) {
   return (await collectTree(path.join(sourceRoot, source), { label: source }))
     .map(({ relativePath }) => `${destination}/${relativePath}`)
@@ -346,7 +358,7 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
     "plugins/game-design-career",
     "reserved destination",
     "matcher 없이",
-    "hookSpecificOutput`, `capabilities`, `warnings",
+    "hookSpecificOutput`, `capabilities`, `imageConfig`, `updates`, `warnings",
     "<!-- game-design-plugin:artifact {\"path\":\"<artifact-path>\",\"formats\":[]} -->",
   ]) {
     assert.match(contractReadme, new RegExp(requiredClause.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));

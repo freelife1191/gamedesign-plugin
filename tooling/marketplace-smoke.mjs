@@ -14,7 +14,8 @@ import { sha256 } from "./lib/hash.mjs";
 import { artifactTreeIdentity, runMarketplaceProof, validateRouteReceipt } from "./lib/marketplace-proof-harness.mjs";
 
 const MARKETPLACE = "game-design-suite";
-export const FALLBACK_PLUGIN_VERSION = "0.1.1";
+export const RELEASE_PLUGIN_VERSION = "0.1.1";
+const VERSION_PREFLIGHT_ERROR = "marketplace version preflight failed";
 export const PACKAGED_SKILL_COUNTS = Object.freeze({
   "game-design-career": 23,
   "game-design-studio": 24,
@@ -238,16 +239,18 @@ export async function resolveExpectedPluginVersion({ repoRoot, productName }) {
     ]);
     const sourceVersion = manifestVersion(safeJson(source, "source plugin manifest"), productName);
     const snapshotVersion = manifestVersion(safeJson(snapshot, "snapshot plugin manifest"), productName);
-    if (sourceVersion && sourceVersion === snapshotVersion) return sourceVersion;
+    if (sourceVersion === RELEASE_PLUGIN_VERSION && snapshotVersion === RELEASE_PLUGIN_VERSION && sourceVersion === snapshotVersion) {
+      return RELEASE_PLUGIN_VERSION;
+    }
   } catch {
-    // A dirty, incomplete, or invalid manifest must not weaken the smoke contract.
+    // Report one safe error without exposing a local path or malformed manifest bytes.
   }
-  return FALLBACK_PLUGIN_VERSION;
+  throw new Error(VERSION_PREFLIGHT_ERROR);
 }
 
-export function validateCliJson(kind, payload, { repoRoot, productName, cacheRoot, expectedVersion = FALLBACK_PLUGIN_VERSION }) {
+export function validateCliJson(kind, payload, { repoRoot, productName, cacheRoot, expectedVersion = RELEASE_PLUGIN_VERSION }) {
   const pluginId = `${productName}@${MARKETPLACE}`;
-  const version = /^\d+\.\d+\.\d+$/u.test(expectedVersion) ? expectedVersion : FALLBACK_PLUGIN_VERSION;
+  const version = expectedVersion;
   try {
     if (kind === "marketplaceAdd") {
       assertExactKeys(payload, ["marketplaceName", "installedRoot", "alreadyAdded"], kind);
@@ -654,6 +657,11 @@ export async function runMarketplaceSmoke({
   let productionStateUnchanged = false;
   try {
     await Promise.all([env.HOME, env.CODEX_HOME, env.TMPDIR].map((directory) => mkdir(directory, { recursive: true })));
+    const canonicalRepoRoot = path.resolve(repoRoot);
+    const expectedVersions = new Map(await Promise.all(PRODUCTS.map(async ({ name }) => [
+      name,
+      await resolveExpectedPluginVersion({ repoRoot: canonicalRepoRoot, productName: name }),
+    ])));
     const realCodexHome = process.env.CODEX_HOME ? path.resolve(process.env.CODEX_HOME) : path.join(homedir(), ".codex");
     const localAuth = path.join(realCodexHome, "auth.json");
     const localAuthStats = await lstat(localAuth).catch(() => null);
@@ -668,7 +676,6 @@ export async function runMarketplaceSmoke({
     await runStage({ product: null, stage: "plugin-install" }, async () => {
       await writeFile(isolatedValidator, await readFile(await validatorPath()));
     });
-    const canonicalRepoRoot = path.resolve(repoRoot);
     const marketplace = await runStage({ product: null, stage: "marketplace-add" }, () => {
       const result = run(codex, ["plugin", "marketplace", "add", canonicalRepoRoot, "--json"], { cwd: repoRoot, env, json: true });
       return validateCliJson("marketplaceAdd", result, { repoRoot: canonicalRepoRoot });
@@ -677,7 +684,8 @@ export async function runMarketplaceSmoke({
     for (const product of PRODUCTS) {
       const packagedSkillCount = PACKAGED_SKILL_COUNTS[product.name];
       if (!Number.isInteger(packagedSkillCount)) throw new Error("packaged skill inventory missing");
-      const expectedVersion = await resolveExpectedPluginVersion({ repoRoot: canonicalRepoRoot, productName: product.name });
+      const expectedVersion = expectedVersions.get(product.name);
+      if (expectedVersion !== RELEASE_PLUGIN_VERSION) throw new Error(VERSION_PREFLIGHT_ERROR);
       const added = await runStage({ product: product.name, stage: "plugin-install" }, () => run(
         codex, ["plugin", "add", `${product.name}@${MARKETPLACE}`, "--json"], { cwd: repoRoot, env, json: true },
       ));

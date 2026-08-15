@@ -88,8 +88,8 @@ const smartRequestGroupContracts = [
   },
 ];
 const expectedPluginTreeCounts = {
-  "game-design-studio": { agents: 12, skills: 24, templates: 15, scripts: 30 },
-  "game-design-career": { agents: 10, skills: 23, templates: 15, scripts: 30 },
+  "game-design-studio": { agents: 12, skills: 24, templates: 15, scripts: 32 },
+  "game-design-career": { agents: 10, skills: 23, templates: 15, scripts: 32 },
 };
 const sharedInstalledSkillIds = [
   "analyze-game-design-references",

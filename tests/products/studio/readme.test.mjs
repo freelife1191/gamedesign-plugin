@@ -815,6 +815,9 @@ test("README inventories the exact packaged runtime scripts and shared quality s
 test("root README describes both packaged quality-profile catalogs without source attribution claims", async () => {
   const readme = await readFile(path.join(repoRoot, "README.md"), "utf8");
   assert.deepEqual(tableIds(readme, "설치된 최상위 스크립트 (top-level scripts)", 3), topLevelScriptIds);
+  assert.match(readme, /Studio 생성본.*최상위 실행 스크립트 32개/u);
+  assert.match(readme, /Career 생성본.*최상위 실행 스크립트 32개/u);
+  assert.match(readme, /업데이트 검사 2개로 모두 32개/u);
   assert.deepEqual(tableIds(readme, "설치된 문서 품질 경로 (document-quality)", 3), documentQualityPaths);
   for (const contract of [
     /Studio 17개/u,
