@@ -546,12 +546,21 @@ test("marketplace version preflight requires matching release manifests", async 
   const snapshotManifest = path.join(root, "plugins", product, ".codex-plugin", "plugin.json");
   try {
     await Promise.all([mkdir(path.dirname(sourceManifest), { recursive: true }), mkdir(path.dirname(snapshotManifest), { recursive: true })]);
+    const manifest = JSON.parse(await readFile(path.join("products", product, "plugin", ".codex-plugin", "plugin.json"), "utf8"));
     await Promise.all([
-      writeFile(sourceManifest, JSON.stringify({ name: product, version: "0.1.1" })),
-      writeFile(snapshotManifest, JSON.stringify({ name: product, version: "0.1.1" })),
+      writeFile(sourceManifest, JSON.stringify(manifest)),
+      writeFile(snapshotManifest, JSON.stringify(manifest)),
     ]);
     assert.equal(await resolveExpectedPluginVersion({ repoRoot: root, productName: product }), "0.1.1");
-    await writeFile(snapshotManifest, JSON.stringify({ name: product, version: "0.1.3" }));
+    const missingDescription = structuredClone(manifest); delete missingDescription.description;
+    await writeFile(sourceManifest, JSON.stringify(missingDescription));
+    await assert.rejects(resolveExpectedPluginVersion({ repoRoot: root, productName: product }), /marketplace version preflight failed/u);
+    const wrongAuthor = structuredClone(manifest); wrongAuthor.author = "not-an-object";
+    await writeFile(sourceManifest, JSON.stringify(wrongAuthor));
+    await assert.rejects(resolveExpectedPluginVersion({ repoRoot: root, productName: product }), /marketplace version preflight failed/u);
+    await writeFile(sourceManifest, JSON.stringify(manifest));
+    const missingPrompt = structuredClone(manifest); delete missingPrompt.interface.defaultPrompt;
+    await writeFile(snapshotManifest, JSON.stringify(missingPrompt));
     await assert.rejects(resolveExpectedPluginVersion({ repoRoot: root, productName: product }), /marketplace version preflight failed/u);
     await writeFile(snapshotManifest, "{");
     await assert.rejects(resolveExpectedPluginVersion({ repoRoot: root, productName: product }), /marketplace version preflight failed/u);
@@ -560,6 +569,35 @@ test("marketplace version preflight requires matching release manifests", async 
     await writeFile(snapshotManifest, JSON.stringify({ name: product, version: "0.1.1" }));
     await writeFile(sourceManifest, JSON.stringify({ name: product, version: "0.1.2" }));
     await assert.rejects(resolveExpectedPluginVersion({ repoRoot: root, productName: product }), /marketplace version preflight failed/u);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("marketplace preflight rejects a corrupt product manifest before executable lookup", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "marketplace-preflight-"));
+  let executableLookups = 0;
+  try {
+    for (const productName of ["game-design-career", "game-design-studio"]) {
+      const manifest = JSON.parse(await readFile(path.join("products", productName, "plugin", ".codex-plugin", "plugin.json"), "utf8"));
+      for (const relative of [
+        path.join("products", productName, "plugin", ".codex-plugin", "plugin.json"),
+        path.join("plugins", productName, ".codex-plugin", "plugin.json"),
+      ]) {
+        const target = path.join(root, relative);
+        await mkdir(path.dirname(target), { recursive: true });
+        await writeFile(target, JSON.stringify(manifest));
+      }
+    }
+    const corrupt = JSON.parse(await readFile(path.join(root, "products", "game-design-career", "plugin", ".codex-plugin", "plugin.json"), "utf8"));
+    delete corrupt.interface;
+    await writeFile(path.join(root, "products", "game-design-career", "plugin", ".codex-plugin", "plugin.json"), JSON.stringify(corrupt));
+    const result = await marketplaceSmoke.runMarketplaceSmoke({
+      repoRoot: root,
+      tempParent: root,
+      findExecutableImpl: () => { executableLookups += 1; throw new Error("executable lookup must not run"); },
+    });
+    assert.equal(result.status, "INCOMPLETE");
+    assert.deepEqual(result.failure, { code: "command-failed", product: null, stage: "command" });
+    assert.equal(executableLookups, 0);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 

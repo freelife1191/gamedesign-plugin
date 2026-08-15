@@ -52,13 +52,22 @@ async function readJson(relativePath) {
   return JSON.parse(await readFile(path.join(repoRoot, relativePath), "utf8"));
 }
 
-test("shared contract documentation names all twelve modules and current SessionStart contract", async () => {
+test("shared contract documentation has the exact twelve-module mapping and current SessionStart contract", async () => {
   const documentation = await readFile(path.join(repoRoot, "shared/contracts/README.md"), "utf8");
   const modules = [
     "knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets", "memory", "reference-intelligence", "updates",
   ];
-  const declared = documentation.match(/`(?:knowledge|templates|responsible-design|export|vendor|archify|im-not-ai|document-quality|image-assets|memory|reference-intelligence|updates)`/gu) ?? [];
-  assert.equal(new Set(declared.map((entry) => entry.slice(1, -1))).size, modules.length);
+  const table = documentation.slice(documentation.indexOf("| Module | Source | Built destination |"), documentation.indexOf("Product files do not silently override shared files."));
+  const rows = table.split("\n").slice(2).filter((line) => line.startsWith("| "))
+    .map((line) => line.split("|").slice(1, -1).map((cell) => cell.trim()));
+  assert.deepEqual(rows.map(([module]) => module?.replaceAll("`", "")), modules);
+  assert.equal(rows.length, modules.length);
+  for (const [module, source, destination] of rows) {
+    assert.match(source, /^`shared\//u, `${module} source`);
+    assert.match(destination, /^`(?:references\/shared|assets\/shared|skills\/)/u, `${module} destination`);
+  }
+  assert.deepEqual(rows.find(([module]) => module === "`document-quality`"), ["`document-quality`", "`shared/document-quality/`", "`references/shared/document-quality/`"]);
+  assert.deepEqual(rows.find(([module]) => module === "`image-assets`"), ["`image-assets`", "`shared/image-assets/`", "`references/shared/image-assets/`"]);
   assert.match(documentation, /SessionStart는 `capability-probe\.mjs`, timeout `25`, status message `Detecting optional game-design and image capabilities`/u);
   assert.match(documentation, /top-level output은 `hookSpecificOutput`, `capabilities`, `imageConfig`, `updates`, `warnings`/u);
   assert.match(documentation, /`additionalContext`.*`capabilities`.*`imageConfig`.*`updates`/u);

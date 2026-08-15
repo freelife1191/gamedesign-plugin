@@ -225,9 +225,24 @@ function mismatch(kind) {
 }
 
 function manifestVersion(manifest, productName) {
-  if (!manifest || typeof manifest !== "object" || Array.isArray(manifest)
-      || manifest.name !== productName || typeof manifest.version !== "string"
-      || !/^\d+\.\d+\.\d+$/u.test(manifest.version)) return null;
+  const isObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+  const hasExactKeys = (value, keys) => isObject(value)
+    && JSON.stringify(Object.keys(value).sort()) === JSON.stringify([...keys].sort());
+  const nonEmptyString = (value) => typeof value === "string" && value.trim().length > 0;
+  const interfaceKeys = ["displayName", "shortDescription", "longDescription", "developerName", "category", "capabilities", "defaultPrompt"];
+  const brandKeys = ["brandColor", "composerIcon", "logo"];
+  if (!hasExactKeys(manifest, ["author", "description", "interface", "name", "skills", "version"])
+      || manifest.name !== productName || manifest.version !== RELEASE_PLUGIN_VERSION
+      || !nonEmptyString(manifest.description) || !hasExactKeys(manifest.author, ["name"])
+      || !nonEmptyString(manifest.author.name) || manifest.skills !== "./skills/" || !isObject(manifest.interface)) return null;
+  const hasBranding = brandKeys.every((key) => Object.hasOwn(manifest.interface, key));
+  if (!hasExactKeys(manifest.interface, hasBranding ? [...interfaceKeys, ...brandKeys] : interfaceKeys)
+      || interfaceKeys.slice(0, 5).some((key) => !nonEmptyString(manifest.interface[key]))
+      || !Array.isArray(manifest.interface.capabilities) || manifest.interface.capabilities.some((value) => !nonEmptyString(value))
+      || !Array.isArray(manifest.interface.defaultPrompt) || manifest.interface.defaultPrompt.length < 1 || manifest.interface.defaultPrompt.length > 3
+      || manifest.interface.defaultPrompt.some((value) => !nonEmptyString(value) || value.length > 128)
+      || (hasBranding && (!/^#[0-9a-f]{6}$/iu.test(manifest.interface.brandColor)
+        || manifest.interface.composerIcon !== "./assets/product-mark.svg" || manifest.interface.logo !== "./assets/product-mark.svg"))) return null;
   return manifest.version;
 }
 
@@ -237,9 +252,12 @@ export async function resolveExpectedPluginVersion({ repoRoot, productName }) {
       readFile(path.join(repoRoot, "products", productName, "plugin", ".codex-plugin", "plugin.json"), "utf8"),
       readFile(path.join(repoRoot, "plugins", productName, ".codex-plugin", "plugin.json"), "utf8"),
     ]);
-    const sourceVersion = manifestVersion(safeJson(source, "source plugin manifest"), productName);
-    const snapshotVersion = manifestVersion(safeJson(snapshot, "snapshot plugin manifest"), productName);
-    if (sourceVersion === RELEASE_PLUGIN_VERSION && snapshotVersion === RELEASE_PLUGIN_VERSION && sourceVersion === snapshotVersion) {
+    const sourceManifest = safeJson(source, "source plugin manifest");
+    const snapshotManifest = safeJson(snapshot, "snapshot plugin manifest");
+    const sourceVersion = manifestVersion(sourceManifest, productName);
+    const snapshotVersion = manifestVersion(snapshotManifest, productName);
+    if (sourceVersion === RELEASE_PLUGIN_VERSION && snapshotVersion === RELEASE_PLUGIN_VERSION
+        && sourceVersion === snapshotVersion && JSON.stringify(sourceManifest) === JSON.stringify(snapshotManifest)) {
       return RELEASE_PLUGIN_VERSION;
     }
   } catch {
@@ -644,6 +662,7 @@ function isolatedEnvironment(registration) {
 export async function runMarketplaceSmoke({
   repoRoot = fileURLToPath(new URL("..", import.meta.url)),
   tempParent = tmpdir(),
+  findExecutableImpl = findExecutable,
 } = {}) {
   const before = await fingerprintProductionState();
   const registration = await createGuardedTempRoot({ parent: tempParent, prefix: "game-design-marketplace-" });
@@ -669,8 +688,8 @@ export async function runMarketplaceSmoke({
       ({ authSource } = await bridgeLocalAuth({ source: localAuth, destination: path.join(env.CODEX_HOME, "auth.json") }));
       delete env.OPENAI_API_KEY;
     }
-    const codex = await runStage({ product: null, stage: "plugin-install" }, () => findExecutable("codex"));
-    const python = await runStage({ product: null, stage: "plugin-install" }, () => findExecutable("python3"));
+    const codex = await runStage({ product: null, stage: "plugin-install" }, () => findExecutableImpl("codex"));
+    const python = await runStage({ product: null, stage: "plugin-install" }, () => findExecutableImpl("python3"));
     const trustedShellPaths = await findTrustedShells();
     const proofIdentity = await captureFileIdentity(PROOF_HARNESS_PATH);
     await runStage({ product: null, stage: "plugin-install" }, async () => {

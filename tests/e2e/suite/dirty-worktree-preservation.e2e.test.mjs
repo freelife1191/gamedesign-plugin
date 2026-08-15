@@ -14,7 +14,7 @@ import { runGameDesignWritingPolish } from "../../../shared/scripts/run-game-des
 import { verifyDiagramSkillVendor } from "../../../tooling/sync-diagram-skills.mjs";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
-const archifyCli = path.join(repoRoot, "shared/vendor/archify/archify/2.13.0/bin/archify.mjs");
+const archifyCli = path.join(repoRoot, "shared/vendor/archify/archify/2.14.0/bin/archify.mjs");
 
 function sha256(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
@@ -249,8 +249,8 @@ test("public vendor verifier rejects a tampered Archify runtime closure", async 
   const vendorRoot = path.join(root, "archify");
   await cp(path.join(repoRoot, "shared/vendor/archify"), vendorRoot, { recursive: true });
   await writeFile(
-    path.join(vendorRoot, "archify/2.13.0/bin/archify.mjs"),
-    `${await readFile(path.join(vendorRoot, "archify/2.13.0/bin/archify.mjs"), "utf8")}\n// hostile byte mutation\n`,
+    path.join(vendorRoot, "archify/2.14.0/bin/archify.mjs"),
+    `${await readFile(path.join(vendorRoot, "archify/2.14.0/bin/archify.mjs"), "utf8")}\n// hostile byte mutation\n`,
   );
 
   await assert.rejects(

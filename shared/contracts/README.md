@@ -39,16 +39,15 @@ Studio와 Career는 `sourceDocumentCategories`에 `career`, `fun-intent`, `syste
 | `vendor` | `shared/vendor/skillstead/svg-infographic/0.9.0/` | `skills/svg-infographic/` |
 | `archify` | `shared/vendor/archify/archify/2.14.0/` | `skills/archify/` |
 | `im-not-ai` | `shared/vendor/im-not-ai/humanize-korean/v2.3.0/` | `skills/humanize-korean/` |
+| `document-quality` | `shared/document-quality/` | `references/shared/document-quality/` |
+| `image-assets` | `shared/image-assets/` | `references/shared/image-assets/` |
 | `memory` | `shared/memory/skills/`, `shared/memory/schema/`, `shared/memory/references/`, `shared/memory/templates/` | `skills/`, `references/shared/memory/schema/`, `references/shared/memory/references/`, `references/shared/memory/templates/` |
 | `reference-intelligence` | `shared/reference-intelligence/skills/`, `shared/reference-intelligence/schema/`, `shared/reference-intelligence/catalog/`, `shared/reference-intelligence/references/`, `shared/reference-intelligence/templates/` | `skills/`, `references/shared/reference-intelligence/schema/`, `references/shared/reference-intelligence/catalog/`, `references/shared/reference-intelligence/references/`, `references/shared/reference-intelligence/templates/` |
 | `updates` | `shared/updates/` | `references/shared/updates/` |
-| shared runtime | `shared/hooks/`, `shared/scripts/` | `hooks/`, `scripts/` |
-| indexed source | selected `docs/**` | `references/source/docs/**` |
-| product overlay | each `sourceRoots` tree | package root |
 
-Product files do not silently override shared files. 동일 destination에 같은 bytes가 들어오면 하나로 합치고, bytes가 다르거나 file/directory collision이 있으면 build를 거부한다. 모든 입력 경로는 NFC 정규화 상대 경로여야 하며 symlink와 root 탈출은 허용하지 않는다.
+12개 module 외에도 shared runtime `shared/hooks/`, `shared/scripts/`는 각각 `hooks/`, `scripts/`로, 선택된 `docs/**`는 `references/source/docs/**`로, product overlay는 package root로 복사한다. Product files do not silently override shared files. 동일 destination에 같은 bytes가 들어오면 하나로 합치고, bytes가 다르거나 file/directory collision이 있으면 build를 거부한다. 모든 입력 경로는 NFC 정규화 상대 경로여야 하며 symlink와 root 탈출은 허용하지 않는다.
 
-`hooks/**`, `scripts/**`, `references/shared/knowledge/**`, `assets/shared/templates/**`, `references/shared/responsible-design/**`, `references/shared/export/**`, `references/shared/memory/**`, `references/shared/reference-intelligence/**`, `references/shared/updates/**`, `skills/svg-infographic/**`, `skills/archify/**`, `skills/humanize-korean/**`, `references/source/docs/**`는 reserved destination이다. 각 built subtree는 위 표의 production source tree 또는 선택된 reference index와 정확히 일치해야 하며 product overlay가 파일을 추가하거나 바꿀 수 없다. `skills/svg-infographic/**`는 Skillstead lock의 55개 path와 정확히 일치한다. 각 vendor의 lock과 third-party notice는 고정 검증·귀속 입력이며 vendor subtree destination에 스스로 복사되지 않는다.
+`hooks/**`, `scripts/**`, `references/shared/knowledge/**`, `assets/shared/templates/**`, `references/shared/responsible-design/**`, `references/shared/export/**`, `references/shared/document-quality/**`, `references/shared/image-assets/**`, `references/shared/memory/**`, `references/shared/reference-intelligence/**`, `references/shared/updates/**`, `skills/svg-infographic/**`, `skills/archify/**`, `skills/humanize-korean/**`, `references/source/docs/**`는 reserved destination이다. 각 built subtree는 위 표의 production source tree 또는 선택된 reference index와 정확히 일치해야 하며 product overlay가 파일을 추가하거나 바꿀 수 없다. `skills/svg-infographic/**`는 Skillstead lock의 55개 path와 정확히 일치한다. 각 vendor의 lock과 third-party notice는 고정 검증·귀속 입력이며 vendor subtree destination에 스스로 복사되지 않는다.
 
 `buildProduct({ repoRoot, productName, stagingRoot, sourceDateEpoch })`는 destination path 정렬, 파일 mode `0644`, 디렉터리 mode `0755`, 고정 timestamp, 정렬된 파일 목록 및 SHA-256으로 재현 가능한 결과를 만든다. 동일 입력과 `sourceDateEpoch`은 동일 파일 목록·bytes·hash를 산출해야 한다.
 

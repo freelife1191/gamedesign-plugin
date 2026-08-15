@@ -20,7 +20,7 @@ test("each generated plugin passes a standalone byte- and process-verified smoke
     assert.equal(result.skillCount, result.name === "game-design-studio" ? 24 : 23);
     assert.deepEqual(result.vendorFiles, [
       { name: "skillstead", files: 55 },
-      { name: "archify", files: 60 },
+      { name: "archify", files: 62 },
     ]);
     assert.deepEqual(result.hooks, ["SessionStart", "Stop"]);
     assert.deepEqual(result.validation, { ok: true, requestedFormats: ["md"] });
