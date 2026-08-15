@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { link, lstat, mkdtemp, mkdir, open, readFile, readdir, rename, rmdir as fsRmdir, rm, symlink, unlink, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -132,6 +133,33 @@ function deferred() {
   let resolve;
   const promise = new Promise((next) => { resolve = next; });
   return { promise, resolve };
+}
+
+function recoveryTarget({ owner, createdAt }) {
+  return createHash("sha256").update(`${owner}\0${createdAt}`, "utf8").digest("hex");
+}
+
+function recoveryPaths(lockPath, generation) {
+  const targetId = recoveryTarget(generation);
+  const prefix = `${lockPath}.recovery.v1.${targetId}`;
+  return {
+    targetId,
+    claim: (sequence) => `${prefix}.claim.${sequence}`,
+    abort: (sequence) => `${prefix}.abort.${sequence}`,
+    retired: `${prefix}.retired`,
+  };
+}
+
+async function writeRecoveryRecord(recordPath, record) {
+  await writeFile(recordPath, `${JSON.stringify(record)}\n`, { mode: 0o600 });
+}
+
+function claimRecord(generation, targetId, sequence, claimant, claimedAt = new Date().toISOString()) {
+  return { schemaVersion: 1, targetId, sequence, owner: generation.owner, createdAt: generation.createdAt, claimant, claimedAt };
+}
+
+function abortRecord(generation, targetId, sequence, claimant, abortedAt = new Date().toISOString()) {
+  return { schemaVersion: 1, targetId, sequence, owner: generation.owner, createdAt: generation.createdAt, claimant, abortedAt };
 }
 
 test("uses the documented OS cache location without exposing it in results", () => {
@@ -497,63 +525,38 @@ test("staging cleanup preserves an externally swapped canonical lock tree", asyn
   assert.deepEqual(await readdir(path.dirname(cachePath)), [path.basename(lockPath)]);
 });
 
-for (const [faultPoint, faults] of [
-  ["staging rename", {
-    rename: async (from, to) => {
-      if (from.includes(".staging.")) throw Object.assign(new Error("injected staging rename interruption"), { code: "EIO" });
-      return rename(from, to);
+test("normal lock retains its owner anchor until the holder releases", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  const cachePath = resolveUpdateCachePath({ env: {}, home, platform: process.platform });
+  const lockPath = `${cachePath}.lock`;
+  const published = deferred();
+  const resume = deferred();
+  let ownerAnchor;
+  const checking = checkGameDesignUpdates({
+    pluginRoot,
+    home,
+    now: Date.parse(CHECKED_AT),
+    fetchFn: checkingFetch([]),
+    fsOps: {
+      link: async (from, to) => {
+        await link(from, to);
+        ownerAnchor = from;
+        published.resolve();
+        await resume.promise;
+      },
     },
-  }],
-  ["cleanup unlink", {
-    unlink: async (filePath) => {
-      if (filePath.includes(".staging.")) throw Object.assign(new Error("injected cleanup unlink interruption"), { code: "EIO" });
-      return unlink(filePath);
-    },
-  }],
-]) {
-  test(`preserves a live task-owned hard-link pair after ${faultPoint} interruption`, async (t) => {
-    const { pluginRoot, home } = await fixture(t);
-    const cachePath = resolveUpdateCachePath({ env: {}, home, platform: process.platform });
-    const lockPath = `${cachePath}.lock`;
-    const calls = [];
-
-    const interrupted = await checkGameDesignUpdates({
-      pluginRoot,
-      home,
-      now: Date.parse(CHECKED_AT),
-      fetchFn: checkingFetch(calls),
-      fsOps: faults,
-    });
-
-    // Catches a mutation that treats a live nlink=2 publication as stale crash residue.
-    assert.equal(interrupted.status, "current");
-    assert.equal(interrupted.cache, "miss");
-    assert.equal(calls.length, 3);
-    const interruptedEntries = await readdir(path.dirname(cachePath));
-    const siblingName = interruptedEntries.find((name) => name.startsWith(`${path.basename(lockPath)}.staging.`));
-    assert.deepEqual(interruptedEntries.sort(), [path.basename(cachePath), path.basename(lockPath), siblingName].sort());
-    assert.equal(typeof siblingName, "string");
-    const canonicalBefore = await lstat(lockPath);
-    const siblingBefore = await lstat(path.join(path.dirname(cachePath), siblingName));
-    assert.equal(canonicalBefore.isFile(), true);
-    assert.equal(siblingBefore.isFile(), true);
-    assert.equal(canonicalBefore.dev, siblingBefore.dev);
-    assert.equal(canonicalBefore.ino, siblingBefore.ino);
-    assert.equal(canonicalBefore.nlink, 2);
-    assert.equal(siblingBefore.nlink, 2);
-
-    const contenderCalls = [];
-    const contender = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(contenderCalls) });
-
-    assert.equal(contender.status, "current");
-    assert.equal(contender.cache, "hit");
-    assert.equal(contenderCalls.length, 0);
-    const canonicalAfter = await lstat(lockPath);
-    assert.equal(canonicalAfter.isFile(), true);
-    assert.equal(canonicalAfter.nlink, 2);
-    assert.deepEqual((await readdir(path.dirname(cachePath))).sort(), [path.basename(cachePath), path.basename(lockPath), siblingName].sort());
   });
-}
+  await published.promise;
+  const canonical = await lstat(lockPath);
+  const anchor = await lstat(ownerAnchor);
+  assert.equal(canonical.nlink, 2);
+  assert.equal(anchor.nlink, 2);
+  assert.equal(canonical.ino, anchor.ino);
+  resume.resolve();
+  await checking;
+  await assert.rejects(lstat(lockPath), { code: "ENOENT" });
+  await assert.rejects(lstat(ownerAnchor), { code: "ENOENT" });
+});
 
 test("reclaims an interrupted hard-link publication only after stale owner death is proven", async (t) => {
   const { pluginRoot, home } = await fixture(t);
@@ -573,8 +576,8 @@ test("reclaims an interrupted hard-link publication only after stale owner death
   assert.equal(result.status, "current");
   assert.equal(calls.length, 3);
   await assert.rejects(lstat(lockPath), { code: "ENOENT" });
-  await assert.rejects(lstat(stagingPath), { code: "ENOENT" });
-  assert.deepEqual((await readdir(path.dirname(cachePath))).filter((name) => !name.includes(".recovery.")).sort(), [path.basename(cachePath)]);
+  assert.equal((await lstat(stagingPath)).nlink, 2);
+  assert.equal((await readdir(path.dirname(cachePath))).some((name) => name.endsWith(".retired")), true);
 });
 
 test("a contender never normalizes a live winner between link publication and cleanup", async (t) => {
@@ -801,6 +804,230 @@ test("a stale recovery contender cannot move a fresh publisher into its release 
     assert.equal((await lstat(lockPath)).isFile(), true);
   }
   assert.equal((await readdir(path.dirname(cachePath))).some((name) => name.includes(".release.")), false);
+});
+
+test("numeric-sorts recovery claims so an unsorted active latest claim blocks recovery", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  const lockPath = await writeFileLock({ home, createdAt: new Date(Date.now() - 120_000).toISOString() });
+  const generation = { owner: "game-design-update-check:99999999-test-owner", createdAt: JSON.parse(await readFile(lockPath, "utf8")).createdAt };
+  const paths = recoveryPaths(lockPath, generation);
+  await writeRecoveryRecord(paths.claim(1), claimRecord(generation, paths.targetId, 1, "game-design-update-check:99999998-earlier"));
+  await writeRecoveryRecord(paths.abort(1), abortRecord(generation, paths.targetId, 1, "game-design-update-check:99999998-earlier"));
+  await writeRecoveryRecord(paths.claim(2), claimRecord(generation, paths.targetId, 2, `game-design-update-check:${process.pid}-active`));
+  const calls = [];
+
+  const result = await checkGameDesignUpdates({
+    pluginRoot,
+    home,
+    now: Date.parse(CHECKED_AT),
+    fetchFn: checkingFetch(calls),
+    fsOps: { readdir: async (directory) => (await readdir(directory)).reverse() },
+  });
+
+  assert.deepEqual(result, expectedUnknownResult());
+  assert.equal(calls.length, 0);
+  assert.deepEqual(
+    (await readdir(path.dirname(lockPath))).filter((name) => name.startsWith(`${path.basename(lockPath)}.recovery.`)).sort(),
+    [path.basename(paths.claim(1)), path.basename(paths.abort(1)), path.basename(paths.claim(2))].sort(),
+  );
+});
+
+test("resumes from a retired hard-link by unlinking only the old canonical", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  const lockPath = await writeFileLock({ home, createdAt: new Date(Date.now() - 120_000).toISOString() });
+  const generation = { owner: "game-design-update-check:99999999-test-owner", createdAt: JSON.parse(await readFile(lockPath, "utf8")).createdAt };
+  const paths = recoveryPaths(lockPath, generation);
+  await writeRecoveryRecord(paths.claim(1), claimRecord(generation, paths.targetId, 1, "game-design-update-check:99999998-dead-claimer"));
+  await link(lockPath, paths.retired);
+  const calls = [];
+
+  const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+
+  assert.equal(result.status, "current");
+  assert.equal(calls.length, 3);
+  await assert.rejects(lstat(lockPath), { code: "ENOENT" });
+  assert.equal((await lstat(paths.retired)).nlink, 1);
+});
+
+test("ignores unrelated recovery-prefixed entries while reclaiming the exact stale generation", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  const lockPath = await writeFileLock({ home, createdAt: new Date(Date.now() - 120_000).toISOString() });
+  await writeFile(`${lockPath}.recovery.v1.not-this-target.garbage`, "unrelated\n", { mode: 0o600 });
+  const calls = [];
+
+  const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+
+  assert.equal(result.status, "current");
+  assert.equal(calls.length, 3);
+});
+
+test("keeps a published claim authoritative when claim staging cleanup fails", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  const lockPath = await writeFileLock({ home, createdAt: new Date(Date.now() - 120_000).toISOString() });
+  const generation = { owner: "game-design-update-check:99999999-test-owner", createdAt: JSON.parse(await readFile(lockPath, "utf8")).createdAt };
+  const paths = recoveryPaths(lockPath, generation);
+  const calls = [];
+
+  const result = await checkGameDesignUpdates({
+    pluginRoot,
+    home,
+    now: Date.parse(CHECKED_AT),
+    fetchFn: checkingFetch(calls),
+    fsOps: {
+      unlink: async (target) => {
+        if (target.includes(".recovery-staging.")) throw Object.assign(new Error("injected claim cleanup failure"), { code: "EIO" });
+        return unlink(target);
+      },
+    },
+  });
+
+  assert.equal(result.status, "current");
+  assert.equal(calls.length, 3);
+  assert.equal((await lstat(paths.claim(1))).nlink, 2);
+});
+
+test("normal owner-anchor cleanup failure still removes the canonical lock on release", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  const cachePath = resolveUpdateCachePath({ env: {}, home, platform: process.platform });
+  const lockPath = `${cachePath}.lock`;
+  const calls = [];
+
+  const result = await checkGameDesignUpdates({
+    pluginRoot,
+    home,
+    now: Date.parse(CHECKED_AT),
+    fetchFn: checkingFetch(calls),
+    fsOps: {
+      unlink: async (target) => {
+        if (target.startsWith(`${lockPath}.staging.`)) throw Object.assign(new Error("injected owner-anchor cleanup failure"), { code: "EIO" });
+        return unlink(target);
+      },
+    },
+  });
+
+  assert.equal(result.status, "current");
+  await assert.rejects(lstat(lockPath), { code: "ENOENT" });
+  assert.equal(calls.length, 3);
+});
+
+test("a same-PID retry appends an abort after EIO and wins a next-sequence claim", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  const lockPath = await writeFileLock({ home, createdAt: new Date(Date.now() - 120_000).toISOString() });
+  const firstCalls = [];
+  const first = await checkGameDesignUpdates({
+    pluginRoot,
+    home,
+    now: Date.parse(CHECKED_AT),
+    fetchFn: checkingFetch(firstCalls),
+    fsOps: { unlink: async (target) => target === lockPath ? Promise.reject(Object.assign(new Error("injected canonical EIO"), { code: "EIO" })) : unlink(target) },
+  });
+  const secondCalls = [];
+  const second = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(secondCalls) });
+
+  assert.deepEqual(first, expectedUnknownResult());
+  assert.equal(firstCalls.length, 0);
+  assert.equal(second.status, "current");
+  assert.equal(secondCalls.length, 3);
+});
+
+test("rechecks the canonical generation immediately before unlinking a retired stale lock", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  const lockPath = await writeFileLock({ home, createdAt: new Date(Date.now() - 120_000).toISOString() });
+  const oldGeneration = { owner: "game-design-update-check:99999999-test-owner", createdAt: JSON.parse(await readFile(lockPath, "utf8")).createdAt };
+  const oldPaths = recoveryPaths(lockPath, oldGeneration);
+  const fresh = `${JSON.stringify({ schemaVersion: 1, owner: `game-design-update-check:${process.pid}-fresh`, createdAt: new Date().toISOString() })}\n`;
+  let swapped = false;
+  const calls = [];
+
+  const result = await checkGameDesignUpdates({
+    pluginRoot,
+    home,
+    now: Date.parse(CHECKED_AT),
+    fetchFn: checkingFetch(calls),
+    fsOps: {
+      lstat: async (target) => {
+        const stat = await lstat(target);
+        if (!swapped && target === lockPath && stat.nlink >= 2) {
+          swapped = true;
+          await unlink(lockPath);
+          await writeFile(lockPath, fresh, { mode: 0o600 });
+        }
+        return stat;
+      },
+    },
+  });
+
+  assert.equal(swapped, true);
+  assert.equal(await readFile(lockPath, "utf8"), fresh);
+  assert.equal(calls.length, 0);
+  assert.equal(result.status, "unknown");
+  assert.equal((await lstat(oldPaths.retired)).isFile(), true);
+});
+
+test("fails closed for malformed, gapped, symlinked, or mismatched exact-generation recovery evidence", async (t) => {
+  for (const [name, writeEvidence] of [
+    ["malformed", async ({ paths }) => writeFile(`${paths.claim(1)}.extra`, "bad\n", { mode: 0o600 })],
+    ["sequence gap", async ({ generation, paths }) => writeRecoveryRecord(paths.claim(2), claimRecord(generation, paths.targetId, 2, "game-design-update-check:99999998-gap"))],
+    ["symlinked claim", async ({ root, generation, paths }) => {
+      const external = path.join(root, "external-claim");
+      await writeRecoveryRecord(external, claimRecord(generation, paths.targetId, 1, "game-design-update-check:99999998-link"));
+      await symlink(external, paths.claim(1));
+    }],
+    ["mismatched retired", async ({ generation, paths }) => {
+      await writeRecoveryRecord(paths.claim(1), claimRecord(generation, paths.targetId, 1, "game-design-update-check:99999998-retired"));
+      await writeFile(paths.retired, `${JSON.stringify({ schemaVersion: 1, owner: generation.owner, createdAt: new Date().toISOString() })}\n`, { mode: 0o600 });
+    }],
+  ]) {
+    const { pluginRoot, home, root } = await fixture(t);
+    const lockPath = await writeFileLock({ home, createdAt: new Date(Date.now() - 120_000).toISOString() });
+    const generation = { owner: "game-design-update-check:99999999-test-owner", createdAt: JSON.parse(await readFile(lockPath, "utf8")).createdAt };
+    const paths = recoveryPaths(lockPath, generation);
+    await writeEvidence({ root, generation, paths });
+    const before = (await readdir(path.dirname(lockPath))).sort();
+    const calls = [];
+
+    const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+
+    assert.deepEqual(result, expectedUnknownResult(), name);
+    assert.equal(calls.length, 0, name);
+    assert.deepEqual((await readdir(path.dirname(lockPath))).sort(), before, name);
+  }
+});
+
+test("recovery directory access failure performs no canonical mutation", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  const lockPath = await writeFileLock({ home, createdAt: new Date(Date.now() - 120_000).toISOString() });
+  const before = await readFile(lockPath, "utf8");
+  const calls = [];
+
+  const result = await checkGameDesignUpdates({
+    pluginRoot,
+    home,
+    now: Date.parse(CHECKED_AT),
+    fetchFn: checkingFetch(calls),
+    fsOps: { readdir: async () => { throw Object.assign(new Error("injected directory EPERM"), { code: "EPERM" }); } },
+  });
+
+  assert.deepEqual(result, expectedUnknownResult());
+  assert.equal(calls.length, 0);
+  assert.equal(await readFile(lockPath, "utf8"), before);
+});
+
+test("a completed retired recovery remains inert when a later publisher creates a fresh canonical", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  const lockPath = await writeFileLock({ home, createdAt: new Date(Date.now() - 120_000).toISOString() });
+  const generation = { owner: "game-design-update-check:99999999-test-owner", createdAt: JSON.parse(await readFile(lockPath, "utf8")).createdAt };
+  const paths = recoveryPaths(lockPath, generation);
+  await writeRecoveryRecord(paths.claim(1), claimRecord(generation, paths.targetId, 1, "game-design-update-check:99999998-crashed"));
+  await link(lockPath, paths.retired);
+  await unlink(lockPath);
+  const calls = [];
+
+  const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+
+  assert.equal(result.status, "current");
+  assert.equal(calls.length, 3);
+  assert.equal((await lstat(paths.retired)).nlink, 1);
 });
 
 test("rejects empty, missing, partial, duplicate, and unknown installed manifests without network or cache publication", async (t) => {

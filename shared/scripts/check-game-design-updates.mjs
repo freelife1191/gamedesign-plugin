@@ -28,8 +28,8 @@ const NOTIFICATION_IDENTITY_KEYS = Object.freeze(["id", "installedTag", "latestT
 const LOCK_METADATA_KEYS = Object.freeze(["schemaVersion", "owner", "createdAt"]);
 const LOCK_METADATA_FILE = "owner.json";
 const LOCK_OWNER = /^game-design-update-check:(?<pid>[1-9]\d*)-[0-9A-Za-z-]+$/u;
-const RECOVERY_MARKER = ".recovery.";
-const RECOVERY_TYPES = new Set(["claim", "retired", "terminal"]);
+const RECOVERY_MARKER = ".recovery.v1.";
+const RECOVERY_STAGING_MARKER = ".recovery-staging.";
 const INSTALLED_COMPONENT_KEYS = Object.freeze(["id", "repository", "installedTag", "commit"]);
 const RELEASE_ENDPOINTS = Object.freeze({
   skillstead: "https://api.github.com/repos/kyungseo/skillstead/releases",
@@ -315,14 +315,15 @@ async function staleDeadOwner(inspected, leaseMs) {
   return ownerIsProvablyDead(inspected.metadata.owner);
 }
 
-function recoveryRecordPath(lockPath, targetId, type, sequence) {
-  return `${lockPath}${RECOVERY_MARKER}${targetId}.${type}.${sequence}`;
+function recoveryRecordPath(lockPath, targetId, type, sequence = null) {
+  const prefix = `${lockPath}${RECOVERY_MARKER}${targetId}`;
+  return type === "retired" ? `${prefix}.retired` : `${prefix}.${type}.${sequence}`;
 }
 
 function recoveryRecordKeys(type) {
   return type === "claim"
     ? ["schemaVersion", "targetId", "sequence", "owner", "createdAt", "claimant", "claimedAt"]
-    : ["schemaVersion", "targetId", "sequence", "owner", "createdAt", "completedAt"];
+    : ["schemaVersion", "targetId", "sequence", "owner", "createdAt", "claimant", "abortedAt"];
 }
 
 function validRecoveryRecord(value, { type, targetId, sequence, owner, createdAt }) {
@@ -332,9 +333,10 @@ function validRecoveryRecord(value, { type, targetId, sequence, owner, createdAt
     || value.sequence !== sequence
     || value.owner !== owner
     || value.createdAt !== createdAt
-    || recoveryTargetId(value) !== targetId) return false;
-  if (type === "claim") return typeof value.claimant === "string" && LOCK_OWNER.test(value.claimant) && validIso(value.claimedAt);
-  return validIso(value.completedAt);
+    || recoveryTargetId(value) !== targetId
+    || typeof value.claimant !== "string"
+    || !LOCK_OWNER.test(value.claimant)) return false;
+  return type === "claim" ? validIso(value.claimedAt) : validIso(value.abortedAt);
 }
 
 async function inspectRecoveryRecord(recordPath, fsOps, validation) {
@@ -342,10 +344,10 @@ async function inspectRecoveryRecord(recordPath, fsOps, validation) {
   let handle;
   try {
     entry = await fsOps.lstat(recordPath);
-    if (!entry.isFile() || entry.isSymbolicLink() || entry.nlink !== 1 || entry.size > 1024 * 1024) return null;
+    if (!entry.isFile() || entry.isSymbolicLink() || ![1, 2].includes(entry.nlink) || entry.size > 1024 * 1024) return null;
     handle = await fsOps.open(recordPath, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
     const opened = await handle.stat();
-    if (!opened.isFile() || opened.nlink !== 1 || !sameFile(entry, opened) || opened.size > 1024 * 1024) return null;
+    if (!opened.isFile() || ![1, 2].includes(opened.nlink) || !sameFile(entry, opened) || opened.size > 1024 * 1024) return null;
     const value = JSON.parse(await handle.readFile({ encoding: "utf8" }));
     const after = await fsOps.lstat(recordPath);
     if (!sameFile(entry, after) || !validation(value)) return null;
@@ -358,9 +360,11 @@ async function inspectRecoveryRecord(recordPath, fsOps, validation) {
 }
 
 async function writeAppendOnlyRecoveryRecord(recordPath, record, fsOps) {
-  const stagingPath = `${recordPath}.staging.${process.pid}.${randomUUID()}`;
+  const lockPath = recordPath.slice(0, recordPath.indexOf(RECOVERY_MARKER));
+  const stagingPath = `${lockPath}${RECOVERY_STAGING_MARKER}${process.pid}.${randomUUID()}`;
   let handle;
   let entry;
+  let published = false;
   try {
     handle = await fsOps.open(stagingPath, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW ?? 0), 0o600);
     entry = await handle.stat();
@@ -370,11 +374,12 @@ async function writeAppendOnlyRecoveryRecord(recordPath, record, fsOps) {
     await handle.close();
     handle = null;
     await fsOps.link(stagingPath, recordPath);
-    await fsOps.unlink(stagingPath);
+    published = true;
+    await fsOps.unlink(stagingPath).catch(() => undefined);
     return true;
   } catch (error) {
     await handle?.close().catch(() => undefined);
-    if (entry !== undefined) await fsOps.unlink(stagingPath).catch(() => undefined);
+    if (entry !== undefined && !published) await fsOps.unlink(stagingPath).catch(() => undefined);
     if (error?.code === "EEXIST") return false;
     throw error;
   }
@@ -388,24 +393,29 @@ async function recoveryState(lockPath, generation, fsOps) {
     return null;
   }
   const base = path.basename(lockPath);
-  const prefix = `${base}${RECOVERY_MARKER}`;
+  const targetId = recoveryTargetId(generation);
+  const prefix = `${base}${RECOVERY_MARKER}${targetId}`;
   const markers = [];
   for (const name of entries) {
+    if (name.startsWith(`${base}${RECOVERY_STAGING_MARKER}`)) continue;
     if (!name.startsWith(prefix)) continue;
-    const match = /^([0-9a-f]{64})\.(claim|retired|terminal)\.([1-9]\d*)$/u.exec(name.slice(prefix.length));
-    if (match === null || !RECOVERY_TYPES.has(match[2])) return null;
-    markers.push({ targetId: match[1], type: match[2], sequence: Number(match[3]), recordPath: path.join(path.dirname(lockPath), name) });
+    if (name === `${prefix}.retired`) {
+      markers.push({ type: "retired", recordPath: path.join(path.dirname(lockPath), name) });
+      continue;
+    }
+    const match = /^\.(claim|abort)\.([1-9]\d*)$/u.exec(name.slice(prefix.length));
+    if (match === null) return null;
+    markers.push({ type: match[1], sequence: Number(match[2]), recordPath: path.join(path.dirname(lockPath), name) });
   }
-  const targetId = recoveryTargetId(generation);
-  const current = markers.filter((marker) => marker.targetId === targetId);
   const claims = new Map();
-  const retired = [];
-  const terminals = new Map();
-  for (const marker of current) {
+  const aborts = new Map();
+  let retired = null;
+  for (const marker of markers) {
     if (marker.type === "retired") {
       const inspected = await inspectOwnedLockFile(marker.recordPath, fsOps, [1, 2, 3]);
       if (!sameGeneration(generation, inspected)) return null;
-      retired.push({ ...marker, inspected });
+      if (retired !== null) return null;
+      retired = { ...marker, inspected };
       continue;
     }
     const inspected = await inspectRecoveryRecord(marker.recordPath, fsOps, (value) => validRecoveryRecord(value, {
@@ -417,24 +427,24 @@ async function recoveryState(lockPath, generation, fsOps) {
     }));
     if (inspected === null) return null;
     if (marker.type === "claim") claims.set(marker.sequence, { ...marker, record: inspected.value });
-    else terminals.set(marker.sequence, { ...marker, record: inspected.value });
+    else aborts.set(marker.sequence, { ...marker, record: inspected.value });
   }
-  if (claims.size === 0 && (retired.length !== 0 || terminals.size !== 0)) return null;
+  if (claims.size === 0 && (retired !== null || aborts.size !== 0)) return null;
   const sequences = [...claims.keys()].sort((left, right) => left - right);
   if (!sequences.every((sequence, index) => sequence === index + 1)) return null;
-  if (retired.length > 1 || [...terminals.keys()].some((sequence) => !claims.has(sequence) || !retired.some((marker) => marker.sequence === sequence))) return null;
-  return { targetId, claims, retired, terminals };
+  if ([...aborts.entries()].some(([sequence, abort]) => !claims.has(sequence) || abort.record.claimant !== claims.get(sequence).record.claimant)) return null;
+  return { targetId, claims, aborts, retired };
 }
 
 async function claimStaleGeneration(lockPath, generation, fsOps, leaseMs) {
   const state = await recoveryState(lockPath, generation, fsOps);
   if (state === null) return null;
-  const latest = [...state.claims.values()].at(-1);
+  const latestSequence = Math.max(0, ...state.claims.keys());
+  const latest = state.claims.get(latestSequence);
   if (latest !== undefined) {
-    const claimAge = Date.now() - Date.parse(latest.record.claimedAt);
-    if (!Number.isFinite(claimAge) || claimAge < leaseMs || !(await ownerIsProvablyDead(latest.record.claimant))) return null;
+    if (!state.aborts.has(latestSequence) && !(await ownerIsProvablyDead(latest.record.claimant))) return null;
   }
-  const sequence = state.claims.size + 1;
+  const sequence = latestSequence + 1;
   const claimant = `game-design-update-check:${process.pid}-${randomUUID()}`;
   const record = {
     schemaVersion: 1,
@@ -447,16 +457,13 @@ async function claimStaleGeneration(lockPath, generation, fsOps, leaseMs) {
   };
   const recordPath = recoveryRecordPath(lockPath, state.targetId, "claim", sequence);
   try {
-    return (await writeAppendOnlyRecoveryRecord(recordPath, record, fsOps)) ? { ...state, sequence, recordPath } : null;
+    return (await writeAppendOnlyRecoveryRecord(recordPath, record, fsOps)) ? { ...state, sequence, recordPath, claimant } : null;
   } catch {
     return null;
   }
 }
 
-async function linkedStagingPath(lockPath, generation, fsOps) {
-  const canonical = await inspectOwnedLockFile(lockPath, fsOps, [1, 2]);
-  if (!sameGeneration(generation, canonical)) return null;
-  if (canonical.entry.nlink === 1) return { canonical, stagingPath: null };
+async function ownerAnchorPath(lockPath, generation, fsOps, linkCount) {
   let entries;
   try {
     entries = await fsOps.readdir(path.dirname(lockPath));
@@ -465,83 +472,90 @@ async function linkedStagingPath(lockPath, generation, fsOps) {
   }
   const candidates = entries.filter((name) => name.startsWith(`${path.basename(lockPath)}.staging.`));
   if (candidates.length !== 1) return null;
-  const stagingPath = path.join(path.dirname(lockPath), candidates[0]);
-  const staging = await inspectOwnedLockFile(stagingPath, fsOps, [2]);
-  return sameGeneration(generation, staging) && sameFile(canonical.entry, staging.entry) ? { canonical, stagingPath } : null;
+  const anchorPath = path.join(path.dirname(lockPath), candidates[0]);
+  const anchor = await inspectOwnedLockFile(anchorPath, fsOps, [linkCount]);
+  return sameGeneration(generation, anchor) ? { anchorPath, anchor } : null;
+}
+
+async function recoveryAuthority(lockPath, generation, claim, fsOps) {
+  const state = await recoveryState(lockPath, generation, fsOps);
+  if (state === null) return null;
+  const latestSequence = Math.max(0, ...state.claims.keys());
+  const latest = state.claims.get(latestSequence);
+  if (latest === undefined || latest.sequence !== claim.sequence || latest.record.claimant !== claim.claimant || state.aborts.has(latestSequence)) return null;
+  return state;
+}
+
+async function publishRecoveryAbort(lockPath, generation, claim, fsOps) {
+  const record = {
+    schemaVersion: 1,
+    targetId: recoveryTargetId(generation),
+    sequence: claim.sequence,
+    owner: generation.owner,
+    createdAt: generation.createdAt,
+    claimant: claim.claimant,
+    abortedAt: new Date().toISOString(),
+  };
+  try {
+    return await writeAppendOnlyRecoveryRecord(recoveryRecordPath(lockPath, record.targetId, "abort", claim.sequence), record, fsOps);
+  } catch {
+    return false;
+  }
 }
 
 async function reclaimStaleLock(lockPath, fsOps, leaseMs) {
   const inspected = await inspectOwnedLockFile(lockPath, fsOps, [1, 2]);
   if (inspected === null || !(await staleDeadOwner(inspected, leaseMs))) return false;
   const generation = { lockPath, kind: "file", entry: inspected.entry, owner: inspected.metadata.owner, createdAt: inspected.metadata.createdAt };
-  if ((await linkedStagingPath(lockPath, generation, fsOps)) === null) return false;
+  const previous = await recoveryState(lockPath, generation, fsOps);
+  if (previous === null) return false;
+  if (previous.retired !== null) {
+    if (!sameFile(inspected.entry, previous.retired.inspected.entry)) return false;
+  } else if (inspected.entry.nlink === 2) {
+    const anchor = await ownerAnchorPath(lockPath, generation, fsOps, 2);
+    if (anchor === null || !sameFile(anchor.anchor.entry, inspected.entry)) return false;
+  }
   const claimed = await claimStaleGeneration(lockPath, generation, fsOps, leaseMs);
   if (claimed === null) return false;
-
-  const current = await linkedStagingPath(lockPath, generation, fsOps);
-  const state = await recoveryState(lockPath, generation, fsOps);
-  if (state === null) return false;
-  const retired = state.retired[0];
-  if (current === null || !(await staleDeadOwner(current.canonical, leaseMs))) return retired !== undefined;
-  if (state.terminals.size !== 0) return false;
-  let retiredPath = retired?.recordPath;
-  if (retiredPath === undefined) {
-    retiredPath = recoveryRecordPath(lockPath, state.targetId, "retired", claimed.sequence);
-    try {
-      await fsOps.link(lockPath, retiredPath);
-    } catch {
-      return false;
-    }
-  }
-  const canonicalBeforeUnlink = await inspectOwnedLockFile(lockPath, fsOps, [2, 3]);
-  const retiredBeforeUnlink = await inspectOwnedLockFile(retiredPath, fsOps, [2, 3]);
-  if (!sameGeneration(generation, canonicalBeforeUnlink)
-    || !sameGeneration(generation, retiredBeforeUnlink)
-    || !sameFile(canonicalBeforeUnlink.entry, retiredBeforeUnlink.entry)) return false;
-  if (current.stagingPath !== null) {
-    const staging = await inspectOwnedLockFile(current.stagingPath, fsOps, [3]);
-    if (!sameGeneration(generation, staging) || !sameFile(staging.entry, canonicalBeforeUnlink.entry)) return false;
-    try {
-      await fsOps.unlink(current.stagingPath);
-    } catch {
-      return false;
-    }
-  }
-  const canonical = await inspectOwnedLockFile(lockPath, fsOps, [2]);
-  const retiredAnchor = await inspectOwnedLockFile(retiredPath, fsOps, [2]);
-  if (!sameGeneration(generation, canonical)
-    || !sameGeneration(generation, retiredAnchor)
-    || !sameFile(canonical.entry, retiredAnchor.entry)) return false;
   try {
+    let state = await recoveryAuthority(lockPath, generation, claimed, fsOps);
+    if (state === null) throw new Error("lost recovery claim");
+    let retiredPath = state.retired?.recordPath;
+    if (retiredPath === undefined) {
+      const canonical = await inspectOwnedLockFile(lockPath, fsOps, [1, 2]);
+      if (!sameGeneration(generation, canonical) || !(await staleDeadOwner(canonical, leaseMs))) throw new Error("stale canonical changed");
+      state = await recoveryAuthority(lockPath, generation, claimed, fsOps);
+      if (state === null) throw new Error("lost recovery claim");
+      retiredPath = recoveryRecordPath(lockPath, state.targetId, "retired");
+      await fsOps.link(lockPath, retiredPath);
+    }
+    state = await recoveryAuthority(lockPath, generation, claimed, fsOps);
+    if (state === null || state.retired === null) throw new Error("lost recovery claim");
+    const canonical = await inspectOwnedLockFile(lockPath, fsOps, [2, 3]);
+    const retired = await inspectOwnedLockFile(state.retired.recordPath, fsOps, [2, 3]);
+    if (!sameGeneration(generation, canonical) || !sameGeneration(generation, retired) || !sameFile(canonical.entry, retired.entry)) throw new Error("canonical changed");
+    if (canonical.entry.nlink === 3) {
+      const anchor = await ownerAnchorPath(lockPath, generation, fsOps, 3);
+      if (anchor === null || !sameFile(anchor.anchor.entry, canonical.entry)) throw new Error("missing owner anchor");
+    }
+    state = await recoveryAuthority(lockPath, generation, claimed, fsOps);
+    if (state === null) throw new Error("lost recovery claim");
+    const finalCanonical = await inspectOwnedLockFile(lockPath, fsOps, [2, 3]);
+    const finalRetired = await inspectOwnedLockFile(state.retired.recordPath, fsOps, [2, 3]);
+    if (!sameGeneration(generation, finalCanonical) || !sameGeneration(generation, finalRetired) || !sameFile(finalCanonical.entry, finalRetired.entry)) throw new Error("canonical changed");
     await fsOps.unlink(lockPath);
+    return true;
   } catch {
+    await publishRecoveryAbort(lockPath, generation, claimed, fsOps);
     return false;
   }
-  const terminal = {
-    schemaVersion: 1,
-    targetId: state.targetId,
-    sequence: claimed.sequence,
-    owner: generation.owner,
-    createdAt: generation.createdAt,
-    completedAt: new Date().toISOString(),
-  };
-  try {
-    await writeAppendOnlyRecoveryRecord(recoveryRecordPath(lockPath, state.targetId, "terminal", claimed.sequence), terminal, fsOps);
-  } catch {
-    // A retired anchor proves the old canonical inode was already removed.
-  }
-  return true;
 }
 
-async function discardStagingLock({ stagingPath, entry }, fsOps) {
-  const quarantinePath = `${stagingPath}.cleanup.${process.pid}.${randomUUID()}`;
+async function removeUnpublishedAnchor(anchorPath, entry, fsOps) {
   try {
-    const current = await fsOps.lstat(stagingPath);
+    const current = await fsOps.lstat(anchorPath);
     if (!current.isFile() || current.isSymbolicLink() || !sameFile(current, entry)) return false;
-    await fsOps.rename(stagingPath, quarantinePath);
-    const moved = await fsOps.lstat(quarantinePath);
-    if (!moved.isFile() || moved.isSymbolicLink() || !sameFile(moved, entry)) return false;
-    await fsOps.unlink(quarantinePath);
+    await fsOps.unlink(anchorPath);
     return true;
   } catch {
     return false;
@@ -551,29 +565,29 @@ async function discardStagingLock({ stagingPath, entry }, fsOps) {
 async function createOwnedLock(lockPath, fsOps) {
   const owner = `game-design-update-check:${process.pid}-${randomUUID()}`;
   const createdAt = new Date().toISOString();
-  const stagingPath = `${lockPath}.staging.${process.pid}.${randomUUID()}`;
+  const ownerAnchor = `${lockPath}.staging.${process.pid}.${randomUUID()}`;
   let entry;
   let handle;
   let published = false;
   try {
-    handle = await fsOps.open(stagingPath, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW ?? 0), 0o600);
+    handle = await fsOps.open(ownerAnchor, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW ?? 0), 0o600);
     entry = await handle.stat();
     if (!entry.isFile() || entry.nlink !== 1) throw new Error("unsafe staging lock");
     await handle.writeFile(`${JSON.stringify({ schemaVersion: 1, owner, createdAt })}\n`, { encoding: "utf8" });
     await handle.sync();
     await handle.close();
     handle = null;
-    const staged = await inspectOwnedLock(stagingPath, fsOps);
+    const staged = await inspectOwnedLockFile(ownerAnchor, fsOps, [1]);
     if (!sameLock({ kind: "file", entry, owner }, staged)) throw new Error("unsafe staging metadata");
-    await fsOps.link(stagingPath, lockPath);
+    await fsOps.link(ownerAnchor, lockPath);
     published = true;
-    await discardStagingLock({ stagingPath, entry }, fsOps);
-    const inspected = await inspectOwnedLock(lockPath, fsOps);
-    if (!sameLock({ kind: "file", entry, owner }, inspected)) throw new Error("unsafe lock metadata");
-    return { lockPath, kind: "file", entry, owner, createdAt };
+    const canonical = await inspectOwnedLockFile(lockPath, fsOps, [2]);
+    const anchor = await inspectOwnedLockFile(ownerAnchor, fsOps, [2]);
+    if (!sameLock({ kind: "file", entry, owner }, canonical) || !sameLock({ kind: "file", entry, owner }, anchor) || !sameFile(canonical.entry, anchor.entry)) throw new Error("unsafe lock metadata");
+    return { lockPath, ownerAnchor, kind: "file", entry, owner, createdAt };
   } catch (error) {
     await handle?.close().catch(() => undefined);
-    if (entry !== undefined && !published) await discardStagingLock({ stagingPath, entry }, fsOps);
+    if (entry !== undefined && !published) await removeUnpublishedAnchor(ownerAnchor, entry, fsOps);
     if (error?.code === "EEXIST") return null;
     throw error;
   }
@@ -588,9 +602,11 @@ async function acquireLock(lockPath, fsOps, leaseMs) {
 
 async function releaseLock(lock, fsOps) {
   if (lock === null || lock === undefined || lock.kind !== "file") return;
-  const inspected = await inspectOwnedLockFile(lock.lockPath, fsOps, [1]);
-  if (!sameGeneration(lock, inspected)) return;
+  const canonical = await inspectOwnedLockFile(lock.lockPath, fsOps, [2]);
+  const anchor = await inspectOwnedLockFile(lock.ownerAnchor, fsOps, [2]);
+  if (!sameGeneration(lock, canonical) || !sameGeneration(lock, anchor) || !sameFile(canonical.entry, anchor.entry)) return;
   await fsOps.unlink(lock.lockPath).catch(() => undefined);
+  await fsOps.unlink(lock.ownerAnchor).catch(() => undefined);
 }
 
 function sleep(ms) {
