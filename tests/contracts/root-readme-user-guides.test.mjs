@@ -162,14 +162,14 @@ const readmeSkillsteadDiagrams = [
     phrases: [
       "Studio 또는 Career 한 문장 요청", "요청 목적·원하는 결과 분석", "한 분야가 분명한가?",
       "전문 스킬", "Studio·Career 오케스트레이터", "필요한 검토 역할 최대 세 개",
-      "기준 결과 폴더 작성·검증", "이름 있는 사람의 승인·수정·보류", "다음 요청·재개",
+      "기준 결과 폴더 작성·검증", "이름 있는 사람의 승인·수정·보류", "검토 반영 후 재개",
     ],
   },
   {
     section: "케이스별 프롬프트로 시작하기",
     id: "prompt-to-result-flow",
     alt: "요청문에서 기획 결과와 다음 요청으로 이어지는 흐름",
-    phrases: ["플러그인 선택", "원하는 작업 사례 선택", "전문 스킬 실행", "기획 결과 폴더", "사람 검토", "다음 요청·재개"],
+    phrases: ["플러그인 선택", "원하는 작업 예시 선택", "전문 스킬 실행", "기획 결과 폴더", "사람 검토", "검토 반영 후 재개"],
   },
   {
     section: "스킬별로 바로 실행하기",
@@ -1701,6 +1701,7 @@ function assertReadmeSkillsteadDiagramSource(svgSource, { id, phrases }) {
   }
   assert.doesNotMatch(svgSource, /증거 후보/u, `${id}: avoids abstract evidence-candidate terminology`);
   if (id === "prompt-to-result-flow") {
+    assert.doesNotMatch(svgSource, /다음 행동이 선명해집니다/u, `${id}: avoids unnatural translated wording`);
     assert.match(svgSource, /승인·보류/u, `${id}: human review keeps approval and hold choices`);
     assert.match(svgSource, /<g\b[^>]*data-flow-node="human-review"/u, `${id}: binds the human review node`);
     assert.match(svgSource, /<g\b[^>]*data-flow-node="next-request-resume"/u, `${id}: binds the next-request and resume node`);
