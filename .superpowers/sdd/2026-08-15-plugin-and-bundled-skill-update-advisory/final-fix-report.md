@@ -175,3 +175,34 @@
 
 - `npm run build && npm run build -- --check` 통과: Career 542 files, Studio 554 files.
 - Fix2의 shared/Studio/Career byte parity, checker `node --check`, manifest JSON parse, `git diff --check`를 Fix3 후에도 재검증했다.
+
+## Fix4: link 선형화와 live hard-link 보존
+
+### 수정 내용
+
+- `link(staging, canonical)`의 성공을 유일한 lock acquire 선형화 지점으로 확정했다. 이후 canonical metadata가 완전하면 winner는 staging cleanup 성공 여부와 관계없이 acquired이며 release/network 경로를 계속 진행한다.
+- regular canonical lock은 완전 metadata와 identity를 만족하면 `nlink=1` 또는 `nlink=2` 모두 inspect한다. `nlink=2` 자체는 crash 증거가 아니므로 contender는 live owner 또는 lease 내 owner를 정규화하지 않고 bounded cache wait을 수행한다.
+- linked staging/cleanup sibling 정규화는 metadata age가 lease 이상이고 owner PID `kill(pid, 0)`가 정확히 `ESRCH`인 경우에만 수행한다. canonical과 정확히 하나의 `<lock>.staging.*` sibling이 regular/non-symlink, same inode, same owner, 모두 nlink=2일 때만 quarantine 검증 후 unlink한다.
+- own release가 nlink=2를 만났을 때는 exact sibling cleanup을 시도한다. 실패하면 canonical도 삭제하지 않아 canonical-only removal로 orphan을 만들지 않고 안전하게 보존한다.
+- legacy valid directory stale+ESRCH, stale empty `rmdir` only, partial/extra/symlink fail-closed 계약은 유지했다.
+
+### TDD 증거
+
+#### RED
+
+- first winner를 `link` 성공 직후 pause하면 기존 contender가 live staging sibling을 normalize하여 winner cleanup을 실패시켰고, 둘 다 `unknown`/network 0으로 닫혔다.
+- Fix3의 live nlink=2 residue 테스트는 새 binding에 맞춰 수정했다. 이전 즉시 정규화 기대는 live owner를 crash로 오판하는 잘못된 oracle이었다.
+
+#### GREEN
+
+- paused winner barrier: contender는 normalize 대신 cache wait에 진입하며, winner resume 뒤 정확히 network 3회 단일 winner, `current/current`, cache `miss/hit`, final canonical/staging 없음이다.
+- post-link rename/unlink interruption에서 live same-PID nlink=2 pair는 winner의 network 3회와 cache miss, contender의 cache hit/network 0을 보존한다. own cleanup 실패 pair는 안전히 남는다.
+- literal stale + dead owner의 exact nlink=2 pair만 정규화·reclaim되어 network 3회 `current` 및 final canonical/staging 없음이 된다.
+- symlink/external sentinel, different inode, multiple sibling, ESRCH 미증명 PID는 bytes/entries를 보존하고 network 0 `unknown`으로 닫힌다.
+- `node --test tests/unit/game-design-update-check.test.mjs`: 31 pass, 0 fail.
+- `node --test tests/unit/update-advisory.test.mjs tests/unit/game-design-update-check.test.mjs`: 39 pass, 0 fail.
+
+### 생성물·정적 검증
+
+- `npm run build && npm run build -- --check` 통과: Career 542 files, Studio 554 files.
+- shared/Studio/Career checker byte parity, checker `node --check`, 두 `BUILD-MANIFEST.json` JSON parse, `git diff --check`를 Fix4 후 재검증했다.

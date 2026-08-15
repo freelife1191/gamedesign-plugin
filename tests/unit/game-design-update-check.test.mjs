@@ -128,6 +128,12 @@ function expectedUnknownResult() {
   };
 }
 
+function deferred() {
+  let resolve;
+  const promise = new Promise((next) => { resolve = next; });
+  return { promise, resolve };
+}
+
 test("uses the documented OS cache location without exposing it in results", () => {
   assert.equal(resolveUpdateCachePath({ env: { XDG_CACHE_HOME: "/tmp/xdg" }, home: "/home/test", platform: "linux" }), "/tmp/xdg/game-design-suite/update-advisory-v1.json");
   assert.equal(resolveUpdateCachePath({ env: {}, home: "/Users/test", platform: "darwin" }), "/Users/test/Library/Caches/game-design-suite/update-advisory-v1.json");
@@ -520,18 +526,18 @@ test("staging cleanup preserves an externally swapped canonical lock tree", asyn
 for (const [faultPoint, faults] of [
   ["staging rename", {
     rename: async (from, to) => {
-      if (from.includes(".staging.") && to.includes(".cleanup.")) throw Object.assign(new Error("injected staging rename interruption"), { code: "EIO" });
+      if (from.includes(".staging.")) throw Object.assign(new Error("injected staging rename interruption"), { code: "EIO" });
       return rename(from, to);
     },
   }],
   ["cleanup unlink", {
     unlink: async (filePath) => {
-      if (filePath.includes(".staging.") && filePath.includes(".cleanup.")) throw Object.assign(new Error("injected cleanup unlink interruption"), { code: "EIO" });
+      if (filePath.includes(".staging.")) throw Object.assign(new Error("injected cleanup unlink interruption"), { code: "EIO" });
       return unlink(filePath);
     },
   }],
 ]) {
-  test(`normalizes a task-owned hard-link pair after ${faultPoint} interruption`, async (t) => {
+  test(`preserves a live task-owned hard-link pair after ${faultPoint} interruption`, async (t) => {
     const { pluginRoot, home } = await fixture(t);
     const cachePath = resolveUpdateCachePath({ env: {}, home, platform: process.platform });
     const lockPath = `${cachePath}.lock`;
@@ -545,12 +551,13 @@ for (const [faultPoint, faults] of [
       fsOps: faults,
     });
 
-    // Catches the nlink === 1 inspection mutation after successful link publication.
-    assert.deepEqual(interrupted, expectedUnknownResult());
-    assert.equal(calls.length, 0);
+    // Catches a mutation that treats a live nlink=2 publication as stale crash residue.
+    assert.equal(interrupted.status, "current");
+    assert.equal(interrupted.cache, "miss");
+    assert.equal(calls.length, 3);
     const interruptedEntries = await readdir(path.dirname(cachePath));
     const siblingName = interruptedEntries.find((name) => name.startsWith(`${path.basename(lockPath)}.staging.`));
-    assert.deepEqual(interruptedEntries.sort(), [path.basename(lockPath), siblingName].sort());
+    assert.deepEqual(interruptedEntries.sort(), [path.basename(cachePath), path.basename(lockPath), siblingName].sort());
     assert.equal(typeof siblingName, "string");
     const canonicalBefore = await lstat(lockPath);
     const siblingBefore = await lstat(path.join(path.dirname(cachePath), siblingName));
@@ -561,17 +568,165 @@ for (const [faultPoint, faults] of [
     assert.equal(canonicalBefore.nlink, 2);
     assert.equal(siblingBefore.nlink, 2);
 
-    const recoveredCalls = [];
-    const recovered = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(recoveredCalls) });
+    const contenderCalls = [];
+    const contender = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(contenderCalls) });
 
-    assert.deepEqual(recovered, expectedUnknownResult());
-    assert.equal(recoveredCalls.length, 0);
+    assert.equal(contender.status, "current");
+    assert.equal(contender.cache, "hit");
+    assert.equal(contenderCalls.length, 0);
     const canonicalAfter = await lstat(lockPath);
     assert.equal(canonicalAfter.isFile(), true);
-    assert.equal(canonicalAfter.nlink, 1);
-    assert.deepEqual(await readdir(path.dirname(cachePath)), [path.basename(lockPath)]);
+    assert.equal(canonicalAfter.nlink, 2);
+    assert.deepEqual((await readdir(path.dirname(cachePath))).sort(), [path.basename(cachePath), path.basename(lockPath), siblingName].sort());
   });
 }
+
+test("reclaims an interrupted hard-link publication only after stale owner death is proven", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  const cachePath = resolveUpdateCachePath({ env: {}, home, platform: process.platform });
+  const lockPath = `${cachePath}.lock`;
+  const owner = "game-design-update-check:99999999-dead-owner";
+  const metadata = `${JSON.stringify({ schemaVersion: 1, owner, createdAt: new Date(Date.now() - 120_000).toISOString() })}\n`;
+  const stagingPath = `${lockPath}.staging.dead-owner`;
+  await mkdir(path.dirname(cachePath), { recursive: true });
+  await writeFile(lockPath, metadata, { mode: 0o600 });
+  await link(lockPath, stagingPath);
+  const calls = [];
+
+  const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+
+  // Catches a mutation that never accepts a stale nlink=2 task-owned publication.
+  assert.equal(result.status, "current");
+  assert.equal(calls.length, 3);
+  await assert.rejects(lstat(lockPath), { code: "ENOENT" });
+  await assert.rejects(lstat(stagingPath), { code: "ENOENT" });
+  assert.deepEqual(await readdir(path.dirname(cachePath)), [path.basename(cachePath)]);
+});
+
+test("a contender never normalizes a live winner between link publication and cleanup", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  const cachePath = resolveUpdateCachePath({ env: {}, home, platform: process.platform });
+  const lockPath = `${cachePath}.lock`;
+  const published = deferred();
+  const resumeWinner = deferred();
+  const contenderWaited = deferred();
+  const contenderNormalizeAttempted = deferred();
+  const calls = [];
+  let winnerStagingPath;
+  let contenderLinkFailed = false;
+  const winner = checkGameDesignUpdates({
+    pluginRoot,
+    home,
+    now: Date.parse(CHECKED_AT),
+    fetchFn: checkingFetch(calls),
+    fsOps: {
+      link: async (stagingPath, canonicalPath) => {
+        await link(stagingPath, canonicalPath);
+        winnerStagingPath = stagingPath;
+        published.resolve();
+        await resumeWinner.promise;
+      },
+    },
+  });
+  await published.promise;
+  const contender = checkGameDesignUpdates({
+    pluginRoot,
+    home,
+    now: Date.parse(CHECKED_AT),
+    fetchFn: checkingFetch(calls),
+    fsOps: {
+      link: async (stagingPath, canonicalPath) => {
+        contenderLinkFailed = true;
+        return link(stagingPath, canonicalPath);
+      },
+      rename: async (from, to) => {
+        if (from === winnerStagingPath) contenderNormalizeAttempted.resolve();
+        return rename(from, to);
+      },
+      lstat: async (target) => {
+        try {
+          return await lstat(target);
+        } finally {
+          if (target === cachePath && contenderLinkFailed) contenderWaited.resolve();
+        }
+      },
+    },
+  });
+
+  const progression = await Promise.race([
+    contenderWaited.promise.then(() => "wait"),
+    contenderNormalizeAttempted.promise.then(() => "normalize"),
+  ]);
+  assert.equal(progression, "wait");
+  resumeWinner.resolve();
+  const results = await Promise.all([winner, contender]);
+
+  // Catches normalizeLinkedStagingLock before a live owner is proved stale and dead.
+  assert.equal(calls.length, 3);
+  assert.deepEqual(results.map(({ status }) => status), ["current", "current"]);
+  assert.deepEqual(results.map(({ cache }) => cache).sort(), ["hit", "miss"]);
+  await assert.rejects(lstat(lockPath), { code: "ENOENT" });
+  assert.deepEqual(await readdir(path.dirname(cachePath)), [path.basename(cachePath)]);
+});
+
+test("preserves ambiguous linked residue and external siblings without network access", async (t) => {
+  for (const [name, addAmbiguity] of [
+    ["symlink", async ({ root, lockPath, stagingPath }) => {
+      const externalPath = path.join(root, "external-sibling");
+      await mkdir(externalPath);
+      await writeFile(path.join(externalPath, "sentinel.txt"), "external bytes\n");
+      await symlink(externalPath, `${stagingPath}.symlink`);
+      return { externalPath, before: await readFile(path.join(externalPath, "sentinel.txt"), "utf8") };
+    }],
+    ["different-inode", async ({ stagingPath }) => {
+      await writeFile(`${stagingPath}.different`, "unrelated bytes\n", { mode: 0o600 });
+      return null;
+    }],
+    ["multiple-hard-links", async ({ lockPath, stagingPath }) => {
+      await link(lockPath, `${stagingPath}.second`);
+      return null;
+    }],
+  ]) {
+    const { pluginRoot, home, root } = await fixture(t);
+    const cachePath = resolveUpdateCachePath({ env: {}, home, platform: process.platform });
+    const lockPath = `${cachePath}.lock`;
+    const stagingPath = `${lockPath}.staging.dead-owner`;
+    const metadata = `${JSON.stringify({ schemaVersion: 1, owner: "game-design-update-check:99999999-dead-owner", createdAt: new Date(Date.now() - 120_000).toISOString() })}\n`;
+    await mkdir(path.dirname(cachePath), { recursive: true });
+    await writeFile(lockPath, metadata, { mode: 0o600 });
+    await link(lockPath, stagingPath);
+    const external = await addAmbiguity({ root, lockPath, stagingPath });
+    const beforeEntries = (await readdir(path.dirname(cachePath))).sort();
+    const calls = [];
+
+    const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+
+    assert.deepEqual(result, expectedUnknownResult(), name);
+    assert.equal(calls.length, 0, name);
+    assert.deepEqual((await readdir(path.dirname(cachePath))).sort(), beforeEntries, name);
+    assert.equal((await lstat(lockPath)).isFile(), true, name);
+    if (external !== null) assert.equal(await readFile(path.join(external.externalPath, "sentinel.txt"), "utf8"), external.before, name);
+  }
+});
+
+test("preserves a linked owner when PID probing cannot prove ESRCH", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  const cachePath = resolveUpdateCachePath({ env: {}, home, platform: process.platform });
+  const lockPath = `${cachePath}.lock`;
+  const stagingPath = `${lockPath}.staging-unproven-owner`;
+  const metadata = `${JSON.stringify({ schemaVersion: 1, owner: "game-design-update-check:1-unproven-owner", createdAt: new Date(Date.now() - 120_000).toISOString() })}\n`;
+  await mkdir(path.dirname(cachePath), { recursive: true });
+  await writeFile(lockPath, metadata, { mode: 0o600 });
+  await link(lockPath, stagingPath);
+  const calls = [];
+
+  const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+
+  assert.deepEqual(result, expectedUnknownResult());
+  assert.equal(calls.length, 0);
+  assert.equal((await lstat(lockPath)).nlink, 2);
+  assert.deepEqual((await readdir(path.dirname(cachePath))).sort(), [path.basename(lockPath), path.basename(stagingPath)].sort());
+});
 
 test("empty legacy recovery cannot rename a regular lock published after its inspection", async (t) => {
   const { pluginRoot, home } = await fixture(t);
