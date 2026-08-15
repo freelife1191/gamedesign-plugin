@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { lstat, mkdtemp, mkdir, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
+import { link, lstat, mkdtemp, mkdir, open, readFile, readdir, rename, rm, symlink, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -397,6 +397,115 @@ test("reclaims a provably stale task-owned lock and completes the check", async 
   await assert.rejects(lstat(lockPath), { code: "ENOENT" });
 });
 
+test("reclaims only a stale empty legacy lock without exposing an incomplete canonical lock", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  const cachePath = resolveUpdateCachePath({ env: {}, home, platform: process.platform });
+  const lockPath = `${cachePath}.lock`;
+  await mkdir(path.dirname(cachePath), { recursive: true });
+  await mkdir(lockPath, { mode: 0o700 });
+  await utimes(lockPath, new Date(Date.now() - 120_000), new Date(Date.now() - 120_000));
+  const calls = [];
+  let publication;
+  let linkAttempts = 0;
+
+  const result = await checkGameDesignUpdates({
+    pluginRoot,
+    home,
+    now: Date.parse(CHECKED_AT),
+    fetchFn: checkingFetch(calls),
+    fsOps: {
+      link: async (stagingPath, canonicalPath) => {
+        linkAttempts += 1;
+        if (linkAttempts === 1) return link(stagingPath, canonicalPath);
+        publication = { stagingPath, canonicalPath };
+        assert.equal(canonicalPath, lockPath);
+        await assert.rejects(lstat(canonicalPath), { code: "ENOENT" });
+        const staged = JSON.parse(await readFile(stagingPath, "utf8"));
+        assert.equal(staged.schemaVersion, 1);
+        await link(stagingPath, canonicalPath);
+      },
+    },
+  });
+
+  // Catches a mutation that keeps the old mkdir(lockPath) -> owner.json sequence.
+  assert.equal(result.status, "current");
+  assert.equal(calls.length, 3);
+  assert.equal(linkAttempts, 2);
+  assert.equal(publication?.canonicalPath, lockPath);
+  await assert.rejects(lstat(lockPath), { code: "ENOENT" });
+  assert.deepEqual(await readdir(path.dirname(cachePath)), [path.basename(cachePath)]);
+
+  await mkdir(lockPath, { mode: 0o700 });
+  await writeFile(path.join(lockPath, "owner.json"), "{partial", { mode: 0o600 });
+  await utimes(lockPath, new Date(Date.now() - 120_000), new Date(Date.now() - 120_000));
+  const partialCalls = [];
+  const partialResult = await checkGameDesignUpdates({ pluginRoot, home, now: SEVEN_DAYS_LATER, fetchFn: checkingFetch(partialCalls) });
+
+  assert.equal(partialResult.status, "unknown");
+  assert.equal(partialCalls.length, 0);
+  assert.equal(await readFile(path.join(lockPath, "owner.json"), "utf8"), "{partial");
+  assert.deepEqual(await readdir(lockPath), ["owner.json"]);
+});
+
+test("staging cleanup preserves an externally swapped canonical lock tree", async (t) => {
+  const { pluginRoot, home, root } = await fixture(t);
+  const cachePath = resolveUpdateCachePath({ env: {}, home, platform: process.platform });
+  const lockPath = `${cachePath}.lock`;
+  const externalPath = path.join(root, "external-lock");
+  const externalOwnerPath = path.join(externalPath, "owner.json");
+  await mkdir(path.dirname(cachePath), { recursive: true });
+  await mkdir(externalPath);
+  await writeFile(externalOwnerPath, "external sentinel bytes\n");
+  await writeFile(path.join(externalPath, "keep.txt"), "external tree bytes\n");
+  const beforeEntries = await readdir(externalPath);
+  const beforeOwner = await readFile(externalOwnerPath, "utf8");
+  const beforeKeep = await readFile(path.join(externalPath, "keep.txt"), "utf8");
+  const calls = [];
+  let swapped = false;
+
+  const result = await checkGameDesignUpdates({
+    pluginRoot,
+    home,
+    now: Date.parse(CHECKED_AT),
+    fetchFn: checkingFetch(calls),
+    fsOps: {
+      open: async (filePath, ...args) => {
+        if (filePath === path.join(lockPath, "owner.json")) {
+          await rm(lockPath, { recursive: true, force: true });
+          await symlink(externalPath, lockPath);
+          swapped = true;
+          throw Object.assign(new Error("injected canonical swap"), { code: "EIO" });
+        }
+        return open(filePath, ...args);
+      },
+      link: async (stagingPath, canonicalPath) => {
+        if (!swapped) {
+          await symlink(externalPath, canonicalPath);
+          swapped = true;
+        }
+        return link(stagingPath, canonicalPath);
+      },
+    },
+  });
+
+  // Catches createOwnedLock catch cleanup that unlinks lockPath/owner.json after a swap.
+  assert.equal(swapped, true);
+  assert.deepEqual(result, {
+    schemaVersion: 1,
+    checkedAt: CHECKED_AT,
+    cache: "miss",
+    status: "unknown",
+    components: INSTALLED.map(({ id, installedTag }) => ({ id, installedTag, latestTag: null, status: "unknown", releaseUrl: null })),
+    notification: null,
+  });
+  assert.equal(calls.length, 0);
+  assert.deepEqual(await readdir(externalPath), beforeEntries);
+  assert.equal(await readFile(externalOwnerPath, "utf8"), beforeOwner);
+  assert.equal(await readFile(path.join(externalPath, "keep.txt"), "utf8"), beforeKeep);
+  assert.equal((await lstat(lockPath)).isSymbolicLink(), true);
+  assert.deepEqual(await readdir(path.dirname(cachePath)), [path.basename(lockPath)]);
+});
+
 test("never reclaims symlink or hostile lock directories", async (t) => {
   const { pluginRoot, home, root } = await fixture(t);
   const cachePath = resolveUpdateCachePath({ env: {}, home, platform: process.platform });
@@ -550,7 +659,12 @@ test("publishes cache atomically and leaves prior evidence intact when publicati
     home,
     now: Date.parse(CHECKED_AT),
     fetchFn: checkingFetch(calls),
-    fsOps: { rename: async () => { throw Object.assign(new Error("rename failed"), { code: "EIO" }); } },
+    fsOps: {
+      rename: async (from, to) => {
+        if (from.endsWith(".tmp")) throw Object.assign(new Error("rename failed"), { code: "EIO" });
+        return rename(from, to);
+      },
+    },
   });
 
   assert.equal(result.status, "unknown");

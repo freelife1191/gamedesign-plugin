@@ -115,3 +115,36 @@
 - PID 조회가 `ESRCH`가 아닌 권한 오류를 반환하거나 PID가 재사용된 경우 stale lock을 보수적으로 보존한다. 이 경우 checker는 bounded wait 뒤 `unknown`이며 안전하지 않은 삭제를 하지 않는다.
 - legacy ID-only cache는 한 번 재검사되어 새 closed schema로 교체된다. 의도된 fail-closed migration 비용이다.
 - active/unknown/hostile lock contention은 최대 1초 wait 뒤 `unknown`을 반환한다. plugin 본래 기능은 계속 진행된다.
+
+## Fix2: canonical lock publication과 cleanup 경계
+
+### 수정 내용
+
+- 새 lock은 canonical `.lock`을 먼저 만들지 않는다. unique staging regular file에 완전한 exact-key metadata를 `O_EXCL`·`O_NOFOLLOW`·`0600`으로 sync한 뒤, 같은 filesystem의 `link(staging, canonical)`으로 no-replace 게시한다. 따라서 canonical path에는 완성된 task-owned metadata file만 나타난다.
+- staging 파일 정리는 canonical path를 다시 따라가지 않는다. 생성 실패와 게시 후 staging 정리는 identity-verified staging을 unique quarantine으로 이동한 뒤 그 quarantine만 삭제한다.
+- 기존 directory-form task lock은 계속 inspect/reclaim/release한다. 오래된, 비-symlink, 정확히 빈 legacy directory만 mtime lease 이후 quarantine으로 이동해 회수한다. `owner.json`이 부분적이거나 unknown/extra entry가 있으면 canonical에 그대로 보존되고 checker는 1초 내 `unknown`으로 닫힌다.
+- 새 regular-file lock release도 owner·inode·kind를 재검사한 뒤 quarantine에서만 삭제한다. PID/nonce/lease 검증과 active/symlink/hostile fail-closed 계약은 유지한다.
+
+### TDD 증거
+
+#### RED
+
+- stale empty legacy `.lock`: 기대 `current`, network 3회였으나 기존 구현은 bounded `unknown`, network 0회로 실패했다.
+- injected canonical directory-to-symlink swap: 기존 `createOwnedLock` catch가 `lockPath/owner.json`을 unlink해 외부 `owner.json` sentinel entry가 사라져 실패했다.
+
+#### GREEN
+
+- stale empty legacy lock은 회수 후 staged publication으로 `current`, network 3회이며 canonical/staging entry가 남지 않는다.
+- 부분 `owner.json` legacy directory는 network 0회·`unknown`이며 bytes/entries를 보존한다.
+- publication 중 canonical을 external directory symlink로 교체해도 결과는 network 0회·`unknown`; external sentinel bytes와 전체 entry set은 동일하고 staging entry는 남지 않는다.
+- `node --test tests/unit/game-design-update-check.test.mjs`: 24 pass, 0 fail.
+- `node --test tests/unit/update-advisory.test.mjs tests/unit/game-design-update-check.test.mjs`: 32 pass, 0 fail.
+
+### 생성물·정적 검증
+
+- `npm run build && npm run build -- --check` 통과: Career 542 files, Studio 554 files.
+- shared checker와 Studio/Career checker `cmp -s` byte parity, 세 checker `node --check`, 두 `BUILD-MANIFEST.json` JSON parse, `git diff --check`를 통과했다.
+
+### 남은 우려
+
+- stale empty legacy directory 회수는 metadata가 없는 이전 crash artefact에만 좁게 적용한다. 비어 있지 않거나 symlink인 canonical path는 소유를 추정하지 않고 보존한다.
