@@ -252,7 +252,7 @@ function assertCapability(capability, availableKeys) {
 }
 
 function assertSessionStartOutput(output) {
-  assert.deepEqual(Object.keys(output).sort(), ["capabilities", "hookSpecificOutput", "imageConfig", "warnings"]);
+  assert.deepEqual(Object.keys(output).sort(), ["capabilities", "hookSpecificOutput", "imageConfig", "updates", "warnings"]);
   assert.deepEqual(Object.keys(output.hookSpecificOutput).sort(), ["additionalContext", "hookEventName"]);
   assert.equal(output.hookSpecificOutput.hookEventName, "SessionStart");
   assert.equal(typeof output.hookSpecificOutput.additionalContext, "string");
@@ -306,7 +306,7 @@ function assertSessionStartOutput(output) {
   }
   assert.deepEqual(
     JSON.parse(output.hookSpecificOutput.additionalContext),
-    { capabilities: output.capabilities, imageConfig: output.imageConfig },
+    { capabilities: output.capabilities, imageConfig: output.imageConfig, updates: output.updates },
   );
 }
 
@@ -673,7 +673,7 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
         hooks: [{
           type: "command",
           command: 'node "${PLUGIN_ROOT}/scripts/capability-probe.mjs"',
-          timeout: 10,
+          timeout: 15,
           statusMessage: "Detecting optional game-design and image capabilities",
         }],
       }],

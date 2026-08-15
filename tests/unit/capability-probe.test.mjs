@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { afterEach, test } from 'node:test';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import {
   browserCandidates,
@@ -15,7 +15,14 @@ import {
 } from '../../shared/scripts/capability-probe.mjs';
 
 const script = fileURLToPath(new URL('../../shared/scripts/capability-probe.mjs', import.meta.url));
+const repoRoot = fileURLToPath(new URL('../../', import.meta.url));
 const temporaryDirs = [];
+const UPDATE_CHECKED_AT = Date.parse('2026-08-15T00:00:00.000Z');
+const UPDATE_COMPONENTS = [
+  { id: 'skillstead', repository: 'https://github.com/kyungseo/skillstead', installedTag: 'svg-infographic/v0.9.0' },
+  { id: 'archify', repository: 'https://github.com/tt-a1i/archify', installedTag: 'v2.13.0' },
+  { id: 'im-not-ai', repository: 'https://github.com/epoko77-ai/im-not-ai', installedTag: 'v2.3.0' },
+];
 
 afterEach(async () => {
   await Promise.all(temporaryDirs.splice(0).map((dir) => rm(dir, { recursive: true, force: true })));
@@ -31,8 +38,54 @@ async function temporaryWorkspace() {
 function runProbe({ cwd, env = {}, input = {} }) {
   const result = spawnSync(process.execPath, [script], {
     cwd,
-    env: { PATH: '', ...env },
+    env: { PATH: '', HOME: cwd, GAME_DESIGN_UPDATE_CHECKS: 'false', ...env },
     input: JSON.stringify(input),
+    encoding: 'utf8',
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stderr, '');
+  return JSON.parse(result.stdout);
+}
+
+function runInjectedProbe({ home, now = UPDATE_CHECKED_AT, archifyTag = 'v2.14.0', offline = false, optOut = false } = {}) {
+  const result = spawnSync(process.execPath, ['--input-type=module', '--eval', `
+    import { runCapabilityProbe } from ${JSON.stringify(pathToFileURL(script).href)};
+    const components = ${JSON.stringify(UPDATE_COMPONENTS)};
+    const endpoints = {
+      skillstead: 'https://api.github.com/repos/kyungseo/skillstead/releases',
+      archify: 'https://api.github.com/repos/tt-a1i/archify/releases',
+      'im-not-ai': 'https://api.github.com/repos/epoko77-ai/im-not-ai/releases',
+    };
+    process.stdin.push(null);
+    const output = await runCapabilityProbe({ updateOptions: {
+      pluginRoot: ${JSON.stringify(repoRoot)},
+      home: ${JSON.stringify(home)},
+      now: ${JSON.stringify(now)},
+      env: ${JSON.stringify(optOut ? { GAME_DESIGN_UPDATE_CHECKS: 'false' } : {})},
+      fetchFn: async (url) => {
+        if (${JSON.stringify(offline)}) throw new Error('offline');
+        const component = components.find(({ id }) => endpoints[id] === url);
+        if (!component) throw new Error('unexpected update endpoint');
+        const tag = component.id === 'archify' ? ${JSON.stringify(archifyTag)} : component.installedTag;
+        return {
+          ok: true,
+          status: 200,
+          url,
+          async json() {
+            return [{
+              tag_name: tag,
+              draft: false,
+              prerelease: false,
+              html_url: component.repository + '/releases/tag/' + encodeURIComponent(tag),
+            }];
+          },
+        };
+      },
+    } });
+    process.stdout.write(JSON.stringify(output));
+  `], {
+    cwd: home,
+    env: { PATH: '', HOME: home },
     encoding: 'utf8',
   });
   assert.equal(result.status, 0, result.stderr);
@@ -45,8 +98,22 @@ test('reports deterministic capability presence and structured optional warnings
   const first = runProbe({ cwd });
   const second = runProbe({ cwd, input: { ignored: 'input cannot enable capabilities' } });
 
-  assert.deepEqual(first, second);
-  assert.equal(first.hookSpecificOutput.hookEventName, 'SessionStart');
+  const { updates: firstUpdates } = first;
+  const { updates: secondUpdates } = second;
+  assert.deepEqual(first.capabilities, second.capabilities);
+  assert.deepEqual(first.imageConfig, second.imageConfig);
+  assert.deepEqual(first.warnings, second.warnings);
+  assert.equal(first.hookSpecificOutput.hookEventName, second.hookSpecificOutput.hookEventName);
+  assert.deepEqual(Object.keys(first).sort(), [
+    'capabilities', 'hookSpecificOutput', 'imageConfig', 'updates', 'warnings',
+  ]);
+  assert.deepEqual(JSON.parse(first.hookSpecificOutput.additionalContext).updates, first.updates);
+  for (const updates of [firstUpdates, secondUpdates]) {
+    assert.equal(updates.cache, 'disabled');
+    assert.equal(updates.status, 'disabled');
+    assert.deepEqual(updates.components, []);
+    assert.equal(updates.notification, null);
+  }
   assert.equal(first.capabilities.node.available, true);
   assert.equal(first.capabilities.soffice.available, false);
   assert.equal(typeof first.capabilities.chromium.available, 'boolean');
@@ -55,6 +122,67 @@ test('reports deterministic capability presence and structured optional warnings
     !first.capabilities.chromium.available,
   );
   assert.ok(first.warnings.some(({ code }) => code === 'capability.soffice.absent'));
+});
+
+test('SessionStart surfaces injected update advisories without changing capability context', async () => {
+  const home = await temporaryWorkspace();
+  const first = runInjectedProbe({ home });
+  assert.deepEqual(Object.keys(first).sort(), [
+    'capabilities', 'hookSpecificOutput', 'imageConfig', 'updates', 'warnings',
+  ]);
+  assert.deepEqual(JSON.parse(first.hookSpecificOutput.additionalContext).updates, first.updates);
+  assert.deepEqual(first.updates.notification, {
+    kind: 'update-available',
+    prompt: '플러그인 업데이트를 확인해 줘',
+    componentIds: ['archify'],
+  });
+
+  const cached = runInjectedProbe({
+    home,
+    now: UPDATE_CHECKED_AT + 1,
+    offline: true,
+  });
+  assert.equal(cached.updates.cache, 'hit');
+  assert.equal(cached.updates.notification, null);
+
+  const currentHome = await temporaryWorkspace();
+  const current = runInjectedProbe({
+    home: currentHome,
+    archifyTag: 'v2.13.0',
+  });
+  assert.equal(current.updates.status, 'current');
+  assert.equal(current.updates.notification, null);
+
+  const newer = runInjectedProbe({
+    home: currentHome,
+    now: UPDATE_CHECKED_AT + (7 * 24 * 60 * 60 * 1000),
+    archifyTag: 'v2.15.0',
+  });
+  assert.deepEqual(newer.updates.notification, {
+    kind: 'update-available',
+    prompt: '플러그인 업데이트를 확인해 줘',
+    componentIds: ['archify'],
+  });
+
+  const offline = runInjectedProbe({
+    home: await temporaryWorkspace(),
+    offline: true,
+  });
+  assert.equal(offline.updates.status, 'unknown');
+  assert.equal(offline.updates.notification, null);
+
+  const optOut = runInjectedProbe({
+    home: await temporaryWorkspace(),
+    optOut: true,
+  });
+  assert.deepEqual(optOut.updates, {
+    schemaVersion: 1,
+    checkedAt: '2026-08-15T00:00:00.000Z',
+    cache: 'disabled',
+    status: 'disabled',
+    components: [],
+    notification: null,
+  });
 });
 
 async function writeArchifySkill(root, version = '2.13.0') {
