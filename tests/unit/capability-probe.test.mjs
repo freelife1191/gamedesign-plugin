@@ -29,16 +29,48 @@ afterEach(async () => {
 });
 
 async function temporaryWorkspace() {
-  const dir = await mkdtemp(join(tmpdir(), 'game-design-capability-'));
-  temporaryDirs.push(dir);
+  const dir = await temporaryDirectory('game-design-capability-');
   await writeFile(join(dir, 'sentinel.txt'), 'unchanged\n');
   return dir;
 }
 
+async function temporaryDirectory(prefix) {
+  const dir = await mkdtemp(join(tmpdir(), prefix));
+  temporaryDirs.push(dir);
+  return dir;
+}
+
+async function snapshotTree(root) {
+  const entries = [];
+  async function visit(current, relativePath) {
+    const stats = await lstat(current);
+    if (stats.isDirectory()) {
+      entries.push({ relativePath, type: 'directory' });
+      const children = await readdir(current);
+      for (const child of children.sort()) await visit(join(current, child), join(relativePath, child));
+      return;
+    }
+    if (stats.isFile()) {
+      entries.push({ relativePath, type: 'file', contents: (await readFile(current)).toString('base64') });
+      return;
+    }
+    entries.push({ relativePath, type: 'other' });
+  }
+  await visit(root, '.');
+  return entries;
+}
+
 function runProbe({ cwd, env = {}, input = {} }) {
+  const { GAME_DESIGN_UPDATE_CHECKS: _checks, HOME: _home, PATH: _path, XDG_CACHE_HOME: _xdgCache, ...safeEnv } = env;
   const result = spawnSync(process.execPath, [script], {
     cwd,
-    env: { PATH: '', HOME: cwd, GAME_DESIGN_UPDATE_CHECKS: 'false', ...env },
+    env: {
+      ...safeEnv,
+      PATH: '',
+      HOME: `${cwd}-home`,
+      XDG_CACHE_HOME: `${cwd}-cache`,
+      GAME_DESIGN_UPDATE_CHECKS: 'false',
+    },
     input: JSON.stringify(input),
     encoding: 'utf8',
   });
@@ -47,7 +79,17 @@ function runProbe({ cwd, env = {}, input = {} }) {
   return JSON.parse(result.stdout);
 }
 
-function runInjectedProbe({ home, now = UPDATE_CHECKED_AT, archifyTag = 'v2.14.0', offline = false, optOut = false } = {}) {
+function runInjectedProbe({
+  home,
+  workspace,
+  now = UPDATE_CHECKED_AT,
+  archifyTag = 'v2.14.0',
+  offline = false,
+  neverResolving = false,
+  optOut = false,
+  processEnv = {},
+  timeout,
+} = {}) {
   const result = spawnSync(process.execPath, ['--input-type=module', '--eval', `
     import { runCapabilityProbe } from ${JSON.stringify(pathToFileURL(script).href)};
     const components = ${JSON.stringify(UPDATE_COMPONENTS)};
@@ -57,6 +99,7 @@ function runInjectedProbe({ home, now = UPDATE_CHECKED_AT, archifyTag = 'v2.14.0
       'im-not-ai': 'https://api.github.com/repos/epoko77-ai/im-not-ai/releases',
     };
     process.stdin.push(null);
+    globalThis.fetch = () => { throw new Error('live network is forbidden in this test'); };
     const output = await runCapabilityProbe({ updateOptions: {
       pluginRoot: ${JSON.stringify(repoRoot)},
       home: ${JSON.stringify(home)},
@@ -64,6 +107,7 @@ function runInjectedProbe({ home, now = UPDATE_CHECKED_AT, archifyTag = 'v2.14.0
       env: ${JSON.stringify(optOut ? { GAME_DESIGN_UPDATE_CHECKS: 'false' } : {})},
       fetchFn: async (url) => {
         if (${JSON.stringify(offline)}) throw new Error('offline');
+        if (${JSON.stringify(neverResolving)}) return new Promise(() => undefined);
         const component = components.find(({ id }) => endpoints[id] === url);
         if (!component) throw new Error('unexpected update endpoint');
         const tag = component.id === 'archify' ? ${JSON.stringify(archifyTag)} : component.installedTag;
@@ -84,9 +128,10 @@ function runInjectedProbe({ home, now = UPDATE_CHECKED_AT, archifyTag = 'v2.14.0
     } });
     process.stdout.write(JSON.stringify(output));
   `], {
-    cwd: home,
-    env: { PATH: '', HOME: home },
+    cwd: workspace,
+    env: { PATH: '', HOME: home, XDG_CACHE_HOME: join(home, 'cache'), ...processEnv },
     encoding: 'utf8',
+    timeout,
   });
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stderr, '');
@@ -125,8 +170,10 @@ test('reports deterministic capability presence and structured optional warnings
 });
 
 test('SessionStart surfaces injected update advisories without changing capability context', async () => {
-  const home = await temporaryWorkspace();
-  const first = runInjectedProbe({ home });
+  const workspace = await temporaryWorkspace();
+  const home = await temporaryDirectory('game-design-update-home-');
+  const before = await snapshotTree(workspace);
+  const first = runInjectedProbe({ home, workspace });
   assert.deepEqual(Object.keys(first).sort(), [
     'capabilities', 'hookSpecificOutput', 'imageConfig', 'updates', 'warnings',
   ]);
@@ -136,18 +183,22 @@ test('SessionStart surfaces injected update advisories without changing capabili
     prompt: '플러그인 업데이트를 확인해 줘',
     componentIds: ['archify'],
   });
+  assert.deepEqual(await snapshotTree(workspace), before);
 
   const cached = runInjectedProbe({
     home,
+    workspace,
     now: UPDATE_CHECKED_AT + 1,
     offline: true,
   });
   assert.equal(cached.updates.cache, 'hit');
   assert.equal(cached.updates.notification, null);
+  assert.deepEqual(await snapshotTree(workspace), before);
 
-  const currentHome = await temporaryWorkspace();
+  const currentHome = await temporaryDirectory('game-design-current-home-');
   const current = runInjectedProbe({
     home: currentHome,
+    workspace,
     archifyTag: 'v2.13.0',
   });
   assert.equal(current.updates.status, 'current');
@@ -155,6 +206,7 @@ test('SessionStart surfaces injected update advisories without changing capabili
 
   const newer = runInjectedProbe({
     home: currentHome,
+    workspace,
     now: UPDATE_CHECKED_AT + (7 * 24 * 60 * 60 * 1000),
     archifyTag: 'v2.15.0',
   });
@@ -165,14 +217,17 @@ test('SessionStart surfaces injected update advisories without changing capabili
   });
 
   const offline = runInjectedProbe({
-    home: await temporaryWorkspace(),
+    home: await temporaryDirectory('game-design-offline-home-'),
+    workspace,
     offline: true,
   });
   assert.equal(offline.updates.status, 'unknown');
   assert.equal(offline.updates.notification, null);
+  assert.deepEqual(await snapshotTree(workspace), before);
 
   const optOut = runInjectedProbe({
-    home: await temporaryWorkspace(),
+    home: await temporaryDirectory('game-design-opt-out-home-'),
+    workspace,
     optOut: true,
   });
   assert.deepEqual(optOut.updates, {
@@ -183,6 +238,45 @@ test('SessionStart surfaces injected update advisories without changing capabili
     components: [],
     notification: null,
   });
+});
+
+test('SessionStart emits JSON within its 20-second bounded capability and update budget', async () => {
+  const workspace = await temporaryWorkspace();
+  const home = await temporaryDirectory('game-design-bounded-home-');
+  const browser = join(await temporaryDirectory('game-design-slow-browser-'), 'google-chrome');
+  await writeFile(browser, '#!/bin/sh\n/bin/sleep 11\nprintf "Google Chrome 151.0.0.0\\n"\n');
+  await chmod(browser, 0o755);
+
+  const startedAt = Date.now();
+  const output = runInjectedProbe({
+    home,
+    workspace,
+    neverResolving: true,
+    processEnv: { PATH: '/usr/bin:/bin', SVG_INFOGRAPHIC_BROWSER: browser },
+    timeout: 20_000,
+  });
+
+  assert.ok(Date.now() - startedAt < 20_000);
+  assert.equal(output.updates.status, 'unknown');
+});
+
+test('SessionStart returns closed unknown updates when checker initialization throws', async () => {
+  const output = runInjectedProbe({
+    home: await temporaryDirectory('game-design-invalid-update-home-'),
+    workspace: await temporaryWorkspace(),
+    now: 'not-a-timestamp',
+  });
+
+  assert.deepEqual(output.updates, {
+    schemaVersion: 1,
+    checkedAt: output.updates.checkedAt,
+    cache: 'miss',
+    status: 'unknown',
+    components: [],
+    notification: null,
+  });
+  assert.doesNotThrow(() => new Date(output.updates.checkedAt).toISOString());
+  assert.deepEqual(JSON.parse(output.hookSpecificOutput.additionalContext).updates, output.updates);
 });
 
 async function writeArchifySkill(root, version = '2.13.0') {
@@ -440,7 +534,7 @@ test('SessionStart includes Archify capability without an absolute host path', a
   const codexHome = join(cwd, 'portable-codex-home');
   await writeArchifySkill(join(codexHome, 'skills', 'archify'));
 
-  const output = runProbe({ cwd, env: { CODEX_HOME: codexHome, HOME: cwd } });
+  const output = runProbe({ cwd, env: { CODEX_HOME: codexHome } });
   const context = JSON.parse(output.hookSpecificOutput.additionalContext);
 
   assert.deepEqual(context.capabilities.archify, {
@@ -614,7 +708,12 @@ test('rejects malformed stdin without failing the optional hook', async () => {
   const cwd = await temporaryWorkspace();
   const result = spawnSync(process.execPath, [script], {
     cwd,
-    env: { PATH: '' },
+    env: {
+      PATH: '',
+      HOME: `${cwd}-home`,
+      XDG_CACHE_HOME: `${cwd}-cache`,
+      GAME_DESIGN_UPDATE_CHECKS: 'false',
+    },
     input: '{not-json',
     encoding: 'utf8',
   });

@@ -66,7 +66,12 @@ test('production build emits runnable SessionStart and Stop hook commands', asyn
     const command = configured.replaceAll('${PLUGIN_ROOT}', built.outputDir);
     const result = spawnSync(command, {
       cwd: built.outputDir,
-      env: { PATH: process.env.PATH ?? '' },
+      env: {
+        PATH: process.env.PATH ?? '',
+        HOME: join(stagingRoot, 'hook-home'),
+        XDG_CACHE_HOME: join(stagingRoot, 'hook-cache'),
+        GAME_DESIGN_UPDATE_CHECKS: 'false',
+      },
       input: event === 'Stop' ? JSON.stringify({
         cwd: built.outputDir,
         turn_id: 'build-smoke',

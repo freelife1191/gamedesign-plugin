@@ -483,12 +483,33 @@ export async function probeCapabilities({ platform = process.platform, env = pro
   return { capabilities, warnings };
 }
 
+function closedUnknownUpdates() {
+  return {
+    schemaVersion: 1,
+    checkedAt: new Date().toISOString(),
+    cache: 'miss',
+    status: 'unknown',
+    components: [],
+    notification: null,
+  };
+}
+
+async function safelyCheckGameDesignUpdates(updateOptions) {
+  try {
+    return await checkGameDesignUpdates(updateOptions);
+  } catch {
+    return closedUnknownUpdates();
+  }
+}
+
 export async function runCapabilityProbe({ updateOptions } = {}) {
   const input = await readHookInput();
-  const result = await probeCapabilities();
   const workspaceRoot = safeAbsoluteCandidate(input.value?.cwd) ?? process.cwd();
-  const imageConfig = toPublicImageConfig(await loadImageConfig({ workspaceRoot }));
-  const updates = await checkGameDesignUpdates(updateOptions);
+  const [result, imageConfig, updates] = await Promise.all([
+    probeCapabilities(),
+    loadImageConfig({ workspaceRoot }).then(toPublicImageConfig),
+    safelyCheckGameDesignUpdates(updateOptions),
+  ]);
   if (input.warning) result.warnings.unshift(input.warning);
   return {
     hookSpecificOutput: {

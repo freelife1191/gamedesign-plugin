@@ -143,7 +143,12 @@ async function validateDiscoveredProducts({ sourceRoot, stagingRoot, referenceIn
 function runBuiltHook({ outputDir, scriptName, input }) {
   const result = spawnSync(process.execPath, [path.join(outputDir, "scripts", scriptName)], {
     cwd: outputDir,
-    env: { ...process.env },
+    env: {
+      PATH: "",
+      HOME: path.join(outputDir, "..", "hook-home"),
+      XDG_CACHE_HOME: path.join(outputDir, "..", "hook-cache"),
+      GAME_DESIGN_UPDATE_CHECKS: "false",
+    },
     input: JSON.stringify(input),
     encoding: "utf8",
   });
@@ -236,7 +241,14 @@ async function assertCompilerlessSealedAppend({ builds, stagingRoot }) {
     `;
     const result = spawnSync(process.execPath, ["--input-type=module", "--eval", script], {
       cwd: build.outputDir,
-      env: { PATH: emptyPath, CC: "/nonexistent/cc", CXX: "/nonexistent/cxx" },
+      env: {
+        PATH: emptyPath,
+        CC: "/nonexistent/cc",
+        CXX: "/nonexistent/cxx",
+        HOME: path.join(stagingRoot, "sealed-append-home"),
+        XDG_CACHE_HOME: path.join(stagingRoot, "sealed-append-cache"),
+        GAME_DESIGN_UPDATE_CHECKS: "false",
+      },
       encoding: "utf8",
     });
     assert.equal(result.status, 0, result.stderr);
@@ -609,7 +621,14 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
       process.stdout.write(JSON.stringify({ imported: true }));
     `], {
       cwd: build.outputDir,
-      env: { PATH: emptyPath, CC: "/nonexistent/cc", CXX: "/nonexistent/cxx" },
+      env: {
+        PATH: emptyPath,
+        CC: "/nonexistent/cc",
+        CXX: "/nonexistent/cxx",
+        HOME: path.join(stagingRoot, "reference-import-home"),
+        XDG_CACHE_HOME: path.join(stagingRoot, "reference-import-cache"),
+        GAME_DESIGN_UPDATE_CHECKS: "false",
+      },
       encoding: "utf8",
     });
     await rm(emptyPath, { recursive: true, force: true });
@@ -673,7 +692,7 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
         hooks: [{
           type: "command",
           command: 'node "${PLUGIN_ROOT}/scripts/capability-probe.mjs"',
-          timeout: 15,
+          timeout: 20,
           statusMessage: "Detecting optional game-design and image capabilities",
         }],
       }],
