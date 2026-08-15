@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { lstat, mkdtemp, mkdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { lstat, mkdtemp, mkdir, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -82,7 +82,11 @@ async function writeCache({ home, value }) {
   return cachePath;
 }
 
-function cacheValue({ checkedAt = CHECKED_AT, lastNotifiedComponentIds = [], lastNotifiedAt = null } = {}) {
+function notificationIdentity({ latestTag = "v2.14.0" } = {}) {
+  return [{ id: "archify", installedTag: "v2.13.0", latestTag }];
+}
+
+function cacheValue({ checkedAt = CHECKED_AT, lastNotifiedComponents = [], lastNotifiedAt = null } = {}) {
   return {
     schemaVersion: 1,
     checkedAt,
@@ -95,7 +99,7 @@ function cacheValue({ checkedAt = CHECKED_AT, lastNotifiedComponentIds = [], las
       releaseUrl: `${component.repository}/releases/tag/${encodeURIComponent(component.installedTag)}`,
     })),
     lastNotifiedAt,
-    lastNotifiedComponentIds,
+    lastNotifiedComponents,
   };
 }
 
@@ -116,7 +120,38 @@ function outdatedCacheValue(options = {}) {
 test("uses the documented OS cache location without exposing it in results", () => {
   assert.equal(resolveUpdateCachePath({ env: { XDG_CACHE_HOME: "/tmp/xdg" }, home: "/home/test", platform: "linux" }), "/tmp/xdg/game-design-suite/update-advisory-v1.json");
   assert.equal(resolveUpdateCachePath({ env: {}, home: "/Users/test", platform: "darwin" }), "/Users/test/Library/Caches/game-design-suite/update-advisory-v1.json");
-  assert.equal(resolveUpdateCachePath({ env: { LOCALAPPDATA: "C:\\Cache" }, home: "C:\\Users\\test", platform: "win32" }), path.join("C:\\Cache", "game-design-suite", "update-advisory-v1.json"));
+  assert.equal(resolveUpdateCachePath({ env: { LOCALAPPDATA: "C:\\Cache" }, home: "C:\\Users\\test", platform: "win32" }), "C:\\Cache\\game-design-suite\\update-advisory-v1.json");
+  assert.equal(resolveUpdateCachePath({ env: { LOCALAPPDATA: "relative-cache" }, home: "C:\\Users\\test", platform: "win32" }), "C:\\Users\\test\\AppData\\Local\\game-design-suite\\update-advisory-v1.json");
+});
+
+test("relative Windows LOCALAPPDATA falls back to absolute home cache without writing under cwd", async (t) => {
+  const { pluginRoot, home, root } = await fixture(t);
+  const cwd = path.join(root, "cwd");
+  await mkdir(cwd);
+  const before = await readdir(cwd);
+  const calls = [];
+  const originalCwd = process.cwd();
+  t.after(() => process.chdir(originalCwd));
+  process.chdir(cwd);
+
+  let result;
+  try {
+    result = await checkGameDesignUpdates({
+      pluginRoot,
+      home,
+      platform: "win32",
+      env: { LOCALAPPDATA: "relative-cache" },
+      now: Date.parse(CHECKED_AT),
+      fetchFn: checkingFetch(calls),
+    });
+  } finally {
+    process.chdir(originalCwd);
+  }
+
+  assert.equal(result.status, "current");
+  assert.equal(calls.length, 3);
+  assert.deepEqual(await readdir(cwd), before);
+  assert.equal((await lstat(path.join(home, "AppData", "Local", "game-design-suite", "update-advisory-v1.json"))).isFile(), true);
 });
 
 test("checks only the three literal official release endpoints on a cache miss", async (t) => {
@@ -168,8 +203,63 @@ test("concurrent fresh outdated cache hits atomically claim one notification wit
     componentIds: ["archify"],
   });
   const persisted = JSON.parse(await readFile(cachePath, "utf8"));
-  assert.deepEqual(persisted.lastNotifiedComponentIds, ["archify"]);
+  assert.deepEqual(persisted.lastNotifiedComponents, notificationIdentity());
   assert.equal(persisted.lastNotifiedAt, "2026-08-21T00:00:00.000Z");
+});
+
+test("a previously notified outdated version stays suppressed after a shared-cache refresh", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  const cachePath = await writeCache({
+    home,
+    value: outdatedCacheValue({ lastNotifiedComponents: notificationIdentity(), lastNotifiedAt: CHECKED_AT }),
+  });
+  const calls = [];
+  const result = await checkGameDesignUpdates({
+    pluginRoot,
+    home,
+    now: SEVEN_DAYS_LATER,
+    fetchFn: checkingFetch(calls, (url) => {
+      if (url === ENDPOINTS[1]) return response(url, [apiRelease("v2.14.0", INSTALLED[1].repository)]);
+      return currentResponse(url);
+    }),
+  });
+
+  assert.equal(result.status, "outdated");
+  assert.equal(result.notification, null);
+  assert.equal(calls.length, 3);
+  const persisted = JSON.parse(await readFile(cachePath, "utf8"));
+  assert.deepEqual(persisted.lastNotifiedComponents, notificationIdentity());
+  assert.equal(persisted.lastNotifiedAt, CHECKED_AT);
+});
+
+test("a newer tag for the same component is claimed once across concurrent shared-cache refreshes", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  const cachePath = await writeCache({
+    home,
+    value: outdatedCacheValue({ lastNotifiedComponents: notificationIdentity(), lastNotifiedAt: CHECKED_AT }),
+  });
+  const calls = [];
+  let releaseFirst;
+  const firstStarted = new Promise((resolve) => { releaseFirst = resolve; });
+  const fetchFn = async (url, options) => {
+    calls.push({ url, options });
+    if (calls.length === 1) await firstStarted;
+    if (url === ENDPOINTS[1]) return response(url, [apiRelease("v2.15.0", INSTALLED[1].repository)]);
+    return currentResponse(url);
+  };
+
+  const first = checkGameDesignUpdates({ pluginRoot, home, now: SEVEN_DAYS_LATER, fetchFn });
+  while (calls.length === 0) await new Promise((resolve) => setTimeout(resolve, 1));
+  const second = checkGameDesignUpdates({ pluginRoot, home, now: SEVEN_DAYS_LATER, fetchFn });
+  releaseFirst();
+  const results = await Promise.all([first, second]);
+
+  assert.equal(calls.length, 3);
+  assert.equal(results.filter(({ notification }) => notification !== null).length, 1);
+  assert.ok(results.every(({ components }) => components.find(({ id }) => id === "archify")?.latestTag === "v2.15.0"));
+  const persisted = JSON.parse(await readFile(cachePath, "utf8"));
+  assert.deepEqual(persisted.lastNotifiedComponents, notificationIdentity({ latestTag: "v2.15.0" }));
+  assert.equal(persisted.lastNotifiedAt, "2026-08-22T00:00:00.000Z");
 });
 
 test("treats exactly seven days as stale and refreshes the cache", async (t) => {
@@ -249,14 +339,16 @@ test("rejects future, truncated JSON, and unknown-key cache evidence before refr
   }
 });
 
-test("rejects partial and future notification state before rechecking", async (t) => {
+test("rejects legacy, partial, future, and non-closed notification state before rechecking", async (t) => {
   const { pluginRoot, home } = await fixture(t);
   for (const value of [
-    outdatedCacheValue({ lastNotifiedComponentIds: ["archify"], lastNotifiedAt: null }),
-    outdatedCacheValue({ lastNotifiedComponentIds: [], lastNotifiedAt: CHECKED_AT }),
-    outdatedCacheValue({ lastNotifiedComponentIds: ["archify"], lastNotifiedAt: "2026-08-14T00:00:00.000Z" }),
-    outdatedCacheValue({ lastNotifiedComponentIds: ["archify"], lastNotifiedAt: "2026-08-22T00:00:00.000Z" }),
-    outdatedCacheValue({ lastNotifiedComponentIds: ["skillstead"], lastNotifiedAt: CHECKED_AT }),
+    { ...outdatedCacheValue(), lastNotifiedComponentIds: ["archify"] },
+    outdatedCacheValue({ lastNotifiedComponents: notificationIdentity(), lastNotifiedAt: null }),
+    outdatedCacheValue({ lastNotifiedComponents: [], lastNotifiedAt: CHECKED_AT }),
+    outdatedCacheValue({ lastNotifiedComponents: notificationIdentity(), lastNotifiedAt: "2026-08-14T00:00:00.000Z" }),
+    outdatedCacheValue({ lastNotifiedComponents: notificationIdentity(), lastNotifiedAt: "2026-08-22T00:00:00.000Z" }),
+    outdatedCacheValue({ lastNotifiedComponents: [{ ...notificationIdentity()[0], extra: true }], lastNotifiedAt: CHECKED_AT }),
+    outdatedCacheValue({ lastNotifiedComponents: [{ id: "archify", installedTag: "v2.13.0", latestTag: "v2.99.0" }], lastNotifiedAt: CHECKED_AT }),
   ]) {
     await writeCache({ home, value });
     const calls = [];
@@ -266,6 +358,83 @@ test("rejects partial and future notification state before rechecking", async (t
     assert.equal(result.cache, "miss");
     assert.equal(calls.length, 3);
   }
+});
+
+async function writeLock({ home, createdAt, owner = "game-design-update-check:99999999-test-owner", extra = false }) {
+  const cachePath = resolveUpdateCachePath({ env: {}, home, platform: process.platform });
+  const lockPath = `${cachePath}.lock`;
+  await mkdir(lockPath, { recursive: true, mode: 0o700 });
+  await writeFile(path.join(lockPath, "owner.json"), `${JSON.stringify({ schemaVersion: 1, owner, createdAt })}\n`, { mode: 0o600 });
+  if (extra) await writeFile(path.join(lockPath, "hostile.txt"), "keep\n");
+  return lockPath;
+}
+
+test("preserves an active task-owned lock and does not start a competing check", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  const lockPath = await writeLock({
+    home,
+    createdAt: new Date(Date.now() - 120_000).toISOString(),
+    owner: `game-design-update-check:${process.pid}-live-owner`,
+  });
+  const calls = [];
+
+  const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+
+  assert.equal(result.status, "unknown");
+  assert.equal(calls.length, 0);
+  assert.equal((await lstat(lockPath)).isDirectory(), true);
+});
+
+test("reclaims a provably stale task-owned lock and completes the check", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  const lockPath = await writeLock({ home, createdAt: new Date(Date.now() - 120_000).toISOString() });
+  const calls = [];
+
+  const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+
+  assert.equal(result.status, "current");
+  assert.equal(calls.length, 3);
+  await assert.rejects(lstat(lockPath), { code: "ENOENT" });
+});
+
+test("never reclaims symlink or hostile lock directories", async (t) => {
+  const { pluginRoot, home, root } = await fixture(t);
+  const cachePath = resolveUpdateCachePath({ env: {}, home, platform: process.platform });
+  await mkdir(path.dirname(cachePath), { recursive: true });
+  const outside = path.join(root, "outside-lock");
+  await mkdir(outside);
+  await writeFile(path.join(outside, "keep.txt"), "outside\n");
+  await symlink(outside, `${cachePath}.lock`);
+  const symlinkCalls = [];
+
+  const symlinkResult = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(symlinkCalls) });
+  assert.equal(symlinkResult.status, "unknown");
+  assert.equal(symlinkCalls.length, 0);
+  assert.equal((await lstat(`${cachePath}.lock`)).isSymbolicLink(), true);
+  assert.equal(await readFile(path.join(outside, "keep.txt"), "utf8"), "outside\n");
+
+  await rm(`${cachePath}.lock`);
+  const hostilePath = await writeLock({ home, createdAt: new Date(Date.now() - 120_000).toISOString(), extra: true });
+  const hostileCalls = [];
+  const hostileResult = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(hostileCalls) });
+  assert.equal(hostileResult.status, "unknown");
+  assert.equal(hostileCalls.length, 0);
+  assert.deepEqual((await readdir(hostilePath)).sort(), ["hostile.txt", "owner.json"]);
+});
+
+test("concurrent contenders recover one stale lock with one network winner", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  await writeLock({ home, createdAt: new Date(Date.now() - 120_000).toISOString() });
+  const calls = [];
+  const fetchFn = checkingFetch(calls);
+
+  const first = checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn });
+  const second = checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn });
+  const results = await Promise.all([first, second]);
+
+  assert.equal(calls.length, 3);
+  assert.deepEqual(results.map(({ status }) => status), ["current", "current"]);
+  assert.deepEqual(results.map(({ cache }) => cache).sort(), ["hit", "miss"]);
 });
 
 test("rejects empty, missing, partial, duplicate, and unknown installed manifests without network or cache publication", async (t) => {

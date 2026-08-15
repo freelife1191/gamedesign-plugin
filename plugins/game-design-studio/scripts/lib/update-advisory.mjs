@@ -19,6 +19,7 @@ const ADVISORY_KEYS = Object.freeze(["schemaVersion", "checkedAt", "status", "co
 const COMPONENT_ADVISORY_KEYS = Object.freeze(["id", "installedTag", "latestTag", "status", "releaseUrl"]);
 const SEMVER_IDENTIFIER = "(?:0|[1-9]\\d*|\\d*[A-Za-z-][0-9A-Za-z-]*)";
 const SEMVER = new RegExp(`^(?<major>0|[1-9]\\d*)\\.(?<minor>0|[1-9]\\d*)\\.(?<patch>0|[1-9]\\d*)(?:-(?<prerelease>${SEMVER_IDENTIFIER}(?:\\.${SEMVER_IDENTIFIER})*))?(?:\\+(?<build>[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?$`, "u");
+const NUMERIC_SEMVER_INTENT = /^\d/u;
 
 function hasExactKeys(value, keys) {
   if (value === null || typeof value !== "object" || Array.isArray(value) || Object.getPrototypeOf(value) !== Object.prototype) return false;
@@ -85,7 +86,9 @@ function inspectReleases(component, releases) {
     if (version === null) {
       const suffix = release.tag.startsWith(rule.prefix) ? release.tag.slice(rule.prefix.length) : null;
       const parsed = suffix === null ? null : suffix.match(SEMVER)?.groups;
-      if (suffix !== null && !(release.prerelease && parsed?.prerelease !== undefined)) {
+      if (suffix !== null
+        && NUMERIC_SEMVER_INTENT.test(suffix)
+        && !(release.prerelease && parsed?.prerelease !== undefined)) {
         return { valid: false, latest: null };
       }
       continue;

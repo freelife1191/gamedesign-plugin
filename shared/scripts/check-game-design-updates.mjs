@@ -2,6 +2,7 @@
 
 import { constants } from "node:fs";
 import * as fs from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import { homedir } from "node:os";
 import path from "node:path";
 import process from "node:process";
@@ -20,9 +21,13 @@ const CACHE_KEYS = Object.freeze([
   "status",
   "components",
   "lastNotifiedAt",
-  "lastNotifiedComponentIds",
+  "lastNotifiedComponents",
 ]);
 const CACHE_COMPONENT_KEYS = Object.freeze(["id", "installedTag", "latestTag", "status", "releaseUrl"]);
+const NOTIFICATION_IDENTITY_KEYS = Object.freeze(["id", "installedTag", "latestTag"]);
+const LOCK_METADATA_KEYS = Object.freeze(["schemaVersion", "owner", "createdAt"]);
+const LOCK_METADATA_FILE = "owner.json";
+const LOCK_OWNER = /^game-design-update-check:(?<pid>[1-9]\d*)-[0-9A-Za-z-]+$/u;
 const INSTALLED_COMPONENT_KEYS = Object.freeze(["id", "repository", "installedTag", "commit"]);
 const RELEASE_ENDPOINTS = Object.freeze({
   skillstead: "https://api.github.com/repos/kyungseo/skillstead/releases",
@@ -31,6 +36,7 @@ const RELEASE_ENDPOINTS = Object.freeze({
 });
 const LOCK_WAIT_MS = 25;
 const LOCK_MAX_WAIT_MS = 1000;
+const LOCK_MIN_LEASE_MS = 30_000;
 
 function hasExactKeys(value, keys) {
   if (value === null || typeof value !== "object" || Array.isArray(value) || Object.getPrototypeOf(value) !== Object.prototype) return false;
@@ -74,27 +80,32 @@ function unknownResult({ checkedAt, cache, installed = [] }) {
   return publicResult({ advisory, cache });
 }
 
-function notificationFor(advisory, previousIds = []) {
-  const componentIds = advisory.components.filter(({ status }) => status === "outdated").map(({ id }) => id);
-  if (componentIds.length === 0 || sameIds(componentIds, previousIds)) return null;
+function notificationIdentityFor(advisory) {
+  return advisory.components
+    .filter(({ status }) => status === "outdated")
+    .map(({ id, installedTag, latestTag }) => ({ id, installedTag, latestTag }))
+    .sort((left, right) => left.id < right.id ? -1 : left.id > right.id ? 1 : 0);
+}
+
+function sameNotificationIdentity(left, right) {
+  return Array.isArray(left) && Array.isArray(right) && recordsMatch(left, right);
+}
+
+function notificationFor(advisory, previousIdentity = []) {
+  const identity = notificationIdentityFor(advisory);
+  if (identity.length === 0 || sameNotificationIdentity(identity, previousIdentity)) return null;
   return Object.freeze({
     kind: "update-available",
     prompt: "플러그인 업데이트를 확인해 줘",
-    componentIds: Object.freeze(componentIds),
+    componentIds: Object.freeze(identity.map(({ id }) => id)),
   });
 }
 
-function sameIds(left, right) {
-  return Array.isArray(left) && Array.isArray(right)
-    && left.length === right.length
-    && left.every((id, index) => id === right[index]);
-}
-
 function cacheRecord({ advisory, notification, now, previous }) {
-  const outdatedIds = advisory.components.filter(({ status }) => status === "outdated").map(({ id }) => id);
+  const identity = notificationIdentityFor(advisory);
   const preserveClaim = notification === null
-    && outdatedIds.length > 0
-    && sameIds(outdatedIds, previous?.lastNotifiedComponentIds)
+    && identity.length > 0
+    && sameNotificationIdentity(identity, previous?.lastNotifiedComponents)
     && typeof previous?.lastNotifiedAt === "string";
   return {
     schemaVersion: 1,
@@ -102,7 +113,9 @@ function cacheRecord({ advisory, notification, now, previous }) {
     status: advisory.status,
     components: advisory.components.map((component) => ({ ...component })),
     lastNotifiedAt: notification === null ? (preserveClaim ? previous.lastNotifiedAt : null) : now,
-    lastNotifiedComponentIds: notification === null ? (preserveClaim ? [...previous.lastNotifiedComponentIds] : []) : [...notification.componentIds],
+    lastNotifiedComponents: notification === null
+      ? (preserveClaim ? previous.lastNotifiedComponents.map((component) => ({ ...component })) : [])
+      : identity,
   };
 }
 
@@ -117,8 +130,11 @@ function cacheAdvisory(record, policy, installed, now) {
     || !["current", "outdated"].includes(record.status)
     || !Array.isArray(record.components)
     || !(record.lastNotifiedAt === null || typeof record.lastNotifiedAt === "string")
-    || !Array.isArray(record.lastNotifiedComponentIds)
-    || !record.lastNotifiedComponentIds.every((id) => typeof id === "string")) return null;
+    || !Array.isArray(record.lastNotifiedComponents)
+    || !record.lastNotifiedComponents.every((component) => hasExactKeys(component, NOTIFICATION_IDENTITY_KEYS)
+      && typeof component.id === "string"
+      && typeof component.installedTag === "string"
+      && typeof component.latestTag === "string")) return null;
   if (!record.components.every((component) => hasExactKeys(component, CACHE_COMPONENT_KEYS))) return null;
   const releases = {};
   for (const component of record.components) {
@@ -137,13 +153,13 @@ function cacheAdvisory(record, policy, installed, now) {
     return null;
   }
   if (advisory.status === "unknown" || advisory.status !== record.status || !recordsMatch(advisory.components, record.components)) return null;
-  const outdatedIds = advisory.components.filter(({ status }) => status === "outdated").map(({ id }) => id);
-  if (outdatedIds.length === 0) {
-    if (record.lastNotifiedComponentIds.length !== 0 || record.lastNotifiedAt !== null) return null;
+  const identity = notificationIdentityFor(advisory);
+  if (identity.length === 0) {
+    if (record.lastNotifiedComponents.length !== 0 || record.lastNotifiedAt !== null) return null;
     return advisory;
   }
-  if (record.lastNotifiedComponentIds.length === 0) return record.lastNotifiedAt === null ? advisory : null;
-  if (!sameIds(record.lastNotifiedComponentIds, outdatedIds) || typeof record.lastNotifiedAt !== "string") return null;
+  if (record.lastNotifiedComponents.length === 0) return record.lastNotifiedAt === null ? advisory : null;
+  if (!sameNotificationIdentity(record.lastNotifiedComponents, identity) || typeof record.lastNotifiedAt !== "string") return null;
   const notifiedAt = new Date(record.lastNotifiedAt);
   const checkedAt = new Date(record.checkedAt);
   if (Number.isNaN(notifiedAt.valueOf())
@@ -206,18 +222,102 @@ async function ensureCacheDirectory(cachePath, fsOps) {
   }
 }
 
-async function acquireLock(lockPath, fsOps) {
+function validLockMetadata(value) {
+  if (!hasExactKeys(value, LOCK_METADATA_KEYS)
+    || value.schemaVersion !== 1
+    || typeof value.owner !== "string"
+    || !LOCK_OWNER.test(value.owner)
+    || typeof value.createdAt !== "string") return false;
+  const createdAt = new Date(value.createdAt);
+  return !Number.isNaN(createdAt.valueOf()) && createdAt.toISOString() === value.createdAt;
+}
+
+async function inspectOwnedLock(lockPath, fsOps) {
+  let directory;
+  try {
+    directory = await fsOps.lstat(lockPath);
+    if (!directory.isDirectory() || directory.isSymbolicLink()) return null;
+    const entries = await fsOps.readdir(lockPath);
+    if (entries.length !== 1 || entries[0] !== LOCK_METADATA_FILE) return null;
+    const loaded = await readRegularJson(path.join(lockPath, LOCK_METADATA_FILE), fsOps);
+    const after = await fsOps.lstat(lockPath);
+    if (!sameFile(directory, after) || loaded.state !== "present" || !validLockMetadata(loaded.value)) return null;
+    return { directory, metadata: loaded.value };
+  } catch {
+    return null;
+  }
+}
+
+async function removeOwnedLock({ lockPath, directory, owner }, fsOps) {
+  const inspected = await inspectOwnedLock(lockPath, fsOps);
+  if (inspected === null || !sameFile(inspected.directory, directory) || inspected.metadata.owner !== owner) return false;
+  const quarantinePath = `${lockPath}.release.${process.pid}.${randomUUID()}`;
+  try {
+    await fsOps.rename(lockPath, quarantinePath);
+    const moved = await inspectOwnedLock(quarantinePath, fsOps);
+    if (moved === null || !sameFile(moved.directory, directory) || moved.metadata.owner !== owner) return false;
+    await fsOps.unlink(path.join(quarantinePath, LOCK_METADATA_FILE));
+    await fsOps.rmdir(quarantinePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function reclaimStaleLock(lockPath, fsOps, leaseMs) {
+  const inspected = await inspectOwnedLock(lockPath, fsOps);
+  if (inspected === null) return false;
+  const age = Date.now() - Date.parse(inspected.metadata.createdAt);
+  if (!Number.isFinite(age) || age < leaseMs) return false;
+  const ownerPid = Number(LOCK_OWNER.exec(inspected.metadata.owner)?.groups?.pid);
+  if (!Number.isSafeInteger(ownerPid)) return false;
+  try {
+    process.kill(ownerPid, 0);
+    return false;
+  } catch (error) {
+    if (error?.code !== "ESRCH") return false;
+  }
+  return removeOwnedLock({ lockPath, directory: inspected.directory, owner: inspected.metadata.owner }, fsOps);
+}
+
+async function createOwnedLock(lockPath, fsOps) {
+  const owner = `game-design-update-check:${process.pid}-${randomUUID()}`;
+  let directory;
+  let handle;
   try {
     await fsOps.mkdir(lockPath, { mode: 0o700 });
-    return true;
+    directory = await fsOps.lstat(lockPath);
+    if (!directory.isDirectory() || directory.isSymbolicLink()) throw new Error("unsafe lock directory");
+    const metadataPath = path.join(lockPath, LOCK_METADATA_FILE);
+    handle = await fsOps.open(metadataPath, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW ?? 0), 0o600);
+    await handle.writeFile(`${JSON.stringify({ schemaVersion: 1, owner, createdAt: new Date().toISOString() })}\n`, { encoding: "utf8" });
+    await handle.sync();
+    await handle.close();
+    handle = null;
+    const inspected = await inspectOwnedLock(lockPath, fsOps);
+    if (inspected === null || !sameFile(inspected.directory, directory) || inspected.metadata.owner !== owner) throw new Error("unsafe lock metadata");
+    return { lockPath, directory, owner };
   } catch (error) {
-    if (error?.code === "EEXIST") return false;
+    await handle?.close().catch(() => undefined);
+    if (directory !== undefined) {
+      const metadataPath = path.join(lockPath, LOCK_METADATA_FILE);
+      await fsOps.unlink(metadataPath).catch(() => undefined);
+      await fsOps.rmdir(lockPath).catch(() => undefined);
+    }
+    if (error?.code === "EEXIST") return null;
     throw error;
   }
 }
 
-async function releaseLock(lockPath, fsOps) {
-  await fsOps.rmdir(lockPath).catch(() => undefined);
+async function acquireLock(lockPath, fsOps, leaseMs) {
+  const created = await createOwnedLock(lockPath, fsOps);
+  if (created !== null) return created;
+  if (!(await reclaimStaleLock(lockPath, fsOps, leaseMs))) return null;
+  return createOwnedLock(lockPath, fsOps);
+}
+
+async function releaseLock(lock, fsOps) {
+  if (lock !== null && lock !== undefined) await removeOwnedLock(lock, fsOps);
 }
 
 function sleep(ms) {
@@ -234,11 +334,11 @@ async function waitForCache({ cachePath, fsOps, policy, installed, now, interval
   return null;
 }
 
-async function claimFreshNotification({ cachePath, fsOps, policy, installed, now, intervalMs }) {
+async function claimFreshNotification({ cachePath, fsOps, policy, installed, now, intervalMs, lockLeaseMs }) {
   const lockPath = `${cachePath}.lock`;
   let locked;
   try {
-    locked = await acquireLock(lockPath, fsOps);
+    locked = await acquireLock(lockPath, fsOps, lockLeaseMs);
   } catch {
     return null;
   }
@@ -249,13 +349,13 @@ async function claimFreshNotification({ cachePath, fsOps, policy, installed, now
   try {
     const cached = await readCache({ cachePath, fsOps, policy, installed, now, intervalMs });
     if (!cached.fresh) return null;
-    const notification = notificationFor(cached.advisory, cached.record.lastNotifiedComponentIds);
+    const notification = notificationFor(cached.advisory, cached.record.lastNotifiedComponents);
     if (notification === null) return { advisory: cached.advisory, notification: null };
     const record = cacheRecord({ advisory: cached.advisory, notification, now: iso(now), previous: cached.record });
     if (!(await publishCache({ cachePath, record, fsOps }))) return null;
     return { advisory: cached.advisory, notification };
   } finally {
-    await releaseLock(lockPath, fsOps);
+    await releaseLock(locked, fsOps);
   }
 }
 
@@ -373,12 +473,20 @@ function defaultFsOps(overrides) {
 }
 
 export function resolveUpdateCachePath({ env = process.env, home = homedir(), platform = process.platform } = {}) {
-  const xdg = typeof env.XDG_CACHE_HOME === "string" && path.isAbsolute(env.XDG_CACHE_HOME) ? env.XDG_CACHE_HOME : null;
+  const isWindowsAbsolute = (value) => typeof value === "string"
+    && (/^[A-Za-z]:[\\/]/u.test(value) || /^\\\\[^\\]/u.test(value));
+  const absoluteForPlatform = (value) => typeof value === "string"
+    && (platform === "win32" ? isWindowsAbsolute(value) || path.isAbsolute(value) : path.isAbsolute(value));
+  const joinForPlatform = (base, ...parts) => platform === "win32" && isWindowsAbsolute(base)
+    ? path.win32.join(base, ...parts)
+    : path.join(base, ...parts);
+  const xdg = absoluteForPlatform(env.XDG_CACHE_HOME) ? env.XDG_CACHE_HOME : null;
+  if (!absoluteForPlatform(home)) throw new TypeError("home must be absolute");
   const base = xdg
-    ?? (platform === "darwin" ? path.join(home, "Library", "Caches")
-      : platform === "win32" ? (typeof env.LOCALAPPDATA === "string" && env.LOCALAPPDATA.length > 0 ? env.LOCALAPPDATA : path.join(home, "AppData", "Local"))
-        : path.join(home, ".cache"));
-  return path.join(base, CACHE_DIRECTORY, CACHE_FILE);
+    ?? (platform === "darwin" ? joinForPlatform(home, "Library", "Caches")
+      : platform === "win32" ? (absoluteForPlatform(env.LOCALAPPDATA) ? env.LOCALAPPDATA : joinForPlatform(home, "AppData", "Local"))
+        : joinForPlatform(home, ".cache"));
+  return joinForPlatform(base, CACHE_DIRECTORY, CACHE_FILE);
 }
 
 export async function checkGameDesignUpdates({
@@ -405,12 +513,18 @@ export async function checkGameDesignUpdates({
     return unknownResult({ checkedAt, cache: "miss" });
   }
   const intervalMs = policy.checkIntervalDays * 24 * 60 * 60 * 1000;
-  const cachePath = resolveUpdateCachePath({ env, home, platform });
+  const lockLeaseMs = Math.max(LOCK_MIN_LEASE_MS, policy.totalTimeoutMs + LOCK_MAX_WAIT_MS + 1000);
+  let cachePath;
+  try {
+    cachePath = resolveUpdateCachePath({ env, home, platform });
+  } catch {
+    return unknownResult({ checkedAt, cache: "miss", installed });
+  }
   const initial = await readCache({ cachePath, fsOps, policy, installed, now, intervalMs });
   if (initial.fresh) {
-    const notification = notificationFor(initial.advisory, initial.record.lastNotifiedComponentIds);
+    const notification = notificationFor(initial.advisory, initial.record.lastNotifiedComponents);
     if (notification === null) return publicResult({ advisory: initial.advisory, cache: "hit" });
-    const claimed = await claimFreshNotification({ cachePath, fsOps, policy, installed, now, intervalMs });
+    const claimed = await claimFreshNotification({ cachePath, fsOps, policy, installed, now, intervalMs, lockLeaseMs });
     return claimed === null
       ? unknownResult({ checkedAt, cache: "hit", installed })
       : publicResult({ advisory: claimed.advisory, cache: "hit", notification: claimed.notification });
@@ -421,7 +535,7 @@ export async function checkGameDesignUpdates({
   const lockPath = `${cachePath}.lock`;
   let locked;
   try {
-    locked = await acquireLock(lockPath, fsOps);
+    locked = await acquireLock(lockPath, fsOps, lockLeaseMs);
   } catch {
     return unknownResult({ checkedAt, cache: "miss", installed });
   }
@@ -429,12 +543,12 @@ export async function checkGameDesignUpdates({
     const winner = await waitForCache({ cachePath, fsOps, policy, installed, now, intervalMs });
     return winner === null
       ? unknownResult({ checkedAt, cache: "miss", installed })
-      : publicResult({ advisory: winner.advisory, cache: "hit", notification: notificationFor(winner.advisory, winner.record.lastNotifiedComponentIds) });
+      : publicResult({ advisory: winner.advisory, cache: "hit", notification: notificationFor(winner.advisory, winner.record.lastNotifiedComponents) });
   }
 
   try {
     const cached = await readCache({ cachePath, fsOps, policy, installed, now, intervalMs });
-    if (cached.fresh) return publicResult({ advisory: cached.advisory, cache: "hit", notification: notificationFor(cached.advisory, cached.record.lastNotifiedComponentIds) });
+    if (cached.fresh) return publicResult({ advisory: cached.advisory, cache: "hit", notification: notificationFor(cached.advisory, cached.record.lastNotifiedComponents) });
     if (cached.state === "unsafe") return unknownResult({ checkedAt, cache: "miss", installed });
     const controller = new AbortController();
     let timeoutId;
@@ -448,7 +562,7 @@ export async function checkGameDesignUpdates({
       const releases = await fetchReleases({ installed, fetchFn, signal: controller.signal, timeout });
       const advisory = evaluateUpdateAdvisory({ policy, installed, releases, checkedAt });
       if (advisory.status === "unknown") return unknownResult({ checkedAt, cache: "miss", installed });
-      const notification = notificationFor(advisory, cached.record?.lastNotifiedComponentIds ?? []);
+      const notification = notificationFor(advisory, cached.record?.lastNotifiedComponents ?? []);
       const record = cacheRecord({ advisory, notification, now: checkedAt, previous: cached.record });
       if (!(await publishCache({ cachePath, record, fsOps }))) return unknownResult({ checkedAt, cache: "miss", installed });
       return publicResult({ advisory, cache: "miss", notification });
@@ -458,7 +572,7 @@ export async function checkGameDesignUpdates({
       clearTimeout(timeoutId);
     }
   } finally {
-    await releaseLock(lockPath, fsOps);
+    await releaseLock(locked, fsOps);
   }
 }
 

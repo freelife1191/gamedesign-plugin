@@ -167,6 +167,39 @@ test("returns unknown rather than current when a matching release response is ma
   });
 });
 
+test("excludes a well-formed non-SemVer tag without poisoning valid stable evidence", () => {
+  const got = evaluateUpdateAdvisory({
+    policy,
+    installed: [installed[1]],
+    releases: {
+      archify: [
+        currentReleases.archify[0],
+        {
+          tag: "vnot-semver",
+          draft: false,
+          prerelease: false,
+          url: releaseUrl("https://github.com/tt-a1i/archify", "vnot-semver"),
+        },
+        {
+          tag: "v2.14.0",
+          draft: false,
+          prerelease: false,
+          url: releaseUrl("https://github.com/tt-a1i/archify", "v2.14.0"),
+        },
+      ],
+    },
+    checkedAt,
+  });
+
+  assert.deepEqual(got.components[0], {
+    id: "archify",
+    installedTag: "v2.13.0",
+    latestTag: "v2.14.0",
+    status: "outdated",
+    releaseUrl: "https://github.com/tt-a1i/archify/releases/tag/v2.14.0",
+  });
+});
+
 test("returns unknown for a malformed numeric prerelease identifier rather than treating installed evidence as current", () => {
   const got = evaluateUpdateAdvisory({
     policy,

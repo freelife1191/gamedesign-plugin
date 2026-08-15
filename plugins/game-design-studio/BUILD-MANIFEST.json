@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "9c65ee4ed4eaa00bda5d05097a35b3b8a03b7d72b6728887c029dc8f3bf13395",
+  "treeSha256": "5aa89894e5b654f83c35fa28aab00849d97b550478ece82552cbfc0c9ccb7e86",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -1596,8 +1596,8 @@
     },
     {
       "path": "scripts/check-game-design-updates.mjs",
-      "sha256": "31cc9bfa3e96edd659f359765cf256488507c25bc75e02fcde8a1ebe53e458bd",
-      "size": 19812
+      "sha256": "885a4f51bdf7c34cce4d090db5ac2ee2d382904f62821c828bc0569766a8ebba",
+      "size": 25210
     },
     {
       "path": "scripts/compile-image-prompts.mjs",
@@ -1731,8 +1731,8 @@
     },
     {
       "path": "scripts/lib/update-advisory.mjs",
-      "sha256": "96767974e74696efb24bc701e7e5ba820cbc81a9a30451359c510a8c5754cbd8",
-      "size": 9074
+      "sha256": "18bf103619128881a8d7671159cf8debb69bdfaf8f9d9e47578ebb852627b4a2",
+      "size": 9166
     },
     {
       "path": "scripts/load-memory-config.mjs",
