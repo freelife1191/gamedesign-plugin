@@ -2068,6 +2068,7 @@ cp .env.example .env
 ```dotenv
 IMAGE_PROVIDER=codex-first
 IMAGE_EMBEDDED_TEXT_LOCALE=none
+# 다음 값은 IMAGE_PROVIDER=openai를 명시적으로 선택했을 때만 사용합니다.
 IMAGE_MODEL=gpt-image-2
 IMAGE_QUALITY=low
 ```

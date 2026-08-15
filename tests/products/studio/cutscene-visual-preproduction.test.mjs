@@ -38,7 +38,7 @@ test("Studio route has the closed cutscene workflow contract while Career expose
     references: ["references/methods/content-specification.md"],
     requiredInputs: ["cutscene brief", "game-state return"],
     skill: "design-cutscene-visual-preproduction",
-    triggerIntents: ["컷씬 기획", "스토리보드", "시네마틱 이미지", "마스터 이미지", "컷씬 프롬프트"],
+    triggerIntents: ["컷씬 기획", "스토리보드", "시네마틱 이미지", "마스터 이미지", "컷씬 프롬프트", "컷씬 승인 후 생성"],
     outputArtifacts: ["cutscene-brief", "cutscene-shot-package", "cutscene-prompt-package", "cutscene-cost-estimate", "cutscene-continuity-review"],
     outputTypes: ["cutscene-visual-preproduction"],
   });

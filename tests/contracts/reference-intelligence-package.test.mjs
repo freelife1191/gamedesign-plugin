@@ -30,12 +30,16 @@ const expectedReferenceFiles = [
   "references/shared/reference-intelligence/templates/transfer-decisions.md",
   "references/shared/reference-intelligence/templates/verification-queue.md",
   "skills/analyze-game-design-references/SKILL.md",
+  "skills/analyze-game-design-references/agents/openai.yaml",
   "skills/maintain-game-design-glossary/SKILL.md",
+  "skills/maintain-game-design-glossary/agents/openai.yaml",
 ].sort();
 
 const referenceSourceFiles = [
   ["shared/reference-intelligence/skills/analyze-game-design-references/SKILL.md", "analysis skill\n"],
+  ["shared/reference-intelligence/skills/analyze-game-design-references/agents/openai.yaml", "interface:\n  display_name: \"Analyze Game Design References\"\n  short_description: \"Analyze reference-game systems with evidence\"\n  default_prompt: \"Use $analyze-game-design-references to analyze these game references.\"\n"],
   ["shared/reference-intelligence/skills/maintain-game-design-glossary/SKILL.md", "glossary skill\n"],
+  ["shared/reference-intelligence/skills/maintain-game-design-glossary/agents/openai.yaml", "interface:\n  display_name: \"Maintain Game Design Glossary\"\n  short_description: \"Maintain bilingual terms with human review\"\n  default_prompt: \"Use $maintain-game-design-glossary to review these terminology candidates.\"\n"],
   ["shared/reference-intelligence/schema/game-design-glossary.schema.json", "{}\n"],
   ["shared/reference-intelligence/schema/glossary-receipt.schema.json", "{}\n"],
   ["shared/reference-intelligence/schema/reference-analysis.schema.json", "{}\n"],
@@ -115,7 +119,9 @@ test("reference-intelligence packages the exact skills, schemas, catalogs, refer
   assert.deepEqual(
     result.files.filter((file) => file.startsWith("references/shared/reference-intelligence/") || [
       "skills/analyze-game-design-references/SKILL.md",
+      "skills/analyze-game-design-references/agents/openai.yaml",
       "skills/maintain-game-design-glossary/SKILL.md",
+      "skills/maintain-game-design-glossary/agents/openai.yaml",
     ].includes(file)).sort(),
     expectedReferenceFiles,
   );
@@ -144,15 +150,16 @@ test("reference-intelligence rejects unsafe source changes before publishing out
 });
 
 test("reference-intelligence rejects every product overlay even when bytes match", async (t) => {
-  for (const [label, sourceContents, overlayContents] of [
-    ["exact bytes", "analysis skill\n", "analysis skill\n"],
-    ["zero-byte same hash", "", ""],
-    ["different bytes", "analysis skill\n", "different overlay\n"],
+  for (const [label, relativePath, sourceContents, overlayContents] of [
+    ["exact skill bytes", "skills/analyze-game-design-references/SKILL.md", "analysis skill\n", "analysis skill\n"],
+    ["zero-byte same skill hash", "skills/analyze-game-design-references/SKILL.md", "", ""],
+    ["different skill bytes", "skills/analyze-game-design-references/SKILL.md", "analysis skill\n", "different overlay\n"],
+    ["exact agents metadata bytes", "skills/analyze-game-design-references/agents/openai.yaml", "interface:\n  display_name: Analysis\n", "interface:\n  display_name: Analysis\n"],
   ]) {
     await t.test(label, async (t) => {
       const fixture = await buildFixture(t);
-      await writeText(fixture.repoRoot, "shared/reference-intelligence/skills/analyze-game-design-references/SKILL.md", sourceContents);
-      await writeText(fixture.repoRoot, "products/reference-intelligence-fixture/plugin/skills/analyze-game-design-references/SKILL.md", overlayContents);
+      await writeText(fixture.repoRoot, `shared/reference-intelligence/${relativePath}`, sourceContents);
+      await writeText(fixture.repoRoot, `products/reference-intelligence-fixture/plugin/${relativePath}`, overlayContents);
       await assertNoOutputPublication(fixture, () => fixture.build(), /reference-intelligence destination collision/iu);
     });
   }

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Maintain Game Design Glossary"
+  short_description: "한국어와 영어 용어 후보를 사람 검토용 사전으로 정리합니다"
+  default_prompt: "Use $maintain-game-design-glossary to review these terminology candidates and prepare a human decision."

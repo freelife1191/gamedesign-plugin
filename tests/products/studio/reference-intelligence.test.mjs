@@ -31,6 +31,7 @@ const analysisLayouts = {
 
 async function readRouting() { return JSON.parse(await readFile(path.join(pluginRoot, "references/routing.json"), "utf8")); }
 async function readSkill(skillId) { return readFile(path.join(skillRoot, skillId, "SKILL.md"), "utf8"); }
+async function readOpenAi(skillId) { return readFile(path.join(skillRoot, skillId, "agents/openai.yaml"), "utf8"); }
 function readContract(skill) {
   const match = skill.match(/<!-- reference-intelligence-contract:start -->\s*```json\s*([\s\S]*?)\s*```\s*<!-- reference-intelligence-contract:end -->/u);
   assert.ok(match, "reference-intelligence contract");
@@ -166,6 +167,29 @@ test("Studio routes reference analysis through common evidence and pending trans
   assert.equal(routing.skillIds.includes("maintain-game-design-glossary"), true);
   assert.deepEqual(routing.referenceIntelligenceWorkflow.transferState, "pending-review");
   assert.deepEqual(routing.referenceIntelligenceWorkflow.outputs, ["reference-system-analysis", "reference-comparison", "design-transfer-decision"]);
+});
+
+test("shared reference skills expose Korean discovery metadata without weakening human review", async () => {
+  const [routing, analysisSkill, glossarySkill, analysisOpenAi, glossaryOpenAi] = await Promise.all([
+    readRouting(),
+    readSkill("analyze-game-design-references"),
+    readSkill("maintain-game-design-glossary"),
+    readOpenAi("analyze-game-design-references"),
+    readOpenAi("maintain-game-design-glossary"),
+  ]);
+  const analysisRoute = routing.routes.find(({ id }) => id === "reference-game-analysis");
+  const glossaryRoute = routing.routes.find(({ id }) => id === "project-glossary-maintenance");
+  for (const trigger of ["경쟁작 분석", "레퍼런스 게임 분석", "장르 시스템 인벤토리", "게임 시스템 비교", "증거와 추정 분리"]) {
+    assert.ok(analysisRoute.triggerIntents.includes(trigger), trigger);
+  }
+  for (const trigger of ["게임 기획 용어 사전", "용어 후보", "용어 승인", "한국어 영어 용어 일관성"]) {
+    assert.ok(glossaryRoute.triggerIntents.includes(trigger), trigger);
+  }
+  assert.match(analysisSkill, /^description: .*경쟁작.*레퍼런스.*장르.*게임 시스템.*증거.*추정/mu);
+  assert.match(glossarySkill, /^description: .*용어 사전.*용어 후보.*사람 승인.*한국어.*영어/mu);
+  assert.match(analysisOpenAi, /^interface:\n  display_name: "[^"]+"\n  short_description: "[^"]{25,64}"\n  default_prompt: "Use \$analyze-game-design-references [^"]+"\n$/u);
+  assert.match(glossaryOpenAi, /^interface:\n  display_name: "[^"]+"\n  short_description: "[^"]{25,64}"\n  default_prompt: "Use \$maintain-game-design-glossary [^"]+"\n$/u);
+  assert.doesNotMatch(`${analysisOpenAi}\n${glossaryOpenAi}`, /auto(?:matic)? approval|자동 승인/iu);
 });
 
 test("analysis skill declares the complete, canonical source and installed boundaries", async () => {

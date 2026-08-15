@@ -206,6 +206,22 @@ const exactStudioProductionSourceIds = Object.freeze([
   "st-s01", "st-s02", "st-s03", "st-s04", "st-s05", "st-s06", "st-s07", "st-s08", "st-s09", "st-s10", "st-s11", "st-s12", "st-s13", "st-s14", "st-s15", "st-s16",
 ]);
 
+test("cutscene skill diagram names the four waves and selective provider policy", async () => {
+  const { sources } = await readStudioProductionInputs();
+  const cutscene = studioSource(sources, "st-s16");
+  const visible = JSON.stringify(cutscene);
+  assert.equal(cutscene.display_contract, "explicit-steps");
+  for (const phrase of ["style-master", "reference-masters", "keyframes", "storyboard", "image_gen", "gpt-image-2", "low 기본", "medium 선택", "high 예외", "승인 전에는 provider를 호출하지 않습니다"]) {
+    assert.match(visible, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "u"), phrase);
+  }
+  assert.deepEqual(cutscene.steps.map(({ label }) => label), ["style-master", "reference-masters", "keyframes", "storyboard", "승인·연속성 검토"]);
+  assert.deepEqual(cutscene.steps.map(({ detail }) => detail), ["스타일 기준 이미지", "인물·배경·소품 기준", "장면별 핵심 프레임", "최종 장면 흐름", "image_gen 우선·유료 생성 선택"]);
+  const svg = renderDiagramSvg(cutscene);
+  for (const [index, label] of cutscene.steps.map(({ label }) => label).entries()) {
+    assert.match(svg, new RegExp(`aria-label="읽기 순서 ${index + 1}: ${label}"`, "u"));
+  }
+});
+
 for (const [name, mutate, expected] of [
   ["a missing one of the exact 34 Studio sources", ({ sources }) => sources.splice(sources.findIndex(({ id }) => id === "st-c01"), 1), /Studio production source IDs.*missing.*st-c01/u],
   ["an extra Studio source", ({ sources }) => sources.push({ ...structuredClone(studioSource(sources, "st-c01")), id: "st-c99" }), /Studio production source IDs.*extra.*st-c99/u],

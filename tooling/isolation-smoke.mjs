@@ -193,8 +193,9 @@ async function verifyReferenceIntelligencePackage(pluginRoot, repoRoot, productN
     }
   }
   for (const skillId of ["analyze-game-design-references", "maintain-game-design-glossary"]) {
-    const relativePath = `skills/${skillId}/SKILL.md`;
-    actual.push({ relativePath, bytes: await readFile(path.join(pluginRoot, relativePath)) });
+    for (const entry of await collectTree(path.join(pluginRoot, "skills", skillId), { label: `${productName} ${skillId} package skill` })) {
+      actual.push({ ...entry, relativePath: `skills/${skillId}/${entry.relativePath}` });
+    }
   }
   assertExactReferenceFiles(actual, expected, productName);
 }
@@ -202,8 +203,8 @@ async function verifyReferenceIntelligencePackage(pluginRoot, repoRoot, productN
 async function addBuiltReferenceIntelligencePackage({ buildRoot, pluginRoot, productName }) {
   const entries = (await collectTree(buildRoot, { label: `${productName} reference-intelligence fixture build` })).filter(({ relativePath }) =>
     relativePath.startsWith("references/shared/reference-intelligence/")
-    || relativePath === "skills/analyze-game-design-references/SKILL.md"
-    || relativePath === "skills/maintain-game-design-glossary/SKILL.md",
+    || relativePath.startsWith("skills/analyze-game-design-references/")
+    || relativePath.startsWith("skills/maintain-game-design-glossary/"),
   );
   const runtimeEntries = await collectReferenceRuntimeEntries(buildRoot);
   const byPath = new Map([...entries, ...runtimeEntries].map((entry) => [entry.relativePath, entry]));
@@ -247,7 +248,7 @@ async function collectReferenceRuntimeEntries(buildRoot) {
 }
 
 function assertExactReferenceFiles(actual, expected, productName) {
-  assert.equal(actual.length, 23, `${productName} reference-intelligence source inventory count`);
+  assert.equal(actual.length, expected.length, `${productName} reference-intelligence source inventory count`);
   assert.deepEqual(actual.map(({ relativePath }) => relativePath).sort(), expected.map(({ relativePath }) => relativePath).sort(), `${productName} reference-intelligence package inventory`);
   for (const { relativePath, bytes } of expected) {
     const packaged = actual.find((entry) => entry.relativePath === relativePath);

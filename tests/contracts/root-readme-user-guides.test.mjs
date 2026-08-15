@@ -173,14 +173,14 @@ const readmeSkillsteadDiagrams = [
     phrases: [
       "Studio 또는 Career 한 문장 요청", "요청 목적·원하는 결과 분석", "한 분야가 분명한가?",
       "전문 스킬", "Studio·Career 오케스트레이터", "필요한 검토 역할 최대 세 개",
-      "기준 결과 폴더 작성·검증", "이름 있는 사람의 승인·수정·보류", "다음 요청·재개",
+      "기준 결과 폴더 작성·검증", "이름 있는 사람의 승인·수정·보류", "검토 반영 후 재개",
     ],
   },
   {
     section: "케이스별 프롬프트로 시작하기",
     id: "prompt-to-result-flow",
     alt: "요청문에서 기획 결과와 다음 요청으로 이어지는 흐름",
-    phrases: ["플러그인 선택", "원하는 작업 사례 선택", "전문 스킬 실행", "기획 결과 폴더", "사람 검토", "다음 요청·재개"],
+    phrases: ["플러그인 선택", "원하는 작업 예시 선택", "전문 스킬 실행", "기획 결과 폴더", "사람 검토", "검토 반영 후 재개"],
   },
   {
     section: "스킬별로 바로 실행하기",
@@ -1956,6 +1956,7 @@ function assertRootContentContract(markdown) {
   for (const mode of ["prompt-only", "select", "required", "all"]) assert.match(images, new RegExp(mode));
   assert.match(images, /OPENAI_API_KEY/);
   assert.match(images, /IMAGE_PROVIDER=codex-first/u);
+  assert.match(images, /IMAGE_PROVIDER=openai를 명시적으로 선택했을 때만 사용합니다/u);
   assert.match(images, /IMAGE_EMBEDDED_TEXT_LOCALE=ko-KR/u);
   assert.match(images, /image_gen|호스트 이미지 기능/u);
   assert.match(images, /한글.*gpt-image-2/su);
@@ -2339,6 +2340,11 @@ test("README Skillstead explanation diagrams reject semantic and distortion regr
   const artifactFlow = readmeSkillsteadDiagrams.find(({ id }) => id === "artifact-review-flow");
   assert.ok(promptFlow && artifactFlow, "prompt and Artifact diagram registries exist");
   const promptSource = await readFile(path.join(root, "guides/assets/readme/prompt-to-result-flow.svg"), "utf8");
+  assert.match(promptSource, /한국어로 작업을 설명하면 필요한 스킬을 바로 찾을 수 있습니다/u);
+  assert.match(promptSource, /영문 ID는 검색할 때만 참고하세요/u);
+  assert.match(promptSource, /검토 결과를 반영해 다시 진행/u);
+  assert.match(promptSource, /영문 ID를 외울 필요는 없습니다/u);
+  assert.doesNotMatch(promptSource, /다음 행동이 선명해집니다|한국어 작업 설명|원하는 작업 사례|다음 요청·재개|암기하지 않아도 됩니다/u);
   for (const [label, mutated] of [
     ["missing dashed resume edge", promptSource.replace('data-flow-edge="human-review-to-next-request-resume"', 'data-flow-edge="deleted-resume-edge"')],
     ["missing resume destination", promptSource.replace('data-to="next-request-resume"', 'data-to="deleted-target"')],

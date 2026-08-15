@@ -24,6 +24,7 @@ const glossaryLayouts = {
 
 async function readRouting() { return JSON.parse(await readFile(path.join(pluginRoot, "references/routing.json"), "utf8")); }
 async function readSkill(product, skillId) { return readFile(path.join(product === "shared" ? skillRoot : path.join(pluginRoot, "skills"), skillId, "SKILL.md"), "utf8"); }
+async function readOpenAi(skillId) { return readFile(path.join(skillRoot, skillId, "agents/openai.yaml"), "utf8"); }
 function readContract(skill) { const match = skill.match(/<!-- reference-intelligence-contract:start -->\s*```json\s*([\s\S]*?)\s*```\s*<!-- reference-intelligence-contract:end -->/u); assert.ok(match, "reference-intelligence contract"); return JSON.parse(match[1]); }
 function readWritingContract(skill) { const match = skill.match(/<!-- game-design-writing-contract:start -->\s*```json\s*([\s\S]*?)\s*```\s*<!-- game-design-writing-contract:end -->/u); assert.ok(match, "game-design-writing contract"); return JSON.parse(match[1]); }
 
@@ -99,6 +100,18 @@ test("Career projects common skills without approval authority", async () => {
     assert.ok(owner.owners.every((role) => ["reverse-design-critic", "evidence-auditor", "document-quality-editor"].includes(role))); assert.doesNotMatch(JSON.stringify(owner), /approv(?:e|al)/iu);
   }
   assert.deepEqual(routing.referenceIntelligenceWorkflow.outputs, ["reverse-design-document", "game-analysis-report"]); assert.equal(routing.referenceIntelligenceWorkflow.transferState, "pending-review");
+});
+
+test("Career discovers the shared reference and glossary skills through generated UI metadata", async () => {
+  const [analysis, glossary] = await Promise.all([
+    readOpenAi("analyze-game-design-references"),
+    readOpenAi("maintain-game-design-glossary"),
+  ]);
+  assert.match(analysis, /\$analyze-game-design-references/u);
+  assert.match(analysis, /경쟁작|레퍼런스/u);
+  assert.match(glossary, /\$maintain-game-design-glossary/u);
+  assert.match(glossary, /용어 사전|용어 후보/u);
+  assert.doesNotMatch(`${analysis}\n${glossary}`, /auto(?:matic)? approval|자동 승인/iu);
 });
 
 test("glossary skill declares the complete, canonical source and installed boundaries", async () => {

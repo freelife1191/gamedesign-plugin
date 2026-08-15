@@ -12,19 +12,19 @@
       {
         "id": "evidence-path",
         "label": "근거 경로",
-        "focus": ["evidence_research", "evidence_project"],
-        "note": "현재 범위의 주장은 작고 검토 가능한 프로젝트와 날짜가 있는 근거로만 바꿉니다."
+        "focus": ["disclosure_approval", "held_context", "evidence_research", "reference_analysis", "glossary_review", "evidence_project", "portfolio_case"],
+        "note": "현재 범위의 자료를 관찰과 추론으로 나누고, 용어 영향을 검토한 뒤 작은 프로젝트 근거로 바꿉니다."
       },
       {
         "id": "career-routes",
         "label": "포트폴리오 경로",
-        "focus": ["portfolio_case"],
+        "focus": ["evidence_project", "growth_experiment", "portfolio_case", "human_review", "export_prepare"],
         "note": "사례 연구와 다음 실험의 경로를 분리하고, 면접은 근거 ID로 연결합니다."
       },
       {
         "id": "review-layers",
         "label": "검토와 내보내기",
-        "focus": ["human_review"],
+        "focus": ["reference_analysis", "glossary_review", "evidence_project", "portfolio_case", "human_review", "export_prepare"],
         "note": "내용·근거·문서 품질은 내보내기 전에 각각 확인합니다."
       },
       {
@@ -46,13 +46,15 @@
     { "id": "evidence", "label": "근거 만들기", "fromCol": 2, "toCol": 4 },
     { "id": "review_export", "label": "검토와 내보내기", "fromCol": 5, "toCol": 5, "variant": "dashed" }
   ],
-  "mainPath": ["stage_diagnosis", "disclosure_approval", "evidence_research", "evidence_project", "portfolio_case", "human_review", "export_prepare"],
+  "mainPath": ["stage_diagnosis", "disclosure_approval", "evidence_research", "reference_analysis", "glossary_review", "evidence_project", "portfolio_case", "human_review", "export_prepare"],
   "nodes": [
     { "id": "stage_diagnosis", "lane": "human", "col": 0, "type": "external", "label": "단계 선택", "sublabel": "역할·제약" },
     { "id": "disclosure_approval", "lane": "human", "col": 1, "width": 52, "type": "external", "label": "범위", "sublabel": "권리" },
     { "id": "held_context", "lane": "career", "col": 0, "width": 52, "type": "messagebus", "label": "보류", "sublabel": "주장" },
     { "id": "evidence_research", "lane": "career", "col": 2, "width": 68, "type": "database", "label": "근거 조사", "sublabel": "날짜·시스템 지도" },
-    { "id": "evidence_project", "lane": "career", "col": 3, "width": 72, "type": "backend", "label": "프로젝트", "sublabel": "1–12주" },
+    { "id": "reference_analysis", "lane": "review", "col": 2, "width": 92, "type": "database", "label": "레퍼런스 분석", "sublabel": "관찰·추론·비교" },
+    { "id": "glossary_review", "lane": "review", "col": 3, "width": 68, "type": "security", "label": "용어 검토", "sublabel": "후보·영향·승인" },
+    { "id": "evidence_project", "lane": "career", "col": 4, "width": 72, "type": "backend", "label": "프로젝트", "sublabel": "1–12주" },
     { "id": "portfolio_case", "lane": "career", "col": 5, "type": "backend", "label": "포트폴리오", "sublabel": "사례 연구" },
     { "id": "growth_experiment", "lane": "human", "col": 4, "width": 52, "type": "backend", "label": "성장" },
     { "id": "human_review", "lane": "review", "col": 5, "type": "external", "label": "사람 검토", "sublabel": "세 검토 층", "tag": "사람 승인" },
@@ -61,7 +63,10 @@
   "edges": [
     { "from": "stage_diagnosis", "to": "disclosure_approval", "role": "main", "variant": "emphasis" },
     { "from": "disclosure_approval", "to": "evidence_research", "role": "main", "variant": "security", "route": "bottom-channel" },
-    { "from": "evidence_research", "to": "evidence_project", "role": "main", "route": "straight", "fromSide": "right", "toSide": "left" },
+    { "from": "evidence_research", "to": "evidence_project", "role": "branch", "route": "straight", "fromSide": "right", "toSide": "left" },
+    { "from": "evidence_research", "to": "reference_analysis", "role": "main", "variant": "security" },
+    { "from": "reference_analysis", "to": "glossary_review", "role": "main", "variant": "security", "route": "straight", "fromSide": "right", "toSide": "left" },
+    { "from": "glossary_review", "to": "evidence_project", "role": "main", "variant": "emphasis" },
     { "from": "evidence_project", "to": "portfolio_case", "role": "main", "variant": "emphasis" },
     { "from": "evidence_project", "to": "growth_experiment", "role": "branch", "variant": "default", "route": "return-left", "fromSide": "left", "toSide": "left" },
     { "from": "portfolio_case", "to": "human_review", "role": "main", "variant": "security" },

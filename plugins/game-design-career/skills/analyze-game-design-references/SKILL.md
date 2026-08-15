@@ -1,6 +1,6 @@
 ---
 name: analyze-game-design-references
-description: Use when analyzing game-reference evidence, comparing game systems, or preparing a design-transfer decision.
+description: "Use when 한국어 또는 영어 요청이 경쟁작·레퍼런스 게임 분석, 장르별 게임 시스템 인벤토리, 게임 시스템 비교, 증거와 추정 분리 또는 설계 전환 제안을 필요로 할 때."
 ---
 
 # Analyze Game Design References

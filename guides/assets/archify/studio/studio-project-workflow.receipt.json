@@ -13,11 +13,11 @@
   "input": "guides/archify-diagrams/specs/studio/studio-project-workflow.json",
   "output": "guides/assets/archify/studio/studio-project-workflow.html",
   "specification": {
-    "sha256": "e76bdba90046bac8f87a0d65b98c8f5871ecf5c1dcd99819a47e172f752b1d92",
-    "bytes": 6695
+    "sha256": "e33b1216c1a68e133ac988bf32e247b50a0c5051bb9c9ed5738e9c31feceb7ca",
+    "bytes": 8263
   },
   "artifact": {
-    "sha256": "d43d1bca6f0fd8d2aafd222f51b140652b51a73d2a7f6c9d6aced5f1138de226",
-    "bytes": 653521
+    "sha256": "cc6858b4210ecc1911d4cb06b457a612abb35d5a84679e3dc618b822b4a08b4c",
+    "bytes": 659568
   }
 }

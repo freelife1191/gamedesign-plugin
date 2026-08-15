@@ -1,0 +1,4 @@
+interface:
+  display_name: "Analyze Game Design References"
+  short_description: "경쟁작 근거와 게임 시스템을 비교해 설계 전환안을 준비합니다"
+  default_prompt: "Use $analyze-game-design-references to analyze these references and compare their game systems with evidence."

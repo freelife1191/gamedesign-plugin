@@ -200,18 +200,31 @@ const suiteInterfaceCards = [
 
 function assertStudioDesignIntelligence(spec) {
   assertEdge(spec, "canonical_artifact", "domain_design");
+  assertEdge(spec, "canonical_artifact", "reference_analysis");
+  assertEdge(spec, "reference_analysis", "glossary_review");
+  assertEdge(spec, "glossary_review", "finding_decision");
   assertEdge(spec, "finding_decision", "image_asset_plan");
+  assertEdge(spec, "image_asset_plan", "cutscene_waves");
+  assertEdge(spec, "cutscene_waves", "image_asset_review");
   assert.match(spec.nodes.find((node) => node.id === "canonical_artifact")?.sublabel ?? "", /승인 맥락/u);
   assert.match(spec.nodes.find((node) => node.id === "image_asset_plan")?.sublabel ?? "", /호스트 우선.*한글 유료/u);
+  assert.match(spec.nodes.find((node) => node.id === "reference_analysis")?.sublabel ?? "", /관찰.*추론.*비교/u);
+  assert.match(spec.nodes.find((node) => node.id === "glossary_review")?.sublabel ?? "", /후보.*영향.*승인/u);
+  assert.match(spec.nodes.find((node) => node.id === "cutscene_waves")?.sublabel ?? "", /마스터.*참조.*키프레임.*보드/u);
   const visibleText = JSON.stringify(spec);
-  for (const phrase of ["승인된 기억", "레퍼런스 근거", "용어 사전", "컷씬 프리프로덕션", "승인 전 provider 호출 0회", "image_gen", "한글 픽셀 텍스트만 gpt-image-2", "low 기본, medium 선택, high 예외"]) {
+  for (const phrase of ["승인된 기억", "레퍼런스 근거", "용어 사전", "컷씬 프리프로덕션", "style-master → reference-masters → keyframes → storyboard", "승인 전 provider 호출 0회", "image_gen", "한글 픽셀 텍스트만 gpt-image-2", "low 기본, medium 선택, high 예외"]) {
     assert.match(visibleText, new RegExp(phrase, "u"));
   }
 }
 
 function assertCareerDesignIntelligence(spec) {
   assertEdge(spec, "disclosure_approval", "evidence_research");
+  assertEdge(spec, "evidence_research", "reference_analysis");
+  assertEdge(spec, "reference_analysis", "glossary_review");
+  assertEdge(spec, "glossary_review", "evidence_project");
   assert.match(spec.nodes.find((node) => node.id === "evidence_research")?.sublabel ?? "", /시스템 지도/u);
+  assert.match(spec.nodes.find((node) => node.id === "reference_analysis")?.sublabel ?? "", /관찰.*추론.*비교/u);
+  assert.match(spec.nodes.find((node) => node.id === "glossary_review")?.sublabel ?? "", /후보.*영향.*승인/u);
   const visibleText = JSON.stringify(spec);
   for (const phrase of ["승인된 기억", "레퍼런스 근거", "용어 사전", "사람의 검토 결정이 필요합니다"]) {
     assert.match(visibleText, new RegExp(phrase, "u"));

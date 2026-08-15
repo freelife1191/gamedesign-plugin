@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "7a5e982772c246f8453ec722e125b51c016672a4e907cfc01734d222a926831b",
+  "treeSha256": "0fdd36bc40ec04500f50fc0d5c79be03eea2987c0c865f139b6ee984626320b4",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -21,8 +21,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "f90196afb9df668ba433b72a47171c54bc7a9e0b488e0e7cb9fb9f59db756349",
-      "size": 63982
+      "sha256": "a0bff721f5d8089c4ffd2e643e4984ff6fb32697d75a717952666788ec0ce475",
+      "size": 64086
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -621,8 +621,8 @@
     },
     {
       "path": "references/routing.json",
-      "sha256": "b80d884f211fae2c6f459988fe0ee39f9ad7dec0073e547facf1025df6b086d7",
-      "size": 19317
+      "sha256": "d53c115af37714ec6821045daf917b016274f1ef1c8daa70db38dc09926c5d50",
+      "size": 19584
     },
     {
       "path": "references/shared/document-quality/game-design-writing-style.md",
@@ -1816,8 +1816,13 @@
     },
     {
       "path": "skills/analyze-game-design-references/SKILL.md",
-      "sha256": "d38c00d9c9168aca28e34cfe03f802d0291b6d9039157d8c33cc31d09c10502a",
-      "size": 5453
+      "sha256": "f4ba91a2db616489b92e4559c86c394196f986b8b543ca20c54018aceb4cdf08",
+      "size": 5568
+    },
+    {
+      "path": "skills/analyze-game-design-references/agents/openai.yaml",
+      "sha256": "57e586d9dd5fd1fda36da52425dfc930613efe9db804f505f1889a673873af81",
+      "size": 299
     },
     {
       "path": "skills/apply-document-quality-profile/SKILL.md",
@@ -2306,8 +2311,13 @@
     },
     {
       "path": "skills/maintain-game-design-glossary/SKILL.md",
-      "sha256": "15ad4923e78815d7c4ebf04bf92fd9b50f756eed0e2af6a9bddeb1fb298503ee",
-      "size": 3571
+      "sha256": "d44ccab7db0d8516d551c7bb018c38133b7171ec272b3e24388721edc366d0d5",
+      "size": 3617
+    },
+    {
+      "path": "skills/maintain-game-design-glossary/agents/openai.yaml",
+      "sha256": "cd232354fe36feb7dd562c9f15c49c179621fa370e8b547638ceb444b929f339",
+      "size": 289
     },
     {
       "path": "skills/maintain-game-design-memory/SKILL.md",

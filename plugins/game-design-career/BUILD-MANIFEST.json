@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-career",
   "sourceDateEpoch": 0,
-  "treeSha256": "d66f8b3e17f70242209de824dddeb7a90c7f8365124ac2685ffb32a93a7b6451",
+  "treeSha256": "e90bc5cf678c03c8cb9b54905a9eed6118b834c29818a614140c9d54fb31649b",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -21,8 +21,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "8ca7a8c00c3b2c5a8d6c35325cc9b696e926e54c1fb39f1e9c8920cbea5bf87d",
-      "size": 62148
+      "sha256": "9d8fcf9fac819143a13da09215979843c4498418811064ec7517144d7a074cef",
+      "size": 62242
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -1801,8 +1801,13 @@
     },
     {
       "path": "skills/analyze-game-design-references/SKILL.md",
-      "sha256": "d38c00d9c9168aca28e34cfe03f802d0291b6d9039157d8c33cc31d09c10502a",
-      "size": 5453
+      "sha256": "f4ba91a2db616489b92e4559c86c394196f986b8b543ca20c54018aceb4cdf08",
+      "size": 5568
+    },
+    {
+      "path": "skills/analyze-game-design-references/agents/openai.yaml",
+      "sha256": "57e586d9dd5fd1fda36da52425dfc930613efe9db804f505f1889a673873af81",
+      "size": 299
     },
     {
       "path": "skills/apply-document-quality-profile/SKILL.md",
@@ -2231,8 +2236,13 @@
     },
     {
       "path": "skills/maintain-game-design-glossary/SKILL.md",
-      "sha256": "15ad4923e78815d7c4ebf04bf92fd9b50f756eed0e2af6a9bddeb1fb298503ee",
-      "size": 3571
+      "sha256": "d44ccab7db0d8516d551c7bb018c38133b7171ec272b3e24388721edc366d0d5",
+      "size": 3617
+    },
+    {
+      "path": "skills/maintain-game-design-glossary/agents/openai.yaml",
+      "sha256": "cd232354fe36feb7dd562c9f15c49c179621fa370e8b547638ceb444b929f339",
+      "size": 289
     },
     {
       "path": "skills/maintain-game-design-memory/SKILL.md",

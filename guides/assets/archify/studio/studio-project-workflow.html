@@ -4841,7 +4841,7 @@
       <p class="subtitle">비전은 기준 설계 문서가 되고, 사람의 결정과 자산 근거를 거쳐 보존된 맥락에서 다시 시작합니다.</p>
     </div>
 
-    <script id="archify-guided-views-data" type="application/json">[{"id":"vision-to-review","label":"비전에서 사람 결정까지","focus":["vision_approval","canonical_artifact","domain_design","specialist_review","finding_decision"],"note":"승인된 플레이어 경험은 전문 검토 결과가 사람의 결정으로 돌아오기 전에 기준 문서가 됩니다."},{"id":"asset-evidence","label":"이미지와 형식 근거","focus":["image_asset_plan","image_asset_review","format_qa_export"],"note":"이미지는 호스트 image_gen을 먼저 사용하고, 한글 픽셀 텍스트만 gpt-image-2로 보냅니다. 유료 전환과 품질은 비용 안내 뒤 사람이 승인합니다."},{"id":"resume-contract","label":"맥락에서 재개","focus":["canonical_artifact","image_asset_review","resume_context"],"note":"기준 경로를 보존하고, 다음 요청은 문서를 새로 만들지 않고 보류된 이미지 승인으로 돌아갑니다."}]</script>
+    <script id="archify-guided-views-data" type="application/json">[{"id":"vision-to-review","label":"비전에서 사람 결정까지","focus":["vision_approval","canonical_artifact","reference_analysis","glossary_review","domain_design","specialist_review","finding_decision"],"note":"승인된 플레이어 경험과 레퍼런스 근거, 용어 후보를 함께 검토한 뒤 설계 결정을 기준 문서에 남깁니다."},{"id":"asset-evidence","label":"이미지와 형식 근거","focus":["image_asset_plan","cutscene_waves","image_asset_review","format_qa_export"],"note":"이미지는 호스트 image_gen을 먼저 사용하고, 한글 픽셀 텍스트만 gpt-image-2로 보냅니다. 유료 전환과 품질은 비용 안내 뒤 사람이 승인합니다."},{"id":"resume-contract","label":"맥락에서 재개","focus":["canonical_artifact","image_asset_review","resume_context"],"note":"기준 경로를 보존하고, 다음 요청은 문서를 새로 만들지 않고 보류된 이미지 승인으로 돌아갑니다."}]</script>
 
     <div class="guided-views no-print" id="guided-views" hidden aria-label="Guided diagram views">
       <button id="guided-view-prev" type="button" aria-label="Previous guided view" title="Previous guided view ([)">&#8592;</button>
@@ -4884,7 +4884,7 @@
 
     <!-- Main Diagram -->
     <div class="diagram-container" data-detail-level="read">
-      <svg viewBox="0 0 720 776" role="img" aria-labelledby="archify-diagram-title archify-diagram-description" data-preset="blueprint" data-quality-profile="showcase">
+      <svg viewBox="0 0 720 1024" role="img" aria-labelledby="archify-diagram-title archify-diagram-description" data-preset="blueprint" data-quality-profile="showcase">
         <title id="archify-diagram-title">게임 디자인 스튜디오 프로젝트 흐름</title>
         <desc id="archify-diagram-description">비전은 기준 설계 문서가 되고, 사람의 결정과 자산 근거를 거쳐 보존된 맥락에서 다시 시작합니다.</desc>
         <!-- Definitions -->
@@ -4923,8 +4923,14 @@
         <text x="54" y="446" class="t-dim" font-size="10" font-weight="600">04 / 자산과 렌더러</text>
 
         <rect data-graph-role="structural-frame" data-composition-frame-kind="lane" data-composition-frame-id="lane-4" x="40" y="548" width="640" height="104" rx="10" class="c-lane" stroke-width="1"/>
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="exception-lane" data-composition-frame-id="lane-4-exception" x="46" y="554" width="628" height="92" rx="8" class="c-security-group" stroke-width="1"/>
-        <text x="54" y="570" class="t-security" font-size="10" font-weight="600">EX / 보류 작업과 재개</text>
+        <text x="54" y="570" class="t-dim" font-size="10" font-weight="600">05 / 컷씬 프리프로덕션</text>
+
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="lane" data-composition-frame-id="lane-5" x="40" y="672" width="640" height="104" rx="10" class="c-lane" stroke-width="1"/>
+        <text x="54" y="694" class="t-dim" font-size="10" font-weight="600">06 / 레퍼런스와 용어</text>
+
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="lane" data-composition-frame-id="lane-6" x="40" y="796" width="640" height="104" rx="10" class="c-lane" stroke-width="1"/>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="exception-lane" data-composition-frame-id="lane-6-exception" x="46" y="802" width="628" height="92" rx="8" class="c-security-group" stroke-width="1"/>
+        <text x="54" y="818" class="t-security" font-size="10" font-weight="600">EX / 보류 작업과 재개</text>
 
         <!-- Phase headers -->
         <line x1="42" y1="35" x2="266" y2="35" class="a-emphasis" stroke-width="1.1"/>
@@ -4941,15 +4947,20 @@
 
 
         <!-- Edge paths -->
-        <path data-edge-from="vision_approval" data-edge-to="canonical_artifact" data-edge-key="0" data-composition-points="134,119;134,166;194,166;194,243" d="M 134 119 L 134 166 L 194 166 L 194 243" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        <path data-edge-from="vision_approval" data-edge-to="canonical_artifact" data-edge-key="0" data-composition-points="88,145;88,166;220,166;220,217" d="M 88 145 L 88 166 L 220 166 L 220 217" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         <path data-edge-from="canonical_artifact" data-edge-to="domain_design" data-edge-key="1" data-composition-points="246,243;274,243" d="M 246 243 L 274 243" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
-        <path data-edge-from="domain_design" data-edge-to="specialist_review" data-edge-key="2" data-composition-points="326,243;326,290;384,290;384,367" d="M 326 243 L 326 290 L 384 290 L 384 367" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
-        <path data-edge-from="specialist_review" data-edge-to="finding_decision" data-edge-key="3" data-composition-points="476,367;476,228;454,228;454,119" d="M 476 367 L 476 228 L 454 228 L 454 119" class="a-security" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
-        <path data-edge-from="finding_decision" data-edge-to="image_asset_plan" data-edge-key="4" data-composition-points="500,153;500,290;500,290;500,465" d="M 500 153 L 500 290 L 500 290 L 500 465" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
-        <path data-edge-from="image_asset_plan" data-edge-to="image_asset_review" data-edge-key="5" data-composition-points="546,491;546,290;579,290;579,119" d="M 546 491 L 546 290 L 579 290 L 579 119" class="a-security" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
-        <path data-edge-from="image_asset_review" data-edge-to="format_qa_export" data-edge-key="6" data-composition-points="625,145;625,290;625,290;625,465" d="M 625 145 L 625 290 L 625 290 L 625 465" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
-        <path data-edge-from="image_asset_review" data-edge-to="resume_context" data-edge-label="보류" data-edge-key="7" data-composition-points="671,119;704,119;704,615;536,615" d="M 671 119 L 704 119 L 704 615 L 536 615" class="a-dashed" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
-        <path data-edge-from="resume_context" data-edge-to="image_asset_review" data-edge-label="재개" data-edge-key="8" data-composition-points="536,615;736,615;736,119;671,119" d="M 536 615 L 736 615 L 736 119 L 671 119" class="a-dashed" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
+        <path data-edge-from="canonical_artifact" data-edge-to="reference_analysis" data-edge-key="2" data-composition-points="194,243;166,243;166,739;254,739" d="M 194 243 L 166 243 L 166 739 L 254 739" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="reference_analysis" data-edge-to="glossary_review" data-edge-key="3" data-composition-points="346,739;591,739" d="M 346 739 L 591 739" class="a-security" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
+        <path data-edge-from="glossary_review" data-edge-to="finding_decision" data-edge-key="4" data-composition-points="625,765;625,800;20,800;20,40;500,40;500,85" d="M 625 765 L 625 800 L 20 800 L 20 40 L 500 40 L 500 85" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        <path data-edge-from="domain_design" data-edge-to="specialist_review" data-edge-key="5" data-composition-points="326,243;326,290;384,290;384,367" d="M 326 243 L 326 290 L 384 290 L 384 367" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="specialist_review" data-edge-to="finding_decision" data-edge-key="6" data-composition-points="476,367;476,228;454,228;454,119" d="M 476 367 L 476 228 L 454 228 L 454 119" class="a-security" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
+        <path data-edge-from="finding_decision" data-edge-to="image_asset_plan" data-edge-key="7" data-composition-points="500,153;500,290;500,290;500,465" d="M 500 153 L 500 290 L 500 290 L 500 465" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        <path data-edge-from="image_asset_plan" data-edge-to="image_asset_review" data-edge-key="8" data-composition-points="546,491;546,290;579,290;579,112" d="M 546 491 L 546 290 L 579 290 L 579 112" class="a-security" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
+        <path data-edge-from="image_asset_plan" data-edge-to="cutscene_waves" data-edge-key="9" data-composition-points="500,517;500,538;500,538;500,589" d="M 500 517 L 500 538 L 500 538 L 500 589" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        <path data-edge-from="cutscene_waves" data-edge-to="image_asset_review" data-edge-key="10" data-composition-points="558,615;558,352;579,352;579,126" d="M 558 615 L 558 352 L 579 352 L 579 126" class="a-security" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
+        <path data-edge-from="image_asset_review" data-edge-to="format_qa_export" data-edge-key="11" data-composition-points="625,145;625,290;625,290;625,465" d="M 625 145 L 625 290 L 625 290 L 625 465" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        <path data-edge-from="image_asset_review" data-edge-to="resume_context" data-edge-label="보류" data-edge-key="12" data-composition-points="671,119;704,119;704,863;536,863" d="M 671 119 L 704 119 L 704 863 L 536 863" class="a-dashed" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
+        <path data-edge-from="resume_context" data-edge-to="image_asset_review" data-edge-label="재개" data-edge-key="13" data-composition-points="536,863;736,863;736,119;671,119" d="M 536 863 L 736 863 L 736 119 L 671 119" class="a-dashed" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
 
         <!-- Nodes -->
         <g id="node-vision_approval" data-node-id="vision_approval" data-node-label="비전 승인" tabindex="0" role="button" aria-label="Focus 비전 승인, 플레이어·재미·비목표, 사람의 결정 › 방향 설정" aria-pressed="false" data-node-kind="external" data-node-sublabel="플레이어·재미·비목표" data-node-context="사람의 결정 › 방향 설정">
@@ -4966,16 +4977,16 @@
 
         <g id="node-resume_context" data-node-id="resume_context" data-node-label="작업 재개" tabindex="0" role="button" aria-label="Focus 작업 재개, 같은 보류 작업, 보류 작업과 재개 › 자산과 내보내기 근거" aria-pressed="false" data-node-kind="messagebus" data-node-sublabel="같은 보류 작업" data-node-context="보류 작업과 재개 › 자산과 내보내기 근거">
           <title>작업 재개 · 같은 보류 작업 · 보류 작업과 재개 › 자산과 내보내기 근거</title>
-          <rect x="464" y="589" width="72" height="52" rx="6" class="c-mask"/>
-          <rect x="464" y="589" width="72" height="52" rx="6" class="c-messagebus" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="messagebus" class="semantic-sigil s-messagebus" transform="translate(470 595) scale(0.6875)">
+          <rect x="464" y="837" width="72" height="52" rx="6" class="c-mask"/>
+          <rect x="464" y="837" width="72" height="52" rx="6" class="c-messagebus" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="messagebus" class="semantic-sigil s-messagebus" transform="translate(470 843) scale(0.6875)">
             <path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11"/>
             <circle cx="5" cy="4.5" r="1" class="sigil-fill"/>
             <circle cx="10.5" cy="8" r="1" class="sigil-fill"/>
             <circle cx="7" cy="11.5" r="1" class="sigil-fill"/>
           </g>
-          <text data-detail-anchor x="500" y="610" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">작업 재개</text>
-          <text data-detail="context" x="500" y="627" class="t-muted" font-size="7.6" text-anchor="middle">같은 보류 작업</text>
+          <text data-detail-anchor x="500" y="858" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">작업 재개</text>
+          <text data-detail="context" x="500" y="875" class="t-muted" font-size="7.6" text-anchor="middle">같은 보류 작업</text>
         </g>
 
         <g id="node-canonical_artifact" data-node-id="canonical_artifact" data-node-label="기준" tabindex="0" role="button" aria-label="Focus 기준, 승인 맥락, 게임 디자인 스튜디오 › 방향 설정" aria-pressed="false" data-node-kind="database" data-node-sublabel="승인 맥락" data-node-context="게임 디자인 스튜디오 › 방향 설정">
@@ -4999,6 +5010,30 @@
           </g>
           <text data-detail-anchor x="300" y="238" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">범위</text>
           <text data-detail="context" x="300" y="255" class="t-muted" font-size="8" text-anchor="middle">설계 영역</text>
+        </g>
+
+        <g id="node-reference_analysis" data-node-id="reference_analysis" data-node-label="레퍼런스 분석" tabindex="0" role="button" aria-label="Focus 레퍼런스 분석, 관찰·추론·비교, 레퍼런스와 용어 › 설계와 결정" aria-pressed="false" data-node-kind="database" data-node-sublabel="관찰·추론·비교" data-node-context="레퍼런스와 용어 › 설계와 결정">
+          <title>레퍼런스 분석 · 관찰·추론·비교 · 레퍼런스와 용어 › 설계와 결정</title>
+          <rect x="254" y="713" width="92" height="52" rx="6" class="c-mask"/>
+          <rect x="254" y="713" width="92" height="52" rx="6" class="c-database" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="database" class="semantic-sigil s-database" transform="translate(260 719) scale(0.6875)">
+            <ellipse cx="8" cy="4" rx="5" ry="2"/>
+            <path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/>
+          </g>
+          <text data-detail-anchor x="300" y="734" class="t-primary" font-size="10.7" font-weight="600" text-anchor="middle">레퍼런스 분석</text>
+          <text data-detail="context" x="300" y="751" class="t-muted" font-size="8" text-anchor="middle">관찰·추론·비교</text>
+        </g>
+
+        <g id="node-glossary_review" data-node-id="glossary_review" data-node-label="용어 검토" tabindex="0" role="button" aria-label="Focus 용어 검토, 후보·영향·승인, 레퍼런스와 용어 › 자산과 내보내기 근거" aria-pressed="false" data-node-kind="security" data-node-sublabel="후보·영향·승인" data-node-context="레퍼런스와 용어 › 자산과 내보내기 근거">
+          <title>용어 검토 · 후보·영향·승인 · 레퍼런스와 용어 › 자산과 내보내기 근거</title>
+          <rect x="591" y="713" width="68" height="52" rx="6" class="c-mask"/>
+          <rect x="591" y="713" width="68" height="52" rx="6" class="c-security" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(597 719) scale(0.6875)">
+            <path d="M8 2.2 13 4v3.5c0 3.1-1.8 5.4-5 6.5-3.2-1.1-5-3.4-5-6.5V4Z"/>
+            <path d="m5.8 8 1.5 1.5 3-3"/>
+          </g>
+          <text data-detail-anchor x="625" y="734" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">용어 검토</text>
+          <text data-detail="context" x="625" y="751" class="t-muted" font-size="7.1" text-anchor="middle">후보·영향·승인</text>
         </g>
 
         <g id="node-specialist_review" data-node-id="specialist_review" data-node-label="전문 검토" tabindex="0" role="button" aria-label="Focus 전문 검토, 품질·실현성, 전문 검토 › 설계와 결정" aria-pressed="false" data-node-kind="security" data-node-sublabel="품질·실현성" data-node-context="전문 검토 › 설계와 결정">
@@ -5037,6 +5072,17 @@
           <text data-detail="context" x="500" y="503" class="t-muted" font-size="6.6" text-anchor="middle">호스트 우선·한글 유료</text>
         </g>
 
+        <g id="node-cutscene_waves" data-node-id="cutscene_waves" data-node-label="컷씬 4단계" tabindex="0" role="button" aria-label="Focus 컷씬 4단계, 마스터→참조→키프레임→보드, 컷씬 프리프로덕션 › 자산과 내보내기 근거" aria-pressed="false" data-node-kind="backend" data-node-sublabel="마스터→참조→키프레임→보드" data-node-context="컷씬 프리프로덕션 › 자산과 내보내기 근거">
+          <title>컷씬 4단계 · 마스터→참조→키프레임→보드 · 컷씬 프리프로덕션 › 자산과 내보내기 근거</title>
+          <rect x="442" y="589" width="116" height="52" rx="6" class="c-mask"/>
+          <rect x="442" y="589" width="116" height="52" rx="6" class="c-backend" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(448 595) scale(0.6875)">
+            <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
+          </g>
+          <text data-detail-anchor x="500" y="610" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">컷씬 4단계</text>
+          <text data-detail="context" x="500" y="627" class="t-muted" font-size="7.2" text-anchor="middle">마스터→참조→키프레임→보드</text>
+        </g>
+
         <g id="node-image_asset_review" data-node-id="image_asset_review" data-node-label="이미지 승인" tabindex="0" role="button" aria-label="Focus 이미지 승인, 이미지, 사람의 결정 › 자산과 내보내기 근거" aria-pressed="false" data-node-kind="external" data-node-sublabel="이미지" data-node-context="사람의 결정 › 자산과 내보내기 근거">
           <title>이미지 승인 · 이미지 · 사람의 결정 › 자산과 내보내기 근거</title>
           <rect x="579" y="93" width="92" height="52" rx="6" class="c-mask"/>
@@ -5069,41 +5115,46 @@
 
 
 
-        <g data-detail="context" data-edge-from="image_asset_review" data-edge-to="resume_context" data-edge-label="보류" data-edge-key="7">
-          <rect x="689" y="347" width="30" height="14" rx="3" class="c-mask"/>
-          <text x="704" y="357" class="t-database" font-size="8" text-anchor="middle">보류</text>
+
+
+
+
+
+        <g data-detail="context" data-edge-from="image_asset_review" data-edge-to="resume_context" data-edge-label="보류" data-edge-key="12">
+          <rect x="689" y="471" width="30" height="14" rx="3" class="c-mask"/>
+          <text x="704" y="481" class="t-database" font-size="8" text-anchor="middle">보류</text>
         </g>
-        <g data-detail="context" data-edge-from="resume_context" data-edge-to="image_asset_review" data-edge-label="재개" data-edge-key="8">
-          <rect x="721" y="371" width="30" height="14" rx="3" class="c-mask"/>
-          <text x="736" y="381" class="t-database" font-size="8" text-anchor="middle">재개</text>
+        <g data-detail="context" data-edge-from="resume_context" data-edge-to="image_asset_review" data-edge-label="재개" data-edge-key="13">
+          <rect x="721" y="495" width="30" height="14" rx="3" class="c-mask"/>
+          <text x="736" y="505" class="t-database" font-size="8" text-anchor="middle">재개</text>
         </g>
 
         <!-- Legend -->
         <g data-legend data-legend-bridge>
-          <text x="20" y="676" class="t-primary" font-size="12" font-weight="650">범례</text>
-          <g data-legend-semantic-kind="backend" data-legend-kind="backend" data-legend-label="Agent logic" data-legend-x="20" data-legend-baseline="696" data-legend-width="91">
-            <rect x="20" y="688" width="14" height="9" rx="2" class="c-backend" stroke-width="1"/>
-            <text x="42" y="696" class="t-muted" font-size="7.5" font-weight="500">Agent logic</text>
+          <text x="20" y="924" class="t-primary" font-size="12" font-weight="650">범례</text>
+          <g data-legend-semantic-kind="backend" data-legend-kind="backend" data-legend-label="Agent logic" data-legend-x="20" data-legend-baseline="944" data-legend-width="91">
+            <rect x="20" y="936" width="14" height="9" rx="2" class="c-backend" stroke-width="1"/>
+            <text x="42" y="944" class="t-muted" font-size="7.5" font-weight="500">Agent logic</text>
           </g>
-          <g data-legend-semantic-kind="security" data-legend-kind="security" data-legend-label="Policy" data-legend-x="118" data-legend-baseline="696" data-legend-width="70">
-            <rect x="118" y="688" width="14" height="9" rx="2" class="c-security" stroke-width="1"/>
-            <text x="140" y="696" class="t-muted" font-size="7.5" font-weight="500">Policy</text>
+          <g data-legend-semantic-kind="security" data-legend-kind="security" data-legend-label="Policy" data-legend-x="118" data-legend-baseline="944" data-legend-width="70">
+            <rect x="118" y="936" width="14" height="9" rx="2" class="c-security" stroke-width="1"/>
+            <text x="140" y="944" class="t-muted" font-size="7.5" font-weight="500">Policy</text>
           </g>
-          <g data-legend-semantic-kind="messagebus" data-legend-kind="messagebus" data-legend-label="Tool action" data-legend-x="195" data-legend-baseline="696" data-legend-width="91">
-            <rect x="195" y="688" width="14" height="9" rx="2" class="c-messagebus" stroke-width="1"/>
-            <text x="217" y="696" class="t-muted" font-size="7.5" font-weight="500">Tool action</text>
+          <g data-legend-semantic-kind="messagebus" data-legend-kind="messagebus" data-legend-label="Tool action" data-legend-x="195" data-legend-baseline="944" data-legend-width="91">
+            <rect x="195" y="936" width="14" height="9" rx="2" class="c-messagebus" stroke-width="1"/>
+            <text x="217" y="944" class="t-muted" font-size="7.5" font-weight="500">Tool action</text>
           </g>
-          <g data-legend-semantic-kind="database" data-legend-kind="database" data-legend-label="Context / trace" data-legend-x="293" data-legend-baseline="696" data-legend-width="109">
-            <rect x="293" y="688" width="14" height="9" rx="2" class="c-database" stroke-width="1"/>
-            <text x="315" y="696" class="t-muted" font-size="7.5" font-weight="500">Context / trace</text>
+          <g data-legend-semantic-kind="database" data-legend-kind="database" data-legend-label="Context / trace" data-legend-x="293" data-legend-baseline="944" data-legend-width="109">
+            <rect x="293" y="936" width="14" height="9" rx="2" class="c-database" stroke-width="1"/>
+            <text x="315" y="944" class="t-muted" font-size="7.5" font-weight="500">Context / trace</text>
           </g>
-          <g data-legend-semantic-kind="cloud" data-legend-kind="cloud" data-legend-label="Cloud service" data-legend-x="409" data-legend-baseline="696" data-legend-width="100">
-            <rect x="409" y="688" width="14" height="9" rx="2" class="c-cloud" stroke-width="1"/>
-            <text x="431" y="696" class="t-muted" font-size="7.5" font-weight="500">Cloud service</text>
+          <g data-legend-semantic-kind="cloud" data-legend-kind="cloud" data-legend-label="Cloud service" data-legend-x="409" data-legend-baseline="944" data-legend-width="100">
+            <rect x="409" y="936" width="14" height="9" rx="2" class="c-cloud" stroke-width="1"/>
+            <text x="431" y="944" class="t-muted" font-size="7.5" font-weight="500">Cloud service</text>
           </g>
-          <g data-legend-semantic-kind="external" data-legend-kind="external" data-legend-label="External system" data-legend-x="516" data-legend-baseline="696" data-legend-width="109">
-            <rect x="516" y="688" width="14" height="9" rx="2" class="c-external" stroke-width="1"/>
-            <text x="538" y="696" class="t-muted" font-size="7.5" font-weight="500">External system</text>
+          <g data-legend-semantic-kind="external" data-legend-kind="external" data-legend-label="External system" data-legend-x="516" data-legend-baseline="944" data-legend-width="109">
+            <rect x="516" y="936" width="14" height="9" rx="2" class="c-external" stroke-width="1"/>
+            <text x="538" y="944" class="t-muted" font-size="7.5" font-weight="500">External system</text>
           </g>
         </g>
       </svg>
@@ -5321,7 +5372,7 @@
         <ul>
           <li>&bull; 일반·컷씬 이미지는 image_gen을 먼저 쓰고 한글 픽셀 텍스트만 gpt-image-2로 보냅니다</li>
           <li>&bull; 유료 품질은 low 기본, medium 선택, high 예외이며 비용 승인 전에는 호출하지 않습니다</li>
-          <li>&bull; 컷씬 프리프로덕션은 네 wave의 프롬프트·비용·승인을 분리하며 승인 전 provider 호출 0회입니다</li>
+          <li>&bull; 컷씬 프리프로덕션은 style-master → reference-masters → keyframes → storyboard 네 단계의 프롬프트·비용·승인을 분리하며 승인 전 provider 호출 0회입니다</li>
           <li>&bull; 이미지 승인은 사람 검토 단계로 남깁니다</li>
           <li>&bull; 내보내기 형식에는 렌더러별 품질 검토 근거가 필요합니다</li>
         </ul>

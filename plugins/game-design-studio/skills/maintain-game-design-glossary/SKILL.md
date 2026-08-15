@@ -1,6 +1,6 @@
 ---
 name: maintain-game-design-glossary
-description: Use when collecting game-design terminology candidates, validating glossary use, or preparing human-reviewed glossary maintenance.
+description: "Use when 한국어 또는 영어 기획서의 용어 사전, 용어 후보, 사람 승인, 한국어·영어 용어 일관성 또는 문서별 영향 검토가 필요할 때."
 ---
 
 # Maintain Game Design Glossary

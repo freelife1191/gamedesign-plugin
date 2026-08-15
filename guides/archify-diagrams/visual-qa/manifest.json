@@ -3,8 +3,8 @@
   "entries": [
     {
       "id": "studio-project-workflow",
-      "specification_sha256": "e76bdba90046bac8f87a0d65b98c8f5871ecf5c1dcd99819a47e172f752b1d92",
-      "artifact_sha256": "d43d1bca6f0fd8d2aafd222f51b140652b51a73d2a7f6c9d6aced5f1138de226",
+      "specification_sha256": "e33b1216c1a68e133ac988bf32e247b50a0c5051bb9c9ed5738e9c31feceb7ca",
+      "artifact_sha256": "cc6858b4210ecc1911d4cb06b457a612abb35d5a84679e3dc618b822b4a08b4c",
       "reviewer": "Codex 헤드리스 시각 QA",
       "review_method": "headless-original-and-fit",
       "correction_rounds": 2,
@@ -12,43 +12,43 @@
       "renders": {
         "read": {
           "path": "renders/studio/studio-project-workflow/read.png",
-          "sha256": "0da5c0bc5b861533bd7853fe495c0683bb4b48811aaf96f2c6a0ef1e6e96e12d",
+          "sha256": "1cbcffa9a1021e609408cafa8a639ab9c6765108f00f27f8214e1c4c90d1b1c2",
           "width": 1600,
-          "height": 2038
+          "height": 2503
         },
         "dark": {
           "path": "renders/studio/studio-project-workflow/dark.png",
-          "sha256": "67c53dcdec0fa640d6a0e30805eba56d97ddf55038718871f241224d388618b2",
+          "sha256": "b7943fcd9247ed79119563c68082751ba7ab79063bfa1b3c07aee2c8f9b57f34",
           "width": 1600,
-          "height": 2038
+          "height": 2503
         },
         "light": {
           "path": "renders/studio/studio-project-workflow/light.png",
-          "sha256": "6a631be7afebdc4e28f4568fc1562f889e9a73b0870bf1bc2dc2d8a7844b8785",
+          "sha256": "1cbcffa9a1021e609408cafa8a639ab9c6765108f00f27f8214e1c4c90d1b1c2",
           "width": 1600,
-          "height": 2038
+          "height": 2503
         },
         "guided_views": [
           {
             "id": "view-vision-to-review",
             "path": "renders/studio/studio-project-workflow/view-vision-to-review.png",
-            "sha256": "2556c9e61737b9536e65efee0523721e8e72d8863b7744866026ff8e470a628e",
+            "sha256": "270cdbc19a4e47f811c8af4f44077d193d5703a5d1319e8d35b3aa9242abde41",
             "width": 1600,
-            "height": 2138
+            "height": 2603
           },
           {
             "id": "view-asset-evidence",
             "path": "renders/studio/studio-project-workflow/view-asset-evidence.png",
-            "sha256": "afa82ad5f86b2cff788572959f1f36dc5c6791272778dd01d491f2d22413d351",
+            "sha256": "0b2eb6979a26972f2abafbc7002f6c1907563b995ef172125df2d3d06c93c0f6",
             "width": 1600,
-            "height": 2138
+            "height": 2603
           },
           {
             "id": "view-resume-contract",
             "path": "renders/studio/studio-project-workflow/view-resume-contract.png",
-            "sha256": "a10f77bfc315b4df7783514de6d9f94fb174f2d4ddc87637624dcfe7e1a198e1",
+            "sha256": "99966ed18f43a1c3d177aa878fbcdb70381eead69aa5549353f48198047ddb79",
             "width": 1600,
-            "height": 2138
+            "height": 2603
           }
         ]
       },
@@ -89,8 +89,8 @@
     },
     {
       "id": "career-evidence-workflow",
-      "specification_sha256": "83fdc3f09d4f55c4e15928af716358f2392ebf37e7d3ea513be5e941b8cd0ac9",
-      "artifact_sha256": "7a3caf0cfa58b4591a13573b37b636512e38ce6829ed6f0269ef56a7f76775f8",
+      "specification_sha256": "4b9303dd7dd97abb1cdefee3be626648681b0b5ccb03ec27a8c4fa9958aa0fab",
+      "artifact_sha256": "b0b177b96d301759440c02629aad11f12a943d809bc8575130f79c0cd8a9c1bd",
       "reviewer": "Codex 헤드리스 시각 QA",
       "review_method": "headless-original-and-fit",
       "correction_rounds": 2,
@@ -98,50 +98,50 @@
       "renders": {
         "read": {
           "path": "renders/career/career-evidence-workflow/read.png",
-          "sha256": "0931a8b3ee55f2aff8688459b0c58025154eaaa1ada9979216c085e8e6a45647",
+          "sha256": "e5df98cc266b8a7cdc4ed4db9b17a48d694aa0ae48b1a47f1714e60a6d2c5c9d",
           "width": 1600,
-          "height": 1926
+          "height": 1878
         },
         "dark": {
           "path": "renders/career/career-evidence-workflow/dark.png",
-          "sha256": "0931a8b3ee55f2aff8688459b0c58025154eaaa1ada9979216c085e8e6a45647",
+          "sha256": "916f9f038226110448a65571a8b4a68e2853c23b7aac791a2fa4f43274436c90",
           "width": 1600,
-          "height": 1926
+          "height": 1878
         },
         "light": {
           "path": "renders/career/career-evidence-workflow/light.png",
-          "sha256": "5476927e2e4e191848c6bcdd539a8f86f4df486563954bd92388b13f01bd705e",
+          "sha256": "e5df98cc266b8a7cdc4ed4db9b17a48d694aa0ae48b1a47f1714e60a6d2c5c9d",
           "width": 1600,
-          "height": 1926
+          "height": 1878
         },
         "guided_views": [
           {
             "id": "view-evidence-path",
             "path": "renders/career/career-evidence-workflow/view-evidence-path.png",
-            "sha256": "aa7729e1d42eb03608b6514acc215ee0ff8f72ea6b242b2666f842155ab33274",
+            "sha256": "2bde35c5dec3b26f3938f6b03c9403cd3241fc166206eaf19441662585a64b58",
             "width": 1600,
-            "height": 2026
+            "height": 1978
           },
           {
             "id": "view-career-routes",
             "path": "renders/career/career-evidence-workflow/view-career-routes.png",
-            "sha256": "0fecb1afd20cda44cbacba3d38e2deb80bf3939337129454b0b701aa73661a2c",
+            "sha256": "db9e317eb6fe96bafafb58bae7aeb11b1249457d9d55e67990b75ea10f8b0382",
             "width": 1600,
-            "height": 2026
+            "height": 1978
           },
           {
             "id": "view-review-layers",
             "path": "renders/career/career-evidence-workflow/view-review-layers.png",
-            "sha256": "02f37a543dbc7b004a397aa568f1613dad4d1aea23e3c73311ff0bc1e3fa7cec",
+            "sha256": "6affec704e966367caf010f2eee40e411b1834cf582b983c160cb01f88b9727b",
             "width": 1600,
-            "height": 2026
+            "height": 1978
           },
           {
             "id": "view-resume-contract",
             "path": "renders/career/career-evidence-workflow/view-resume-contract.png",
-            "sha256": "b9ccc3c18a5835feefef695d65802eb21782abc316d385b5cf7c51eb2e7ccece",
+            "sha256": "9219dc97880f7414c861fe515f74d31bfcbe00a00b1c355f5e5339ed524a2222",
             "width": 1600,
-            "height": 2026
+            "height": 1978
           }
         ]
       },
@@ -353,38 +353,38 @@
   "contact_sheets": [
     {
       "html": "all.html",
-      "html_sha256": "daa2840bb83b598f3192fe14621ef384a72eaaa0e45443813b93981582215fee",
+      "html_sha256": "73032a0300659c3eec1320c8867e784418b5717e451dec8951d2378fe2aeea7e",
       "png": "all.png",
-      "png_sha256": "586d15655bdbaef409d3c8762f62bee746180cfe0f58156bdecd83996843e687",
+      "png_sha256": "a6fecb90a7a006a44d53e51225a832e90bab13e2f6eb8f2378f0392a9a8e8a53",
       "width": 1800,
-      "height": 7233,
+      "height": 7650,
       "source_read_sha256": [
         "014a13165ae0df536ea56605236dd23b2d1dc43a68faf394b7d5071b30bb883b",
-        "0931a8b3ee55f2aff8688459b0c58025154eaaa1ada9979216c085e8e6a45647",
-        "0da5c0bc5b861533bd7853fe495c0683bb4b48811aaf96f2c6a0ef1e6e96e12d",
+        "e5df98cc266b8a7cdc4ed4db9b17a48d694aa0ae48b1a47f1714e60a6d2c5c9d",
+        "1cbcffa9a1021e609408cafa8a639ab9c6765108f00f27f8214e1c4c90d1b1c2",
         "2f9076142a6021eafc604515e21154f8988cae60fa1353c8c5c8a7c3b2063066"
       ]
     },
     {
       "html": "product-career.html",
-      "html_sha256": "a28b4f0c7a24adb79f1031b509e84210305070eec39bf1df01a36f5d2fd21c63",
+      "html_sha256": "247b6c9ed094cd4b27ad18d740753cc06d7d080b86e7a07eaae5ea61cc758a13",
       "png": "product-career.png",
-      "png_sha256": "834162ad8f3160dda7f27d4c2f6162b08f267825af1ca57286ee04d0d37d9562",
+      "png_sha256": "b504ccf5496a7dc35cb64a1d0b55f9c76edfc35728111b97f8d123a78f850996",
       "width": 1800,
-      "height": 2202,
+      "height": 2154,
       "source_read_sha256": [
-        "0931a8b3ee55f2aff8688459b0c58025154eaaa1ada9979216c085e8e6a45647"
+        "e5df98cc266b8a7cdc4ed4db9b17a48d694aa0ae48b1a47f1714e60a6d2c5c9d"
       ]
     },
     {
       "html": "product-studio.html",
-      "html_sha256": "07ecd332e76446e68d074648e023b8657f4f8bac732096f8f72eb9fd39e479cf",
+      "html_sha256": "ba7537b87027aa4403aaec9e79c955201f0fdc491a8692f31b8217a632f82dfb",
       "png": "product-studio.png",
-      "png_sha256": "bf81ff0eaf914fab5f878429589706547d8c325c53ae1783216fe89086ce98f5",
+      "png_sha256": "df2e78657323cfb6ef09c8dbdc78b71978cbbb71201081954131fdfe93303c04",
       "width": 1800,
-      "height": 2314,
+      "height": 2779,
       "source_read_sha256": [
-        "0da5c0bc5b861533bd7853fe495c0683bb4b48811aaf96f2c6a0ef1e6e96e12d"
+        "1cbcffa9a1021e609408cafa8a639ab9c6765108f00f27f8214e1c4c90d1b1c2"
       ]
     },
     {
@@ -423,14 +423,14 @@
     },
     {
       "html": "type-workflow.html",
-      "html_sha256": "2da27604ec2aa23d73b8f0f6ebacd7d613771f175517b542e57d7865bada8b69",
+      "html_sha256": "9f8eb5c7141f6abbd639cf48b17505186d1bb398489d1dae20b8073d256967a3",
       "png": "type-workflow.png",
-      "png_sha256": "1c89e4395f556a04024a097eeda66781da125ed4c0bf02776cd0a6ee2b56a641",
+      "png_sha256": "742d09bbe83d8d18a97499b58a2246b0fda33ff33da2ae47130d99d7c299fd63",
       "width": 1800,
-      "height": 4438,
+      "height": 4855,
       "source_read_sha256": [
-        "0931a8b3ee55f2aff8688459b0c58025154eaaa1ada9979216c085e8e6a45647",
-        "0da5c0bc5b861533bd7853fe495c0683bb4b48811aaf96f2c6a0ef1e6e96e12d"
+        "e5df98cc266b8a7cdc4ed4db9b17a48d694aa0ae48b1a47f1714e60a6d2c5c9d",
+        "1cbcffa9a1021e609408cafa8a639ab9c6765108f00f27f8214e1c4c90d1b1c2"
       ]
     }
   ]

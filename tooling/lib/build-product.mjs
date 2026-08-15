@@ -57,7 +57,9 @@ const sharedMemoryInventory = Object.freeze({
 const sharedReferenceIntelligenceInventory = Object.freeze({
   "shared/reference-intelligence/skills": Object.freeze([
     "analyze-game-design-references/SKILL.md",
+    "analyze-game-design-references/agents/openai.yaml",
     "maintain-game-design-glossary/SKILL.md",
+    "maintain-game-design-glossary/agents/openai.yaml",
   ]),
   "shared/reference-intelligence/schema": Object.freeze([
     "game-design-glossary.schema.json",
@@ -369,8 +371,8 @@ function addEntry(targets, entry, destinationPrefix, sourceLabel) {
 }
 
 function isReferenceIntelligenceDestination(relativePath) {
-  return relativePath === "skills/analyze-game-design-references/SKILL.md"
-    || relativePath === "skills/maintain-game-design-glossary/SKILL.md"
+  return relativePath.startsWith("skills/analyze-game-design-references/")
+    || relativePath.startsWith("skills/maintain-game-design-glossary/")
     || relativePath.startsWith("references/shared/reference-intelligence/");
 }
 

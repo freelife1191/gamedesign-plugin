@@ -270,7 +270,7 @@
     },
     {
       "id": "cutscene-visual-preproduction",
-      "triggerIntents": ["컷씬 기획", "스토리보드", "시네마틱 이미지", "마스터 이미지", "컷씬 프롬프트"],
+      "triggerIntents": ["컷씬 기획", "스토리보드", "시네마틱 이미지", "마스터 이미지", "컷씬 프롬프트", "컷씬 승인 후 생성"],
       "requiredInputs": ["cutscene brief", "game-state return"],
       "skill": "design-cutscene-visual-preproduction",
       "eligibleProfiles": ["live-service-rpg", "mobile", "pc-console"],
@@ -370,7 +370,7 @@
     },
     {
       "id": "reference-game-analysis",
-      "triggerIntents": ["reference game analysis", "game comparison", "design transfer decision"],
+      "triggerIntents": ["reference game analysis", "game comparison", "design transfer decision", "경쟁작 분석", "레퍼런스 게임 분석", "장르 시스템 인벤토리", "게임 시스템 비교", "증거와 추정 분리"],
       "requiredInputs": ["reference brief", "reference set", "evidence scope", "project constraints"],
       "skill": "analyze-game-design-references",
       "eligibleProfiles": ["live-service-rpg", "mobile", "pc-console"],
@@ -383,7 +383,7 @@
     },
     {
       "id": "project-glossary-maintenance",
-      "triggerIntents": ["game design glossary", "terminology maintenance", "terminology findings"],
+      "triggerIntents": ["game design glossary", "terminology maintenance", "terminology findings", "게임 기획 용어 사전", "용어 후보", "용어 승인", "한국어 영어 용어 일관성"],
       "requiredInputs": ["glossary candidates", "glossary snapshot", "human decision owner"],
       "skill": "maintain-game-design-glossary",
       "eligibleProfiles": ["live-service-rpg", "mobile", "pc-console"],

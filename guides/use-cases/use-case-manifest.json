@@ -668,7 +668,7 @@
       "diagram": {
         "svg": "guides/assets/game-design-studio/skills/design-cutscene-visual-preproduction.svg",
         "png": "guides/assets/game-design-studio/skills/design-cutscene-visual-preproduction.png",
-        "alt": "컷씬 비주얼 프리프로덕션 직접 호출 흐름"
+        "alt": "컷씬 네 단계와 선택적 이미지 생성 승인 흐름"
       }
     },
     {

@@ -2144,36 +2144,37 @@
     "id": "st-s16",
     "scope": "game-design-studio-skill",
     "title": "컷씬 비주얼 프리프로덕션 직접 호출",
-    "description": "컷씬 wave의 비용·실시간 승인·연속성 경계를 생성 전에 고정합니다.",
-    "alt": "컷씬 비주얼 프리프로덕션 직접 호출 흐름",
+    "description": "style-master → reference-masters → keyframes → storyboard 순서로 진행합니다.",
+    "alt": "컷씬 네 단계와 선택적 이미지 생성 승인 흐름",
     "type": "skill-flow",
+    "display_contract": "explicit-steps",
     "eyebrow": "ST-S16 · SKILL",
-    "conclusion": "컷씬 패키지는 현재 estimate와 이름 있는 실시간 승인이 확인된 wave만 다음 작업으로 보냅니다.",
+    "conclusion": "image_gen을 먼저 사용합니다. 한글 텍스트는 gpt-image-2를 쓰고, 화질은 low 기본·medium 선택·high 예외입니다. 승인 전에는 provider를 호출하지 않습니다.",
     "steps": [
       {
         "stage": "trigger",
-        "label": "컷씬 trigger",
-        "detail": "컷씬 brief를 받습니다."
+        "label": "style-master",
+        "detail": "스타일 기준 이미지"
       },
       {
         "stage": "필수 입력",
-        "label": "컷씬 brief·복귀 상태",
-        "detail": "필수 값을 둡니다."
+        "label": "reference-masters",
+        "detail": "인물·배경·소품 기준"
       },
       {
         "stage": "skill-owned work",
-        "label": "컷씬 프리프로덕션",
-        "detail": "작업 경계를 수행합니다."
+        "label": "keyframes",
+        "detail": "장면별 핵심 프레임"
       },
       {
         "stage": "output",
-        "label": "컷씬 패키지",
-        "detail": "정확한 ID를 남깁니다."
+        "label": "storyboard",
+        "detail": "최종 장면 흐름"
       },
       {
         "stage": "next route",
-        "label": "wave dispatch",
-        "detail": "조건부 handoff입니다."
+        "label": "승인·연속성 검토",
+        "detail": "image_gen 우선·유료 생성 선택"
       }
     ],
     "source_paths": [

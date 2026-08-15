@@ -89,7 +89,7 @@ plugins/game-design-studio/
 │   ├── maintain-game-design-memory/  # 후보와 승인 이력 관리
 │   ├── retrieve-approved-design-memory/ # 승인된 관련 기억 조회
 │   └── svg-infographic/              # vendored Skillstead 0.9.0
-├── agents/ (9개)                    # 일반 7개와 이미지 전문 2개의 이식 가능한 역할 프롬프트
+├── agents/ (12개)                   # 기획·검토·이미지 작업을 맡는 이식 가능한 전문 역할 프롬프트
 ├── hooks/
 │   └── hooks.json
 ├── scripts/                         # shared runtime
@@ -602,6 +602,7 @@ package-local 파일은 설치한 플러그인에서 바로 열 수 있습니다
 IMAGE_GEN_MODE=prompt-only
 IMAGE_PROVIDER=codex-first
 IMAGE_EMBEDDED_TEXT_LOCALE=none
+# 다음 값은 IMAGE_PROVIDER=openai를 명시적으로 선택했을 때만 사용합니다.
 IMAGE_MODEL=gpt-image-2
 IMAGE_QUALITY=low
 OPENAI_API_KEY=

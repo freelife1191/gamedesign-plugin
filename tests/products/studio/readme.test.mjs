@@ -765,6 +765,7 @@ test("README documents the closed Studio document-quality workflow and installed
     "IMAGE_MODEL=gpt-image-2",
     "IMAGE_QUALITY=low",
     "IMAGE_PROVIDER=codex-first",
+    "IMAGE_PROVIDER=openai를 명시적으로 선택했을 때만 사용합니다",
     "IMAGE_EMBEDDED_TEXT_LOCALE=ko-KR",
     "image_gen",
     "Codex/host",
@@ -934,6 +935,7 @@ test("review skill projects the canonical finding template into the package", as
 
 test("README explains the source overlay and complete independent built-plugin structure", async () => {
   const readme = await readFile(readmePath, "utf8");
+  assert.doesNotMatch(readme, /agents\/ \(9개\)/u, "Studio README must not retain the stale nine-agent count");
   for (const pathOrCount of [
     "products/game-design-studio/plugin",
     "plugins/game-design-studio",
@@ -974,4 +976,11 @@ test("README explains the source overlay and complete independent built-plugin s
   assert.ok(readme.includes("4개: universal core 1 + 선택 프로필 3"));
   assert.ok(readme.includes("저수준 `buildProduct()` 출력에는 `BUILD-MANIFEST.json`이 없습니다"));
   assert.ok(readme.includes("이 suite distribution snapshot에는 `BUILD-MANIFEST.json`이 있으며"));
+});
+
+test("Studio guide keeps the first-start checklist in a single ordered sequence", async () => {
+  const guide = await readFile(path.join(repoRoot, "guides/game-design-studio/README.md"), "utf8");
+  const section = guide.match(/## 처음 시작하기\n\n([\s\S]*?)\n\n---/u)?.[1] ?? "";
+  const numbers = [...section.matchAll(/^(\d+)\./gmu)].map((match) => Number(match[1]));
+  assert.deepEqual(numbers, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 });

@@ -8,6 +8,7 @@ Career image workflow는 planning, generation, review를 분리합니다. 모든
 IMAGE_GEN_MODE=prompt-only
 IMAGE_PROVIDER=codex-first
 IMAGE_EMBEDDED_TEXT_LOCALE=none
+# 다음 값은 IMAGE_PROVIDER=openai를 명시적으로 선택했을 때만 사용합니다.
 IMAGE_MODEL=gpt-image-2
 IMAGE_QUALITY=low
 ```

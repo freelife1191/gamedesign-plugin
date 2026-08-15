@@ -486,7 +486,9 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
   for (const build of [studioBuild, careerBuild]) {
     for (const relativePath of [
       "skills/analyze-game-design-references/SKILL.md",
+      "skills/analyze-game-design-references/agents/openai.yaml",
       "skills/maintain-game-design-glossary/SKILL.md",
+      "skills/maintain-game-design-glossary/agents/openai.yaml",
       "references/shared/reference-intelligence/schema/game-design-glossary.schema.json",
       "references/shared/reference-intelligence/schema/glossary-receipt.schema.json",
       "references/shared/reference-intelligence/schema/reference-analysis.schema.json",
