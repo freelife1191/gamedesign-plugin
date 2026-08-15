@@ -11,6 +11,7 @@ export const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 
 const COMPONENT_IDS = Object.freeze(["skillstead", "archify", "im-not-ai"]);
 const UPDATE_STATUSES = new Set(["current", "outdated", "unknown"]);
+const DEPENDENCY_REJECTED_CODE = "DEPENDENCY_REJECTED";
 
 function unknownComponent(id) {
   return { id, status: "unknown", installedTag: null, latestTag: null, updateAvailable: false };
@@ -35,6 +36,12 @@ function normalizeDiagramComponents(results) {
   return ["skillstead", "archify"].map((id) => normalizeComponent(id, byName.get(id)));
 }
 
+function reportRejectedDependencies(componentIds, writeStderr) {
+  for (const id of componentIds) {
+    writeStderr(`UPDATE_CHECK_FAILED component=${id} code=${DEPENDENCY_REJECTED_CODE}\n`);
+  }
+}
+
 export function updateStatusFor(components) {
   if (!Array.isArray(components) || components.length !== COMPONENT_IDS.length || components.some(({ id, status }, index) => id !== COMPONENT_IDS[index] || !UPDATE_STATUSES.has(status))) {
     return "unknown";
@@ -51,6 +58,7 @@ export async function checkSuiteUpdates({
   root = repoRoot,
   checkDiagramSkills = checkLatestDiagramSkills,
   checkImNotAi = checkLatestImNotAi,
+  writeStderr = (message) => process.stderr.write(message),
 } = {}) {
   const absoluteRoot = path.resolve(root);
   const [diagram, imNotAi] = await Promise.allSettled([
@@ -61,6 +69,8 @@ export async function checkSuiteUpdates({
     ...(diagram.status === "fulfilled" ? normalizeDiagramComponents(diagram.value) : COMPONENT_IDS.slice(0, 2).map(unknownComponent)),
     imNotAi.status === "fulfilled" ? normalizeComponent("im-not-ai", imNotAi.value) : unknownComponent("im-not-ai"),
   ];
+  if (diagram.status === "rejected") reportRejectedDependencies(COMPONENT_IDS.slice(0, 2), writeStderr);
+  if (imNotAi.status === "rejected") reportRejectedDependencies(["im-not-ai"], writeStderr);
   return { schemaVersion: 1, status: updateStatusFor(components), components };
 }
 

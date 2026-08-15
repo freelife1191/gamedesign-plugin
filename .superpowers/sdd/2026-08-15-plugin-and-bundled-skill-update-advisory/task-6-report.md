@@ -43,3 +43,21 @@ Changed PNG count: **0** (`git diff --name-only -- '*.png'`). Therefore there we
 
 - The official snapshot builder retains its recovery bundle at `/private/var/folders/99/kpfx0mdj3fvbczqpbncjl0bm0000gn/T/snapshot-recovery-p6UoaM` until its installed snapshots are accepted. It is outside the repository and was not modified further.
 - No changes were made to the installed Codex cache, user marketplace, or `docs/LLM WIKI/`.
+
+## Fix Round 1 — manifest parity and safe rejected-dependency evidence
+
+### RED
+
+- `node --test tests/unit/check-suite-updates.test.mjs tests/unit/validate-suite.test.mjs` failed before the fix: a true rejected diagram dependency emitted no stderr evidence, and the update-manifest stage was absent from the release suite.
+- Before regeneration, central and generated plugin `installed-components.json` still declared Archify `v2.13.0`/`2c1f8ac2ca28a26d0b68043ec80c9554e20ff0e3` while the verified vendor lock declared v2.14.0.
+
+### GREEN
+
+- Ran the deterministic `node tooling/generate-update-manifest.mjs` first, then the authoritative `node tooling/build-snapshots.mjs`. The central manifest and both generated plugin manifests now declare Archify `v2.14.0` at `a3bf80c25a824f5d5c46dfdbfdb96cc52dd4742a`; both `BUILD-MANIFEST.json` files were regenerated.
+- Added the mandatory `update manifest` release-suite stage: `node tooling/generate-update-manifest.mjs --check`. Its regression asserts the exact command, and the committed manifest check passes.
+- A true dependency rejection now emits only closed evidence, one line per affected component: `UPDATE_CHECK_FAILED component=<known-id> code=DEPENDENCY_REJECTED`. The rejection regression proves result `unknown`, exit `1`, and absence of the synthetic raw `403`/token/path body.
+- Focused suite: 85 passing, 0 failing. `check:diagram-skills`, manifest `--check`, catalog, curated stage/check, contact-sheet check, and clean snapshot build all pass. Changed PNG count remains **0**; consequently there are no original-resolution PNGs to inspect and no overlap, clipping, or tofu findings.
+
+### External latest-check state
+
+At the final live audit the GitHub REST core limit was exhausted (`403`, `x-ratelimit-remaining: 0`, reset `2026-08-15T11:39:00Z`). Therefore `npm run check:updates` and `npm run validate:release:latest` correctly fail closed with safe stderr evidence and the unchanged unknown JSON/exit-1 contract; no response body, path, token, or stack was exposed. This is an external rate-limit verification gap, not a manifest or closure mismatch. The earlier Task 6 live GREEN had already reported all components current, and the regenerated manifest proves the installed Archify value is now v2.14.0.

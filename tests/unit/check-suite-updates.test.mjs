@@ -111,6 +111,24 @@ test("aggregate checker treats malformed or failed component checks as unknown a
   assert.equal(exitCodeForUpdateStatus(result.status), 1);
 });
 
+test("aggregate checker records rejected dependency evidence without leaking its raw failure", async () => {
+  const { checkSuiteUpdates, exitCodeForUpdateStatus } = await import(checkerUrl.href);
+  const stderr = [];
+  const result = await checkSuiteUpdates({
+    checkDiagramSkills: async () => { throw new Error("403 forbidden body: secret-token=/private/repo"); },
+    checkImNotAi: async () => ({ status: "current", installedTag: "v2.3.0", latestTag: "v2.3.0", updateAvailable: false }),
+    writeStderr: (message) => stderr.push(message),
+  });
+
+  assert.equal(result.status, "unknown");
+  assert.equal(exitCodeForUpdateStatus(result.status), 1);
+  assert.deepEqual(stderr, [
+    "UPDATE_CHECK_FAILED component=skillstead code=DEPENDENCY_REJECTED\n",
+    "UPDATE_CHECK_FAILED component=archify code=DEPENDENCY_REJECTED\n",
+  ]);
+  assert.equal(stderr.join("").includes("secret-token"), false);
+});
+
 test("weekly workflow is a read-only scheduled audit without an update command", async () => {
   const workflowPath = path.join(repoRoot, ".github/workflows/check-bundled-skill-updates.yml");
   const workflow = parseWorkflowYaml(await readFile(workflowPath, "utf8"));

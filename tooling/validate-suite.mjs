@@ -16,6 +16,7 @@ const STAGES = Object.freeze([
   { name: "reference drift", command: [process.execPath, "tooling/index-references.mjs", "--check"], rerun: "node tooling/index-references.mjs --check" },
   { name: "evidence audit", command: [process.execPath, "tooling/audit-evidence.mjs", "--check"], rerun: "node tooling/audit-evidence.mjs --check" },
   { name: "vendor hash", command: [process.execPath, "tooling/verify-vendor-hash.mjs"], rerun: "node tooling/verify-vendor-hash.mjs" },
+  { name: "update manifest", command: [process.execPath, "tooling/generate-update-manifest.mjs", "--check"], rerun: "node tooling/generate-update-manifest.mjs --check" },
   { name: "unit tests", command: ["npm", "run", "test:unit"], rerun: "npm run test:unit" },
   { name: "contract tests", command: ["npm", "run", "test:contracts"], rerun: "npm run test:contracts" },
   { name: "product tests", command: ["npm", "run", "test:products"], rerun: "npm run test:products" },

@@ -10,6 +10,7 @@ const expectedStages = [
   "reference drift",
   "evidence audit",
   "vendor hash",
+  "update manifest",
   "unit tests",
   "contract tests",
   "product tests",
@@ -41,6 +42,24 @@ test("suite runs the exact stage order and treats wholly absent Task 11 as incom
   }
 });
 
+test("release suite requires the committed update manifest generator check", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "validate-suite-manifest-"));
+  let manifestStage;
+  try {
+    await runSuite({
+      repoRoot: root,
+      runCommand: async (stage) => {
+        if (stage.name === "update manifest") manifestStage = stage;
+        return { status: 0, signal: null };
+      },
+    });
+    assert.deepEqual(manifestStage.command.slice(1), ["tooling/generate-update-manifest.mjs", "--check"]);
+    assert.equal(manifestStage.rerun, "node tooling/generate-update-manifest.mjs --check");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("release mode fails when Task 11 is unavailable", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "validate-suite-release-"));
   try {
@@ -63,7 +82,7 @@ test("suite stops on first failure and reports the exact rerun command", async (
         return stage.name === "contract tests" ? { status: 7, signal: null } : { status: 0, signal: null };
       },
     });
-    assert.deepEqual(calls, expectedStages.slice(0, 5));
+    assert.deepEqual(calls, expectedStages.slice(0, expectedStages.indexOf("contract tests") + 1));
     assert.equal(result.ok, false);
     assert.equal(result.rerun, "npm run test:contracts");
   } finally {
