@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
@@ -74,6 +74,31 @@ test("tree audit rejects invalid UTF-8, symlinks, escape links, sibling names, h
     await symlink(path.join(root, "target.txt"), path.join(root, "link.txt"));
     await assert.rejects(() => auditTree({ root, packageName: "game-design-studio" }), /symlink/u);
   });
+});
+
+test("tree audit permits only the update policy's exact product IDs and rejects an injected sibling import", async (t) => {
+  const root = await fixture(
+    t,
+    "references/shared/updates/update-policy.json",
+    await readFile(path.join(repoRoot, "shared/updates/update-policy.json")),
+  );
+  const evaluatorPath = path.join(root, "scripts/lib/update-advisory.mjs");
+  const evaluator = await readFile(path.join(repoRoot, "shared/scripts/lib/update-advisory.mjs"));
+  await mkdir(path.dirname(evaluatorPath), { recursive: true });
+  await writeFile(evaluatorPath, evaluator);
+
+  await assert.doesNotReject(() => auditTree({
+    root,
+    packageName: "game-design-studio",
+    siblingNames: ["game-design-career"],
+  }));
+
+  await writeFile(evaluatorPath, `${evaluator}\nimport sibling from "game-design-career";\n`);
+  await assert.rejects(() => auditTree({
+    root,
+    packageName: "game-design-studio",
+    siblingNames: ["game-design-career"],
+  }), /sibling package/u);
 });
 
 test("immutable vendored Skillstead documentation remains auditable while product files must use wrappers", async (t) => {

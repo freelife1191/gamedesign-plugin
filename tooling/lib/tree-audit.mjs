@@ -6,9 +6,15 @@ import { comparePaths, normalizeRelativePath } from "./paths.mjs";
 const utf8 = new TextDecoder("utf-8", { fatal: true });
 const relativeReference = /(?:^|[('"`\s])((?:\.\.[/\\])+[^)'"`\s]+)/gu;
 const vendorCliPath = /(?:^|\/)(?:\.claude\/skills\/svg-infographic|\.agents\/skills\/svg-infographic|skills\/svg-infographic)\/scripts\/(?:check-svg|render)\.mjs$/u;
-const sharedUpdateIdentityPaths = new Set([
-  "references/shared/updates/update-policy.json",
-  "scripts/lib/update-advisory.mjs",
+const sharedUpdateIdentityMatchers = new Map([
+  [
+    "references/shared/updates/update-policy.json",
+    /"productIds":\s*\[\s*"game-design-studio",\s*"game-design-career"\s*\]/u,
+  ],
+  [
+    "scripts/lib/update-advisory.mjs",
+    /policy\.productIds\[0\]\s*!==\s*"game-design-studio"\s*\|\|\s*policy\.productIds\[1\]\s*!==\s*"game-design-career"/u,
+  ],
 ]);
 
 function inside(root, candidate) {
@@ -164,9 +170,8 @@ function containsRawVendorCli(text) {
 }
 
 function assertTextIsSafe({ text, relativePath, packageRoot, siblingNames, forbiddenAbsolutePaths, inactiveRelativeReferenceTuples, usedInactiveRelativeReferenceTuples }) {
-  const siblingCheckedText = sharedUpdateIdentityPaths.has(relativePath)
-    ? text.replaceAll('"game-design-studio"', "").replaceAll('"game-design-career"', "")
-    : text;
+  const identityMatcher = sharedUpdateIdentityMatchers.get(relativePath);
+  const siblingCheckedText = identityMatcher ? text.replace(identityMatcher, "") : text;
   for (const sibling of siblingNames) {
     if (relativePath.includes(sibling) || siblingCheckedText.includes(sibling)) {
       throw new Error(`${relativePath} references sibling package ${sibling}`);
