@@ -328,3 +328,12 @@ Exact mutation names: `approval-authority`, `approval-binding`,
   pass. No live provider, image generation, credential, or network call ran.
 - Independent C0/I0/M0 rereview remains the final acceptance gate; this report
   does not self-approve Task 8.
+
+### Independent acceptance
+
+- Independent Fix2 rereview at implementation commit `5b08210` returned
+  **C0 / I0 / M0 — APPROVE**. Fresh public real-filesystem probes confirmed
+  approval-time master drift rejects with provider 0 and an unchanged tree;
+  reordered beat IDs retain their own keyframe lineage; normal ordered
+  `/v1/images/edits`, failed-only retry, exact-file rehash, and rename-away
+  defenses remain intact. Task 8 is complete in the code/spec/security lane.

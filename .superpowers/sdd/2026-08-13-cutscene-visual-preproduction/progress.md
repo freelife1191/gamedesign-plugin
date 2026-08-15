@@ -269,6 +269,10 @@ Task self-consistency:
   (`ccefa51aaf427e0f4491e42cc4ffb726061a5ec168ba00985e41a2d5e497f580`).
   Four shared/product runtime byte-parity groups, syntax, BUILD-MANIFEST JSON,
   and diff checks pass. Task 8 remains pending independent C0/I0/M0 rereview.
+- Task 8: complete at implementation commit `5b08210`. Independent Fix2
+  rereview returned **C0/I0/M0 APPROVE** after fresh public real-FS drift,
+  lineage, normal `/v1/images/edits`, failed-only retry, exact-file rehash, and
+  rename-away probes. No load-bearing Task 8 finding remains.
 
 ## Task 6 completion evidence
 
