@@ -438,6 +438,33 @@ test("v2 journal keeps a wave-global sequence across internal and explicit retri
   assert.equal(records.every((record) => validateCutsceneGenerationUsage(record).ok), true);
 });
 
+test("approved reference digest drift fails before provider access or artifact writes", async (t) => {
+  const artifactRoot = await mkdtemp(path.join(tmpdir(), "cutscene-reference-drift-"));
+  t.after(() => rm(artifactRoot, { recursive: true, force: true }));
+  const fixture = await materializedStageFixture({ artifactRoot, waveId: "reference-masters", retryReserve: 1, ceilings: [0.3, 0.5] });
+  const sourceAssetId = fixture.plan.cutsceneWorkflow.waves[0].assetIds[0];
+  const source = fixture.manifest.assets.find(({ asset_id: assetId }) => assetId === sourceAssetId);
+  const approvedSha256 = fixture.promptPackage.references.find(({ assetId }) => assetId === sourceAssetId).sha256;
+  const changedBytes = validPng(2, 2);
+  const changedSha256 = createHash("sha256").update(changedBytes).digest("hex");
+  assert.notEqual(changedSha256, approvedSha256);
+  await writeFile(path.join(artifactRoot, source.output.path), changedBytes);
+  const before = await artifactSnapshot(artifactRoot);
+  let providerCalls = 0;
+
+  await assert.rejects(
+    () => runApprovedCutsceneImageWave({
+      ...fixture,
+      artifactRoot,
+      workspaceRoot: artifactRoot,
+      fetchFn: async () => { providerCalls += 1; return imageResponse({ requestId: "must-not-dispatch" }); },
+    }),
+    { code: "cutscene.reference_binding_stale", path: "/promptPackage/references" },
+  );
+  assert.equal(providerCalls, 0);
+  assert.deepEqual(await artifactSnapshot(artifactRoot), before);
+});
+
 test("a retry rejects a changed full-wave estimate or pricing journal epoch before provider access and without writes", async (t) => {
   const artifactRoot = await mkdtemp(path.join(tmpdir(), "cutscene-retry-drift-"));
   t.after(() => rm(artifactRoot, { recursive: true, force: true }));

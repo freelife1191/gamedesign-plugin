@@ -424,16 +424,29 @@ async function bindDeclaredReferenceInputs(root, manifest, job) {
   if (!Array.isArray(job.reference_asset_ids)) return job;
   if (job.reference_asset_ids.length === 0) return job;
   const byId = new Map(manifest.assets.map((asset) => [asset.asset_id, asset]));
+  const declaredReferenceImages = Array.isArray(job.reference_images) ? job.reference_images : [];
   const referenceImages = [];
   const parentPromptDigests = [];
-  for (const assetId of job.reference_asset_ids) {
+  for (const [index, assetId] of job.reference_asset_ids.entries()) {
     const source = byId.get(assetId);
     if (!source || source.generation_state !== "generated" || !digestPattern.test(source.prompt_digest ?? "")) {
       throw new Error("Declared reference asset is not generated with a bound prompt.");
     }
-    const file = await readSecureReferenceFile({ artifactRoot: root, path: source.output?.path });
-    referenceImages.push({ asset_id: source.asset_id, path: source.output.path, sha256: file.digest });
+    const declared = declaredReferenceImages[index];
+    if (declaredReferenceImages.length > 0) {
+      if (declaredReferenceImages.length !== job.reference_asset_ids.length || declared?.asset_id !== source.asset_id || declared?.path !== source.output?.path) {
+        throw new Error("Declared reference binding does not match the generation lineage.");
+      }
+      referenceImages.push(clone(declared));
+    } else {
+      const file = await readSecureReferenceFile({ artifactRoot: root, path: source.output?.path });
+      referenceImages.push({ asset_id: source.asset_id, path: source.output.path, sha256: file.digest });
+    }
     parentPromptDigests.push(source.prompt_digest);
+  }
+  if (declaredReferenceImages.length > 0) {
+    const loaded = await loadSecureReferenceInputs({ artifactRoot: root, references: referenceImages });
+    await loaded.verify();
   }
   return {
     ...clone(job),
@@ -647,7 +660,8 @@ export async function generateImageAssetWorkflow({
       let boundJob;
       try {
         boundJob = await bindDeclaredReferenceInputs(root, executionManifest, job);
-      } catch {
+      } catch (error) {
+        if (typeof beforeProvider === "function") throw error;
         providerResult.failures.push({ asset_id: job.asset_id, generation_state: "qa-failed", reason: "invalid-generation-reference", provenance: { provider: "codex-host" } });
         executedJobs.push(job);
         continue;

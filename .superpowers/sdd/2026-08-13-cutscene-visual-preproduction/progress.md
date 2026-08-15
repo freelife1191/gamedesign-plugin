@@ -251,6 +251,24 @@ Task self-consistency:
   three shared/product runtime parity checks, changed-module syntax,
   BUILD-MANIFEST JSON parsing, and diff check pass. Task 8 remains pending
   independent C0/I0/M0 rereview and is not self-approved here.
+- Task 8 second rereview returned C1/I1/M0. Approval-time master SHA-256 was
+  present in the estimate identity but the generic adapter replaced it with a
+  newly observed digest before provider dispatch; sorted keyframe IDs were also
+  paired to beats by index rather than by deterministic beat identity.
+- Task 8 second-rereview RED/GREEN: approval-time style-master byte drift changed
+  a public paid request without rejection, and beats `A.2, A:1` produced reversed
+  storyboard keyframe lineage. The frozen dispatch now carries exact approved
+  reference metadata, the generic adapter validates rather than overwrites it,
+  and the approved stage rejects drift before any provider/journal/artifact
+  write. Beat lineage now derives the keyframe ID directly from each beat ID.
+- Second-rereview validation: focused **2/2**, final relevant matrix **246/246**,
+  contracts **328/328**, products **421/421**, package validators **2/47**, and
+  `npm run build -- --check` pass. Accepted snapshots are Career 532
+  (`6e87f885c3be4542212d35cf85f222fbdee2599ea1524879b5d8b372e342d2e1`)
+  and Studio 544
+  (`ccefa51aaf427e0f4491e42cc4ffb726061a5ec168ba00985e41a2d5e497f580`).
+  Four shared/product runtime byte-parity groups, syntax, BUILD-MANIFEST JSON,
+  and diff checks pass. Task 8 remains pending independent C0/I0/M0 rereview.
 
 ## Task 6 completion evidence
 

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-career",
   "sourceDateEpoch": 0,
-  "treeSha256": "e0a23b793eefabf4040f63eee66800ddef08a712b3277e58d355d6262c5aa7b0",
+  "treeSha256": "6e87f885c3be4542212d35cf85f222fbdee2599ea1524879b5d8b372e342d2e1",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -1576,8 +1576,8 @@
     },
     {
       "path": "scripts/estimate-cutscene-image-cost.mjs",
-      "sha256": "3af33bb052fbc95856efe383cdaff034aa104d0af2663a5d4fbfacf9d3499ffb",
-      "size": 17733
+      "sha256": "0d3915c65decd552a97c6a09d3a99692d9fe9a4bb2bf52c09e4a88cccc60ed49",
+      "size": 18864
     },
     {
       "path": "scripts/generate-openai-images.mjs",
@@ -1706,8 +1706,8 @@
     },
     {
       "path": "scripts/plan-cutscene-visual-preproduction.mjs",
-      "sha256": "52502c9e0456ca04996e893c5840f7d35fe021df86b328cdc4ea6b6ba590699d",
-      "size": 21575
+      "sha256": "aa612491134369cd317f6982a519756aceea2ff0605bd72c15cc66f375299d65",
+      "size": 21842
     },
     {
       "path": "scripts/quality-source-anchors.mjs",
@@ -1731,8 +1731,8 @@
     },
     {
       "path": "scripts/run-approved-cutscene-image-stage.mjs",
-      "sha256": "bf7fd989a3ff70cb7406268a6cc35bc3f7587284a8d7823c12760d9a9fc34bdc",
-      "size": 28289
+      "sha256": "f9baf140bfc10dce1f5392397423883ec9599acb79d20164378b5f1e58c1c9ce",
+      "size": 29009
     },
     {
       "path": "scripts/run-game-design-writing-polish.mjs",
@@ -1741,8 +1741,8 @@
     },
     {
       "path": "scripts/run-image-asset-workflow.mjs",
-      "sha256": "8fb14add88c1e047df5e4a561bc5ae3ba7378b0c861281d6cd66f3aeef133ad5",
-      "size": 43750
+      "sha256": "0a61f861271fa630c5390f7b18212f6e46e7a848a103577c0ab249675b473e3f",
+      "size": 44551
     },
     {
       "path": "scripts/stop-artifact-review.mjs",

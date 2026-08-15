@@ -50,8 +50,12 @@ function normalizedRecordId(value, fallback) {
   return normalized || fallback;
 }
 
+function keyframeAssetId(cutsceneId, beat, index) {
+  return `${cutsceneId}-keyframe-${normalizedRecordId(beat.beatId, `beat-${index + 1}`)}`;
+}
+
 function waveAssets(cutsceneId, beats, shots) {
-  const keyframes = beats.map((beat, index) => `${cutsceneId}-keyframe-${normalizedRecordId(beat.beatId, `beat-${index + 1}`)}`);
+  const keyframes = beats.map((beat, index) => keyframeAssetId(cutsceneId, beat, index));
   const storyboard = shots.map((shot, index) => `${cutsceneId}-storyboard-${normalizedRecordId(shot.shotId, `shot-${index + 1}`)}`);
   return [
     { id: "style-master", assetIds: [`${cutsceneId}-style-master-style-01`] },
@@ -110,7 +114,11 @@ function cutsceneLineage(plan) {
   const referenceIds = waves.get("reference-masters").assetIds;
   const keyframeIds = waves.get("keyframes").assetIds;
   const storyboardIds = waves.get("storyboard").assetIds;
-  const keyframeByBeat = new Map(plan.beats.map((beat, index) => [beat.beatId, keyframeIds[index]]));
+  const keyframeIdSet = new Set(keyframeIds);
+  const keyframeByBeat = new Map(plan.beats.map((beat, index) => {
+    const assetId = keyframeAssetId(plan.cutsceneId, beat, index);
+    return [beat.beatId, keyframeIdSet.has(assetId) ? assetId : undefined];
+  }));
   const lineage = new Map(styleIds.map((assetId) => [assetId, []]));
   for (const assetId of referenceIds) lineage.set(assetId, [...styleIds]);
   for (const assetId of keyframeIds) lineage.set(assetId, [...styleIds, ...referenceIds]);

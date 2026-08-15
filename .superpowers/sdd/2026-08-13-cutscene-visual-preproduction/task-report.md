@@ -279,3 +279,52 @@ Exact mutation names: `approval-authority`, `approval-binding`,
   BUILD-MANIFEST JSON parsing, and `git diff --check` also pass.
 - Independent rereview remains the final acceptance gate; this section does not
   self-approve Task 8.
+
+## Task 8 — Approved reference authority and beat-lineage closure
+
+### Second rereview findings reproduced
+
+- The second independent rereview returned **C1 / I1 / M0**. A reference-master
+  approval bound the style-master SHA-256 only inside the request identity. The
+  generic image adapter then reread a changed file and replaced that approved
+  digest with the new digest before `/v1/images/edits`, allowing provider,
+  journal, receipt, and manifest writes after approval-time byte drift.
+- The planner sorted keyframe asset IDs but paired them to beats by array index.
+  With beats `A.2, A:1`, storyboard shot `A.2` therefore referenced
+  `keyframe-a-1` and shot `A:1` referenced `keyframe-a-2`.
+- RED added two literal public regressions. The first changed only the approved
+  style-master PNG and observed a missing rejection. The second asserted the
+  two beat-derived keyframe IDs and observed the reversed mapping.
+
+### Correction
+
+- The frozen cutscene dispatch manifest now carries the exact ordered approved
+  `reference_images` plus their parent prompt digests. The generic image adapter
+  validates those declared IDs, paths, and SHA-256 values against current bytes;
+  it cannot replace an approval digest with a newly observed digest.
+- The approved stage preflights every selected asset's exact reference binding
+  before journal, receipt-directory, provider, or artifact writes and returns
+  `cutscene.reference_binding_stale /promptPackage/references` on drift. Provider
+  calls remain zero and the complete artifact tree remains byte/type identical.
+- Keyframe IDs are derived from each beat ID through one deterministic helper.
+  Storyboard lineage uses that beat-to-ID mapping rather than the sorted wave
+  array position.
+
+### Fresh final validation before rereview
+
+- RED **0/2** became GREEN **2/2** for approval-time master drift and reordered
+  beat lineage. The final cutscene/image/Studio/E2E/FD matrix is **246/246**.
+- Full contracts are **328/328** and full products are **421/421**.
+- The accepted `npm run build` and `npm run build -- --check` snapshots are
+  Career **532** files
+  (`6e87f885c3be4542212d35cf85f222fbdee2599ea1524879b5d8b372e342d2e1`)
+  and Studio **544** files
+  (`ccefa51aaf427e0f4491e42cc4ffb726061a5ec168ba00985e41a2d5e497f580`).
+  The exact retained recovery bundle was moved recoverably to the user Trash
+  only after `--check` passed.
+- Official package validation passes for **2** plugins and **47** skills. Shared,
+  Career, and Studio bytes match for the planner, estimator, image workflow, and
+  approved cutscene stage; module syntax, BUILD-MANIFEST JSON, and diff checks
+  pass. No live provider, image generation, credential, or network call ran.
+- Independent C0/I0/M0 rereview remains the final acceptance gate; this report
+  does not self-approve Task 8.

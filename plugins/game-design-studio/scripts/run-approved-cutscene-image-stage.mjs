@@ -5,6 +5,7 @@ import { types } from "node:util";
 
 import { assertCurrentCutsceneEstimate, buildCutsceneDispatchSnapshot, calculateActualCost, resolveCutsceneGenerationAuthority } from "./estimate-cutscene-image-cost.mjs";
 import { validateHostCutsceneApproval } from "./lib/cutscene-generation-approval.mjs";
+import { loadSecureReferenceInputs } from "./lib/image-reference-loader.mjs";
 import { isRfc3339DateTime } from "./lib/rfc3339.mjs";
 import { ensureArtifactDirectories, safeWriteArtifactFile } from "./lib/safe-artifact-write.mjs";
 import { cutsceneDocumentSha256, snapshotCutscenePlainData } from "./validate-cutscene-visual-preproduction.mjs";
@@ -59,6 +60,19 @@ function assertCompletedPredecessors(plan, waveId) {
     if (wave.completion == null) throw coded("cutscene.predecessor_completion_missing", `/cutsceneWorkflow/waves/${index}/completion`);
     if (wave.completion.kind !== "completed") throw coded("cutscene.predecessor_completion_kind_invalid", `/cutsceneWorkflow/waves/${index}/completion/kind`);
     if (!same(wave.completion.assetIds, wave.assetIds)) throw coded("cutscene.predecessor_completion_asset_set_mismatch", `/cutsceneWorkflow/waves/${index}/completion/assetIds`);
+  }
+}
+
+async function assertApprovedReferencesCurrent(artifactRoot, dispatch) {
+  const selected = new Set(dispatch.assetIds);
+  try {
+    for (const asset of dispatch.manifest.assets) {
+      if (!selected.has(asset.asset_id) || !Array.isArray(asset.reference_images) || asset.reference_images.length === 0) continue;
+      const loaded = await loadSecureReferenceInputs({ artifactRoot, references: asset.reference_images });
+      await loaded.verify();
+    }
+  } catch {
+    throw coded("cutscene.reference_binding_stale", "/promptPackage/references");
   }
 }
 
@@ -253,6 +267,7 @@ async function createOutcome({ input, dispatch, providerRequestId = "no-request-
 async function runApprovedCutsceneImageWaveInternal(rawInput, explicitRetry = false) {
   const current = assertCurrent(rawInput, explicitRetry);
   const currentInput = current.input;
+  await assertApprovedReferencesCurrent(currentInput.artifactRoot, current.dispatch);
   if (!explicitRetry) {
     const existing = await readJournal(currentInput.artifactRoot, currentInput.waveId, [...current.wave.assetIds].sort(compareUtf8), { estimate: currentInput.estimate, pricingSnapshot: currentInput.pricingSnapshot });
     if (current.dispatch.assetIds.some((assetId) => (existing.physicalCounts.get(assetId) ?? 0) > 0)) throw coded("cutscene.asset_already_attempted", "/selectedAssetIds");

@@ -124,6 +124,12 @@ function requestForAsset(asset, prompt, pricingSnapshot, manifestAssets, referen
     if (!plain(reference) || !isHash(reference.sha256)) throw coded("cutscene.dispatch_binding_invalid", `/manifest/assets/reference_images/${index}`);
     return reference.sha256;
   });
+  const parentPromptDigests = references.map((reference, index) => {
+    const source = manifestAssets.get(reference.asset_id);
+    const promptDigest = source?.prompt_digest ?? source?.prompt_sha256;
+    if (!isHash(promptDigest)) throw coded("cutscene.dispatch_binding_invalid", `/manifest/assets/reference_images/${index}`);
+    return promptDigest;
+  });
   const output = asset.planning?.target_output;
   if (!plain(output) || !Number.isInteger(output.width) || !Number.isInteger(output.height) || typeof output.path !== "string"
     || typeof output.aspect_ratio !== "string" || typeof output.format !== "string" || typeof output.background !== "string") throw coded("cutscene.dispatch_binding_invalid", "/manifest/assets/planning/target_output");
@@ -142,7 +148,14 @@ function requestForAsset(asset, prompt, pricingSnapshot, manifestAssets, referen
       background: output.background,
     },
   };
-  return { ...routing, requestSha256: cutsceneDocumentSha256(request), request, output: { ...output } };
+  return {
+    ...routing,
+    requestSha256: cutsceneDocumentSha256(request),
+    request,
+    output: { ...output },
+    referenceImages: references.map((reference) => ({ ...reference })),
+    promptLineage: { parent_prompt_digests: parentPromptDigests },
+  };
 }
 
 export function buildCutsceneDispatchSnapshot({ plan, promptPackage, manifest, waveId, pricingSnapshot, selectedAssetIds } = {}) {
@@ -156,17 +169,29 @@ export function buildCutsceneDispatchSnapshot({ plan, promptPackage, manifest, w
   const sourceAssets = new Map(manifest.assets.map((asset) => [asset.asset_id, asset]));
   const prompts = new Map(authority.prompts.map((prompt) => [prompt.assetId, prompt]));
   const referenceBindings = new Map(authority.references.map(({ assetId, sha256 }) => [assetId, sha256]));
+  const referenceImagesByAsset = new Map();
+  const promptLineageByAsset = new Map();
   const requests = ids.map((assetId) => {
     const asset = sourceAssets.get(assetId);
     const prompt = prompts.get(assetId);
     if (!asset || !prompt) throw coded("cutscene.dispatch_binding_invalid", "/manifest/assets");
     const bound = requestForAsset(asset, prompt, pricing, sourceAssets, referenceBindings);
-    return { assetId, ...bound };
+    referenceImagesByAsset.set(assetId, bound.referenceImages);
+    promptLineageByAsset.set(assetId, bound.promptLineage);
+    const { referenceImages: _referenceImages, promptLineage: _promptLineage, ...request } = bound;
+    return { assetId, ...request };
   });
   const routing = new Set(requests.map(({ provider, model, quality }) => `${provider}\0${model}\0${quality}`));
   if (routing.size !== 1) throw coded("cutscene.dispatch_binding_invalid", "/manifest/assets/provider");
   const ephemeralManifest = structuredClone(manifest);
-  for (const asset of ephemeralManifest.assets) asset.prompt_digest = asset.prompt_sha256;
+  for (const asset of ephemeralManifest.assets) {
+    asset.prompt_digest = asset.prompt_sha256;
+    const referenceImages = referenceImagesByAsset.get(asset.asset_id);
+    if (referenceImages?.length > 0) {
+      asset.reference_images = referenceImages.map((reference) => ({ ...reference }));
+      asset.prompt_lineage = structuredClone(promptLineageByAsset.get(asset.asset_id));
+    }
+  }
   return deepFreeze({ schemaVersion: 1, waveId, assetIds: ids, provider: requests[0].provider, model: requests[0].model, quality: requests[0].quality, requests, manifest: ephemeralManifest });
 }
 

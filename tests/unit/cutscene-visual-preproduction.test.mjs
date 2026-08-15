@@ -115,6 +115,22 @@ test("prompt-only has expected references but no invented hashes", () => {
   assert.deepEqual(validateCutsceneManifestHandoff({ manifest }), manifest);
 });
 
+test("storyboard lineage binds each shot to its own beat keyframe independent of sorted asset IDs", () => {
+  const { manifest } = planCutsceneVisualPreproduction(taskTwoInput({
+    cutsceneId: "cutscene-order",
+    beats: [{ beatId: "A.2" }, { beatId: "A:1" }],
+    shots: [{ shotId: "SHOT-01", beatId: "A.2" }, { shotId: "SHOT-02", beatId: "A:1" }],
+  }));
+  const byId = new Map(manifest.assets.map((asset) => [asset.asset_id, asset]));
+  const commonReferences = [
+    "cutscene-order-style-master-style-01",
+    "cutscene-order-reference-master-environment-01",
+    "cutscene-order-reference-master-prop-01",
+  ];
+  assert.deepEqual(byId.get("cutscene-order-storyboard-shot-01").reference_asset_ids, [...commonReferences, "cutscene-order-keyframe-a-2"]);
+  assert.deepEqual(byId.get("cutscene-order-storyboard-shot-02").reference_asset_ids, [...commonReferences, "cutscene-order-keyframe-a-1"]);
+});
+
 test("plan-image-assets validates cutscene handoff without mutation", () => {
   const manifest = cutsceneManifestFixture();
   assert.deepEqual(validateCutsceneManifestHandoff({ manifest }), manifest);
