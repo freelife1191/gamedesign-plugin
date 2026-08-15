@@ -24,12 +24,19 @@ test("clean-built SessionStart probe and Skillstead renderer report the same rea
   const pluginRoot = await realpath(build.outputDir);
   const probe = spawnSync(process.execPath, [path.join(pluginRoot, "scripts/capability-probe.mjs")], {
     cwd: pluginRoot,
-    env: { ...process.env },
+    env: {
+      ...process.env,
+      HOME: path.join(stagingRoot, "probe-home"),
+      XDG_CACHE_HOME: path.join(stagingRoot, "probe-cache"),
+      GAME_DESIGN_UPDATE_CHECKS: "false",
+    },
     input: "{}",
     encoding: "utf8",
   });
   assert.equal(probe.status, 0, probe.stderr);
   const output = JSON.parse(probe.stdout);
+  assert.equal(output.updates.cache, "disabled");
+  assert.equal(output.updates.status, "disabled");
   assert.equal(output.capabilities.chromium.available, true);
   assert.deepEqual(Object.keys(output.capabilities.chromium), ["available", "command", "version", "via"]);
 

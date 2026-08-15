@@ -692,7 +692,7 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
         hooks: [{
           type: "command",
           command: 'node "${PLUGIN_ROOT}/scripts/capability-probe.mjs"',
-          timeout: 20,
+          timeout: 25,
           statusMessage: "Detecting optional game-design and image capabilities",
         }],
       }],

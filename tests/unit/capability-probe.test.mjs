@@ -240,11 +240,11 @@ test('SessionStart surfaces injected update advisories without changing capabili
   });
 });
 
-test('SessionStart emits JSON within its 20-second bounded capability and update budget', async () => {
+test('SessionStart emits JSON within its 25-second 15-second capability and 5-second update budget', async () => {
   const workspace = await temporaryWorkspace();
   const home = await temporaryDirectory('game-design-bounded-home-');
   const browser = join(await temporaryDirectory('game-design-slow-browser-'), 'google-chrome');
-  await writeFile(browser, '#!/bin/sh\n/bin/sleep 11\nprintf "Google Chrome 151.0.0.0\\n"\n');
+  await writeFile(browser, '#!/bin/sh\n/bin/sleep 15\nprintf "Google Chrome 151.0.0.0\\n"\n');
   await chmod(browser, 0o755);
 
   const startedAt = Date.now();
@@ -253,10 +253,10 @@ test('SessionStart emits JSON within its 20-second bounded capability and update
     workspace,
     neverResolving: true,
     processEnv: { PATH: '/usr/bin:/bin', SVG_INFOGRAPHIC_BROWSER: browser },
-    timeout: 20_000,
+    timeout: 25_000,
   });
 
-  assert.ok(Date.now() - startedAt < 20_000);
+  assert.ok(Date.now() - startedAt < 25_000);
   assert.equal(output.updates.status, 'unknown');
 });
 
