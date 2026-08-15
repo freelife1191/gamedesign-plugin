@@ -17,7 +17,12 @@
     "review-image-assets",
     "polish-game-design-writing",
     "humanize-korean",
-    "archify"
+    "archify",
+    "retrieve-approved-design-memory",
+    "capture-game-design-memory",
+    "maintain-game-design-memory",
+    "analyze-game-design-references",
+    "maintain-game-design-glossary"
   ],
   "roleIds": [
     "career-strategist",
@@ -72,6 +77,31 @@
     {
       "skill": "humanize-korean",
       "owners": ["game-design-writing-editor"],
+      "conditionalOwners": []
+    },
+    {
+      "skill": "retrieve-approved-design-memory",
+      "owners": ["career-strategist"],
+      "conditionalOwners": []
+    },
+    {
+      "skill": "capture-game-design-memory",
+      "owners": ["evidence-auditor"],
+      "conditionalOwners": []
+    },
+    {
+      "skill": "maintain-game-design-memory",
+      "owners": ["evidence-auditor"],
+      "conditionalOwners": []
+    },
+    {
+      "skill": "analyze-game-design-references",
+      "owners": ["reverse-design-critic", "evidence-auditor"],
+      "conditionalOwners": []
+    },
+    {
+      "skill": "maintain-game-design-glossary",
+      "owners": ["evidence-auditor", "document-quality-editor"],
       "conditionalOwners": []
     },
     {
@@ -135,6 +165,49 @@
       "conditionalOwners": []
     }
   ],
+  "plannedPaths": {
+    "skills": [
+      "skills/orchestrate-game-design-career/SKILL.md",
+      "skills/map-game-design-career/SKILL.md",
+      "skills/research-game-design-jobs/SKILL.md",
+      "skills/build-game-design-portfolio/SKILL.md",
+      "skills/reverse-engineer-game-design/SKILL.md",
+      "skills/practice-game-design-interview/SKILL.md",
+      "skills/review-game-design-portfolio/SKILL.md",
+      "skills/plan-junior-growth/SKILL.md",
+      "skills/visualize-career-roadmap/SKILL.md",
+      "skills/export-career-documents/SKILL.md",
+      "skills/apply-document-quality-profile/SKILL.md",
+      "skills/plan-image-assets/SKILL.md",
+      "skills/generate-image-assets/SKILL.md",
+      "skills/review-image-assets/SKILL.md",
+      "skills/polish-game-design-writing/SKILL.md",
+      "skills/humanize-korean/SKILL.md",
+      "skills/archify/SKILL.md",
+      "skills/retrieve-approved-design-memory/SKILL.md",
+      "skills/capture-game-design-memory/SKILL.md",
+      "skills/maintain-game-design-memory/SKILL.md",
+      "skills/analyze-game-design-references/SKILL.md",
+      "skills/maintain-game-design-glossary/SKILL.md"
+    ]
+  },
+  "memoryWorkflow": {
+    "retrieveSkill": "retrieve-approved-design-memory",
+    "captureSkill": "capture-game-design-memory",
+    "maintenanceSkill": "maintain-game-design-memory",
+    "retrievePlacement": "after-intake-before-specialist-routing",
+    "capturePlacement": "after-completion-gates",
+    "defaultScope": "project",
+    "defaultMaxItems": 5,
+    "requiresProjectId": true,
+    "dedicatedAgent": false
+  },
+  "referenceIntelligenceWorkflow": {
+    "analysisSkill": "analyze-game-design-references",
+    "glossarySkill": "maintain-game-design-glossary",
+    "transferState": "pending-review",
+    "outputs": ["reverse-design-document", "game-analysis-report"]
+  },
   "directUseSources": [
     {
       "id": "map-game-design-career",
@@ -150,6 +223,21 @@
       "id": "review-image-assets",
       "skill": "review-image-assets",
       "outputTypes": ["image-asset-review", "lifecycle-receipt"]
+    },
+    {
+      "id": "retrieve-approved-design-memory",
+      "skill": "retrieve-approved-design-memory",
+      "outputTypes": ["approved-memory-guidance"]
+    },
+    {
+      "id": "reference-game-analysis",
+      "skill": "analyze-game-design-references",
+      "outputTypes": ["reverse-design-document", "game-analysis-report"]
+    },
+    {
+      "id": "project-glossary-maintenance",
+      "skill": "maintain-game-design-glossary",
+      "outputTypes": ["game-design-glossary", "terminology-findings", "glossary-receipt"]
     }
   ],
   "stages": ["entry", "new-hire", "junior-growth", "transition"],
@@ -666,7 +754,8 @@
   ],
   "faqReadOrders": {
     "canonical-template": ["content.md", "evidence.yml", "decisions/README.md", "assets/README.md", "export-manifest.yml"],
-    "image-review": ["assets/image-assets.yml", "evidence.yml", "decisions/"]
+    "image-review": ["assets/image-assets.yml", "evidence.yml", "decisions/"],
+    "memory-guidance": ["memory-application-report", "memory ID", "source binding", "apply/exclusion reason"]
   },
   "faqContracts": [
     {
@@ -922,6 +1011,21 @@
       "case": { "id": "CA-C08", "path": "use-cases/competency-paths.md", "anchor": "ca-c08-면접주니어-성장직무-전환" },
       "skillPath": "skills/orchestrate-game-design-career.md",
       "recipePath": "recipes/junior-growth-transition.md",
+      "recovery": { "owner": "사람", "sequence": ["보존", "사람 확인", "재개"] }
+    },
+    {
+      "id": "Q19",
+      "question": "이전 학습·포트폴리오 교훈을 다음 작업에 어떻게 안전하게 쓰는가?",
+      "primarySkill": "retrieve-approved-design-memory",
+      "routingSource": { "kind": "direct-use", "id": "retrieve-approved-design-memory" },
+      "expectedOutputs": [{ "id": "approved-memory-guidance", "kind": "skill-owned", "path": "memory-application-report" }],
+      "completionTokens": ["적용·제외 사유"],
+      "fields": ["memory ID", "source binding", "apply/exclusion reason"],
+      "readOrderId": "memory-guidance",
+      "case": { "id": "CA-C06", "path": "use-cases/competency-paths.md", "anchor": "ca-c06-창작-기획-포트폴리오" },
+      "skillPath": "memory.md",
+      "skillSource": "shared-memory",
+      "recipePath": "recipes/portfolio-build-review.md",
       "recovery": { "owner": "사람", "sequence": ["보존", "사람 확인", "재개"] }
     }
   ],

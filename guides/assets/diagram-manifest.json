@@ -252,8 +252,21 @@
     {"id":"st-s14","scope":"game-design-studio-skill","svg":"game-design-studio/skills/svg-infographic.svg","png":"game-design-studio/skills/svg-infographic.png","alt":"SVG 인포그래픽 직접 호출 흐름","sources":["../game-design-studio/skills/svg-infographic.md"],"usedBy":["../game-design-studio/skills/svg-infographic.md"]},
     {"id":"st-s15","scope":"game-design-studio-skill","svg":"game-design-studio/skills/visualize-game-design.svg","png":"game-design-studio/skills/visualize-game-design.png","alt":"게임 기획 시각화 직접 호출 흐름","sources":["../game-design-studio/skills/visualize-game-design.md"],"usedBy":["../game-design-studio/skills/visualize-game-design.md"]}
   ,
-  {
-    "id": "ca-c01",
+    {
+      "id": "st-s16",
+      "scope": "game-design-studio-skill",
+      "svg": "game-design-studio/skills/design-cutscene-visual-preproduction.svg",
+      "png": "game-design-studio/skills/design-cutscene-visual-preproduction.png",
+      "alt": "컷씬 네 단계와 선택적 이미지 생성 승인 흐름",
+      "sources": [
+        "../game-design-studio/skills/design-cutscene-visual-preproduction.md"
+      ],
+      "usedBy": [
+        "../game-design-studio/skills/design-cutscene-visual-preproduction.md"
+      ]
+    },
+    {
+      "id": "ca-c01",
     "scope": "game-design-career-use-case",
     "svg": "game-design-career/use-cases/ca-c01.svg",
     "png": "game-design-career/use-cases/ca-c01.png",

@@ -17,7 +17,7 @@ test("each generated plugin passes a standalone byte- and process-verified smoke
   const report = await runIsolationSmoke({ repoRoot });
   assert.deepEqual(report.map(({ name }) => name), products);
   for (const result of report) {
-    assert.equal(result.skillCount, 18);
+    assert.equal(result.skillCount, result.name === "game-design-studio" ? 24 : 23);
     assert.deepEqual(result.vendorFiles, [
       { name: "skillstead", files: 55 },
       { name: "archify", files: 60 },
@@ -82,6 +82,17 @@ test("isolation smoke rejects a symlink introduced after extraction", async () =
       await symlink(path.join(pluginRoot, "README.md"), path.join(pluginRoot, "escape-link"));
     },
   }), /symlink/u);
+});
+
+test("isolation smoke sends a changed reference-intelligence source declaration to the semantic classifier before byte verification", async () => {
+  await assert.rejects(runIsolationSmoke({
+    repoRoot,
+    mutateCopy: async ({ pluginRoot }) => {
+      const target = path.join(pluginRoot, "skills/analyze-game-design-references/SKILL.md");
+      const source = await readFile(target, "utf8");
+      await writeFile(target, source.replace("../../../scripts/analyze-game-design-references.mjs", "../../../scripts/escaped-reference-runtime.mjs"));
+    },
+  }), /reference-intelligence semantic contract mismatch/u);
 });
 
 test("temporary-root guard rejects broad and symlink roots", async () => {

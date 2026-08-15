@@ -1,0 +1,30 @@
+{
+  "profile_id": "cutscene-visual-preproduction",
+  "version": 1,
+  "artifact_types": ["design-document"],
+  "audiences": ["narrative", "design", "art", "animation", "cinematics", "qa", "production"],
+  "required_sections": [
+    {"id": "cutscene-brief", "title": "Cutscene purpose, game-state entry, and return"},
+    {"id": "visual-preproduction", "title": "Beats, shots, master references, prompts, and continuity"}
+  ],
+  "required_tables": [
+    {"id": "cutscene-shot-table", "section_id": "visual-preproduction", "columns": ["Beat", "Shot", "Camera", "Blocking", "Dialogue", "State return", "Continuity"]}
+  ],
+  "required_diagrams": [
+    {"id": "cutscene-generation-dag", "section_id": "visual-preproduction", "purpose": "Show serial master, keyframe, and storyboard generation dependencies", "alt_text": "Cutscene generation graph from style master through reference masters, keyframes, storyboard, and continuity review"}
+  ],
+  "required_images": [
+    {"id": "cutscene-storyboard-keyframe", "section_id": "visual-preproduction", "purpose": "Review intended framing, continuity, and gameplay-readable information", "alt_text": "Storyboard keyframe showing character placement, camera direction, visible state, and safe dialogue area"}
+  ],
+  "recommended_images": [
+    {"id": "cutscene-master-reference-contact-sheet", "section_id": "visual-preproduction", "purpose": "Compare selected style and reference masters before dependent shots", "alt_text": "Contact sheet of approved cutscene style, character, environment, and prop master references"}
+  ],
+  "length_guidance": {"min_words": 1200, "max_words": 4800, "min_pages": 5, "max_pages": 20},
+  "ppt_story_contract": {},
+  "acceptance_criteria": [
+    "Every beat and shot names its game-state entry, visible information, dialogue or subtitle constraint, continuity preservation, and return state.",
+    "Each visual wave binds stable IDs, current prompts, current references, cost disclosure, named host-user approval, and continuity findings without treating generation as approval."
+  ],
+  "export_rules": {"required_formats": ["md", "pdf", "docx"], "forbidden_formats": ["pptx"]},
+  "quality_checks": ["cutscene-continuity", "shot-state-coverage", "dialogue-safe-area", "generation-approval-binding"]
+}

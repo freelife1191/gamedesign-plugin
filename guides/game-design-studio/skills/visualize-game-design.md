@@ -129,7 +129,7 @@ $game-design-studio:export-game-design-documents artifact=<artifact-path> verifi
 <!-- PROMPT-TEMPLATES:START game-design-studio:visualize-game-design -->
 ### 재사용 프롬프트 템플릿
 
-- [beginner — source-backed 규칙 흐름 도식](../../prompt-templates/studio/visualize-game-design.md#studiovisualize-game-designbeginner)
-- [standard — Archify 우선 구조 도식과 honest fallback](../../prompt-templates/studio/visualize-game-design.md#studiovisualize-game-designstandard)
-- [advanced — source mapping·receipt·visual QA를 갖춘 lifecycle 도식](../../prompt-templates/studio/visualize-game-design.md#studiovisualize-game-designadvanced)
+- [beginner: source-backed 규칙 흐름 도식](../../prompt-templates/studio/visualize-game-design.md#studiovisualize-game-designbeginner)
+- [standard: Archify 우선 구조 도식과 honest fallback](../../prompt-templates/studio/visualize-game-design.md#studiovisualize-game-designstandard)
+- [advanced: source mapping·receipt·visual QA를 갖춘 lifecycle 도식](../../prompt-templates/studio/visualize-game-design.md#studiovisualize-game-designadvanced)
 <!-- PROMPT-TEMPLATES:END game-design-studio:visualize-game-design -->

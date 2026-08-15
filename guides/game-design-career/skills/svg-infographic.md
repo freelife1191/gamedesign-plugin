@@ -139,7 +139,7 @@ $game-design-career:visualize-career-roadmap artifact=<artifact-path> 기존 evi
 <!-- PROMPT-TEMPLATES:START game-design-career:svg-infographic -->
 ### 재사용 프롬프트 템플릿
 
-- [beginner — 학습 roadmap SVG 초안](../../prompt-templates/career/svg-infographic.md#careersvg-infographicbeginner)
-- [standard — evidence map editable SVG와 render 상태](../../prompt-templates/career/svg-infographic.md#careersvg-infographicstandard)
-- [advanced — lint·2× render·접근성·승인 SVG QA](../../prompt-templates/career/svg-infographic.md#careersvg-infographicadvanced)
+- [beginner: 학습 roadmap SVG 초안](../../prompt-templates/career/svg-infographic.md#careersvg-infographicbeginner)
+- [standard: evidence map editable SVG와 render 상태](../../prompt-templates/career/svg-infographic.md#careersvg-infographicstandard)
+- [advanced: lint·2× render·접근성·승인 SVG QA](../../prompt-templates/career/svg-infographic.md#careersvg-infographicadvanced)
 <!-- PROMPT-TEMPLATES:END game-design-career:svg-infographic -->

@@ -22,7 +22,7 @@ Turn a mechanic into an implementable, testable system specification. Make rule 
 
 ## Required input
 
-Collect the system purpose, actors, inputs, constraints, current rules, failure expectations, authoritative data source, network model, UI surface, known balance evidence, and decision owners.
+Collect the system purpose, actors, inputs, constraints, current rules, failure expectations, authoritative data source, network model, UI surface, known balance evidence, decision owners, and any `analyze-game-design-references` transfer proposal. Treat every reference transfer as `pending-review`; do not turn it into an approved rule or mutate the Canonical Artifact directly.
 
 ## Assumption policy
 
@@ -36,6 +36,7 @@ Tag unapproved timings, ratios, costs, probabilities, limits, and other balance 
 4. Map every player-visible state to UI states, feedback, and accessible alternatives.
 5. Define the data schema with PK/FK ownership and table/runtime mapping.
 6. Convert every provisional balance constant into a validation task; apply gates and reviewer checks.
+7. Preserve reference claim and evidence bindings when a reference analysis informs this specification, and keep the transfer proposal separate until human review.
 
 ## Output contract
 

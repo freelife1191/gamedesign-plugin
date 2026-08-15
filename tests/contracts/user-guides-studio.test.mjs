@@ -4,7 +4,7 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { collectProductInventory } from "../../tooling/lib/user-guides.mjs";
+import { collectProductInventory, SOURCE_BOUND_MEMORY_SKILL_IDS } from "../../tooling/lib/user-guides.mjs";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
 const requiredHeadings = [
@@ -78,13 +78,26 @@ const WORKBENCH_LANES = Object.freeze({
   "polish-game-design-writing": "품질·검토",
   "review-game-design": "품질·검토",
   "plan-image-assets": "이미지",
+  "design-cutscene-visual-preproduction": "이미지",
   "generate-image-assets": "이미지",
   "review-image-assets": "이미지",
   "visualize-game-design": "시각화",
   "archify": "시각화",
   "svg-infographic": "시각화",
   "export-game-design-documents": "출력",
+  "retrieve-approved-design-memory": "프로젝트 기억",
+  "capture-game-design-memory": "프로젝트 기억",
+  "maintain-game-design-memory": "프로젝트 기억",
+  "analyze-game-design-references": "레퍼런스 분석·용어 사전",
+  "maintain-game-design-glossary": "레퍼런스 분석·용어 사전",
 });
+
+const sourceBoundMemorySkillIds = new Set(SOURCE_BOUND_MEMORY_SKILL_IDS);
+const sourceBoundReferenceSkillPaths = new Map([
+  ["analyze-game-design-references", "../reference-analysis.md"],
+  ["maintain-game-design-glossary", "../glossary.md"],
+]);
+const directSkillGuideIds = (inventory) => inventory.skillIds.filter((skillId) => !sourceBoundMemorySkillIds.has(skillId) && !sourceBoundReferenceSkillPaths.has(skillId));
 
 function h2Headings(markdown) {
   return [...markdown.matchAll(/^## (.+)$/gm)].map((match) => match[1]);
@@ -261,9 +274,9 @@ function assertStudioGuideRouting(index, skillIndex) {
 
 test("Studio documents every installed skill with the common contract", async () => {
   const inventory = await collectProductInventory(root, "game-design-studio");
-  assert.equal(inventory.skillIds.length, 18);
+  assert.equal(inventory.skillIds.length, 24);
 
-  for (const skillId of inventory.skillIds) {
+  for (const skillId of directSkillGuideIds(inventory)) {
     const markdown = await readFile(
       path.join(root, "guides/game-design-studio/skills", skillId + ".md"),
       "utf8",
@@ -292,7 +305,10 @@ test("Studio skill workbench routes every direct-use case through its own lane",
     assert.ok(row, `workbench row: ${skillId}`);
     assert.equal(row.split("|").length, 9, `${skillId}: seven-column decision row`);
     assert.match(row, new RegExp(`\\$game-design-studio:${skillId}\\b`), `${skillId}: direct CLI signal`);
-    assert.match(row, new RegExp(`\\.\\./skills/${skillId}\\.md#직접-호출-활용-${skillId}`), `${skillId}: direct-use guide anchor`);
+    const guideTarget = sourceBoundMemorySkillIds.has(skillId)
+      ? "../memory.md"
+      : (sourceBoundReferenceSkillPaths.get(skillId) ?? `../skills/${skillId}.md#직접-호출-활용-${skillId}`);
+    assert.ok(row.includes(guideTarget), `${skillId}: direct-use guide anchor`);
   }
   assert.deepEqual(workbenchLaneMap(workbench), WORKBENCH_LANES, "closed skill-to-lane map");
 
@@ -414,7 +430,7 @@ test("Studio skill handoffs are derived from canonical routes and source-backed 
   const sources = await sourceInventory("game-design-studio");
   const routing = JSON.parse(await readFile(path.join(root, "products/game-design-studio/plugin/references/routing.json"), "utf8"));
   const profileMap = JSON.parse(await readFile(path.join(root, "products/game-design-studio/plugin/references/document-quality/template-profile-map.json"), "utf8")).templates;
-  const directRoutes = routing.routes.filter(({ skill }) => skill !== "orchestrate-game-design-project" && !sourceExceptions[skill]);
+  const directRoutes = routing.routes.filter(({ skill }) => skill !== "orchestrate-game-design-project" && !sourceExceptions[skill] && !sourceBoundReferenceSkillPaths.has(skill));
   const directSkills = [...new Set(directRoutes.map(({ skill }) => skill))];
   const allowedNextTargets = new Set([...inventory.skillIds, "downstream"]);
 
@@ -456,7 +472,7 @@ test("Studio skill handoffs are derived from canonical routes and source-backed 
     for (const target of allRouteTargets) assert.ok(scoped.includes(target), `${skillId}: missing routed target ${target}`);
   }
 
-  for (const skillId of inventory.skillIds) {
+  for (const skillId of directSkillGuideIds(inventory)) {
     const markdown = await readFile(path.join(root, "guides/game-design-studio/skills", `${skillId}.md`), "utf8");
     const documentedIds = extractSection(markdown, "이미지·도식화 조건").match(/\b(?:skillstead-[a-z0-9-]+|[a-z0-9-]+-image)\b/g) ?? [];
     const mappedProfileIds = routing.routes.filter((route) => route.skill === skillId)
@@ -599,7 +615,9 @@ test("Studio topical guides preserve image, visualization, and export policies",
     "all",
     "gpt-image-2",
     "low",
-    "OpenAI only",
+    "IMAGE_PROVIDER=codex-first",
+    "IMAGE_EMBEDDED_TEXT_LOCALE=ko-KR",
+    "image_gen",
     "Codex",
     "SVG",
     "정확한 2× PNG",

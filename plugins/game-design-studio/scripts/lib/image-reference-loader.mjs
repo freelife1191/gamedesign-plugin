@@ -34,17 +34,23 @@ function sameFileIdentity(left, right) {
   return left?.dev === right?.dev && left?.ino === right?.ino && left?.mode === right?.mode && left?.size === right?.size;
 }
 
-async function pinPath(absolutePath, { directory = false } = {}) {
+function sameDirectoryIdentity(left, right) {
+  return left?.dev === right?.dev && left?.ino === right?.ino && left?.mode === right?.mode;
+}
+
+async function pinPath(absolutePath, { directory = false, allowMetadataChange = false } = {}) {
   const stats = await lstat(absolutePath);
   const canonical = await realpath(absolutePath);
   if (stats.isSymbolicLink() || canonical !== absolutePath || (directory && !stats.isDirectory())) throw new Error("unsafe reference path");
-  return { path: absolutePath, identity: identity(stats) };
+  return { path: absolutePath, identity: identity(stats), directory, allowMetadataChange };
 }
 
 async function verifyPin(pin) {
   const stats = await lstat(pin.path);
   const canonical = await realpath(pin.path);
-  if (stats.isSymbolicLink() || canonical !== pin.path || !sameIdentity(pin.identity, identity(stats))) throw new Error("reference identity changed");
+  const current = identity(stats);
+  const matches = pin.directory && pin.allowMetadataChange ? sameDirectoryIdentity(pin.identity, current) : sameIdentity(pin.identity, current);
+  if (stats.isSymbolicLink() || canonical !== pin.path || !matches) throw new Error("reference identity changed");
 }
 
 async function pinRoot(root) {
@@ -53,7 +59,7 @@ async function pinRoot(root) {
   const requestedStats = await lstat(requested);
   if (!requestedStats.isDirectory() || requestedStats.isSymbolicLink()) throw new Error("unsafe reference root");
   const canonical = await realpath(requested);
-  const pin = await pinPath(canonical, { directory: true });
+  const pin = await pinPath(canonical, { directory: true, allowMetadataChange: true });
   return { root: canonical, pins: [pin] };
 }
 
@@ -76,6 +82,24 @@ async function verifyPins(pins) {
   for (const pin of pins) await verifyPin(pin);
 }
 
+async function verifyReferenceFile(destination, expectedIdentity, expectedDigest) {
+  let handle;
+  try {
+    handle = await open(destination, constants.O_RDONLY | constants.O_NOFOLLOW);
+    const before = await handle.stat();
+    if (!before.isFile() || !sameIdentity(expectedIdentity, identity(before))) throw new Error("reference identity changed");
+    const bytes = await handle.readFile();
+    const after = await handle.stat();
+    const current = await lstat(destination);
+    const canonical = await realpath(destination);
+    if (!sameIdentity(expectedIdentity, identity(after)) || !sameIdentity(expectedIdentity, identity(current))
+      || current.isSymbolicLink() || canonical !== destination || bytes.length !== before.size
+      || createHash("sha256").update(bytes).digest("hex") !== expectedDigest) throw new Error("reference identity changed");
+  } finally {
+    await handle?.close().catch(() => {});
+  }
+}
+
 export async function readSecureReferenceFile({ artifactRoot, path: referencePath } = {}) {
   const { root, pins: rootPins } = await pinRoot(artifactRoot);
   const { destination, pins: pathPins } = await pinContainedPath(root, referencePath);
@@ -95,12 +119,14 @@ export async function readSecureReferenceFile({ artifactRoot, path: referencePat
     await verifyPins(pins);
     const inspection = inspectCompletePng(bytes);
     if (!inspection.ok) throw new Error("invalid reference png");
+    const fileIdentity = identity(before);
+    const digest = createHash("sha256").update(bytes).digest("hex");
     return {
       path: referencePath,
       bytes,
-      digest: createHash("sha256").update(bytes).digest("hex"),
+      digest,
       filename: path.posix.basename(referencePath),
-      verify: () => verifyPins(pins),
+      verify: async () => { await verifyPins(pins); await verifyReferenceFile(destination, fileIdentity, digest); await verifyPins(pins); },
     };
   } finally {
     await handle?.close().catch(() => {});

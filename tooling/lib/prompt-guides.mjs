@@ -225,7 +225,7 @@ export function renderPromptGuideSummary(entries) {
   return [
     "### 재사용 프롬프트 템플릿",
     "",
-    ...ordered.map((entry) => `- [${entry.level} — ${entry.title}](../../prompt-templates/${entry.product}/${entry.skill}.md#${entryAnchor(entry)})`),
+    ...ordered.map((entry) => `- [${entry.level}: ${entry.title}](../../prompt-templates/${entry.product}/${entry.skill}.md#${entryAnchor(entry)})`),
   ].join("\n");
 }
 

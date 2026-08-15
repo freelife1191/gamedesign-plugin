@@ -19,6 +19,7 @@ const skillIds = [
   "define-game-vision",
   "design-game-systems",
   "design-game-content",
+  "design-cutscene-visual-preproduction",
   "design-player-experience",
   "design-game-economy-and-liveops",
   "plan-game-production",
@@ -32,9 +33,14 @@ const skillIds = [
   "polish-game-design-writing",
   "humanize-korean",
   "archify",
+  "retrieve-approved-design-memory",
+  "capture-game-design-memory",
+  "maintain-game-design-memory",
+  "analyze-game-design-references",
+  "maintain-game-design-glossary",
 ];
-const directSkillIds = skillIds.slice(0, 15);
-const installedSkillIds = [...directSkillIds, "archify", "humanize-korean", "svg-infographic"].sort();
+const directSkillIds = skillIds.slice(0, 16);
+const installedSkillIds = [...directSkillIds, "analyze-game-design-references", "archify", "capture-game-design-memory", "humanize-korean", "maintain-game-design-glossary", "maintain-game-design-memory", "retrieve-approved-design-memory", "svg-infographic"].sort();
 
 const roleIds = [
   "lead-game-designer",
@@ -75,6 +81,11 @@ const plannedPaths = {
     "assets/templates/game-design-review/content.md",
     "references/visualization-presets.json",
     "references/export-recipes.md",
+    "references/shared/reference-intelligence/references/evidence-policy.md",
+    "references/shared/reference-intelligence/references/reference-analysis-flow.md",
+    "references/shared/reference-intelligence/schema/reference-analysis.schema.json",
+    "references/shared/reference-intelligence/schema/game-design-glossary.schema.json",
+    "references/shared/reference-intelligence/schema/glossary-receipt.schema.json",
   ],
 };
 
@@ -110,6 +121,13 @@ const routeContract = {
         reviewers: ["level-puzzle-reviewer"],
       },
     ],
+  },
+  "cutscene-visual-preproduction": {
+    skill: "design-cutscene-visual-preproduction",
+    reference: "references/methods/content-specification.md",
+    artifactType: "cutscene-visual-preproduction",
+    outputArtifacts: ["cutscene-brief", "cutscene-shot-package", "cutscene-prompt-package", "cutscene-cost-estimate", "cutscene-continuity-review"],
+    outputTypes: ["cutscene-visual-preproduction"],
   },
   "player-experience": {
     skill: "design-player-experience",
@@ -148,6 +166,18 @@ const routeContract = {
     artifactType: "canonical-artifact",
     outputArtifacts: ["requested-md", "requested-pdf", "requested-docx", "requested-pptx", "qa-manifest"],
   },
+  "reference-game-analysis": {
+    skill: "analyze-game-design-references",
+    reference: "references/shared/reference-intelligence/references/reference-analysis-flow.md",
+    artifactType: "reference-system-analysis",
+    outputTypes: ["reference-system-analysis", "reference-comparison", "design-transfer-decision"],
+  },
+  "project-glossary-maintenance": {
+    skill: "maintain-game-design-glossary",
+    reference: "references/shared/reference-intelligence/schema/game-design-glossary.schema.json",
+    artifactType: "game-design-glossary",
+    outputTypes: ["game-design-glossary", "terminology-findings", "glossary-receipt"],
+  },
 };
 
 async function readJson(relativePath) {
@@ -185,7 +215,7 @@ test("Studio product selects the complete shared contract and 49-document corpus
     name: "game-design-studio",
     displayName: "Game Design Studio",
     description: "Professional game design, review, visualization, and export workflows.",
-    sharedModules: ["knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets"],
+    sharedModules: ["knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets", "memory", "reference-intelligence"],
     sharedRuntime: true,
     sourceRoots: ["plugin"],
     sourceDocumentCategories: ["career", "fun-intent", "systems", "content", "feedback"],
@@ -204,7 +234,7 @@ test("Studio routing enumerates the planned skills, roles, and composable profil
   const routing = await readJson("references/routing.json");
 
   assert.deepEqual(routing.skillIds, skillIds);
-  assert.equal(new Set(routing.skillIds).size, 17);
+  assert.equal(new Set(routing.skillIds).size, 23);
   assert.deepEqual(routing.roleIds, roleIds);
   assert.deepEqual(routing.imageSpecialistIds, imageSpecialistIds);
   assert.equal(new Set(routing.roleIds).size, 10);
@@ -214,12 +244,12 @@ test("Studio routing enumerates the planned skills, roles, and composable profil
   assert.deepEqual(routing.plannedPaths, plannedPaths);
 });
 
-test("Studio keeps the 15-direct and 18-installed skill inventory contract", async () => {
+test("Studio keeps the 16-direct and 24-installed skill inventory contract", async () => {
   const inventory = await collectProductInventory(repoRoot, "game-design-studio");
 
-  assert.equal(directSkillIds.length, 15, "Studio has exactly 15 direct product skills");
+  assert.equal(directSkillIds.length, 16, "Studio has exactly 16 direct product skills");
   assert.deepEqual(inventory.skillIds, installedSkillIds);
-  assert.equal(inventory.skillIds.length, 18, "Studio installs the 15 direct skills plus three bundled skills");
+  assert.equal(inventory.skillIds.length, 24, "Studio installs the 16 direct skills plus eight shared skills");
 });
 
 test("Studio orchestrator accepts ordinary natural-language requests without explicit skill names", async () => {
@@ -237,7 +267,7 @@ test("Studio orchestrator accepts ordinary natural-language requests without exp
 test("Every Studio route is deterministic and points at its planned artifact source", async () => {
   const routing = await readJson("references/routing.json");
   assert.equal(routing.schemaVersion, 1);
-  assert.equal(routing.routes.length, 11);
+  assert.equal(routing.routes.length, 14);
 
   const routes = new Map(routing.routes.map((route) => [route.id, route]));
   assert.deepEqual([...routes.keys()], Object.keys(routeContract));
@@ -257,6 +287,7 @@ test("Every Studio route is deterministic and points at its planned artifact sou
       "skill",
       "triggerIntents",
       ...(expected.outputArtifacts ? ["outputArtifacts"] : []),
+      ...(expected.outputTypes ? ["outputTypes"] : []),
     ].sort();
     assert.deepEqual(Object.keys(route).sort(), expectedKeys);
     assert.deepEqual(
@@ -276,6 +307,7 @@ test("Every Studio route is deterministic and points at its planned artifact sou
       assert.deepEqual(route.conditionalReviewers, expected.conditionalReviewers);
     }
     if (expected.outputArtifacts) assert.deepEqual(route.outputArtifacts, expected.outputArtifacts);
+    if (expected.outputTypes) assert.deepEqual(route.outputTypes, expected.outputTypes);
     assert.ok(route.completionGates.length > 0, `${routeId}: completionGates`);
   }
 });

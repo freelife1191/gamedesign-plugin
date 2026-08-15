@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { homedir, tmpdir } from "node:os";
 import {
@@ -17,9 +18,12 @@ import process from "node:process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { copyTree, collectTree } from "./lib/copy-tree.mjs";
+import { buildProduct } from "./lib/build-product.mjs";
 import { cleanupGuardedTempRoot, createGuardedTempRoot } from "./lib/guarded-temp.mjs";
 import { sha256 } from "./lib/hash.mjs";
 import { auditTree } from "./lib/tree-audit.mjs";
+import { scanJavaScriptImports } from "./lib/js-import-scanner.mjs";
+import { classifyInactiveReferenceIntelligenceSourcePaths, parseReferenceIntelligenceContract, referenceIntelligenceContractLayouts } from "./lib/reference-intelligence-contract.mjs";
 
 const TEMP_PREFIX = "game-design-isolation-";
 const PRODUCT_NAMES = Object.freeze(["game-design-career", "game-design-studio"]);
@@ -28,12 +32,16 @@ const EXACT_SKILL_IDS = Object.freeze({
     "apply-document-quality-profile", "build-game-design-portfolio", "export-career-documents", "generate-image-assets", "humanize-korean",
     "map-game-design-career", "orchestrate-game-design-career", "plan-image-assets", "plan-junior-growth", "polish-game-design-writing",
     "practice-game-design-interview", "research-game-design-jobs", "reverse-engineer-game-design", "review-game-design-portfolio", "review-image-assets",
+    "capture-game-design-memory", "maintain-game-design-memory", "retrieve-approved-design-memory",
+    "analyze-game-design-references", "maintain-game-design-glossary",
     "svg-infographic", "archify", "visualize-career-roadmap",
   ].sort()),
   "game-design-studio": Object.freeze([
     "apply-document-quality-profile", "define-game-vision", "design-game-content", "design-game-economy-and-liveops", "design-game-systems",
-    "design-player-experience", "export-game-design-documents", "generate-image-assets", "humanize-korean", "orchestrate-game-design-project",
+    "design-cutscene-visual-preproduction", "design-player-experience", "export-game-design-documents", "generate-image-assets", "humanize-korean", "orchestrate-game-design-project",
     "plan-game-production", "plan-image-assets", "polish-game-design-writing", "review-game-design", "review-image-assets", "svg-infographic", "archify", "visualize-game-design",
+    "capture-game-design-memory", "maintain-game-design-memory", "retrieve-approved-design-memory",
+    "analyze-game-design-references", "maintain-game-design-glossary",
   ].sort()),
 });
 const EXPECTED_HOOKS = Object.freeze({
@@ -118,6 +126,27 @@ function exactHookCommand(hooks, eventName) {
   return hook;
 }
 
+async function inactiveReferenceIntelligenceSourceRuntimes(pluginRoot) {
+  const inactive = [];
+  for (const skillId of Object.keys(referenceIntelligenceContractLayouts)) {
+    const relativeSkill = `skills/${skillId}/SKILL.md`;
+    const skillPath = path.join(pluginRoot, relativeSkill);
+    const stats = await lstat(skillPath);
+    if (stats.isSymbolicLink() || !stats.isFile()) throw new Error(`${skillId} reference-intelligence skill identity mismatch`);
+    const contract = parseReferenceIntelligenceContract(await readFile(skillPath, "utf8"));
+    const installedCounterparts = new Set();
+    for (const relativePath of Object.values(contract.layouts?.installed ?? {}).flat()) {
+      const target = path.resolve(path.dirname(skillPath), relativePath);
+      if (!inside(pluginRoot, target)) throw new Error(`${skillId} reference-intelligence installed contract escapes plugin root`);
+      const targetStats = await lstat(target);
+      if (targetStats.isSymbolicLink() || !targetStats.isFile()) throw new Error(`${skillId} reference-intelligence installed contract target is not a regular file`);
+      installedCounterparts.add(target);
+    }
+    inactive.push(...classifyInactiveReferenceIntelligenceSourcePaths({ packageRoot: pluginRoot, skillPath, contract, installedCounterparts }));
+  }
+  return inactive;
+}
+
 async function verifyVendor(pluginRoot, { name, skillId, tag, treeRoot, files }) {
   const lock = JSON.parse(await readFile(path.join(pluginRoot, `references/shared/vendor/${name}/vendor.lock.json`), "utf8"));
   if (lock?.upstream?.tag !== tag || lock?.tree?.root !== treeRoot || !Array.isArray(lock.tree.files)) {
@@ -137,6 +166,94 @@ async function verifyVendor(pluginRoot, { name, skillId, tag, treeRoot, files })
     throw new Error("unexpected vendored file");
   }
   return { name, files: actual.size };
+}
+
+async function verifyReferenceIntelligencePackage(pluginRoot, repoRoot, productName) {
+  const expected = [];
+  for (const [sourceRelative, destinationPrefix] of [
+    ["shared/reference-intelligence/skills", "skills"],
+    ["shared/reference-intelligence/schema", "references/shared/reference-intelligence/schema"],
+    ["shared/reference-intelligence/catalog", "references/shared/reference-intelligence/catalog"],
+    ["shared/reference-intelligence/references", "references/shared/reference-intelligence/references"],
+    ["shared/reference-intelligence/templates", "references/shared/reference-intelligence/templates"],
+  ]) {
+    for (const entry of await collectTree(path.join(repoRoot, sourceRelative), { label: `${productName} reference-intelligence source` })) {
+      expected.push({ bytes: entry.bytes, relativePath: `${destinationPrefix}/${entry.relativePath}` });
+    }
+  }
+  const actual = [];
+  for (const destinationRoot of [
+    "references/shared/reference-intelligence/schema",
+    "references/shared/reference-intelligence/catalog",
+    "references/shared/reference-intelligence/references",
+    "references/shared/reference-intelligence/templates",
+  ]) {
+    for (const entry of await collectTree(path.join(pluginRoot, destinationRoot), { label: `${productName} reference-intelligence package` })) {
+      actual.push({ ...entry, relativePath: `${destinationRoot}/${entry.relativePath}` });
+    }
+  }
+  for (const skillId of ["analyze-game-design-references", "maintain-game-design-glossary"]) {
+    for (const entry of await collectTree(path.join(pluginRoot, "skills", skillId), { label: `${productName} ${skillId} package skill` })) {
+      actual.push({ ...entry, relativePath: `skills/${skillId}/${entry.relativePath}` });
+    }
+  }
+  assertExactReferenceFiles(actual, expected, productName);
+}
+
+async function addBuiltReferenceIntelligencePackage({ buildRoot, pluginRoot, productName }) {
+  const entries = (await collectTree(buildRoot, { label: `${productName} reference-intelligence fixture build` })).filter(({ relativePath }) =>
+    relativePath.startsWith("references/shared/reference-intelligence/")
+    || relativePath.startsWith("skills/analyze-game-design-references/")
+    || relativePath.startsWith("skills/maintain-game-design-glossary/"),
+  );
+  const runtimeEntries = await collectReferenceRuntimeEntries(buildRoot);
+  const byPath = new Map([...entries, ...runtimeEntries].map((entry) => [entry.relativePath, entry]));
+  for (const entry of byPath.values()) {
+    const destination = path.join(pluginRoot, entry.relativePath);
+    await mkdir(path.dirname(destination), { recursive: true });
+    await writeFile(destination, entry.bytes);
+  }
+}
+
+async function collectReferenceRuntimeEntries(buildRoot) {
+  const pending = [
+    path.join(buildRoot, "scripts/analyze-game-design-references.mjs"),
+    path.join(buildRoot, "scripts/manage-game-design-glossary.mjs"),
+    path.join(buildRoot, "scripts/validate-game-design-writing-language.mjs"),
+    path.join(buildRoot, "scripts/validate-reference-intelligence.mjs"),
+  ];
+  const entries = [];
+  const seen = new Set();
+  while (pending.length) {
+    const current = pending.pop();
+    if (seen.has(current)) continue;
+    const relativePath = path.relative(buildRoot, current).split(path.sep).join("/");
+    if (!relativePath.startsWith("scripts/") || path.isAbsolute(relativePath) || relativePath.includes("..")) throw new Error(`reference runtime escapes fixture build: ${current}`);
+    const stats = await lstat(current);
+    if (stats.isSymbolicLink() || !stats.isFile()) throw new Error(`reference runtime is not a regular file: ${relativePath}`);
+    const bytes = await readFile(current);
+    const source = bytes.toString("utf8");
+    entries.push({ bytes, relativePath });
+    seen.add(current);
+    const scanned = scanJavaScriptImports(source);
+    if (scanned.errors.length > 0) throw new Error(`reference runtime has an unresolved dynamic import: ${relativePath}`);
+    const specifiers = scanned.specifiers.map(({ specifier }) => specifier);
+    for (const specifier of specifiers) {
+      if (specifier.startsWith("node:")) continue;
+      if (!specifier.startsWith(".")) throw new Error(`reference runtime uses a non-Node bare specifier: ${specifier}`);
+      pending.push(path.resolve(path.dirname(current), specifier));
+    }
+  }
+  return entries;
+}
+
+function assertExactReferenceFiles(actual, expected, productName) {
+  assert.equal(actual.length, expected.length, `${productName} reference-intelligence source inventory count`);
+  assert.deepEqual(actual.map(({ relativePath }) => relativePath).sort(), expected.map(({ relativePath }) => relativePath).sort(), `${productName} reference-intelligence package inventory`);
+  for (const { relativePath, bytes } of expected) {
+    const packaged = actual.find((entry) => entry.relativePath === relativePath);
+    if (!packaged || !packaged.bytes.equals(bytes)) throw new Error(`${productName} reference-intelligence package bytes mismatch: ${relativePath}`);
+  }
 }
 
 async function officialValidatorPath() {
@@ -159,20 +276,19 @@ async function discoverPython() {
 }
 
 async function verifyOne({ repoRoot, productName, isolationRoot, mutateCopy, actualHome }) {
+  const build = await buildProduct({
+    repoRoot,
+    productName,
+    stagingRoot: path.join(isolationRoot, "build"),
+    sourceDateEpoch: 0,
+  });
   const source = path.join(repoRoot, "plugins", productName);
   await canonicalDirectory(source, `${productName} source`);
   const pluginRoot = path.join(isolationRoot, "package", productName);
   await mkdir(pluginRoot, { recursive: true });
   await copyTree(source, pluginRoot, { label: `${productName} isolated extraction` });
+  await addBuiltReferenceIntelligencePackage({ buildRoot: build.outputDir, pluginRoot, productName });
   await mutateCopy?.({ pluginRoot, productName, actualHome });
-
-  const sibling = PRODUCT_NAMES.find((name) => name !== productName);
-  const audit = await auditTree({
-    root: pluginRoot,
-    packageName: productName,
-    siblingNames: [sibling],
-    forbiddenAbsolutePaths: [repoRoot, actualHome, process.env.CODEX_HOME ?? path.join(actualHome, ".codex")],
-  });
 
   const manifest = JSON.parse(await readFile(path.join(pluginRoot, ".codex-plugin/plugin.json"), "utf8"));
   if (manifest.name !== productName || manifest.version !== "0.1.0" || manifest.skills !== "./skills/") {
@@ -182,6 +298,21 @@ async function verifyOne({ repoRoot, productName, isolationRoot, mutateCopy, act
   const skills = skillEntries.filter((entry) => entry.isDirectory()).map(({ name }) => name).sort();
   if (JSON.stringify(skills) !== JSON.stringify(EXACT_SKILL_IDS[productName])) throw new Error(`${productName} exact skill IDs mismatch: ${skills.join(",")}`);
   for (const skill of skills) await lstat(path.join(pluginRoot, "skills", skill, "SKILL.md"));
+  const inactiveSourceRuntimes = await inactiveReferenceIntelligenceSourceRuntimes(pluginRoot);
+  const inactiveSourceRuntimeTuples = new Set(inactiveSourceRuntimes.map(({ tuple }) => tuple));
+  if (inactiveSourceRuntimeTuples.size !== 3) throw new Error("reference-intelligence inactive source tuple contract mismatch");
+  await verifyReferenceIntelligencePackage(pluginRoot, repoRoot, productName);
+  const sibling = PRODUCT_NAMES.find((name) => name !== productName);
+  const audit = await auditTree({
+    root: pluginRoot,
+    packageName: productName,
+    siblingNames: [sibling],
+    forbiddenAbsolutePaths: [repoRoot, actualHome, process.env.CODEX_HOME ?? path.join(actualHome, ".codex")],
+    inactiveRelativeReferenceTuples: inactiveSourceRuntimeTuples,
+  });
+  if (JSON.stringify(audit.usedInactiveRelativeReferenceTuples) !== JSON.stringify([...inactiveSourceRuntimeTuples].sort())) {
+    throw new Error("reference-intelligence inactive source tuple consumption mismatch");
+  }
 
   const vendors = await Promise.all([
     verifyVendor(pluginRoot, { name: "skillstead", skillId: "svg-infographic", tag: "svg-infographic/v0.9.0", treeRoot: "svg-infographic/0.9.0", files: 55 }),

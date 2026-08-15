@@ -50,3 +50,7 @@ Leave unfinished format checks `pending`. Mark a requested format `passed` only 
 ## Completion record
 
 Report selected routes and roles, fulfilled criteria, artifact paths, gate states with evidence or blockers, format states, unresolved decisions with owners, and preserved canonical output. Claim completion only for the scope whose required gates passed.
+
+## Memory evidence boundary
+
+When applying a `project-fact` or `decision`, bind the original `artifact_id`, locator, and SHA in `evidence.yml` or `decisions/`; a memory ID is never the independent source of truth. A `design-lesson` is a question or proposal and creates no new decision state. A `style-preference` changes expression only: it never changes a fact, number, ID, or approval state. On source drift, exclude the memory and continue the existing workflow.

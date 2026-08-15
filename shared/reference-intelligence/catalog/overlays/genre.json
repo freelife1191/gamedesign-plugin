@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "overlays": [
+    {
+      "overlayId": "action-rpg",
+      "questions": [
+        { "questionId": "core-play-action-rpg-loop", "systemId": "core-play", "applicability": "required-candidate", "rationale": "Action RPG analysis usually needs the combat, exploration, and decision loop checked first.", "conditions": ["Use only when the reference combines action play with character progression."], "verificationPrompts": ["What inputs, enemies, spaces, and decisions recur in direct play?"] },
+        { "questionId": "player-character-action-rpg-build", "systemId": "player-character", "applicability": "conditional", "rationale": "Build expression may matter when the reference exposes meaningful choices.", "conditions": ["Apply when abilities, equipment, or roles can be selected or changed."], "verificationPrompts": ["Which build choices alter play rather than only presentation?"] },
+        { "questionId": "progression-action-rpg-power", "systemId": "progression", "applicability": "conditional", "rationale": "Power growth is a question when advancement changes combat or exploration options.", "conditions": ["Apply when persistent advancement is observable."], "verificationPrompts": ["How does advancement change the next playable decision?"] }
+      ]
+    },
+    {
+      "overlayId": "narrative-adventure",
+      "questions": [
+        { "questionId": "content-narrative-branching", "systemId": "content", "applicability": "conditional", "rationale": "Narrative pacing and branch structure are relevant when choices affect sequence or context.", "conditions": ["Apply when branching, gating, or stateful narrative is observable."], "verificationPrompts": ["Where do player choices change sequence, information, or outcome?"] }
+      ]
+    },
+    {
+      "overlayId": "survival-crafting",
+      "questions": [
+        { "questionId": "collection-crafting-survival-loop", "systemId": "collection-crafting", "applicability": "required-candidate", "rationale": "Gathering and transformation commonly shape the survival loop but remain questions to verify.", "conditions": ["Use only when survival and crafting are core reference features."], "verificationPrompts": ["What is gathered, transformed, lost, and retained between attempts?"] },
+        { "questionId": "failure-recovery-survival-loss", "systemId": "failure-recovery", "applicability": "conditional", "rationale": "Loss and recovery need inspection when failure changes inventory, location, or progression.", "conditions": ["Apply when failure has a persistent cost."], "verificationPrompts": ["What survives failure and what recovery routes exist?"] }
+      ]
+    }
+  ]
+}

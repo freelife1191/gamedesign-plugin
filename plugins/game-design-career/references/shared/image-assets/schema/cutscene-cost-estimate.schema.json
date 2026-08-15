@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.game-design-plugin/shared/image-assets/schema/cutscene-cost-estimate.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "sha256", "waveId", "assetIds", "planSha256", "pricingSnapshotSha256", "retryReserve", "costStatus", "attemptCeilings", "minimumUsd", "expectedUsd", "maximumUsd"],
+  "properties": {
+    "schemaVersion": { "const": 2 },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "waveId": { "enum": ["style-master", "reference-masters", "keyframes", "storyboard"] },
+    "assetIds": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" } },
+    "planSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "pricingSnapshotSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "retryReserve": { "type": "integer", "minimum": 0 },
+    "costStatus": { "enum": ["available", "unavailable"] },
+    "attemptCeilings": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["assetId", "requestSha256", "maximumUsd"],
+        "properties": {
+          "assetId": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+          "requestSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "maximumUsd": { "type": ["number", "null"], "exclusiveMinimum": 0 }
+        }
+      }
+    },
+    "minimumUsd": { "type": ["number", "null"], "exclusiveMinimum": 0 },
+    "expectedUsd": { "type": ["number", "null"], "exclusiveMinimum": 0 },
+    "maximumUsd": { "type": ["number", "null"], "exclusiveMinimum": 0 }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "costStatus": { "const": "available" } }, "required": ["costStatus"] },
+      "then": {
+        "properties": {
+          "attemptCeilings": { "items": { "properties": { "maximumUsd": { "type": "number", "exclusiveMinimum": 0 } } } },
+          "minimumUsd": { "type": "number" },
+          "expectedUsd": { "type": "number" },
+          "maximumUsd": { "type": "number" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "costStatus": { "const": "unavailable" } }, "required": ["costStatus"] },
+      "then": {
+        "properties": {
+          "attemptCeilings": {
+            "contains": { "type": "object", "required": ["maximumUsd"], "properties": { "maximumUsd": { "const": null } } },
+            "minContains": 1
+          },
+          "minimumUsd": { "const": null }, "expectedUsd": { "const": null }, "maximumUsd": { "const": null }
+        }
+      }
+    }
+  ]
+}

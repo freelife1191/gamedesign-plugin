@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "sources": [
+    { "id": "steamworks-tags", "url": "https://partner.steamgames.com/doc/store/tags?l=english&language=english", "required": false, "purpose": "Public genre and feature tag criteria." },
+    { "id": "gamerefinery-genres", "url": "https://docs.gamerefinery.com/en/articles/2278730-what-are-categories-genres-and-subgenres", "required": false, "purpose": "Mobile genre and subgenre comparison." },
+    { "id": "gamerefinery-intelligence", "url": "https://www.gamerefinery.com/game-intelligence-tools/", "required": false, "purpose": "Optional paid comparison service." },
+    { "id": "gdc-postmortems", "url": "https://gdcvault.com/browse/postmortem/?media=s", "required": false, "purpose": "Developer context and postmortems." },
+    { "id": "game-ui-database", "url": "https://www.gameuidatabase.com/", "required": false, "purpose": "Interface reference, not rule evidence." },
+    { "id": "interface-in-game", "url": "https://interfaceingame.com/screenshots/", "required": false, "purpose": "Interface reference, not rule evidence." },
+    { "id": "steamdb-faq", "url": "https://steamdb.info/faq/", "required": false, "purpose": "Unofficial change tracking that needs official cross-checking." },
+    { "id": "igdb-api", "url": "https://api-docs.igdb.com/", "required": false, "purpose": "Discovery metadata; authentication and terms are optional." }
+  ]
+}

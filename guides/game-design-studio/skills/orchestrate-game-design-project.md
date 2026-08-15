@@ -85,6 +85,9 @@ intake를 정리하고 `routing.json.routes`의 exact route와 artifact를 고�
 | `review` | `$game-design-studio:review-game-design` |
 | `visualization` | `$game-design-studio:visualize-game-design` |
 | `export` | `$game-design-studio:export-game-design-documents` |
+| `reference-game-analysis` | `$game-design-studio:analyze-game-design-references` |
+| `project-glossary-maintenance` | `$game-design-studio:maintain-game-design-glossary` |
+| `cutscene-visual-preproduction` | `$game-design-studio:design-cutscene-visual-preproduction` |
 
 ## 생성 파일과 결과 구조
 
@@ -147,7 +150,7 @@ $game-design-studio:<selected-skill> artifact=artifacts/<artifact-id> routing.js
 <!-- PROMPT-TEMPLATES:START game-design-studio:orchestrate-game-design-project -->
 ### 재사용 프롬프트 템플릿
 
-- [beginner — 제한된 brief를 한 route로 라우팅](../../prompt-templates/studio/orchestrate-game-design-project.md#studioorchestrate-game-design-projectbeginner)
-- [standard — 여러 Artifact를 연결하는 프로젝트 라우팅](../../prompt-templates/studio/orchestrate-game-design-project.md#studioorchestrate-game-design-projectstandard)
-- [advanced — 역할 검토와 결정 병합을 갖춘 재개 라우팅](../../prompt-templates/studio/orchestrate-game-design-project.md#studioorchestrate-game-design-projectadvanced)
+- [beginner: 제한된 brief를 한 route로 라우팅](../../prompt-templates/studio/orchestrate-game-design-project.md#studioorchestrate-game-design-projectbeginner)
+- [standard: 여러 Artifact를 연결하는 프로젝트 라우팅](../../prompt-templates/studio/orchestrate-game-design-project.md#studioorchestrate-game-design-projectstandard)
+- [advanced: 역할 검토와 결정 병합을 갖춘 재개 라우팅](../../prompt-templates/studio/orchestrate-game-design-project.md#studioorchestrate-game-design-projectadvanced)
 <!-- PROMPT-TEMPLATES:END game-design-studio:orchestrate-game-design-project -->

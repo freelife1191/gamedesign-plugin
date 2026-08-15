@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "systems": [
+    { "systemId": "core-play", "name": "Core play" },
+    { "systemId": "player-character", "name": "Player character" },
+    { "systemId": "progression", "name": "Progression" },
+    { "systemId": "collection-crafting", "name": "Collection and crafting" },
+    { "systemId": "economy", "name": "Economy" },
+    { "systemId": "rewards", "name": "Rewards" },
+    { "systemId": "content", "name": "Content" },
+    { "systemId": "social", "name": "Social" },
+    { "systemId": "monetization", "name": "Monetization" },
+    { "systemId": "retention", "name": "Retention" },
+    { "systemId": "meta-liveops", "name": "Meta and live operations" },
+    { "systemId": "ux-accessibility", "name": "UX and accessibility" },
+    { "systemId": "account-platform", "name": "Account and platform" },
+    { "systemId": "session-network", "name": "Session and network" },
+    { "systemId": "failure-recovery", "name": "Failure and recovery" },
+    { "systemId": "operations-telemetry", "name": "Operations and telemetry" }
+  ],
+  "questions": [
+    { "questionId": "account-platform-continuity", "systemId": "account-platform", "applicability": "unknown", "rationale": "Ask how player state persists across supported environments.", "conditions": [], "verificationPrompts": ["What saves, syncs, or is region-restricted?"] },
+    { "questionId": "collection-crafting-ownership", "systemId": "collection-crafting", "applicability": "unknown", "rationale": "Ask what players acquire, transform, and retain.", "conditions": [], "verificationPrompts": ["Which collection or crafting loops are observable?"] },
+    { "questionId": "content-structure", "systemId": "content", "applicability": "unknown", "rationale": "Ask how playable content is organized and renewed.", "conditions": [], "verificationPrompts": ["What content units and difficulty paths are present?"] },
+    { "questionId": "core-play-loop", "systemId": "core-play", "applicability": "unknown", "rationale": "Ask what the player repeatedly does and decides.", "conditions": [], "verificationPrompts": ["What actions, challenges, and outcomes form the loop?"] },
+    { "questionId": "economy-flow", "systemId": "economy", "applicability": "unknown", "rationale": "Ask how resources enter, move through, and leave the game.", "conditions": [], "verificationPrompts": ["What currencies, sinks, and exchanges are observable?"] },
+    { "questionId": "failure-recovery-cost", "systemId": "failure-recovery", "applicability": "unknown", "rationale": "Ask what failure costs and how players recover.", "conditions": [], "verificationPrompts": ["What happens after failure, disconnect, or abandoned progress?"] },
+    { "questionId": "meta-liveops-cadence", "systemId": "meta-liveops", "applicability": "unknown", "rationale": "Ask how the game changes over time.", "conditions": [], "verificationPrompts": ["Which seasons, events, or update cadences are evidenced?"] },
+    { "questionId": "monetization-offer", "systemId": "monetization", "applicability": "unknown", "rationale": "Ask what offers exist without inferring their performance.", "conditions": [], "verificationPrompts": ["Which prices, offers, and disclosures are directly observable?"] },
+    { "questionId": "operations-telemetry-feedback", "systemId": "operations-telemetry", "applicability": "unknown", "rationale": "Ask what support, safety, telemetry, or experiment surface is evidenced.", "conditions": [], "verificationPrompts": ["What player-facing support or operational signals can be verified?"] },
+    { "questionId": "player-character-expression", "systemId": "player-character", "applicability": "unknown", "rationale": "Ask how player state, roles, and builds change choices.", "conditions": [], "verificationPrompts": ["What abilities, states, roles, or builds are observable?"] },
+    { "questionId": "progression-advancement", "systemId": "progression", "applicability": "unknown", "rationale": "Ask how short-term activity connects to longer-term advancement.", "conditions": [], "verificationPrompts": ["What progression gates, upgrades, or account growth are observable?"] },
+    { "questionId": "retention-return-loop", "systemId": "retention", "applicability": "unknown", "rationale": "Ask what return loops are observable without assigning causality.", "conditions": [], "verificationPrompts": ["Which recurring goals, recovery paths, or reminders are evidenced?"] },
+    { "questionId": "rewards-risk-return", "systemId": "rewards", "applicability": "unknown", "rationale": "Ask how rewards relate to effort, risk, and timing.", "conditions": [], "verificationPrompts": ["What reward sources and trade-offs are observable?"] },
+    { "questionId": "session-network-continuity", "systemId": "session-network", "applicability": "unknown", "rationale": "Ask how a session starts, connects, ends, and resumes.", "conditions": [], "verificationPrompts": ["What lobby, matchmaking, reconnect, or settlement behavior is observable?"] },
+    { "questionId": "social-coordination", "systemId": "social", "applicability": "unknown", "rationale": "Ask how players cooperate, compete, communicate, or report issues.", "conditions": [], "verificationPrompts": ["Which social and safety interactions are observable?"] },
+    { "questionId": "ux-accessibility-path", "systemId": "ux-accessibility", "applicability": "unknown", "rationale": "Ask whether the critical path is understandable and supportable.", "conditions": [], "verificationPrompts": ["What navigation, information, assistive, and recovery paths are observable?"] }
+  ]
+}

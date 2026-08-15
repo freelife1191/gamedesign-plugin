@@ -143,8 +143,9 @@ test("generated snapshots contain the exact clean product build plus the suite m
         assert.doesNotMatch(workflow, /\.\.\/image-assets\//u);
       }
 
-      assert.equal(pathsUnder(packageFiles, "skills/").filter((file) => file.endsWith("/SKILL.md")).length, 18);
-      assert.equal(pathsUnder(packageFiles, "skills/").filter((file) => file.endsWith("/SKILL.md") && !file.startsWith("skills/svg-infographic/")).length, 17);
+      assert.equal(pathsUnder(packageFiles, "skills/").filter((file) => file.endsWith("/SKILL.md")).length, productName === "game-design-studio" ? 24 : 23);
+      assert.equal(pathsUnder(packageFiles, "skills/").filter((file) => file.endsWith("/SKILL.md") && !file.startsWith("skills/svg-infographic/")).length, productName === "game-design-studio" ? 23 : 22);
+      assert.equal(pathsUnder(packageFiles, "scripts/").filter((file) => /^scripts\/[^/]+\.mjs$/u.test(file)).length, 30);
       assert.equal(
         pathsUnder(packageFiles, "agents/").filter((file) => file.endsWith(".md")).length,
         productName === "game-design-studio" ? 12 : 10,

@@ -13,11 +13,11 @@
   "input": "guides/archify-diagrams/specs/career/career-evidence-workflow.json",
   "output": "guides/assets/archify/career/career-evidence-workflow.html",
   "specification": {
-    "sha256": "37fceb8e99e52c3aa1696213c94172ea3837fd7f6e2ce38b51eecdbfc2ad4407",
-    "bytes": 6623
+    "sha256": "4b9303dd7dd97abb1cdefee3be626648681b0b5ccb03ec27a8c4fa9958aa0fab",
+    "bytes": 7920
   },
   "artifact": {
-    "sha256": "aa426208a1a6b8228757b571c58cc75576ce9a518b5391029898f5c9ac7b4afc",
-    "bytes": 626394
+    "sha256": "b0b177b96d301759440c02629aad11f12a943d809bc8575130f79c0cd8a9c1bd",
+    "bytes": 655856
   }
 }

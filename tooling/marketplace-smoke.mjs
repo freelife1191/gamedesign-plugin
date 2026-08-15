@@ -14,7 +14,10 @@ import { sha256 } from "./lib/hash.mjs";
 import { artifactTreeIdentity, runMarketplaceProof, validateRouteReceipt } from "./lib/marketplace-proof-harness.mjs";
 
 const MARKETPLACE = "game-design-suite";
-export const PACKAGED_SKILL_COUNT = 18;
+export const PACKAGED_SKILL_COUNTS = Object.freeze({
+  "game-design-career": 23,
+  "game-design-studio": 24,
+});
 export const CODEX_EXEC_TIMEOUT_MS = 300_000;
 const PRODUCTS = Object.freeze([
   {
@@ -648,6 +651,8 @@ export async function runMarketplaceSmoke({
     });
 
     for (const product of PRODUCTS) {
+      const packagedSkillCount = PACKAGED_SKILL_COUNTS[product.name];
+      if (!Number.isInteger(packagedSkillCount)) throw new Error("packaged skill inventory missing");
       const added = await runStage({ product: product.name, stage: "plugin-install" }, () => run(
         codex, ["plugin", "add", `${product.name}@${MARKETPLACE}`, "--json"], { cwd: repoRoot, env, json: true },
       ));
@@ -655,7 +660,7 @@ export async function runMarketplaceSmoke({
       const cliContext = { repoRoot: canonicalRepoRoot, productName: product.name, cacheRoot };
       await runStage({ product: product.name, stage: "plugin-install" }, () => validateCliJson("pluginAdd", added, cliContext));
       await runStage({ product: product.name, stage: "plugin-package" }, async () => {
-        if (await realpath(cacheRoot) !== cacheRoot || await countSkills(cacheRoot) !== PACKAGED_SKILL_COUNT) throw new Error("cache mismatch");
+        if (await realpath(cacheRoot) !== cacheRoot || await countSkills(cacheRoot) !== packagedSkillCount) throw new Error("cache mismatch");
         run(python, [isolatedValidator, cacheRoot], { cwd: registration.root, env });
       });
       await runStage({ product: product.name, stage: "plugin-list" }, () => validateCliJson(
@@ -701,7 +706,7 @@ export async function runMarketplaceSmoke({
       if (selectedRoute.selectedSkill !== proof.selectedSkill || JSON.stringify(selectedRoute.routeReceipt) !== JSON.stringify(proof.routeReceipt)) {
         throw new SmokeStageError(new Error("route proof selection mismatch"), { product: product.name, stage: "route-proof" });
       }
-      results.push({ product: product.name, pluginId: added.pluginId, selectedSkill: proof.selectedSkill, route: proof.routeReceipt.routeId, skills: PACKAGED_SKILL_COUNT, artifact: "validated-md", exec: "completed" });
+      results.push({ product: product.name, pluginId: added.pluginId, selectedSkill: proof.selectedSkill, route: proof.routeReceipt.routeId, skills: packagedSkillCount, artifact: "validated-md", exec: "completed" });
       const removedPlugin = await runStage({ product: product.name, stage: "plugin-remove" }, () => run(
         codex, ["plugin", "remove", `${product.name}@${MARKETPLACE}`, "--json"], { cwd: repoRoot, env, json: true },
       ));

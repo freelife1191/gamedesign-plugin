@@ -57,7 +57,11 @@ Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스
 
 - [Studio 활용 사례 인덱스](use-cases/README.md): 역량·콘셉트·직접 스킬 중 무엇부터 볼지 선택합니다.
 - [역량 사례 8개](use-cases/competency-paths.md)와 [콘셉트 사례 10개](use-cases/concept-scenarios.md): 사례의 전체 흐름과 검토·재개를 읽습니다.
-- [스킬 워크벤치](use-cases/skill-workbench.md): 설치된 18개 스킬의 직접 호출 신호와 피할 때를 비교합니다.
+- [스킬 워크벤치](use-cases/skill-workbench.md): Studio 제품 작업의 직접 호출 신호와 피할 때를 비교합니다.
+- [프로젝트 기억](memory.md): 승인된 설계 교훈의 로컬 보관, 요청별 제외와 후보 관리 방법을 확인합니다.
+- [경쟁작·레퍼런스 분석](reference-analysis.md): 관찰 근거로 시스템을 비교하고 adopt·adapt·reject·hold 제안을 사람에게 검토받습니다.
+- [용어 사전 검토](glossary.md): 후보 용어를 사람 승인과 스냅샷에 묶고 원문 자동 치환을 막습니다.
+- [컷씬 비주얼 프리프로덕션](cutscene-visual-preproduction.md): shot, 프롬프트, wave별 비용·승인과 continuity gate를 분리합니다.
 - [Studio FAQ](faq.md): 현재 막힌 질문의 실행 요청과 관련 사례를 찾습니다.
 - [공통 결과물 카탈로그](../use-cases/output-catalog.md): 최소·선택·확장 결과와 Canonical Artifact 읽는 순서를 확인합니다.
 - [요청문 템플릿 허브](../prompt-templates/README.md): 사용자 유형·난이도별 요청과 예상 결과를 비교합니다.
@@ -69,13 +73,14 @@ Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스
 
 1. [설치](installation.md)에서 App 또는 CLI 중 한 환경의 절차만 따라 설치합니다.
 2. [5분 빠른 시작](quick-start.md)의 요청문 하나를 복사합니다.
-3. [템플릿 15개](templates.md)에서 목적에 맞는 템플릿을 고르고, 필요하면 [스킬 18개](skills/README.md)의 연결된 스킬을 직접 호출합니다.
+3. [템플릿 15개](templates.md)에서 목적에 맞는 템플릿을 고르고, 필요하면 [스킬 24개](skills/README.md)의 연결된 스킬을 직접 호출합니다.
 4. [목적별 레시피](#목적별-레시피) 하나를 선택합니다.
 5. [전체 워크플로](workflow.md)에서 현재 단계와 다음 사람 결정을 확인합니다.
 6. [이미지 자산](image-assets.md)에서 image slot과 사람 승인 경계를 계획합니다.
-7. [시각화](visualization.md)에서 Skillstead SVG와 PNG 검증을 준비합니다.
-8. [MD·PDF·DOCX·PPTX 내보내기](exports.md)에서 필요한 형식만 준비합니다.
-9. 막히면 [문제 해결](troubleshooting.md)에서 보존된 결과로 재개합니다.
+7. 컷씬 이미지가 필요하면 [컷씬 비주얼 프리프로덕션](cutscene-visual-preproduction.md)에서 Prompt Only, Estimate Only, Generate After Approval 순서를 확인합니다.
+8. [시각화](visualization.md)에서 Skillstead SVG와 PNG 검증을 준비합니다.
+9. [MD·PDF·DOCX·PPTX 내보내기](exports.md)에서 필요한 형식만 준비합니다.
+10. 막히면 [문제 해결](troubleshooting.md)에서 보존된 결과로 재개합니다.
 
 ---
 
@@ -104,18 +109,22 @@ Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스
 - [설치](installation.md)
 - [5분 빠른 시작](quick-start.md)
 - [전체 워크플로](workflow.md)
+- [프로젝트 기억](memory.md)
+- [경쟁작·레퍼런스 분석](reference-analysis.md)
+- [용어 사전 검토](glossary.md)
+- [컷씬 비주얼 프리프로덕션](cutscene-visual-preproduction.md)
 - [문제 해결](troubleshooting.md)
 
 전체 레퍼런스:
 
-- [스킬 18개](skills/README.md)
+- [스킬 24개](skills/README.md)
 - [템플릿 15개](templates.md)
 - [문서 품질 profile](document-quality.md)
 - [이미지 자산](image-assets.md)
 - [시각화](visualization.md)
 - [MD·PDF·DOCX·PPTX 내보내기](exports.md)
 
-각 스킬 ID는 [스킬 18개](skills/README.md)에서 해당 상세 가이드로 직접 연결됩니다. 각 템플릿의 용도와 복사 가능한 요청문은 [템플릿 15개](templates.md)에 있습니다.
+각 스킬 ID는 [스킬 24개](skills/README.md)에서 해당 상세 가이드로 직접 연결됩니다. 컷씬 전용 순서는 [컷씬 비주얼 프리프로덕션](cutscene-visual-preproduction.md)에서 확인합니다. 각 템플릿의 용도와 복사 가능한 요청문은 [템플릿 15개](templates.md)에 있습니다.
 
 ---
 

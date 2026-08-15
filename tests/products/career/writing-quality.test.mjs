@@ -30,6 +30,18 @@ const expectedSkillContract = {
     skill: "humanize-korean",
     path: "../humanize-korean/SKILL.md",
   },
+  optionalInputs: [
+    "reference-intelligence/glossary/terms.json",
+    "reference-intelligence/glossary/glossary-receipt.json",
+  ],
+  terminologyBehavior: "validate-and-report",
+  autoReplace: false,
+  approvalMutation: false,
+  languageRoutes: {
+    ko: "humanize-korean-then-human-review",
+    "en-US": "english-consistency-findings-then-human-review",
+    "en-GB": "english-consistency-findings-then-human-review",
+  },
   sharedWrapper: "scripts/run-game-design-writing-polish.mjs",
   changeRateGate: {
     reviewAbove: 0.3,

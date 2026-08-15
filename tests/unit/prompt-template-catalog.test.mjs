@@ -12,7 +12,7 @@ import {
 import { collectProductInventory } from "../../tooling/lib/user-guides.mjs";
 
 const STUDIO_SKILLS = [
-  "apply-document-quality-profile", "define-game-vision", "design-game-content",
+  "apply-document-quality-profile", "define-game-vision", "design-cutscene-visual-preproduction", "design-game-content",
   "design-game-economy-and-liveops", "design-game-systems", "design-player-experience",
   "export-game-design-documents", "generate-image-assets", "orchestrate-game-design-project",
   "plan-game-production", "plan-image-assets", "review-game-design", "review-image-assets",
@@ -106,11 +106,11 @@ function completeFixture() {
   return [
     ...skillTemplates,
     ...Array.from({ length: 36 }, (_, index) => ({
-      ...validEntry(index + 97, "use-case"),
+      ...validEntry(index + 100, "use-case"),
       source_case_id: `SOURCE-${index + 1}`,
     })),
-    ...Array.from({ length: 12 }, (_, index) => validEntry(index + 133, "recipe")),
-    ...Array.from({ length: 8 }, (_, index) => validEntry(index + 145, "suite-case")),
+    ...Array.from({ length: 12 }, (_, index) => validEntry(index + 136, "recipe")),
+    ...Array.from({ length: 8 }, (_, index) => validEntry(index + 148, "suite-case")),
   ];
 }
 
@@ -155,13 +155,13 @@ test("complete catalog has exact kind and prompt counts", () => {
   });
   assert.equal(result.ok, true, result.errors.join("\n"));
   assert.deepEqual(result.counts, {
-    skillTemplates: 96,
+    skillTemplates: 99,
     useCases: 36,
     recipes: 12,
     suiteCases: 8,
-    total: 152,
-    appPrompts: 152,
-    cliPrompts: 152,
+    total: 155,
+    appPrompts: 155,
+    cliPrompts: 155,
   });
 });
 
@@ -802,6 +802,74 @@ test("Studio visual catalog has exact skill-level bindings and matching Studio p
   }
 });
 
+function assertCutscenePromptCards(entries) {
+  const cards = entries.filter((entry) => entry.skill === "design-cutscene-visual-preproduction");
+  assert.deepEqual(cards.map((entry) => entry.id), [
+    "studio:design-cutscene-visual-preproduction:beginner",
+    "studio:design-cutscene-visual-preproduction:standard",
+    "studio:design-cutscene-visual-preproduction:advanced",
+  ]);
+  assert.deepEqual(cards.map((entry) => entry.level), ["beginner", "standard", "advanced"]);
+  for (const card of cards) {
+    assert.equal(card.product, "studio");
+    assert.match(card.cli_prompt.example, /^\$game-design-studio:design-cutscene-visual-preproduction\b/u);
+    assert.ok(card.source_references.includes("guides/game-design-studio/skills/design-cutscene-visual-preproduction.md"));
+    assert.ok(card.source_references.includes("guides/game-design-studio/cutscene-visual-preproduction.md"));
+    assert.deepEqual(card.diagram_binding, {
+      id: "st-s16",
+      svg: "guides/assets/game-design-studio/skills/design-cutscene-visual-preproduction.svg",
+      png: "guides/assets/game-design-studio/skills/design-cutscene-visual-preproduction.png",
+      alt: "컷씬 비주얼 프리프로덕션 흐름",
+    });
+  }
+  const advanced = cards.at(-1);
+  for (const field of ["current wave", "count", "provider", "model", "quality", "size", "USD min/expected/max", "finite cap", "retryReserve", "pricing time", "costStatus", "named approval"]) {
+    assert.ok(advanced.required_inputs.includes(field), `advanced cutscene card requires ${field}`);
+  }
+  assert.match(advanced.when_not_to_use, /과거·포괄 승인/u);
+  assert.match(advanced.resume_prompt, /최신 retryable stable ID.*같은 current full-wave estimate.*named live approval/u);
+  const paidPolicy = JSON.stringify({ app: advanced.app_prompt, cli: advanced.cli_prompt });
+  assert.match(paidPolicy, /image_gen|codex-first/iu);
+  assert.match(paidPolicy, /한글.*gpt-image-2|gpt-image-2.*한글/isu);
+  assert.match(paidPolicy, /low.*기본.*medium.*(?:master|마스터).*high.*예외/isu);
+  assert.doesNotMatch(paidPolicy, /quality=high/iu);
+}
+
+function assertCutsceneProjection(entries) {
+  assert.deepEqual(entries.filter((entry) => entry.skill === "design-cutscene-visual-preproduction").map((entry) => entry.id), [
+    "studio:design-cutscene-visual-preproduction:beginner",
+    "studio:design-cutscene-visual-preproduction:standard",
+    "studio:design-cutscene-visual-preproduction:advanced",
+  ]);
+}
+
+test("Studio cutscene prompt catalog keeps three ordered approval-safe cards and rejects mutations", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const catalog = await loadPromptTemplateCatalog({ repoRoot });
+  assertCutscenePromptCards(catalog.entries);
+  const advancedInputs = catalog.entries.find((entry) => entry.id === "studio:design-cutscene-visual-preproduction:advanced").required_inputs;
+  for (const field of advancedInputs) {
+    const mutated = catalog.entries.map((entry) => entry.id === "studio:design-cutscene-visual-preproduction:advanced"
+      ? { ...entry, required_inputs: entry.required_inputs.filter((value) => value !== field) }
+      : entry);
+    assert.throws(() => assertCutscenePromptCards(mutated), new RegExp(field.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "u"), `advanced required input mutation: ${field}`);
+  }
+  const cutsceneCards = catalog.entries.filter((entry) => entry.skill === "design-cutscene-visual-preproduction");
+  const reordered = [...catalog.entries.filter((entry) => entry.skill !== "design-cutscene-visual-preproduction"), ...[...cutsceneCards].reverse()];
+  assert.throws(() => assertCutscenePromptCards(reordered), /Expected values to be strictly deep-equal/u, "three-card order mutation");
+  const missingSource = catalog.entries.map((entry) => entry.id === "studio:design-cutscene-visual-preproduction:beginner"
+    ? { ...entry, source_references: entry.source_references.slice(1) }
+    : entry);
+  assert.throws(() => assertCutscenePromptCards(missingSource), /design-cutscene-visual-preproduction\.md/u, "source reference mutation");
+  const wrongDiagram = catalog.entries.map((entry) => entry.id === "studio:design-cutscene-visual-preproduction:standard"
+    ? { ...entry, diagram_binding: { ...entry.diagram_binding, id: "st-s11" } }
+    : entry);
+  assert.throws(() => assertCutscenePromptCards(wrongDiagram), /st-s16/u, "cutscene diagram binding mutation");
+  const projection = JSON.parse(await readFile(path.join(repoRoot, "products", "game-design-studio", "plugin", "references", "prompt-templates.json"), "utf8"));
+  assertCutsceneProjection(projection.entries);
+  assert.throws(() => assertCutsceneProjection(projection.entries.filter((entry) => entry.id !== "studio:design-cutscene-visual-preproduction:standard")), /Expected values to be strictly deep-equal/u, "projection mutation");
+});
+
 test("Studio visual catalog preserves image mode routing, no-key capability boundaries, and defaults", async () => {
   const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
   const [entries, imagePolicy] = await Promise.all([
@@ -832,8 +900,11 @@ test("Studio visual catalog preserves image mode routing, no-key capability boun
   );
   assert.match(contract, /IMAGE_MODEL.*gpt-image-2|gpt-image-2.*IMAGE_MODEL/iu);
   assert.match(contract, /IMAGE_QUALITY.*low|low.*IMAGE_QUALITY/iu);
-  assert.match(contract, /OPENAI_API_KEY.*OpenAI only.*(?:fallback|전환).*(?:금지|하지 않)|OpenAI only.*(?:fallback|전환).*(?:금지|하지 않)/iu);
-  assert.match(contract, /key가 없.*host.*available.*(?:사용|전달).*unknown.*unavailable.*(?:호출하지 않|prompt.*placeholder.*보존)/iu);
+  assert.match(contract, /IMAGE_PROVIDER.*codex-first|codex-first.*IMAGE_PROVIDER/iu);
+  assert.match(contract, /host image_gen/iu);
+  assert.match(contract, /IMAGE_EMBEDDED_TEXT_LOCALE=ko-KR.*gpt-image-2|gpt-image-2.*IMAGE_EMBEDDED_TEXT_LOCALE=ko-KR/iu);
+  assert.match(contract, /low.*medium.*high/iu);
+  assert.match(contract, /explicit OpenAI.*승인|승인.*explicit OpenAI/iu);
   assert.doesNotMatch(contract, /\[(?:API key|OPENAI_API_KEY|credential|자격 증명)\]/iu);
 });
 
@@ -929,17 +1000,13 @@ test("Career visual generation prompt leaves carry provider routing independentl
     path.join(repoRoot, "guides", "prompt-templates", "catalog", "career-visual.json"), "utf8",
   )).filter(({ skill }) => skill === "generate-image-assets");
   const providerTerms = [
-    ["IMAGE_MODEL=gpt-image-2", /IMAGE_MODEL=gpt-image-2/iu],
+    ["IMAGE_PROVIDER=codex-first", /IMAGE_PROVIDER=codex-first/iu],
     ["IMAGE_QUALITY=low", /IMAGE_QUALITY=low/iu],
-    ["OPENAI_API_KEY", /OPENAI_API_KEY/iu],
-    ["OpenAI only", /OpenAI only/iu],
-    ["fallback 전환 금지", /fallback 전환 금지/iu],
-    ["key가 없고", /key가 없고/iu],
-    ["host available", /host available/iu],
-    ["selected jobs만", /selected jobs만/iu],
-    ["unknown 또는 unavailable", /unknown 또는 unavailable/iu],
-    ["generator를 호출하지 않고", /generator를 호출하지 않고/iu],
-    ["prompt와 placeholder를 보존한다", /prompt와 placeholder를 보존한다/iu],
+    ["host image_gen", /host image_gen/iu],
+    ["API key 존재는 유료 승인이 아니며", /API key.*유료 승인.*아니/iu],
+    ["IMAGE_EMBEDDED_TEXT_LOCALE=ko-KR", /IMAGE_EMBEDDED_TEXT_LOCALE=ko-KR.*gpt-image-2/iu],
+    ["medium은 선택된 master/key image, high는 예외적인 video hero frame/production concept art", /medium.*master.*high.*(?:video hero frame|production concept art)/iu],
+    ["비용을 먼저 안내하고 승인 뒤 실행", /비용.*승인 뒤 실행/iu],
   ];
   const assertGenerationLeaf = (leaf) => {
     for (const [, pattern] of providerTerms) assert.match(leaf, pattern);
@@ -1236,10 +1303,13 @@ test("Career visual catalog preserves closed image modes, safe provider routing,
 
   assert.deepEqual(imagePolicy.match(/^\|\s*`([a-z][a-z-]*)`\s*\|/gmu)?.map((row) => row.match(/`([a-z][a-z-]*)`/u)[1]).sort(), allowedModes);
   assert.deepEqual(imageModes(entries), allowedModes);
-  assert.match(contract, /IMAGE_MODEL.*gpt-image-2|gpt-image-2.*IMAGE_MODEL/iu);
+  assert.match(contract, /gpt-image-2/iu);
   assert.match(contract, /IMAGE_QUALITY.*low|low.*IMAGE_QUALITY/iu);
-  assert.match(contract, /OPENAI_API_KEY.*OpenAI only.*(?:fallback|전환).*(?:금지|하지 않)|OpenAI only.*(?:fallback|전환).*(?:금지|하지 않)/iu);
-  assert.match(contract, /key가 없.*host.*available.*(?:사용|전달).*unknown.*unavailable.*(?:호출하지 않|prompt.*placeholder.*보존)/iu);
+  assert.match(contract, /IMAGE_PROVIDER.*codex-first|codex-first.*IMAGE_PROVIDER/iu);
+  assert.match(contract, /host image_gen/iu);
+  assert.match(contract, /IMAGE_EMBEDDED_TEXT_LOCALE=ko-KR.*gpt-image-2/iu);
+  assert.match(contract, /low.*medium.*high/iu);
+  assert.match(contract, /비용.*승인 뒤 실행/iu);
   assert.doesNotMatch(contract, /\[(?:API key|OPENAI_API_KEY|credential|자격 증명)\]/iu);
 
   for (const entry of entries) {
@@ -1602,14 +1672,14 @@ test("loader rejects duplicate IDs and symlink shards", async (t) => {
   );
 });
 
-test("all 152 catalog cards use Korean-first titles and distinct source-bound result excerpts", async () => {
+test("all 155 catalog cards use Korean-first titles and distinct source-bound result excerpts", async () => {
   const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
   const catalogDir = path.join(repoRoot, "guides", "prompt-templates");
   const index = JSON.parse(await readFile(path.join(catalogDir, "catalog.json"), "utf8"));
   const entries = (await Promise.all(index.sources.map(async (source) => (
     JSON.parse(await readFile(path.join(catalogDir, source), "utf8"))
   )))).flat();
-  assert.equal(entries.length, 152);
+  assert.equal(entries.length, 155);
   assert.deepEqual(koreanPresentationErrors(entries), []);
 });
 
@@ -1774,7 +1844,7 @@ test("complete catalogs require every installed product skill at each level exac
     requireComplete: true,
   });
   assert.equal(result.ok, false);
-  assert.match(result.errors.join("\n"), /skill-template cardinality.*found 32/u);
+  assert.match(result.errors.join("\n"), /skill-template cardinality.*found 33/u);
   assert.match(result.errors.join("\n"), /skill-template cardinality.*found 0/u);
 });
 

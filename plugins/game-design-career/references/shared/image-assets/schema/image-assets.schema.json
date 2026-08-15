@@ -7,6 +7,31 @@
   "required": ["schema_version", "assets"],
   "properties": {
     "schema_version": { "const": 1 },
+    "cutsceneWorkflow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "dagSha256", "waves"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "dagSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "waves": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "assetIds"],
+            "properties": {
+              "id": { "enum": ["style-master", "reference-masters", "keyframes", "storyboard"] },
+              "assetIds": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" }
+              }
+            }
+          }
+        }
+      }
+    },
     "assets": {
       "type": "array",
       "items": { "$ref": "#/$defs/asset" }
@@ -111,6 +136,8 @@
         },
         "prompt": { "type": "string", "minLength": 1 },
         "prompt_digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "prompt_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "approval_binding_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
         "output": {
           "type": "object",
           "additionalProperties": false,

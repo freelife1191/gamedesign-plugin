@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdir, mkdtemp, readFile, rename, rm, symlink, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, rename, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { deflateSync } from "node:zlib";
 
-import { generateImageAssetWorkflow, reviewImageAssetWorkflow, runImageAssetWorkflow as runImageAssetWorkflowBase } from "../../../shared/scripts/run-image-asset-workflow.mjs";
+import { generateImageAssetWorkflow, planImageAssetWorkflow as planImageAssetWorkflowBase, reviewImageAssetWorkflow, runImageAssetWorkflow as runImageAssetWorkflowBase } from "../../../shared/scripts/run-image-asset-workflow.mjs";
 import { buildImageAssetPlan } from "../../../shared/scripts/build-image-asset-plan.mjs";
 import { validateImageAssetManifest } from "../../../shared/scripts/validate-image-assets.mjs";
 
@@ -32,6 +32,7 @@ const injectedPatternCatalog = Object.fromEntries(await Promise.all(patternNames
   JSON.parse(await readFile(path.join(repoRoot, "shared/image-assets/prompt-patterns", `${name}.json`), "utf8")),
 ])));
 const runImageAssetWorkflow = (options) => runImageAssetWorkflowBase({ ...options, patternCatalog: options?.patternCatalog ?? injectedPatternCatalog });
+const planImageAssetWorkflow = (options) => planImageAssetWorkflowBase({ ...options, patternCatalog: options?.patternCatalog ?? injectedPatternCatalog });
 
 function png() {
   const crc32 = (bytes) => {
@@ -96,6 +97,106 @@ function lineageError(validation, code) {
   return validation.errors.some((entry) => entry.code === code);
 }
 
+async function plannedSingleAssetGeneration(t, prefix) {
+  const root = await workflowRoot(t, prefix);
+  const planned = await planImageAssetWorkflow({ artifactRoot: root, artifact, qualityProfile: profile });
+  return { root, manifest: planned.manifest, assetId: planned.manifest.assets[0].asset_id };
+}
+
+async function receiptFiles(root) {
+  try { return (await readdir(path.join(root, "assets", "receipts"))).sort(); } catch (error) { if (error?.code === "ENOENT") return []; throw error; }
+}
+
+test("Studio cutscene authorization callback still creates one bounded reservation for host and provider unavailable outcomes", async (t) => {
+  for (const [label, codexCapability, expectedProvider, expectedReason] of [
+    ["host-unavailable", { status: "available" }, "codex-host", "host-generator-unavailable"],
+    ["provider-unavailable", { status: "unavailable" }, "unavailable", "no-provider-available"],
+  ]) {
+    const { root, manifest, assetId } = await plannedSingleAssetGeneration(t, `studio-${label}-`);
+    let authorizations = 0;
+    const result = await generateImageAssetWorkflow({
+      artifactRoot: root, manifest,
+      config: { mode: "select", model: "gpt-image-2", quality: "low", apiKeyPresent: false }, codexCapability,
+      selectedAssetIds: [assetId], internalSelection: true, attemptIdFactory: () => `cutscene-${label}-attempt`,
+      beforeProvider: async () => { authorizations += 1; return { authorization: "cutscene-approved" }; },
+    });
+    assert.equal(authorizations, 0, `${label} must not claim a provider authorization`);
+    assert.deepEqual(result.providerResult.failures.map(({ asset_id, reason }) => ({ asset_id, reason })), [{ asset_id: assetId, reason: expectedReason }]);
+    assert.equal(result.manifest.assets[0].generation_receipts.length, 1);
+    const receipt = JSON.parse(await readFile(path.join(root, result.manifest.assets[0].generation_receipts[0].path), "utf8"));
+    const reservation = JSON.parse(await readFile(path.join(root, receipt.reservation_path), "utf8"));
+    assert.equal(receipt.provider, expectedProvider);
+    assert.deepEqual(reservation.asset_ids, [assetId]);
+    assert.equal((await receiptFiles(root)).length, 2);
+  }
+});
+
+test("Studio cutscene authorization failure leaves no attempt reservation or receipt", async (t) => {
+  const { root, manifest, assetId } = await plannedSingleAssetGeneration(t, "studio-cutscene-authorization-failure-");
+  let hostCalls = 0;
+  await assert.rejects(() => generateImageAssetWorkflow({
+    artifactRoot: root, manifest,
+    config: { mode: "select", model: "gpt-image-2", quality: "low", apiKeyPresent: false }, codexCapability: { status: "available" },
+    selectedAssetIds: [assetId], internalSelection: true, attemptIdFactory: () => "cutscene-authorization-failure-attempt",
+    beforeProvider: async () => { throw new Error("cutscene-authorization-rejected"); },
+    hostGenerate: async () => { hostCalls += 1; return { results: [], failures: [] }; },
+  }), /cutscene-authorization-rejected/u);
+  assert.equal(hostCalls, 0);
+  assert.deepEqual(await receiptFiles(root), []);
+});
+
+test("Studio cutscene callback success, host throw, and malformed host result preserve bounded reservations", async (t) => {
+  const success = await plannedSingleAssetGeneration(t, "studio-cutscene-host-success-");
+  let successAuthorizations = 0;
+  const successful = await generateImageAssetWorkflow({
+    artifactRoot: success.root, manifest: success.manifest,
+    config: { mode: "select", model: "gpt-image-2", quality: "low", apiKeyPresent: false }, codexCapability: { status: "available" },
+    selectedAssetIds: [success.assetId], internalSelection: true, attemptIdFactory: () => "cutscene-host-success-attempt",
+    beforeProvider: async () => { successAuthorizations += 1; return { authorization: "cutscene-approved" }; },
+    hostGenerate: async ({ jobs }) => ({ results: [{ asset_id: success.assetId, generation_state: "generated", bytes: png(), provenance: { provider: "codex-host", prompt_digest: digest(jobs[0].prompt) } }], failures: [] }),
+  });
+  assert.equal(successAuthorizations, 1);
+  assert.equal(successful.manifest.assets[0].generation_state, "generated");
+  assert.equal((await receiptFiles(success.root)).length, 2);
+
+  const thrown = await plannedSingleAssetGeneration(t, "studio-cutscene-host-throw-");
+  let throwAuthorizations = 0;
+  await assert.rejects(() => generateImageAssetWorkflow({
+    artifactRoot: thrown.root, manifest: thrown.manifest,
+    config: { mode: "select", model: "gpt-image-2", quality: "low", apiKeyPresent: false }, codexCapability: { status: "available" },
+    selectedAssetIds: [thrown.assetId], internalSelection: true, attemptIdFactory: () => "cutscene-host-throw-attempt",
+    beforeProvider: async () => { throwAuthorizations += 1; return { authorization: "cutscene-approved" }; },
+    hostGenerate: async () => { throw new Error("host-provider-threw"); },
+  }), /host-provider-threw/u);
+  assert.equal(throwAuthorizations, 1);
+  assert.deepEqual(await receiptFiles(thrown.root), ["image-generation-attempt-cutscene-host-throw-attempt.json"]);
+
+  const malformed = await plannedSingleAssetGeneration(t, "studio-cutscene-malformed-host-");
+  let authorizations = 0;
+  await assert.rejects(() => generateImageAssetWorkflow({
+    artifactRoot: malformed.root, manifest: malformed.manifest,
+    config: { mode: "select", model: "gpt-image-2", quality: "low", apiKeyPresent: false }, codexCapability: { status: "available" },
+    selectedAssetIds: [malformed.assetId], internalSelection: true, attemptIdFactory: () => "cutscene-malformed-host-attempt",
+    beforeProvider: async () => { authorizations += 1; return { authorization: "cutscene-approved" }; },
+    hostGenerate: async () => ({ malformed: true }),
+  }), /Host generation must return results and failures arrays/u);
+  assert.equal(authorizations, 1);
+  assert.deepEqual(await receiptFiles(malformed.root), ["image-generation-attempt-cutscene-malformed-host-attempt.json"]);
+});
+
+test("Studio ordinary host and provider unavailable workflows retain create-once receipts", async (t) => {
+  for (const [label, codexCapability] of [["host", { status: "available" }], ["provider", { status: "unavailable" }]]) {
+    const ordinary = await plannedSingleAssetGeneration(t, `studio-ordinary-${label}-unavailable-`);
+    const result = await generateImageAssetWorkflow({
+      artifactRoot: ordinary.root, manifest: ordinary.manifest,
+      config: { mode: "select", model: "gpt-image-2", quality: "low", apiKeyPresent: false }, codexCapability,
+      selectedAssetIds: [ordinary.assetId], internalSelection: true, attemptIdFactory: () => `ordinary-${label}-unavailable-attempt`,
+    });
+    assert.equal(result.manifest.assets[0].generation_receipts.length, 1);
+    assert.equal((await receiptFiles(ordinary.root)).length, 2);
+  }
+});
+
 test("Studio plan-image-assets makes a profile-preflight plan and hands Skillstead evidence to visual QA", async () => {
   const skill = await readFile(path.join(pluginRoot, "skills/plan-image-assets/SKILL.md"), "utf8");
 
@@ -114,6 +215,9 @@ test("Studio plan-image-assets makes a profile-preflight plan and hands Skillste
   assert.match(skill, /<title>|title\/desc/u);
   assert.match(skill, /2× PNG|@2x`? PNG/u);
   assert.match(skill, /lint|render|QA/u);
+  assert.match(skill, /cutsceneWorkflow/u);
+  assert.match(skill, /validateCutsceneManifestHandoff/u);
+  assert.match(skill, /secure reference loader/u);
   assert.doesNotMatch(skill, /OpenAI|Codex image generation/u);
 });
 
@@ -127,8 +231,13 @@ test("Studio generate-image-assets routes by actual configuration without invent
   assert.match(skill, /selectGenerationJobs/u);
   assert.match(skill, /stable asset IDs?/u);
   assert.match(skill, /OPENAI_API_KEY/u);
+  assert.match(skill, /IMAGE_PROVIDER.*codex-first|codex-first.*IMAGE_PROVIDER/isu);
+  assert.match(skill, /API key.*(?:유료|paid).*승인|key.*does not.*consent/isu);
+  assert.match(skill, /IMAGE_EMBEDDED_TEXT_LOCALE.*ko-KR/isu);
+  assert.match(skill, /한글.*gpt-image-2|Korean.*gpt-image-2/isu);
+  assert.match(skill, /low.*(?:default|기본).*medium.*(?:master|마스터).*high.*(?:exception|예외)/isu);
   assert.match(skill, /generate-openai-images\.mjs/u);
-  assert.match(skill, /OpenAI only|only.*OpenAI/is);
+  assert.match(skill, /explicit.*OpenAI|OpenAI.*명시/isu);
   assert.match(skill, /no.*Codex fallback|never.*fallback/is);
   assert.match(skill, /host image capability/u);
   assert.match(skill, /prompts.*placeholders/is);
@@ -136,6 +245,7 @@ test("Studio generate-image-assets routes by actual configuration without invent
   assert.match(skill, /select.*explicit.*stable/is);
   assert.match(skill, /do not.*model.*quality|must not.*model.*quality/is);
   assert.match(skill, /concept-draft/u);
+  assert.doesNotMatch(skill, /OPENAI_API_KEY.*(?:present|있으면).{0,40}(?:OpenAI only|OpenAI만)/isu);
 });
 
 test("Studio review-image-assets requires named human evidence for ordered lifecycle transitions", async () => {
@@ -171,8 +281,7 @@ test("Studio routing and specialist roles expose the image workflow without appr
   assert.ok(routing.imageSpecialistIds.includes("visual-asset-reviewer"));
   assert.ok(routing.plannedPaths.skills.includes("skills/plan-image-assets/SKILL.md"));
   assert.ok(routing.plannedPaths.imageSpecialists.includes("agents/visual-asset-reviewer.md"));
-  assert.match(orchestrator, /apply-document-quality-profile.*plan-image-assets/is);
-  assert.match(orchestrator, /generate-image-assets.*review-image-assets/is);
+  assert.match(orchestrator, /select exact domain routes, artifacts, profiles, quality\/image work/is);
   assert.match(artDirector, /purpose.*readability.*prompt.*variant/is);
   assert.match(reviewer, /visual.*accessibility.*rights.*placement/is);
   assert.match(artDirector, /recommend/is);
@@ -185,7 +294,7 @@ test("Studio executes selected OpenAI workflow into artifact-local prompts, mani
   let calls = 0;
   const result = await runImageAssetWorkflow({
     artifactRoot: root, artifact, qualityProfile: profile,
-    config: { mode: "select", model: "gpt-image-2", quality: "low", apiKey: "secret-never-written", apiKeyPresent: true },
+    config: { mode: "select", providerPreference: "openai", embeddedTextLocale: "none", model: "gpt-image-2", quality: "low", apiKey: "secret-never-written", apiKeyPresent: true },
     selectedAssetIds: ["hero"], selectionReceipt: { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-studio-openai", asset_ids: ["hero"] },
     codexCapability: { status: "available" }, now: () => "2026-08-06T00:00:00.000Z", sleepFn: async () => {},
     fetchFn: async () => {
@@ -202,6 +311,45 @@ test("Studio executes selected OpenAI workflow into artifact-local prompts, mani
   assert.equal(JSON.parse(await readFile(path.join(root, "assets/image-assets.yml"), "utf8")).assets[0].generation_state, "generated");
   assert.match(await readFile(path.join(root, "assets/prompts/image-prompts.md"), "utf8"), /Expected count: 1/u);
   assert.equal((await readFile(path.join(root, "assets/image-assets.yml"), "utf8")).includes("secret-never-written"), false);
+});
+
+test("Studio keeps API key presence separate from paid routing and fails Korean text closed", async (t) => {
+  const hostFirst = await plannedSingleAssetGeneration(t, "studio-host-first-with-key-");
+  let hostCalls = 0;
+  let openAiCalls = 0;
+  const hostResult = await generateImageAssetWorkflow({
+    artifactRoot: hostFirst.root, manifest: hostFirst.manifest,
+    config: {
+      mode: "select", providerPreference: "codex-first", embeddedTextLocale: "none",
+      model: "gpt-image-2", quality: "low", apiKey: "present-but-not-consent", apiKeyPresent: true,
+    },
+    codexCapability: { status: "available" }, selectedAssetIds: [hostFirst.assetId], internalSelection: true,
+    hostGenerate: async ({ jobs }) => {
+      hostCalls += 1;
+      return { results: [{ asset_id: hostFirst.assetId, generation_state: "generated", bytes: png(), provenance: { provider: "codex-host", prompt_digest: digest(jobs[0].prompt) } }], failures: [] };
+    },
+    generateOpenAIImagesFn: async () => { openAiCalls += 1; return { results: [], failures: [] }; },
+  });
+  assert.equal(hostResult.decision.provider, "codex");
+  assert.equal(hostCalls, 1);
+  assert.equal(openAiCalls, 0);
+
+  const korean = await plannedSingleAssetGeneration(t, "studio-korean-text-route-");
+  let koreanHostCalls = 0;
+  let koreanOpenAiCalls = 0;
+  const blocked = await generateImageAssetWorkflow({
+    artifactRoot: korean.root, manifest: korean.manifest,
+    config: {
+      mode: "select", providerPreference: "codex-first", embeddedTextLocale: "ko-KR",
+      model: "gpt-image-2", quality: "low", apiKey: "present-but-not-consent", apiKeyPresent: true,
+    },
+    codexCapability: { status: "available" }, selectedAssetIds: [korean.assetId], internalSelection: true,
+    hostGenerate: async () => { koreanHostCalls += 1; return { results: [], failures: [] }; },
+    generateOpenAIImagesFn: async () => { koreanOpenAiCalls += 1; return { results: [], failures: [] }; },
+  });
+  assert.deepEqual(blocked.decision, { provider: "unavailable", reason: "korean-text-requires-openai" });
+  assert.equal(koreanHostCalls, 0);
+  assert.equal(koreanOpenAiCalls, 0);
 });
 
 test("Studio review requires an artifact-local host-user receipt rather than an agent decision", async (t) => {
@@ -257,7 +405,7 @@ test("Studio generates an image_needs-declared master before binding its derivat
   const calls = [];
   const result = await runImageAssetWorkflow({
     artifactRoot: root, artifact: declared, qualityProfile: profile,
-    config: { mode: "all", model: "gpt-image-2", quality: "low", apiKey: "secret-never-written", apiKeyPresent: true },
+    config: { mode: "all", providerPreference: "openai", embeddedTextLocale: "none", model: "gpt-image-2", quality: "low", apiKey: "secret-never-written", apiKeyPresent: true },
     codexCapability: { status: "unavailable" }, sleepFn: async () => {},
     fetchFn: async (url, options) => {
       calls.push({ url, options });
@@ -350,6 +498,30 @@ test("Studio rechecks pinned parent identities after a deterministic rename-away
   });
   assert.equal(hostCalls, 0);
   assert.deepEqual(result.providerResult.failures.map(({ asset_id, reason }) => ({ asset_id, reason })), [{ asset_id: character.asset_id, reason: "host-callback-failed" }]);
+});
+
+test("Studio closes earlier host authorizations as not-called when a later batch authorization fails", async (t) => {
+  const { root, manifest, master, character, ui } = await masterDerivativeFixture(t);
+  master.generation_state = "generated";
+  const outcomes = [];
+  let authorizations = 0;
+  let hostCalls = 0;
+  await assert.rejects(() => generateImageAssetWorkflow({
+    artifactRoot: root, manifest,
+    config: { mode: "select", model: "gpt-image-2", quality: "low", apiKeyPresent: false }, codexCapability: { status: "available" },
+    selectedAssetIds: [character.asset_id, ui.asset_id],
+    selectionReceipt: { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-host-batch-auth", asset_ids: [character.asset_id, ui.asset_id] },
+    beforeProvider: async ({ asset_id }) => {
+      authorizations += 1;
+      if (authorizations === 2) throw new Error("second-authorization-rejected");
+      return { assetId: asset_id, authorization: "first" };
+    },
+    afterProvider: async (outcome) => outcomes.push(outcome),
+    hostGenerate: async () => { hostCalls += 1; return { results: [], failures: [] }; },
+  }), /second-authorization-rejected/u);
+  assert.equal(hostCalls, 0);
+  assert.equal(authorizations, 2);
+  assert.deepEqual(outcomes.map(({ assetId, providerOutcome, assetOutcome, retryDisposition }) => ({ assetId, providerOutcome, assetOutcome, retryDisposition })), [{ assetId: character.asset_id, providerOutcome: "not-called", assetOutcome: "not-attempted", retryDisposition: "none" }]);
 });
 
 test("Studio rejects an image that names itself as its master or reference", async (t) => {

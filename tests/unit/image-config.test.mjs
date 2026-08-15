@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { constants } from "node:fs";
-import { chmod, mkdir, mkdtemp, open, readFile, realpath, rename, rm, symlink, writeFile } from "node:fs/promises";
+import { chmod, mkdir, mkdtemp, open, realpath, rename, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -30,10 +30,12 @@ test("safe defaults are used without a workspace .env", async (t) => {
 
   assert.deepEqual(toPublicImageConfig(config), {
     mode: "prompt-only",
+    providerPreference: "codex-first",
+    embeddedTextLocale: "none",
     model: "gpt-image-2",
     quality: "low",
     apiKeyPresent: false,
-    sources: { mode: "default", model: "default", quality: "default", apiKey: "none" },
+    sources: { mode: "default", providerPreference: "default", embeddedTextLocale: "default", model: "default", quality: "default", apiKey: "none" },
     warnings: [],
   });
   assert.equal(config.apiKey, undefined);
@@ -43,6 +45,8 @@ test("process values override .env and .env overrides defaults without mutating 
   const root = await workspace(t);
   await writeEnv(root, [
     "IMAGE_GEN_MODE=required",
+    "IMAGE_PROVIDER=openai",
+    "IMAGE_EMBEDDED_TEXT_LOCALE=ko-KR",
     "IMAGE_MODEL=env-file-model",
     "IMAGE_QUALITY=medium",
     "OPENAI_API_KEY=file-secret-value",
@@ -50,6 +54,8 @@ test("process values override .env and .env overrides defaults without mutating 
   ].join("\n"));
   const env = {
     IMAGE_GEN_MODE: " all ",
+    IMAGE_PROVIDER: " codex-first ",
+    IMAGE_EMBEDDED_TEXT_LOCALE: " none ",
     IMAGE_MODEL: " process-model ",
     IMAGE_QUALITY: " high ",
     OPENAI_API_KEY: " process-secret-value ",
@@ -59,10 +65,10 @@ test("process values override .env and .env overrides defaults without mutating 
   const config = await loadImageConfig({ workspaceRoot: root, env });
 
   assert.deepEqual(
-    { mode: config.mode, model: config.model, quality: config.quality, apiKeyPresent: config.apiKeyPresent },
-    { mode: "all", model: "process-model", quality: "high", apiKeyPresent: true },
+    { mode: config.mode, providerPreference: config.providerPreference, embeddedTextLocale: config.embeddedTextLocale, model: config.model, quality: config.quality, apiKeyPresent: config.apiKeyPresent },
+    { mode: "all", providerPreference: "codex-first", embeddedTextLocale: "none", model: "process-model", quality: "high", apiKeyPresent: true },
   );
-  assert.deepEqual(config.sources, { mode: "environment", model: "environment", quality: "environment", apiKey: "environment" });
+  assert.deepEqual(config.sources, { mode: "environment", providerPreference: "environment", embeddedTextLocale: "environment", model: "environment", quality: "environment", apiKey: "environment" });
   assert.deepEqual(env, before);
 });
 
@@ -79,13 +85,13 @@ test("trimmed-empty values are unset and fall through to .env or defaults", asyn
   assert.equal(config.model, "gpt-image-2");
   assert.equal(config.quality, "auto");
   assert.equal(config.apiKeyPresent, false);
-  assert.deepEqual(config.sources, { mode: ".env", model: "default", quality: ".env", apiKey: "none" });
+  assert.deepEqual(config.sources, { mode: ".env", providerPreference: "default", embeddedTextLocale: "default", model: "default", quality: ".env", apiKey: "none" });
 });
 
 test("all closed modes and qualities validate", () => {
   for (const mode of ["required", "all", "select", "prompt-only"]) {
     for (const quality of ["low", "medium", "high", "auto"]) {
-      assert.deepEqual(validateImageConfig({ mode, model: "gpt-image-2", quality }), { ok: true, errors: [] });
+      assert.deepEqual(validateImageConfig({ mode, providerPreference: "codex-first", embeddedTextLocale: "none", model: "gpt-image-2", quality }), { ok: true, errors: [] });
     }
   }
 });
@@ -94,6 +100,8 @@ test("invalid policy values and unsafe model identifiers return value-free struc
   const root = await workspace(t);
   const cases = [
     ["IMAGE_GEN_MODE", "unbounded-mode", "invalid_mode", "mode"],
+    ["IMAGE_PROVIDER", "automatic-paid-fallback", "invalid_provider_preference", "providerPreference"],
+    ["IMAGE_EMBEDDED_TEXT_LOCALE", "guess-from-prompt", "invalid_embedded_text_locale", "embeddedTextLocale"],
     ["IMAGE_QUALITY", "ultra-costly", "invalid_quality", "quality"],
     ["IMAGE_MODEL", "model/../../escape", "invalid_model", "model"],
   ];
@@ -160,7 +168,7 @@ test("the parser rejects hostile or ambiguous dotenv syntax without echoing valu
 });
 
 test("backtick shell syntax is rejected for every supported key without exposing its value", async (t) => {
-  for (const keyName of ["IMAGE_GEN_MODE", "IMAGE_MODEL", "IMAGE_QUALITY", "OPENAI_API_KEY"]) {
+  for (const keyName of ["IMAGE_GEN_MODE", "IMAGE_PROVIDER", "IMAGE_EMBEDDED_TEXT_LOCALE", "IMAGE_MODEL", "IMAGE_QUALITY", "OPENAI_API_KEY"]) {
     await t.test(keyName, async (t) => {
       const root = await workspace(t);
       const secretLikeValue = `backtick-${keyName.toLowerCase()}-never-print`;
@@ -207,19 +215,19 @@ test("only the workspace-root .env is read", async (t) => {
   await mkdir(root);
   await writeEnv(parent, "IMAGE_GEN_MODE=all\n");
   await writeEnv(root, "IMAGE_GEN_MODE=required\n");
-  const reads = [];
+  const reads = new Set();
 
   const config = await loadImageConfig({
     workspaceRoot: root,
     env: {},
-    readFileFn: async (...args) => {
-      reads.push(args[0]);
-      return readFile(...args);
+    readFileFn: async (handle, ...args) => {
+      reads.add(path.join(root, ".env"));
+      return handle.read(...args);
     },
   });
 
   assert.equal(config.mode, "required");
-  assert.deepEqual(reads, [path.join(root, ".env")]);
+  assert.deepEqual([...reads], [path.join(root, ".env")]);
 });
 
 test("a symlink swapped in after lstat is rejected before outside bytes can be parsed", async (t) => {

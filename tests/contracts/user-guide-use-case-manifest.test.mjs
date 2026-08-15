@@ -33,7 +33,15 @@ const CAREER_TEMPLATE_SOURCE_ROOT = path.join(repoRoot, "products/game-design-ca
 const CAREER_SKILL_SOURCE_ROOT = path.join(repoRoot, "products/game-design-career/plugin/skills");
 const CAREER_FAQ_SPEC_PATH = path.join(repoRoot, "docs/superpowers/specs/2026-08-06-game-design-plugin-use-case-learning-guide-design.md");
 const CAREER_ROUTING = JSON.parse(await readFile(CAREER_ROUTING_PATH, "utf8"));
-const DIRECT_USE_EXCLUDED_SKILL_IDS = new Set(["archify", "humanize-korean", "polish-game-design-writing"]);
+const DIRECT_USE_EXCLUDED_SKILL_IDS = new Set([
+  "archify", "humanize-korean", "polish-game-design-writing",
+  "capture-game-design-memory", "maintain-game-design-memory", "retrieve-approved-design-memory",
+  "analyze-game-design-references", "maintain-game-design-glossary",
+]);
+const ROUTE_BOUNDARY_SKILL_IDS = new Set([
+  "archify", "humanize-korean", "polish-game-design-writing",
+  "capture-game-design-memory", "maintain-game-design-memory", "retrieve-approved-design-memory",
+]);
 
 test("result-boundary readability rejects dense visible prose and accepts result cards", () => {
   const denseBoundary = "**최소 결과:** 초안. **선택 결과:** 도식. **확장 결과:** 검토 패키지. **승인 주체:** 멘토. **보류 대상:** 패키지. **재개 조건:** 권한 확인. **안전·증거 경계:** 자동 승인은 하지 않음.";
@@ -187,6 +195,21 @@ const CAREER_FAQ_ANSWER_FIELDS = [
   "실패·재개·관련 경로",
 ];
 const CAREER_FAQ_CONTRACT = Object.freeze(CAREER_ROUTING.faqContracts ?? []);
+const CAREER_MEMORY_FAQ = Object.freeze({
+  id: "Q19",
+  question: "이전 학습·포트폴리오 교훈을 다음 작업에 어떻게 안전하게 쓰는가?",
+  primarySkill: "retrieve-approved-design-memory",
+  routingSource: { kind: "direct-use", id: "retrieve-approved-design-memory" },
+  expectedOutputs: [{ id: "approved-memory-guidance", kind: "skill-owned", path: "memory-application-report" }],
+  completionTokens: ["적용·제외 사유"],
+  fields: ["memory ID", "source binding", "apply/exclusion reason"],
+  readOrderId: "memory-guidance",
+  case: { id: "CA-C06", path: "use-cases/competency-paths.md", anchor: "ca-c06-창작-기획-포트폴리오" },
+  skillPath: "memory.md",
+  skillSource: "shared-memory",
+  recipePath: "recipes/portfolio-build-review.md",
+  recovery: { owner: "사람", sequence: ["보존", "사람 확인", "재개"] },
+});
 const STUDIO_FAQ_CONTRACT = Object.freeze([
   ["규칙, mechanic, system과 core loop는 어떻게 다른가?", ["규칙", "mechanic", "system", "core loop"], ["입력", "상태", "루프"], ["rule", "state"], ["ST-C02", "ST-C03", "`core-motivation-loop`"], ["사람", "검토"]],
   ["처음부터 긴 GDD를 만들어야 하는가?", ["긴 GDD", "처음", "없으며"], ["비전", "가정", "경계"], ["vision", "content.md"], ["ST-C01", "`game-design-brief`", "`vision-pillars`"], ["승인", "가정"]],
@@ -206,6 +229,8 @@ const STUDIO_FAQ_CONTRACT = Object.freeze([
   ["renderer가 없을 때 어떤 결과를 전달할 수 있는가?", ["renderer", "Canonical Artifact", "unavailable"], ["capability", "lint", "SVG source"], ["content.md", "SVG"], ["ST-C08", "`visualize-game-design`", "`export-game-design-documents`"], ["PNG", "승인"]],
   ["학생 과제에서 결과를 그대로 제출해도 되는가?", ["학생 과제", "그대로", "제출"], ["답안 대행", "AI 정책", "출처 표기"], ["contribution", "evidence"], ["ST-C01", "ST-C08", "`game-design-review`"], ["학교 정책", "승인"]],
   ["서로 다른 장르 사례를 내 아이디어에 어떻게 적용하는가?", ["서로 다른 장르", "아이디어", "적용"], ["player context", "입력 장치", "사회적 위험"], ["assumption", "validation"], ["ST-G01", "ST-G10", "`game-design-brief`"], ["일반화", "사람"]],
+  ["이전 프로젝트 교훈을 다음 기획에 어떻게 안전하게 쓰는가?", ["이름이 확인된", "승인", "자동 승인되지"], ["출처 파일", "적용·제외", "충돌", "기억 없이"], [], [], []],
+  ["컷씬 이미지는 언제 생성하고, 비용을 어떻게 통제하는가?", ["style-master", "실시간 승인", "costStatus"], ["unavailable", "provider 호출 0회", "retryable stable ID"], ["cutscene-brief", "cutscene-shot-package", "cutscene-cost-estimate"], ["ST-S16", "`design-cutscene-visual-preproduction`", "`cutscene-visual-preproduction`"], ["이전 승인", "자동 승인", "사람"]],
 ].map(([question, conclusion, reason, result, related, safety], index) => ({
   heading: `Q${String(index + 1).padStart(2, "0")}. ${question}`,
   conclusion,
@@ -845,7 +870,7 @@ const STUDIO_COMPETENCY_SEMANTIC_CONTRACT = Object.freeze({
     ["capacity 근거 없는 일정", "production-ready"],
     ["capacity evidence", "named-human decision receipt"],
     ["prototype / defer / exclude", "stable asset ID"],
-    ["`prompt-only`", "OpenAI only"],
+    ["`prompt-only`", "`IMAGE_PROVIDER=codex-first`"],
     ["NDA", "권리 불명 자산"],
     ["IMAGE_GEN_MODE=prompt-only", "renderer-neutral"],
     ["artifact=game-design/exploration-prototype/production-scope-risk", "export-game-design-documents"],
@@ -911,6 +936,7 @@ const STUDIO_CASE_CONTRACT = Object.freeze([
 const STUDIO_SKILL_CASE_CONTRACT = Object.freeze([
   ["ST-S01", "apply-document-quality-profile", ["selection-record", "quality-checklist", "requirement-manifest"], ["define-game-vision", "design-game-systems", "design-game-content", "design-player-experience", "design-game-economy-and-liveops", "plan-game-production", "review-game-design", "visualize-game-design", "export-game-design-documents"], "문서 품질 프로필 직접 호출 흐름"],
   ["ST-S02", "define-game-vision", ["vision-pillars", "core-motivation-loop"], ["design-game-systems"], "게임 비전 직접 호출 흐름"],
+  ["ST-S16", "design-cutscene-visual-preproduction", ["cutscene-brief", "cutscene-shot-package", "cutscene-prompt-package", "cutscene-cost-estimate", "cutscene-continuity-review"], ["plan-image-assets", "generate-image-assets", "review-image-assets"], "컷씬 네 단계와 선택적 이미지 생성 승인 흐름"],
   ["ST-S03", "design-game-content", ["narrative-quest-npc", "character-skill-combat-monster"], ["review-game-design"], "게임 콘텐츠 직접 호출 흐름"],
   ["ST-S04", "design-game-economy-and-liveops", ["economy-balance", "liveops-experiment-event"], ["review-game-design"], "게임 경제와 LiveOps 직접 호출 흐름"],
   ["ST-S05", "design-game-systems", ["system-specification", "rule-exception-matrix", "data-schema-table-contract"], ["review-game-design"], "게임 시스템 직접 호출 흐름"],
@@ -1154,8 +1180,9 @@ function assertStudioCompetencySemantics({ competencyPaths, entries, inventory }
   for (const [mode, clause] of Object.entries(STUDIO_IMAGE_MODE_SCOPE_CONTRACT)) {
     assert.ok(productionPractice.includes(clause), `ST-C08 ${mode} exact generation scope`);
   }
-  assert.match(productionPractice, /non-empty `OPENAI_API_KEY`가 있으면 OpenAI only/);
-  assert.match(productionPractice, /실패 후 Codex fallback을 하지 않습니다/);
+  assert.match(productionPractice, /`IMAGE_PROVIDER=codex-first`/);
+  assert.match(productionPractice, /유료 API로 자동 전환하지 않습니다/);
+  assert.match(productionPractice, /한글.*`gpt-image-2`/);
   const productionReview = sectionByHeading(productionCase, 3, "검토와 승인");
   for (const term of ["production owner", "rights/asset owner", "실제 format QA", "자동 승인하지 않습니다"]) {
     assert.ok(productionReview.includes(term), `ST-C08 review boundary: ${term}`);
@@ -1733,6 +1760,15 @@ function assertStudioFaq(markdown) {
   for (const [index, answer] of answers.entries()) {
     const contract = STUDIO_FAQ_CONTRACT[index];
     const fields = inlineFields(answer.body);
+    if (contract.heading === "Q19. 이전 프로젝트 교훈을 다음 기획에 어떻게 안전하게 쓰는가?") {
+      assert.deepEqual(inlineFieldLabels(answer.body), ["결론", "이유와 경계", "실행 요청", "비활성화와 관련 문서"], `${answer.heading} shared-memory answer shape`);
+      const byLabel = new Map(fields.map((field) => [field.label, field.value]));
+      for (const term of contract.conclusion) assert.ok(byLabel.get("결론").includes(term), `${answer.heading} conclusion term: ${term}`);
+      for (const term of contract.reason) assert.ok(byLabel.get("이유와 경계").includes(term), `${answer.heading} reason term: ${term}`);
+      assert.equal(fencedCodeBlocks(byLabel.get("실행 요청"), "text").length, 1, `${answer.heading} one executable request block`);
+      assert.match(byLabel.get("비활성화와 관련 문서"), /GAME_DESIGN_MEMORY_ENABLED=false[\s\S]*\]\(memory\.md\)/u, `${answer.heading} disable and recovery path`);
+      continue;
+    }
     assert.deepEqual(inlineFieldLabels(answer.body), STUDIO_FAQ_ANSWER_FIELDS, `${answer.heading} answer shape`);
     const byLabel = new Map(fields.map((field) => [field.label, field.value]));
     for (const field of fields) {
@@ -1809,16 +1845,17 @@ function faqReadOrder(contract, routing) {
 
 async function assertCareerFaqMetadata(routing, {
   skillRoot = CAREER_SKILL_SOURCE_ROOT,
+  sharedMemorySkillRoot = path.join(repoRoot, "shared", "memory", "skills"),
   templateRoot = CAREER_TEMPLATE_SOURCE_ROOT,
   specQuestions,
 } = {}) {
   assert.ok(Array.isArray(routing.faqContracts), "routing.json faqContracts array");
-  assert.equal(routing.faqContracts.length, 18, "routing.json Career FAQ contract count");
-  const expectedIds = Array.from({ length: 18 }, (_, index) => `Q${String(index + 1).padStart(2, "0")}`);
+  assert.equal(routing.faqContracts.length, 19, "routing.json Career FAQ contract count");
+  const expectedIds = Array.from({ length: 19 }, (_, index) => `Q${String(index + 1).padStart(2, "0")}`);
   assert.deepEqual(routing.faqContracts.map(({ id }) => id), expectedIds, "Career FAQ exact ordered IDs");
-  assert.equal(new Set(routing.faqContracts.map(({ id }) => id)).size, 18, "Career FAQ unique IDs");
-  assert.equal(new Set(routing.faqContracts.map(({ question }) => question)).size, 18, "Career FAQ unique questions");
-  if (specQuestions) assert.deepEqual(routing.faqContracts.map(({ question }) => question), specQuestions, "Career FAQ spec questions");
+  assert.equal(new Set(routing.faqContracts.map(({ id }) => id)).size, 19, "Career FAQ unique IDs");
+  assert.equal(new Set(routing.faqContracts.map(({ question }) => question)).size, 19, "Career FAQ unique questions");
+  if (specQuestions) assert.deepEqual(routing.faqContracts.map(({ question }) => question), [...specQuestions, CAREER_MEMORY_FAQ.question], "Career FAQ spec questions plus memory safety question");
 
   const installedSkills = new Set(routing.skillIds);
   const routeById = new Map(routing.routes.map((route) => [route.id, route]));
@@ -1828,7 +1865,12 @@ async function assertCareerFaqMetadata(routing, {
   assert.equal(directUseById.size, routing.directUseSources.length, "unique direct-use source IDs");
   for (const contract of routing.faqContracts) {
     assert.ok(installedSkills.has(contract.primarySkill), `${contract.id} installed primary skill`);
-    assert.equal(contract.skillPath, `skills/${contract.primarySkill}.md`, `${contract.id} canonical skill path`);
+    if (contract.skillSource === "shared-memory") {
+      assert.deepEqual(contract, CAREER_MEMORY_FAQ, "Q19 exact shared-memory FAQ contract");
+    } else {
+      assert.equal(contract.skillPath, `skills/${contract.primarySkill}.md`, `${contract.id} canonical skill path`);
+      assert.equal(contract.skillSource, undefined, `${contract.id} product skill source`);
+    }
     assert.ok(Array.isArray(contract.expectedOutputs) && contract.expectedOutputs.length > 0, `${contract.id} expected outputs`);
     assert.equal(new Set(contract.expectedOutputs.map(({ id }) => id)).size, contract.expectedOutputs.length, `${contract.id} unique output IDs`);
     if (contract.routingSource.kind === "route") {
@@ -1848,7 +1890,9 @@ async function assertCareerFaqMetadata(routing, {
       assert.deepEqual(contract.expectedOutputs.map(({ id }) => id), directUse.outputTypes, `${contract.id} exact direct-use-owned outputs`);
     }
 
-    const skillSource = await readFile(path.join(skillRoot, contract.primarySkill, "SKILL.md"), "utf8");
+    const skillSource = await readFile(contract.skillSource === "shared-memory"
+      ? path.join(sharedMemorySkillRoot, contract.primarySkill, "SKILL.md")
+      : path.join(skillRoot, contract.primarySkill, "SKILL.md"), "utf8");
     const outputContract = skillSection(skillSource, "Output contract");
     const completionContract = skillSection(skillSource, "Completion(?: Criteria)?");
     for (const output of contract.expectedOutputs) {
@@ -1966,9 +2010,9 @@ test("complete use-case validation reports the exact production coverage includi
     audiencePaths: 6,
     studioCases: 18,
     careerCases: 18,
-    studioSkillCases: 15,
+    studioSkillCases: 16,
     careerSkillCases: 15,
-    faq: 48,
+    faq: 51,
   });
 });
 
@@ -1977,15 +2021,15 @@ test("complete aggregate guide validation composes the production use-case cover
 
   assert.equal(result.ok, true, result.errors.join("\n"));
   assert.deepEqual(result.counts, {
-    guides: 147,
-    skillGuides: 36,
+    guides: 157,
+    skillGuides: 47,
     templates: 30,
-    svg: 90,
-    png: 90,
+    svg: 91,
+    png: 91,
     audiencePaths: 6,
     useCases: 36,
-    skillCases: 30,
-    faq: 48,
+    skillCases: 31,
+    faq: 51,
   });
 });
 
@@ -2002,15 +2046,15 @@ test("production diagram manifest keeps the exact complete scope inventory", asy
     "game-design-career-skill",
   ].map((scope) => [scope, manifest.diagrams.filter((diagram) => diagram.scope === scope).length]));
 
-  assert.equal(manifest.diagrams.length, 90);
-  assert.equal(new Set(manifest.diagrams.map(({ id }) => id)).size, 90);
+  assert.equal(manifest.diagrams.length, 91);
+  assert.equal(new Set(manifest.diagrams.map(({ id }) => id)).size, 91);
   assert.deepEqual(scopeCounts, {
     shared: 6,
     "game-design-studio": 6,
     "game-design-career": 6,
     "use-case-audience": 6,
     "game-design-studio-use-case": 18,
-    "game-design-studio-skill": 15,
+    "game-design-studio-skill": 16,
     "game-design-career-use-case": 18,
     "game-design-career-skill": 15,
   });
@@ -2046,7 +2090,7 @@ test("complete validation reads production document anchors and App/CLI request 
     }, /App request marker/u],
     ["missing FAQ heading", async () => {
       await writeFile(faqDocument, canonicalDocuments.get(faqDocument).replace("### Q01.", "### FAQ01."));
-    }, /faq>=48/u],
+    }, /faq>=51/u],
   ];
 
   for (const [label, mutate, expected] of mutations) {
@@ -2619,7 +2663,7 @@ test("Studio manifest declares the ordered case and installed-skill coverage wit
     "ST-G01", "ST-G02", "ST-G03", "ST-G04", "ST-G05",
     "ST-G06", "ST-G07", "ST-G08", "ST-G09", "ST-G10",
   ]);
-  assert.equal(studioSkillCases.length, 15);
+  assert.equal(studioSkillCases.length, 16);
   const projectCase = ({ id, product, view, document, anchor, audiences, level, skills, templates, outputs, diagram }) => ({
     id, product, view, document, anchor, audiences, level, skills, templates, outputs,
     diagram: { svg: diagram.svg, png: diagram.png, alt: diagram.alt },
@@ -2644,7 +2688,7 @@ test("Studio manifest declares the ordered case and installed-skill coverage wit
   assert.equal(result.targetValidation, "deferred");
   assert.equal(
     result.deferredTargetPaths.filter((target) => target.startsWith("guides/game-design-studio/") || target.startsWith("guides/assets/game-design-studio/")).length,
-    99,
+    102,
   );
   assert.ok(result.deferredTargetPaths.includes("guides/game-design-studio/use-cases/competency-paths.md"));
   assert.ok(result.deferredTargetPaths.includes("guides/game-design-studio/use-cases/concept-scenarios.md"));
@@ -2662,7 +2706,7 @@ function assertStudioSkillCaseRouting({ cases, inventory, routing }) {
     "generate-image-assets",
     "review-image-assets",
     "svg-infographic",
-    ...DIRECT_USE_EXCLUDED_SKILL_IDS,
+    ...ROUTE_BOUNDARY_SKILL_IDS,
   ]);
   assert.ok(routing.routes.length > 0, "canonical routing.routes must not be empty");
   assert.deepEqual(
@@ -2957,8 +3001,8 @@ test("each Studio competency case preserves its anchored case-card and executabl
   for (const mode of ["prompt-only", "select", "required", "all"]) {
     assert.match(productionPractice, new RegExp("`" + mode + "`"), `ST-C08 IMAGE_GEN_MODE ${mode}`);
   }
-  assert.match(productionPractice, /OpenAI only/);
-  assert.match(productionPractice, /fallback을 하지 않습니다/);
+  assert.match(productionPractice, /`IMAGE_PROVIDER=codex-first`/);
+  assert.match(productionPractice, /자동 전환하지 않습니다/);
   assertStudioCompetencySemantics({ competencyPaths, entries, inventory });
 });
 
@@ -3041,6 +3085,7 @@ test("common use-case hub has the exact H2 navigation and twelve FAQ IDs", async
       "누구를 위한 가이드인가요",
       "역량·콘셉트·스킬 중 선택하기",
       "탐색 순서",
+      "설계 지능과 일관성 도구 선택하기",
       "작업 규모 선택하기",
       "결과물 먼저 보기",
       "사용자 유형·난이도별 요청문",
@@ -3069,7 +3114,7 @@ test("each common FAQ answer provides the six executable and evidence fields", a
   }
 });
 
-test("Studio FAQ contains all eighteen approved questions with executable, bounded answers", async () => {
+test("Studio FAQ contains all twenty approved questions with executable, bounded answers", async () => {
   const faqPath = path.join(repoRoot, "guides", "game-design-studio", "faq.md");
   const stat = await lstat(faqPath);
   assert.ok(stat.isFile() && !stat.isSymbolicLink(), "Studio FAQ must be a regular file");
@@ -3105,6 +3150,23 @@ test("Studio FAQ contract rejects missing requests, swapped answers, and wrong q
     /Studio FAQ approved question headings/,
   );
 
+  const q20 = answers.find(({ heading }) => heading === "Q20. 컷씬 이미지는 언제 생성하고, 비용을 어떻게 통제하는가?");
+  assert.ok(q20, "Q20 fixture");
+  for (const { label, value } of inlineFields(q20.body)) {
+    const mutated = markdown.replace(value, "TODO");
+    assert.throws(
+      () => assertStudioFaq(mutated),
+      new RegExp(`Q20\\. .* ${label} substantive content`),
+      `Q20 rejects ${label} mutation`,
+    );
+  }
+  const q20WrongQuestion = markdown.replace(q20.heading, "Q20. 승인되지 않은 다른 질문");
+  assert.throws(
+    () => assertStudioFaq(q20WrongQuestion),
+    /Studio FAQ approved question headings/,
+    "Q20 rejects question mutation",
+  );
+
   const injectedH2 = markdown.replace("**예상 결과:**", "## 다른 섹션\n\n**예상 결과:**");
   assert.throws(
     () => assertStudioFaq(injectedH2),
@@ -3112,7 +3174,7 @@ test("Studio FAQ contract rejects missing requests, swapped answers, and wrong q
   );
 });
 
-test("Career FAQ contains the eighteen approved questions with executable, bounded answers", async () => {
+test("Career FAQ contains the nineteen approved questions with executable, bounded answers", async () => {
   const faqPath = path.join(repoRoot, "guides", "game-design-career", "faq.md");
   const stat = await lstat(faqPath);
   assert.ok(stat.isFile() && !stat.isSymbolicLink(), "Career FAQ must be a regular file");
@@ -3170,7 +3232,7 @@ test("Career FAQ routing sources reject every wrong-valid route and direct-use r
       const wrongDirectUse = CAREER_ROUTING.directUseSources.find(({ id }) => id !== contract.routingSource.id);
       const swapped = structuredClone(CAREER_ROUTING);
       swapped.faqContracts[index].routingSource.id = wrongDirectUse.id;
-      await assert.rejects(() => assertCareerFaqMetadata(swapped), /direct-use primary skill|exact direct-use-owned outputs/, `${contract.id} direct-use skill mismatch`);
+      await assert.rejects(() => assertCareerFaqMetadata(swapped), /exact shared-memory FAQ contract|direct-use primary skill|exact direct-use-owned outputs/, `${contract.id} direct-use skill mismatch`);
 
       const omittedOutputs = structuredClone(CAREER_ROUTING);
       omittedOutputs.directUseSources.find(({ id }) => id === contract.routingSource.id).outputTypes = [];
@@ -3178,7 +3240,7 @@ test("Career FAQ routing sources reject every wrong-valid route and direct-use r
 
       const swappedOutputs = structuredClone(CAREER_ROUTING);
       swappedOutputs.directUseSources.find(({ id }) => id === contract.routingSource.id).outputTypes = wrongDirectUse.outputTypes;
-      await assert.rejects(() => assertCareerFaqMetadata(swappedOutputs), /exact direct-use-owned outputs/, `${contract.id} direct-use output swap`);
+      await assert.rejects(() => assertCareerFaqMetadata(swappedOutputs), /exact shared-memory FAQ contract|exact direct-use-owned outputs/, `${contract.id} direct-use output swap`);
     }
   }
 });
@@ -3186,12 +3248,14 @@ test("Career FAQ routing sources reject every wrong-valid route and direct-use r
 test("Career FAQ rejects product SKILL Output and Completion source mutations", async () => {
   const temporaryRoot = await mkdtemp(path.join(os.tmpdir(), "career-faq-skills-"));
   const skillRoot = path.join(temporaryRoot, "skills");
+  const sharedMemorySkillRoot = path.join(temporaryRoot, "shared-memory-skills");
   const allOutputIds = [...new Set(CAREER_FAQ_CONTRACT.flatMap(({ expectedOutputs }) => expectedOutputs.map(({ id }) => id)))];
   const allCompletionTokens = [...new Set(CAREER_FAQ_CONTRACT.flatMap(({ completionTokens }) => completionTokens))];
   try {
     await cp(CAREER_SKILL_SOURCE_ROOT, skillRoot, { recursive: true });
+    await cp(path.join(repoRoot, "shared", "memory", "skills"), sharedMemorySkillRoot, { recursive: true });
     for (const contract of CAREER_FAQ_CONTRACT) {
-      const skillPath = path.join(skillRoot, contract.primarySkill, "SKILL.md");
+      const skillPath = path.join(contract.skillSource === "shared-memory" ? sharedMemorySkillRoot : skillRoot, contract.primarySkill, "SKILL.md");
       const canonical = await readFile(skillPath, "utf8");
       for (const { id } of contract.expectedOutputs) {
         const outputSection = skillSection(canonical, "Output contract");
@@ -3200,7 +3264,7 @@ test("Career FAQ rejects product SKILL Output and Completion source mutations", 
           const mutatedSection = outputSection.replace(`\`${id}\``, replacement);
           assert.notEqual(mutatedSection, outputSection, `${contract.id} Output source mutation precondition: ${id}`);
           await writeFile(skillPath, canonical.replace(outputSection, mutatedSection), "utf8");
-          await assert.rejects(() => assertCareerFaqMetadata(CAREER_ROUTING, { skillRoot }), /source-owned output ID/, `${contract.id} ${id} Output ${label}`);
+          await assert.rejects(() => assertCareerFaqMetadata(CAREER_ROUTING, { skillRoot, sharedMemorySkillRoot }), /source-owned output ID/, `${contract.id} ${id} Output ${label}`);
           await writeFile(skillPath, canonical, "utf8");
         }
       }
@@ -3211,7 +3275,7 @@ test("Career FAQ rejects product SKILL Output and Completion source mutations", 
           const mutatedSection = completionSection.replace(token, replacement);
           assert.notEqual(mutatedSection, completionSection, `${contract.id} Completion source mutation precondition: ${token}`);
           await writeFile(skillPath, canonical.replace(completionSection, mutatedSection), "utf8");
-          await assert.rejects(() => assertCareerFaqMetadata(CAREER_ROUTING, { skillRoot }), /source-owned Completion token/, `${contract.id} ${token} Completion ${label}`);
+          await assert.rejects(() => assertCareerFaqMetadata(CAREER_ROUTING, { skillRoot, sharedMemorySkillRoot }), /source-owned Completion token/, `${contract.id} ${token} Completion ${label}`);
           await writeFile(skillPath, canonical, "utf8");
         }
       }
@@ -3268,7 +3332,7 @@ test("Career FAQ exactly follows routing metadata and rejects exhaustive contrac
     }
     const readOrder = faqReadOrder(contract, CAREER_ROUTING);
     for (const inventoryItem of readOrder) {
-      assert.throws(() => assertCareerFaq(markdown.replace(outcome, outcome.replace(inventoryItem, ""))), /canonical full read order/, `${answer.heading} ${inventoryItem} inventory omission`);
+      assert.throws(() => assertCareerFaq(markdown.replace(outcome, outcome.replace(inventoryItem, ""))), /canonical output field|canonical full read order/, `${answer.heading} ${inventoryItem} inventory omission`);
     }
     for (let orderIndex = 0; orderIndex < readOrder.length - 1; orderIndex += 1) {
       const swapped = [...readOrder];
@@ -3303,10 +3367,12 @@ test("Career FAQ exactly follows routing metadata and rejects exhaustive contrac
   }
 });
 
-test("Career FAQ primary skills expose product-source Output Contract sections", async () => {
-  for (const { primarySkill } of CAREER_FAQ_CONTRACT) {
-    const source = await readFile(path.join(repoRoot, "products/game-design-career/plugin/skills", primarySkill, "SKILL.md"), "utf8");
-    assert.match(source, /^## Output contract$/mi, `Career FAQ ${primarySkill} product Output Contract`);
+test("Career FAQ primary skills expose product or shared-memory Output Contract sections", async () => {
+  for (const { primarySkill, skillSource } of CAREER_FAQ_CONTRACT) {
+    const source = await readFile(skillSource === "shared-memory"
+      ? path.join(repoRoot, "shared", "memory", "skills", primarySkill, "SKILL.md")
+      : path.join(repoRoot, "products/game-design-career/plugin/skills", primarySkill, "SKILL.md"), "utf8");
+    assert.match(source, /^## Output contract$/mi, `Career FAQ ${primarySkill} Output Contract`);
   }
 });
 
@@ -3462,9 +3528,9 @@ test("Studio case and direct-skill diagrams are source-linked, rendered, and emb
   };
 
   assert.equal(caseSources.length, 18, "Studio case diagram source count");
-  assert.equal(skillSources.length, 15, "Studio direct-skill diagram source count");
+  assert.equal(skillSources.length, 16, "Studio direct-skill diagram source count");
   assert.equal(caseDiagrams.length, 18, "Studio case diagram manifest count");
-  assert.equal(skillDiagrams.length, 15, "Studio direct-skill diagram manifest count");
+  assert.equal(skillDiagrams.length, 16, "Studio direct-skill diagram manifest count");
 
   const expectedEntries = [
     ...studioCases.map((entry) => ({ entry, type: entry.view === "competency" ? "design-pipeline" : "decision-flow", kind: "use-cases" })),
@@ -3523,7 +3589,7 @@ test("Studio case and direct-skill diagrams are source-linked, rendered, and emb
   }
 
   const result = await buildUseCaseDiagrams({ repoRoot, ids: expectedEntries.map(({ entry }) => entry.id.toLowerCase()), check: true });
-  assert.deepEqual(result, { svg: 33, png: 33 }, "Studio diagrams pass Skillstead lint and generated-file check");
+  assert.deepEqual(result, { svg: 34, png: 34 }, "Studio diagrams pass Skillstead lint and generated-file check");
 });
 
 test("Studio diagram semantic bindings reject wrong-valid skills, outputs, next routes, and removed branches", async () => {
@@ -3721,6 +3787,7 @@ const STUDIO_DIAGRAM_PRODUCTION_EXPECTED = Object.freeze({
   "st-s13": { kind: "skill", skill: "review-image-assets", trigger: ["검토 trigger", "draft receipt를 받습니다."], requiredInput: "draft receipt + lifecycle state", outputs: ["image-asset-review", "lifecycle-receipt"], nextRoutes: ["export-game-design-documents"], nextCondition: null, routeIds: [] },
   "st-s14": { kind: "skill", skill: "svg-infographic", trigger: ["SVG trigger", "구조 관계를 받습니다."], requiredInput: "relationship structure + evidence", outputs: ["editable-svg", "png-2x", "render-evidence"], nextRoutes: ["visualize-game-design"], nextCondition: null, routeIds: [] },
   "st-s15": { kind: "skill", skill: "visualize-game-design", trigger: ["시각화 trigger", "관계 질문을 받습니다."], requiredInput: "relationship question + source data", outputs: ["editable-svg", "png-2x", "visualization-evidence"], nextRoutes: ["review-game-design", "export-game-design-documents"], nextCondition: null, routeIds: ["visualization"] },
+  "st-s16": { kind: "skill", skill: "design-cutscene-visual-preproduction", trigger: ["style-master", "스타일 기준 이미지"], requiredInput: "cutscene brief + game-state return", outputs: ["cutscene-brief", "cutscene-shot-package", "cutscene-prompt-package", "cutscene-cost-estimate", "cutscene-continuity-review"], nextRoutes: ["plan-image-assets", "generate-image-assets", "review-image-assets"], nextCondition: "current estimate + named live approval → wave dispatch", routeIds: ["cutscene-visual-preproduction"] },
 });
 
 const STUDIO_CANONICAL_ROUTE_EXPECTED = Object.freeze({
@@ -3728,6 +3795,7 @@ const STUDIO_CANONICAL_ROUTE_EXPECTED = Object.freeze({
   vision: { triggerIntents: ["game vision", "design pillars", "core fun", "motivation loop"], skill: "define-game-vision", requiredInputs: ["target player", "desired emotion", "experience intent", "constraints"], artifactType: "vision-pillars" },
   systems: { triggerIntents: ["game system", "rules", "state transitions", "data schema"], skill: "design-game-systems", requiredInputs: ["system purpose", "inputs", "constraints", "failure expectations"], artifactType: "system-specification" },
   content: { triggerIntents: ["quest", "level content", "narrative", "character", "enemy", "combat", "boss", "encounter", "puzzle", "level design", "soft lock", "secret route", "reset", "retry"], skill: "design-game-content", requiredInputs: ["content purpose", "supporting systems", "production budget", "repeatability target"], artifactType: "narrative-quest-npc" },
+  "cutscene-visual-preproduction": { triggerIntents: ["컷씬 기획", "스토리보드", "시네마틱 이미지", "마스터 이미지", "컷씬 프롬프트", "컷씬 승인 후 생성"], skill: "design-cutscene-visual-preproduction", requiredInputs: ["cutscene brief", "game-state return"], artifactType: "cutscene-visual-preproduction" },
   "player-experience": { triggerIntents: ["player experience", "UX flow", "tutorial", "accessibility", "input"], skill: "design-player-experience", requiredInputs: ["critical actions", "platform", "input methods", "first-session goal"], artifactType: "ui-ux-flow-state" },
   economy: { triggerIntents: ["game economy", "monetization", "currency balance", "shop balance"], skill: "design-game-economy-and-liveops", requiredInputs: ["business model", "currencies", "progression target", "target inventory", "real-price policy"], artifactType: "economy-balance" },
   liveops: { triggerIntents: ["LiveOps", "event plan", "experiment", "segment rollout"], skill: "design-game-economy-and-liveops", requiredInputs: ["event goal", "experiment hypothesis", "control", "sample and duration", "protection metrics"], artifactType: "liveops-experiment-event" },
@@ -3735,6 +3803,8 @@ const STUDIO_CANONICAL_ROUTE_EXPECTED = Object.freeze({
   review: { triggerIntents: ["design review", "critique", "launch readiness", "risk review"], skill: "review-game-design", requiredInputs: ["canonical artifact", "review questions", "decision owner"], artifactType: "game-design-review" },
   visualization: { triggerIntents: ["diagram", "visualize", "flow chart", "economy map", "roadmap diagram"], skill: "visualize-game-design", requiredInputs: ["valid canonical artifact", "relationship to clarify", "target audience"], artifactType: "canonical-artifact" },
   export: { triggerIntents: ["export", "PDF", "DOCX", "presentation", "PPTX"], skill: "export-game-design-documents", requiredInputs: ["valid canonical artifact", "requested formats", "audience", "purpose"], artifactType: "canonical-artifact" },
+  "reference-game-analysis": { triggerIntents: ["reference game analysis", "game comparison", "design transfer decision", "경쟁작 분석", "레퍼런스 게임 분석", "장르 시스템 인벤토리", "게임 시스템 비교", "증거와 추정 분리"], skill: "analyze-game-design-references", requiredInputs: ["reference brief", "reference set", "evidence scope", "project constraints"], artifactType: "reference-system-analysis" },
+  "project-glossary-maintenance": { triggerIntents: ["game design glossary", "terminology maintenance", "terminology findings", "게임 기획 용어 사전", "용어 후보", "용어 승인", "한국어 영어 용어 일관성"], skill: "maintain-game-design-glossary", requiredInputs: ["glossary candidates", "glossary snapshot", "human decision owner"], artifactType: "game-design-glossary" },
 });
 
 function cloneStudioDiagramSource(source) {

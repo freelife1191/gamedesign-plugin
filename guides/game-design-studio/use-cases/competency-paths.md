@@ -1477,7 +1477,7 @@ ST-C07의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 �
 1. `production-scope-risk`에 core-loop 기여, capacity evidence, prototype hypothesis, dependency, DoD와 kill criterion을 기록합니다.
 2. `game-design-review`로 direct locator가 있는 finding과 minimal fix를 만들고 disagreement를 `decision-change-log`에 보존합니다.
 3. `plan-image-assets`에서 purpose·slot·stable ID·prompt·rights gap을 계획합니다. `IMAGE_GEN_MODE`의 `prompt-only`는 외부 호출 없이 prompt/placeholder만, `select`는 실제 사용자의 immutable receipt에 든 ordered stable IDs만, `required`는 manifest의 finite required assets만, `all`은 manifest에 선언된 required·recommended·variant만 대상으로 합니다.
-4. provider routing은 바꾸지 않습니다. non-empty `OPENAI_API_KEY`가 있으면 OpenAI only이며 실패 후 Codex fallback을 하지 않습니다. key가 없고 host capability가 `available`일 때만 해당 경로를 쓰며, 그 외에는 prompt와 placeholder를 보존합니다.
+4. provider routing은 `IMAGE_PROVIDER=codex-first`를 기본으로 유지합니다. API key가 있어도 available 호스트 `image_gen`을 먼저 쓰며, 실패나 품질 불만족 뒤 유료 API로 자동 전환하지 않습니다. 이미지 안에 한글이 필요하거나 사용자가 비용을 확인하고 OpenAI를 명시적으로 선택한 경우에만 `gpt-image-2`를 사용합니다.
 5. 구조 관계가 prose보다 명확할 때만 `visualize-game-design`을 계획하고, `export-game-design-documents`로 MD와 요청 형식의 renderer-neutral job을 준비합니다.
 
 ### 포트폴리오·실무 확장

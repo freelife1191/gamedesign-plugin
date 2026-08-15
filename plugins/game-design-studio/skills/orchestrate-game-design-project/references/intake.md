@@ -23,6 +23,19 @@ Record each field as supplied, safely assumed, unknown, or not applicable:
 
 Also record the decision owner, source material, relevant existing Canonical Artifact, and known deadlines or approval boundaries.
 
+## Memory normalization
+
+Add these normalized fields without changing the selected design route:
+
+```json
+{
+  "projectId": "existing-artifact-or-explicit-user-id",
+  "memoryDisabledForRequest": false
+}
+```
+
+Normalize an explicit request such as “do not use previous memory for this work” to `memoryDisabledForRequest = true`. It skips retrieval and candidate capture for this request only. When there is no project ID, skip memory as `skipped-project-id-missing`; ask for an ID only if it materially changes the design route, and continue the baseline workflow. Memory unavailability never blocks the Canonical Artifact.
+
 ## Assumption policy
 
 Make a safe assumption only when it is reversible, low impact, clearly labeled, and does not determine a responsible-design or release decision. Record every safe assumption with its affected section, validation owner, and replacement question.

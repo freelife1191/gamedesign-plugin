@@ -1863,6 +1863,355 @@
       "sample_result_excerpt": "‘자동 가격 조정’은 시장 운영의 이해도를 낮출 수 있어 ‘직접 흥정’ 기능과 나란히 비교했습니다. 플레이 관찰 자료의 책임자가 근거를 보완한 뒤 기능 채택을 판단합니다. (ID: studio:define-game-vision:advanced; 파일: game-design/studio-foundations/vision-advanced/content.md)"
     },
     {
+      "id": "studio:design-cutscene-visual-preproduction:beginner",
+      "kind": "skill-template",
+      "product": "studio",
+      "title": "컷씬 개요와 장면 박자를 생성 없이 정리",
+      "purpose": "컷씬 목적, 플레이어 상태, beat와 조작 반환 지점을 prompt-only 패키지에 고정한다.",
+      "audiences": [
+        "game-designer",
+        "content-narrative-designer"
+      ],
+      "intents": [
+        "컷씬 기획",
+        "beat 정리"
+      ],
+      "level": "beginner",
+      "when_to_use": "컷씬 이미지나 비용을 논의하기 전에 장면 목적과 감정 변화를 짧은 brief로 합의할 때 사용한다.",
+      "when_not_to_use": "이미지를 만들거나 승인·receipt를 추정할 때는 사용하지 않는다.",
+      "required_inputs": [
+        "컷씬 목적",
+        "player state",
+        "beat",
+        "조작 반환 지점",
+        "decision owner"
+      ],
+      "optional_inputs": [
+        "대사",
+        "참고 작품",
+        "자막 언어"
+      ],
+      "placeholders": [
+        "[컷씬 목적]",
+        "[player state]",
+        "[beat]",
+        "[decision owner]"
+      ],
+      "app_prompt": {
+        "example": "@Game Design Studio 오프닝 컷씬의 brief와 beat만 작성해. 플레이어 상태와 조작 반환 지점을 기록하고 이미지는 생성하지 마.",
+        "template": "@Game Design Studio [컷씬 목적]의 [player state]와 [beat]를 brief로 정리해. [decision owner] 검토 전에는 이미지나 승인을 만들지 마."
+      },
+      "cli_prompt": {
+        "example": "$game-design-studio:design-cutscene-visual-preproduction artifact=game-design/island/opening mode=prompt-only 오프닝 컷씬의 brief와 beat만 작성하고 provider는 호출하지 마.",
+        "template": "$game-design-studio:design-cutscene-visual-preproduction artifact=[컷씬 목적] mode=prompt-only [player state]와 [beat]를 기록하고 provider는 호출하지 마."
+      },
+      "skill": "design-cutscene-visual-preproduction",
+      "skill_chain": [
+        "design-cutscene-visual-preproduction"
+      ],
+      "specialist_roles": [
+        "content-narrative-designer",
+        "lead-game-designer"
+      ],
+      "intermediate_artifacts": [
+        "game-design-brief"
+      ],
+      "minimum_outputs": [
+        "cutscene brief",
+        "beat sheet",
+        "조작 반환 지점",
+        "미정 입력 목록"
+      ],
+      "optional_outputs": [
+        "대사 초안",
+        "자막 언어"
+      ],
+      "extended_outputs": [
+        "shot list",
+        "continuity bible"
+      ],
+      "expected_file_tree": [
+        "game-design/studio-cutscene/beginner/content.md",
+        "game-design/studio-cutscene/beginner/evidence.yml",
+        "game-design/studio-cutscene/beginner/export-manifest.yml"
+      ],
+      "read_order": [
+        "game-design/studio-cutscene/beginner/content.md",
+        "game-design/studio-cutscene/beginner/evidence.yml",
+        "game-design/studio-cutscene/beginner/export-manifest.yml"
+      ],
+      "human_review_boundary": "content-narrative-designer와 lead-game-designer가 beat와 조작 반환을 검토하며 이 기록은 이미지 승인이나 문서 승인이 아니다.",
+      "hold_conditions": [
+        "컷씬 목적이 없음",
+        "player state가 없음",
+        "decision owner가 없음"
+      ],
+      "resume_prompt": "기존 cutscene brief를 보존하고 새로 확인된 player state와 beat만 반영해 미정 입력 확인부터 재개해.",
+      "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request API keys, credentials, personal data, or private materials.",
+      "diagram_binding": {
+        "id": "st-s16",
+        "svg": "guides/assets/game-design-studio/skills/design-cutscene-visual-preproduction.svg",
+        "png": "guides/assets/game-design-studio/skills/design-cutscene-visual-preproduction.png",
+        "alt": "컷씬 비주얼 프리프로덕션 흐름"
+      },
+      "related_use_cases": [
+        "ST-C08"
+      ],
+      "related_recipes": [
+        "content-quest-design"
+      ],
+      "source_references": [
+        "guides/game-design-studio/skills/design-cutscene-visual-preproduction.md",
+        "guides/game-design-studio/cutscene-visual-preproduction.md"
+      ],
+      "display_title": "생성 전 컷씬 개요와 장면 박자 고정",
+      "sample_result_excerpt": "오프닝 컷씬의 조작 반환은 등대 점화 직후로 잡았고, 두 번째 beat의 감정 전환은 담당자 확인이 남아 있습니다. 이미지와 승인 receipt는 만들지 않았습니다. (ID: studio:design-cutscene-visual-preproduction:beginner; 파일: game-design/studio-cutscene/beginner/content.md)"
+    },
+    {
+      "id": "studio:design-cutscene-visual-preproduction:standard",
+      "kind": "skill-template",
+      "product": "studio",
+      "title": "장면 목록과 연속성 기준을 갖춘 프롬프트 패키지",
+      "purpose": "인물·배경·소품의 continuity 조건과 shot별 마스터 프롬프트를 생성 없이 reusable package로 나눈다.",
+      "audiences": [
+        "game-designer",
+        "content-narrative-designer",
+        "art-brief-director"
+      ],
+      "intents": [
+        "shot list",
+        "연속성 설계"
+      ],
+      "level": "standard",
+      "when_to_use": "컷씬의 shot 수와 시각 연속성 조건이 알려져 있어 마스터 프롬프트 패키지를 검토할 때 사용한다.",
+      "when_not_to_use": "reference hash를 발명하거나 provider 호출을 시작할 때는 사용하지 않는다.",
+      "required_inputs": [
+        "컷씬 brief",
+        "shot list",
+        "continuity bible",
+        "rights 상태",
+        "model",
+        "quality",
+        "size",
+        "decision owner"
+      ],
+      "optional_inputs": [
+        "참고 이미지",
+        "camera 참고",
+        "lighting 참고"
+      ],
+      "placeholders": [
+        "[컷씬 brief]",
+        "[shot list]",
+        "[continuity bible]",
+        "[model]",
+        "[quality]",
+        "[size]"
+      ],
+      "app_prompt": {
+        "example": "@Game Design Studio 컷씬의 shot list와 continuity bible, style/reference master 프롬프트만 작성해. 인물·배경·소품 조건을 stable ID로 연결하고 이미지는 생성하지 마.",
+        "template": "@Game Design Studio [컷씬 brief]의 [shot list]와 [continuity bible]을 바탕으로 [model] [quality] [size]용 마스터 프롬프트 패키지만 작성해. provider는 호출하지 마."
+      },
+      "cli_prompt": {
+        "example": "$game-design-studio:design-cutscene-visual-preproduction artifact=game-design/island/opening mode=prompt-only style-master와 reference-master prompt, stable ID, continuity 조건만 작성해.",
+        "template": "$game-design-studio:design-cutscene-visual-preproduction artifact=[컷씬 brief] mode=prompt-only shots=[shot list] continuity=[continuity bible] model=[model] quality=[quality] size=[size] prompt package만 작성해."
+      },
+      "skill": "design-cutscene-visual-preproduction",
+      "skill_chain": [
+        "design-cutscene-visual-preproduction",
+        "plan-image-assets"
+      ],
+      "specialist_roles": [
+        "content-narrative-designer",
+        "art-brief-director",
+        "lead-game-designer"
+      ],
+      "intermediate_artifacts": [
+        "game-design-brief"
+      ],
+      "minimum_outputs": [
+        "shot list",
+        "continuity bible",
+        "style master prompt",
+        "reference master prompt",
+        "stable ID"
+      ],
+      "optional_outputs": [
+        "camera reference",
+        "lighting reference"
+      ],
+      "extended_outputs": [
+        "assets/image-assets.yml",
+        "assets/prompts/image-prompts.md",
+        "assets/prompts/image-prompts.json"
+      ],
+      "expected_file_tree": [
+        "game-design/studio-cutscene/standard/content.md",
+        "game-design/studio-cutscene/standard/evidence.yml",
+        "game-design/studio-cutscene/standard/assets/prompts/image-prompts.md",
+        "game-design/studio-cutscene/standard/assets/prompts/image-prompts.json"
+      ],
+      "read_order": [
+        "game-design/studio-cutscene/standard/content.md",
+        "game-design/studio-cutscene/standard/evidence.yml",
+        "game-design/studio-cutscene/standard/assets/prompts/image-prompts.md",
+        "game-design/studio-cutscene/standard/assets/prompts/image-prompts.json"
+      ],
+      "human_review_boundary": "art-brief-director가 continuity 조건과 권리 상태를 검토하지만 prompt package는 생성 승인이나 production candidacy가 아니다.",
+      "hold_conditions": [
+        "shot list가 없음",
+        "continuity bible이 없음",
+        "rights 상태가 미확정"
+      ],
+      "resume_prompt": "기존 stable ID와 prompt package를 보존하고 확정된 shot과 continuity 조건만 반영해 prompt-only 단계부터 재개해.",
+      "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request API keys, credentials, personal data, or private materials.",
+      "diagram_binding": {
+        "id": "st-s16",
+        "svg": "guides/assets/game-design-studio/skills/design-cutscene-visual-preproduction.svg",
+        "png": "guides/assets/game-design-studio/skills/design-cutscene-visual-preproduction.png",
+        "alt": "컷씬 비주얼 프리프로덕션 흐름"
+      },
+      "related_use_cases": [
+        "ST-C08"
+      ],
+      "related_recipes": [
+        "content-quest-design"
+      ],
+      "source_references": [
+        "guides/game-design-studio/skills/design-cutscene-visual-preproduction.md",
+        "guides/game-design-studio/cutscene-visual-preproduction.md"
+      ],
+      "display_title": "컷씬 장면·연속성·마스터 프롬프트 패키지",
+      "sample_result_excerpt": "세 shot의 인물 의상과 등대 내부 조명을 continuity bible에 고정하고 style/reference master 프롬프트를 분리했습니다. reference hash와 이미지 bytes는 아직 없습니다. (ID: studio:design-cutscene-visual-preproduction:standard; 파일: game-design/studio-cutscene/standard/content.md)"
+    },
+    {
+      "id": "studio:design-cutscene-visual-preproduction:advanced",
+      "kind": "skill-template",
+      "product": "studio",
+      "title": "4단계 비용·실시간 승인·연속성 관문 계획",
+      "purpose": "style-master, reference-masters, keyframes, storyboard의 순차 비용·승인·재시도 경계를 검증할 수 있는 계획으로 정리한다.",
+      "audiences": [
+        "game-designer",
+        "art-brief-director",
+        "lead-game-designer"
+      ],
+      "intents": [
+        "컷씬 비용",
+        "승인 gate",
+        "연속성 검토"
+      ],
+      "level": "advanced",
+      "when_to_use": "현재 컷씬 prompt package에 유한한 비용 cap과 이름 있는 실시간 승인 정보를 붙여 각 wave의 dispatch 조건을 검토할 때 사용한다. 견적 초안은 미리 만들 수 있지만 paid dispatch는 current estimate와 named approval이 필요하고, style-master 뒤의 wave에는 선행 wave 완료도 필요하다.",
+      "when_not_to_use": "가격을 0으로 추정하거나 과거·포괄 승인을 다음 wave에 재사용할 때는 사용하지 않는다.",
+      "required_inputs": [
+        "current wave",
+        "count",
+        "provider",
+        "model",
+        "quality",
+        "size",
+        "USD min/expected/max",
+        "finite cap",
+        "retryReserve",
+        "pricing time",
+        "costStatus",
+        "named approval"
+      ],
+      "optional_inputs": [
+        "기존 receipt",
+        "retryable stable ID",
+        "continuity finding"
+      ],
+      "placeholders": [
+        "[current wave]",
+        "[count]",
+        "[model]",
+        "[quality]",
+        "[size]",
+        "[finite cap]",
+        "[named approval]"
+      ],
+      "app_prompt": {
+        "example": "@Game Design Studio 컷씬의 style-master 비용과 승인 계획을 계산해. 한글이 없는 프레임은 host image_gen 우선, 유료 기본은 low, 선택한 master만 medium으로 두고 high는 사용하지 마. count, model, quality, size, USD min/expected/max, finite cap, retryReserve, pricing time, costStatus를 공개하고 이미지는 생성하지 마.",
+        "template": "@Game Design Studio [current wave]의 [count], [model], [quality], [size], USD 범위와 [finite cap]을 비용 계획으로 공개해. 한글 픽셀 텍스트는 gpt-image-2, 그 밖에는 host 우선·low 기본·medium 선택·high 예외 정책을 적용하고 [named approval] 전에는 provider를 호출하지 마."
+      },
+      "cli_prompt": {
+        "example": "$game-design-studio:design-cutscene-visual-preproduction artifact=game-design/island/opening mode=estimate-only wave=style-master count=1 provider=codex-first quality=medium size=1536x1024 capUsd=20 비용과 named approval 요구만 기록해.",
+        "template": "$game-design-studio:design-cutscene-visual-preproduction artifact=[current wave] mode=estimate-only count=[count] provider=[provider] model=[model] quality=[quality] size=[size] capUsd=[finite cap] namedApproval=[named approval] host 우선·low 기본·medium 선택·high 예외 비용 계획만 기록해."
+      },
+      "skill": "design-cutscene-visual-preproduction",
+      "skill_chain": [
+        "design-cutscene-visual-preproduction",
+        "plan-image-assets",
+        "generate-image-assets",
+        "review-image-assets"
+      ],
+      "specialist_roles": [
+        "art-brief-director",
+        "lead-game-designer"
+      ],
+      "intermediate_artifacts": [
+        "game-design-brief"
+      ],
+      "minimum_outputs": [
+        "4 wave schedule",
+        "USD min/expected/max",
+        "finite cap",
+        "retryReserve",
+        "named approval boundary",
+        "continuity gate"
+      ],
+      "optional_outputs": [
+        "retryable stable ID",
+        "continuity finding"
+      ],
+      "extended_outputs": [
+        "assets/image-assets.yml",
+        "assets/receipts/image-generation-<asset-id>-<attempt-id>.json",
+        "decisions/image-review-<event-id>.json"
+      ],
+      "expected_file_tree": [
+        "game-design/studio-cutscene/advanced/content.md",
+        "game-design/studio-cutscene/advanced/evidence.yml",
+        "game-design/studio-cutscene/advanced/assets/image-assets.yml",
+        "game-design/studio-cutscene/advanced/assets/receipts/image-generation-<asset-id>-<attempt-id>.json"
+      ],
+      "read_order": [
+        "game-design/studio-cutscene/advanced/content.md",
+        "game-design/studio-cutscene/advanced/evidence.yml",
+        "game-design/studio-cutscene/advanced/assets/image-assets.yml",
+        "game-design/studio-cutscene/advanced/assets/receipts/image-generation-<asset-id>-<attempt-id>.json"
+      ],
+      "human_review_boundary": "lead-game-designer가 현재 estimate와 이름 있는 승인 범위를 확인하며 provider 결과와 continuity review가 있어도 사람이 lifecycle 승격을 결정한다.",
+      "hold_conditions": [
+        "finite cap이 없음",
+        "costStatus가 unavailable",
+        "current estimate가 없음",
+        "named approval이 없음",
+        "style-master 뒤 wave의 선행 완료 receipt가 없음"
+      ],
+      "resume_prompt": "성공 receipt와 terminal failure를 보존하고 최신 retryable stable ID만 같은 current full-wave estimate와 named live approval으로 재개해.",
+      "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request API keys, credentials, personal data, or private materials.",
+      "diagram_binding": {
+        "id": "st-s16",
+        "svg": "guides/assets/game-design-studio/skills/design-cutscene-visual-preproduction.svg",
+        "png": "guides/assets/game-design-studio/skills/design-cutscene-visual-preproduction.png",
+        "alt": "컷씬 비주얼 프리프로덕션 흐름"
+      },
+      "related_use_cases": [
+        "ST-C08"
+      ],
+      "related_recipes": [
+        "content-quest-design"
+      ],
+      "source_references": [
+        "guides/game-design-studio/skills/design-cutscene-visual-preproduction.md",
+        "guides/game-design-studio/cutscene-visual-preproduction.md"
+      ],
+      "display_title": "컷씬 4단계 비용·승인·연속성 관문",
+      "sample_result_excerpt": "style-master 1건의 비용 범위와 cap, retryReserve를 공개했고 costStatus가 unavailable이면 provider 호출 0회로 멈추도록 기록했습니다. style-master는 current estimate와 named approval 뒤에 dispatch하며, keyframes와 storyboard는 같은 조건에 선행 wave 완료가 더 필요합니다. (ID: studio:design-cutscene-visual-preproduction:advanced; 파일: game-design/studio-cutscene/advanced/content.md)"
+    },
+    {
       "id": "studio:design-game-content:beginner",
       "kind": "skill-template",
       "product": "studio",
@@ -4387,12 +4736,12 @@
         "[capability snapshot]"
       ],
       "app_prompt": {
-        "example": "@Game Design Studio required finite assets만 처리해. key가 없고 host capability가 available이면 해당 jobs만 사용하고 unknown 또는 unavailable이면 호출하지 말고 prompt와 placeholder를 보존해.",
-        "template": "@Game Design Studio [Canonical Artifact]의 [declared required stable IDs]를 required mode로 처리해. [capability snapshot]에서 key가 없고 host가 available일 때만 jobs를 사용하고 unknown 또는 unavailable이면 호출하지 말고 prompt와 placeholder를 보존해."
+        "example": "@Game Design Studio required finite assets만 처리해. IMAGE_PROVIDER=codex-first로 API key와 관계없이 available host image_gen을 먼저 사용하고, unavailable이면 유료 전환 제안만 남긴 뒤 호출하지 말고 prompt와 placeholder를 보존해.",
+        "template": "@Game Design Studio [Canonical Artifact]의 [declared required stable IDs]를 required mode로 처리해. [capability snapshot]에서 IMAGE_PROVIDER=codex-first로 host가 available일 때 jobs를 사용하고, unavailable이면 explicit OpenAI 비용 제안만 남긴 뒤 호출하지 말고 prompt와 placeholder를 보존해."
       },
       "cli_prompt": {
         "example": "$game-design-studio:generate-image-assets artifact=game-design/coop/brief mode=required capability=unavailable required declared jobs는 unavailable로 두고 prompt와 placeholder를 보존해.",
-        "template": "$game-design-studio:generate-image-assets artifact=[Canonical Artifact] mode=required assetIds=[declared required stable IDs] capability=[capability snapshot] key가 없고 host가 available일 때만 jobs를 사용하고 아니면 호출 없이 보존해."
+        "template": "$game-design-studio:generate-image-assets artifact=[Canonical Artifact] mode=required assetIds=[declared required stable IDs] capability=[capability snapshot] IMAGE_PROVIDER=codex-first로 available host image_gen을 먼저 사용하고 아니면 유료 전환 제안만 남긴 뒤 호출 없이 보존해."
       },
       "skill": "generate-image-assets",
       "skill_chain": [
@@ -4464,7 +4813,7 @@
       "kind": "skill-template",
       "product": "studio",
       "title": "all mode OpenAI-only failure와 provenance 분리",
-      "purpose": "all mode의 declared required·recommended·variant jobs만 실행하고 API key가 있으면 OpenAI only failure를 Codex fallback 없이 provenance에 남긴다.",
+      "purpose": "all mode의 declared required·recommended·variant jobs만 실행한다. codex-first host image_gen을 먼저 쓰고, 한글 삽입은 explicit OpenAI gpt-image-2, low 기본·medium 선택·high 예외 정책으로 비용 승인 뒤 실행한다.",
       "audiences": [
         "art-brief-director",
         "visual-asset-reviewer"
@@ -4480,6 +4829,9 @@
         "validated image manifest",
         "compiled prompt package",
         "IMAGE_GEN_MODE=all",
+        "IMAGE_PROVIDER=codex-first 또는 승인된 openai",
+        "IMAGE_EMBEDDED_TEXT_LOCALE=none 또는 ko-KR",
+        "IMAGE_QUALITY=low 또는 승인된 medium/high",
         "redacted provider configuration",
         "capability snapshot",
         "declared finite jobs"
@@ -4494,12 +4846,12 @@
         "[provider failure state]"
       ],
       "app_prompt": {
-        "example": "@Game Design Studio all mode에서 declared required·recommended·variant jobs만 처리해. OPENAI_API_KEY가 있으면 OpenAI only로 시도하고 auth·quota·policy·network 실패 후 Codex fallback은 금지하며 provenance를 분리해.",
-        "template": "@Game Design Studio [Canonical Artifact]의 [declared finite jobs]만 all mode로 처리해. [provider failure state]를 asset별 provenance로 보존하고 key가 있으면 OpenAI only이며 실패 후 Codex fallback은 금지해."
+        "example": "@Game Design Studio all mode에서 declared required·recommended·variant jobs만 처리해. IMAGE_PROVIDER=codex-first로 host image_gen을 먼저 시도해. 만족스럽지 않으면 low OpenAI 비용을 제안하고 승인 뒤에만 explicit OpenAI를 실행해. 이미지 안 한글은 IMAGE_EMBEDDED_TEXT_LOCALE=ko-KR과 gpt-image-2가 필수야. medium은 master, high는 예외적인 video hero frame이나 production concept art에만 비용 승인 뒤 사용해.",
+        "template": "@Game Design Studio [Canonical Artifact]의 [declared finite jobs]만 all mode로 처리해. [provider failure state]를 보존하고 host 우선, explicit OpenAI 승인, 한글 ko-KR + gpt-image-2, low 기본·medium master·high 예외 정책을 지켜."
       },
       "cli_prompt": {
-        "example": "$game-design-studio:generate-image-assets artifact=game-design/coop/brief mode=all declared=required,recommended,variant provider=OpenAI OpenAI only failure를 보존하고 fallback 없이 provenance를 분리해.",
-        "template": "$game-design-studio:generate-image-assets artifact=[Canonical Artifact] mode=all assetIds=[declared finite jobs] failureState=[provider failure state] OpenAI only failure를 보존하고 Codex fallback 없이 provenance를 분리해."
+        "example": "$game-design-studio:generate-image-assets artifact=game-design/coop/brief mode=all declared=required,recommended,variant provider=OpenAI 승인된 OpenAI failure를 보존하고 자동 fallback 없이 provenance를 분리해.",
+        "template": "$game-design-studio:generate-image-assets artifact=[Canonical Artifact] mode=all assetIds=[declared finite jobs] failureState=[provider failure state] IMAGE_PROVIDER=codex-first로 host image_gen을 먼저 시도해. 만족스럽지 않거나 실패하면 결과를 보존하고 low 유료 비용을 제안하되 승인 전에는 호출하지 마. 이미지 안 한글은 IMAGE_EMBEDDED_TEXT_LOCALE=ko-KR과 explicit OpenAI gpt-image-2를 사용하고, medium은 master/key image, high는 예외적인 video hero frame이나 production concept art에만 비용 승인 뒤 사용해."
       },
       "skill": "generate-image-assets",
       "skill_chain": [
@@ -4515,7 +4867,7 @@
       ],
       "minimum_outputs": [
         "all declared finite job list",
-        "OpenAI only or host decision",
+        "codex-first host or explicitly approved OpenAI decision",
         "per-asset provenance",
         "explicit failure state",
         "concept-draft result"

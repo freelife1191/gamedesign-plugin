@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "sourceTreeSha256", "entries"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "sourceTreeSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "entries": {
+      "type": "array", "maxItems": 10000,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["memoryId", "headEventId", "headEventPath", "fileSha256", "kind", "lane", "status", "scope", "projectId", "artifactTypes", "relatedIds", "tags"],
+        "properties": {
+          "memoryId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+          "headEventId": { "type": "string", "pattern": "^mev1-[a-f0-9]{64}$" },
+          "headEventPath": { "type": "string", "pattern": "^(?!.*[\\u0000\\uFEFF\\r])(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+" },
+          "fileSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "kind": { "enum": ["project-fact", "decision", "design-lesson", "style-preference", "career-lesson", "external-note"] },
+          "lane": { "enum": ["common", "studio", "career"] },
+          "status": { "enum": ["candidate", "verified", "approved", "expired", "rejected", "disputed", "superseded", "stale"] },
+          "scope": { "enum": ["project", "workspace", "global"] },
+          "projectId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+          "artifactTypes": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" } },
+          "relatedIds": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" } },
+          "tags": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" } }
+        }
+      }
+    }
+  }
+}

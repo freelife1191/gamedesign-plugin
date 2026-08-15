@@ -6,7 +6,7 @@
 - 상태: 사용자 승인
 - 대상: Game Design Studio, Game Design Career, 공통 런타임과 사용자 가이드
 - 기본 정책: 프로젝트별·로컬 전용·승인 기반 기억
-- 1차 검색 계층: Markdown 원본과 재생성 가능한 JSON 색인
+- 1차 검색 계층: append-only Markdown 이벤트와 재생성 가능한 JSON 색인 세대
 
 ## 결정 요약
 
@@ -21,8 +21,8 @@ Studio와 Career에 가벼운 장기 기억 기능을 추가한다. 기억은 LL
 밝힌 지속적인 표현·작업 선호는 명시적 사용자 지시라는 근거와 함께 승인된
 선호로 기록할 수 있다.
 
-Markdown을 기억의 원본으로 사용하고 `memory-index.json`은 검색용 생성
-파일로 둔다. SQLite는 1차 구현에서 제외한다. 기억이 없거나 손상돼도 기존
+한 번만 추가하는 Markdown 이벤트를 기억의 원본으로 사용하고 JSON 색인 세대는
+삭제 후 재생성할 수 있는 검색 캐시로 둔다. SQLite는 1차 구현에서 제외한다. 기억이 없거나 손상돼도 기존
 기획, 검토, 이미지, 도식화, 한국어 문장 검수와 내보내기는 계속 동작한다.
 
 ## 배경과 설계 근거
@@ -66,17 +66,17 @@ Markdown을 기억의 원본으로 사용하고 `memory-index.json`은 검색용
 
 ### Markdown 위키만 사용
 
-`index.md`, `log.md`와 기억 문서만 읽는 가장 단순한 방식이다. 사람이 바로
+`index.md`, `log.md`와 기억 이벤트만 읽는 가장 단순한 방식이다. 사람이 바로
 열어볼 수 있고 추가 런타임이 없지만, 문서가 늘어나면 매번 전체 파일에서 ID,
 상태, 범위와 출처를 확인해야 한다. 작은 실험에는 적합하지만 제품 계약으로는
 검색과 중복 검사가 약하다.
 
 ### Markdown 원본과 재생성 가능한 JSON 색인
 
-Markdown을 유일한 원본으로 두고 결정적 검사기가 `memory-index.json`을
-생성한다. 사람이 읽는 기록과 기계 검색을 분리하며, 색인이 손상돼도 원본에서
-다시 만들 수 있다. 현재 Node 18 지원을 유지하면서 외부 의존성을 추가하지
-않는다. 이 방식을 채택한다.
+Markdown 이벤트를 유일한 원본으로 두고 결정적 접기(`fold`)가 현재 `head`와 JSON 색인
+세대를 생성한다. 사람이 읽는 기록과 기계 검색을 분리하며, 색인이 손상돼도
+원본에서 다시 만들 수 있다. Node `>=18` 표준 라이브러리만 사용하고 런타임
+compiler나 외부 의존성을 추가하지 않는다. 이 방식을 채택한다.
 
 ### Markdown과 SQLite를 처음부터 사용
 
@@ -120,7 +120,7 @@ Markdown을 유일한 원본으로 두고 결정적 검사기가 `memory-index.j
 - 기존 교훈을 대체하거나 반박하는 결과
                          │
                          ▼
-로컬 기억 저장·색인 갱신·짧은 사용 기록
+로컬 기억 이벤트 append·색인 세대 생성·짧은 사용 기록
 ```
 
 기억은 검색 보조 계층이다. 결과 문서가 로컬 기억에만 의존하면 안 된다.
@@ -141,22 +141,45 @@ Markdown을 유일한 원본으로 두고 결정적 검사기가 `memory-index.j
 후보 작성을 건너뛰고 프로젝트 식별이 필요하다는 비차단 안내만 남긴다.
 
 ```text
-<workspace-root>/.game-design/
-├── memory/
-│   ├── index.md
-│   ├── log.md
-│   ├── projects/
-│   ├── lessons/
-│   │   ├── candidates/
-│   │   ├── approved/
-│   │   └── retired/
-│   ├── preferences/
-│   ├── conflicts/
-│   └── receipts/
-├── generated/
-│   └── memory-index.json
-└── quarantine/
+<store-root>/
+└── v1/
+    ├── events/
+    │   └── <memory-shard>/<memory-id>/<event-id>/
+    │       ├── instances/<instance-id>.md
+    │       ├── claims/<instance-id>.json
+    │       └── commit.json
+    ├── controls/
+    │   └── quarantine/<target-shard>/<target-event-id>/<marker-event-id>/
+    │       ├── instances/<instance-id>.md
+    │       ├── claims/<instance-id>.json
+    │       └── commit.json
+    └── derived/
+        ├── .reservations/global/<00000..09999>.json
+        ├── indexes/<source-tree-sha256>/<index-sha256>/
+        │   ├── instances/<instance-id>.json
+        │   └── _slots/<000..255>.json
+        ├── receipts/<request-sha256>/<receipt-sha256>/
+        │   ├── instances/<instance-id>.json
+        │   └── _slots/<000..255>.json
+        ├── views/<source-tree-sha256>/<view-sha256>/
+        │   ├── instances/<instance-id>.md
+        │   └── _slots/<000..255>.json
+        └── logs/<source-tree-sha256>/<log-sha256>/
+            ├── instances/<instance-id>.md
+            └── _slots/<000..255>.json
 ```
+
+`memory-shard`는 `sha256(memory_id).slice(0, 2)`다. 이벤트 ID는 정규화한 UTF-8
+Markdown bytes에서 계산한 `mev1-<sha256>`이다. 논리 record에는 `event_id`와
+`event_sha256`을 넣지 않으며 validator는 두 필드를 알 수 없는 key로 거부한다.
+이렇게 해야 event ID를 계산할 Markdown이 자기 해시를 포함하는 순환을 피한다.
+`instance-id`는 `randomUUID()`로 만든다. 같은 논리 결과를 여러 프로세스가 동시에
+생성할 때 물리 파일을 구분할 뿐 record, event ID와 색인 내용에는 들어가지
+않는다. 상태별 디렉터리와 current pointer는 두지 않는다. 경로는 권한이나
+상태를 나타내지 않으며, 유효한 이벤트 DAG를 fold한 head가 현재 상태다.
+
+Markdown 이벤트와 quarantine marker만 감사 가능한 영구 기록이다. `derived/`
+아래 JSON과 Markdown 세대는 모두 삭제 가능한 캐시이며 원본을 대신하지 않는다.
 
 - `project`: 현재 `project_id`와 공통 프로젝트 사실만 검색한다.
 - `workspace`: 같은 작업 공간에 있는 여러 `project_id`의 승인 기록을 검색할
@@ -171,8 +194,8 @@ Markdown을 유일한 원본으로 두고 결정적 검사기가 `memory-index.j
 
 ### 로컬 Git 제외
 
-기본 `local` 모드에서는 최초 초기화 때 현재 Git 저장소의
-`.git/info/exclude`에 플러그인 소유 표식 블록만 추가한다.
+기본 `local` 모드에서는 기억 이벤트 append가 성공한 뒤 별도 best-effort 단계로
+현재 Git 저장소의 `.git/info/exclude`에 플러그인 소유 표식 블록만 추가한다.
 
 ```gitignore
 # game-design-plugin:memory:start
@@ -187,34 +210,364 @@ Markdown을 유일한 원본으로 두고 결정적 검사기가 `memory-index.j
 - `tracked` 모드는 기억을 자동 커밋하지 않는다.
 - 표식 제거는 명시적인 기억 관리 작업에서만 수행한다.
 
-## 기억 문서 계약
+repo별 `.git/info/.game-design-memory-exclude.lock`를 `open('wx')`로 만든
+프로세스만 기존 파일을 제한된 크기로 읽고 표식이 없을 때 끝에 한 번 append한
+뒤 sync한다. lock 충돌·stale lock·사용자 파일 변화·잘못된 표식은 warning으로
+건너뛴다. Git 제외 실패는 이미 저장한 기억 이벤트를 rollback하거나 다시 쓰지
+않는다. 이 경로는 기억 이벤트 저장 계약과 신뢰 경계를 공유하지 않는다.
 
-각 기억은 Markdown 한 파일이다. YAML 앞부분에는 검색과 검증에 필요한 닫힌
-필드 집합만 허용한다. 여러 출처는 정렬된 `sources` 목록으로 기록한다.
+### 변경 불가 추가와 동시 실행
+
+권한이 있는 final 경로를 `O_EXCL`로 직접 쓰지 않는다. write·sync 도중 프로세스가
+중단되면 partial 파일이 content-addressed 경로를 영구 점유해 같은 event를 다시
+쓸 수 없기 때문이다. `appendMemoryEvent`와 `appendQuarantineMarker`는 다음 sealed
+instance protocol을 사용한다.
+
+1. 경로와 크기를 검사하고 기존 ancestor를 `lstat`과 `realpath`로 확인한다.
+2. `randomUUID()`로 고른 `instances/<instance-id>.md`를 mode `0o600`,
+   `O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW`로 연다. write loop, `FileHandle.sync()`,
+   close를 마친 뒤 bytes의 event ID·schema를 다시 검증한다.
+3. event ID, instance ID, file SHA-256과 byte length만 담은 canonical JSON claim을
+   `claims/<instance-id>.json`에 같은 방식으로 완전히 쓰고 sync한다. claim은
+   key 순서가 `schemaVersion`, `eventId`, `instanceId`, `fileSha256`, `byteLength`인
+   공백 없는 JSON object와 trailing LF 한 개다. `schemaVersion`은 1이다.
+4. 완전히 sync한 claim에 `link(claimPath, commit.json)`을 호출한다. 같은
+   filesystem의 hard link 생성은 create-once commit 지점이다. 성공 후 event
+   디렉터리를 best-effort sync하고 read-back 검증을 통과해야 `created`다.
+5. `EEXIST`이면 기존 `commit.json`, 가리키는 instance와 canonical bytes를 bounded
+   read로 검증한다. 모두 같으면 `present`, 하나라도 다르면 conflict다.
+
+instance나 claim 쓰기 중 중단되면 `commit.json`이 없으므로 scanner가 무시한다.
+재시도는 새 instance ID를 사용한다. claim이 완전히 sync된 뒤 hard link가
+생기므로 partial commit marker는 존재할 수 없다. commit 뒤 instance·claim·marker
+중 하나라도 없거나 hash·length·schema가 다르면 해당 memory를 fail-closed한다.
+scanner는 유효한 `commit.json`이 seal한 instance만 논리 event나 control로 인정한다.
+
+Studio와 Career가 동시에 같은 이벤트를 쓰면 한 프로세스만 hard link 생성에
+성공해 `created`를 받고 loser는 기존 commit을 검증해 `present`를 받는다. 서로
+다른 이벤트는 모두 남아 fold에서 선형 head나 branch로 판정한다. plugin API는
+source event와 control에 truncate, rename, unlink를 호출하지 않는다.
+
+### 공개 저장·접기 API
+
+다음 공개 형태를 사용한다.
+
+```js
+memoryEventRelativePath({ memoryId, eventId }) -> string
+stageImmutableMemoryFile({ store, relativePath, bytes }) -> Promise<{ instancePath, fileSha256, byteLength }>
+parseMemoryEventDocument(source, { sourceName, eventId }) -> { event, record, sections }
+appendMemoryEvent({ store, eventDocument }) -> Promise<{ status, eventId, relativePath, fileSha256 }>
+scanMemoryEvents({ store, maxEventBytes = 262144, maxEvents = 10000 }) -> Promise<MemoryEventScan>
+foldMemoryEvents(scan, { now }) -> MemoryFold
+appendQuarantineMarker({ store, targetMemoryId, targetEventId, targetRelativePath, observedSha256, reasonCode, actor, now }) -> Promise<AppendResult>
+publishMemoryIndexGeneration({ store, indexBytes, sourceTreeSha256, limits }) -> Promise<{ complete, status: "created"|"present"|null, generationPath: string|null, indexSha256: string|null, warnings }>
+loadCurrentMemoryIndex({ store, fold, limits }) -> Promise<{ complete, index: object|null, bytes: Buffer|null, sourceTreeSha256: string|null, indexSha256: string|null, warnings }>
+publishMemoryReceiptGeneration({ store, receiptBytes, requestSha256, limits }) -> Promise<{ complete, status: "created"|"present"|null, generationPath: string|null, receiptSha256: string|null, warnings }>
+loadMemoryReceipt({ store, requestSha256, receiptSha256, limits }) -> Promise<{ complete, status: "ready"|"missing"|"corrupt"|null, receipt: object|null, bytes: Buffer|null, warnings }>
+listMemoryReceipts({ store, requestSha256, maxItems = 256, limits }) -> Promise<{ complete, items: ReceiptHistoryMetadata[], warnings }>
+publishMemoryViewGeneration({ store, viewBytes, sourceTreeSha256, limits }) -> Promise<DerivedPublishResult>
+loadMemoryView({ store, sourceTreeSha256, viewSha256, limits }) -> Promise<DerivedLoadResult>
+publishMemoryLogGeneration({ store, logBytes, sourceTreeSha256, limits }) -> Promise<DerivedPublishResult>
+loadMemoryLog({ store, sourceTreeSha256, logSha256, limits }) -> Promise<DerivedLoadResult>
+scanDerivedGenerations({ store, limits }) -> Promise<DerivedGenerationScan>
+rebuildMemoryIndex({ workspaceRoot, config, now }) -> Promise<MemoryIndex>
+```
+
+`DerivedPublishResult`는 `{ complete, status: "created"|"present"|null,
+generationPath: string|null, generationSha256: string|null, warnings }`, `DerivedLoadResult`는
+`{ complete, status: "ready"|"missing"|"corrupt"|null, bytes: Buffer|null,
+generationPath: string|null, warnings }`로 닫는다. census 또는 quota가 불완전하면
+`complete:false`, status와 path는 `null`이며 loader/list의 object·bytes·items는
+각각 `null`, `null`, `[]`다.
+
+`resolveMemoryStore`, immutable bounded `readMemoryFile`, `parseMemoryDocument`,
+`validateMemoryRecord`, `validateMemoryTransition`, `validateMemorySourceBindings`는
+유지한다. `captureDesignMemory` 결과의 `created|present|conflict` 의미도 유지한다.
+`maintainDesignMemory`의 approve·reject·sweep는 transition 이벤트를 append하고,
+quarantine은 marker를 append한다.
+
+`MEMORY_PLATFORM_CAPABILITIES`, `createMemoryStorePlatformAdapter`,
+`writeMemoryFileAtomic`, `moveMemoryFileAtomic`, `memoryRecordRelativePath`와
+`memory-store-posix-helper.c`는 구현 후 공개 surface에 남기지 않는다. runtime
+C compiler, 외부 helper, replace, move, 상태별 경로 또는 current pointer에
+의존하지 않는다. `ensureMemoryGitExclusion`은 별도 best-effort trust path로만
+유지한다.
+
+### 손상, 논리 격리와 색인 세대
+
+scanner는 손상 항목의 안전한 상대 `path`, `reasonCode`, 가능한 경우
+`observedSha256`만 보고한다. raw bytes와 절대 경로를 오류에 넣지 않는다. 유효한
+이벤트가 손상되면 그 memory 전체를 검색에서 제외하지만 관련 없는 memory는
+계속 fold한다.
+
+`maxEvents` 기본값과 hard maximum은 모두 10,000이다. 호출자는 1~10,000만 줄일
+수 있고 그 밖의 값은 scan 전에 거부한다. 이 예산은 `events/`와
+`controls/quarantine/` 아래에서 만난 directory, regular file, symlink와 special
+entry를 유효 여부와 seal 여부에 관계없이 하나씩 센다. 10,001번째 entry를
+처리하기 전에 `complete:false`, `memory.scan_limit_exceeded`로 중단한다. scan이
+불완전하면 그 store 전체를 승인 검색·색인 publish에 사용하지 않는다. 한도 뒤에
+있는 무효화 transition을 놓치고 이전 approved head를 되살리는 경로는 없다.
+`MemoryEventScan`은 `complete`, `entriesScanned`, `events`, `controls`, `diagnostics`를
+반환하며 `entriesScanned`는 10,000을 넘지 않는다.
+
+격리는 원본 이동이 아니라 `controls/quarantine/`에 sealed immutable Markdown
+marker를 append하는 작업이다. marker에는 target memory ID, target event ID와
+상대 경로, observed digest 또는 `null`, reason code, actor, `recorded_at`만 둔다.
+marker ID는 canonical marker Markdown bytes의
+`qmv1-<sha256>`이며 event와 같은 sealed instance protocol을 쓴다.
+유효한 marker 하나가 있으면 해당 `memory_id` 전체를 영구 fail-closed 격리한다.
+이전 approved ancestor와 이후 event도 검색·
+색인·resolution 입력으로 돌아올 수 없다. v1에는 `unquarantine`과 `repair`가
+없다. 복구가 필요하면 출처와 감사 연결을 갖춘 새 `memory_id`의 capture event를
+만들어야 하며, 격리된 DAG를 parent로 참조할 수 없다. 원본 bytes와 marker는
+그대로 보존한다.
+
+`sourceTreeSha256`은 정렬된 `(relativePath, observedSha256, classification)`
+tuple의 canonical JSON hash다. `v1/events/`와 `v1/controls/`만 입력이며 손상
+항목도 트리 정체성에 포함한다. `v1/derived/indexes|receipts|views|logs`는
+`sourceTreeSha256`에서 제외해 파생물이 자기 source identity를 바꾸지 않게 한다.
+`rebuildMemoryIndex`는 매번 raw 이벤트와 marker를 scan/fold해 canonical index
+bytes와 `indexSha256`을 만들고 새 generation을 create-once로 publish한다. current
+pointer는 없다. fresh fold의 두 hash와 모두 일치하는 valid generation만 현재
+색인으로 보며 여러 instance가 있으면 bytewise-lowest 경로를 읽는다. 없거나
+모두 손상됐으면 새 instance를 append한다. `index.md`와 `log.md`도 같은 규칙을
+따르며 UUID와 실행 시각은 논리 bytes에 넣지 않는다.
+
+### JSON receipt와 Markdown log 분리
+
+retrieval 사용 기록은 JSON receipt generation이다. receipt의 논리 identity는
+`(requestSha256, receiptSha256)` pair다. `requestSha256`은 정규화된 사용자 request
+context만 식별하며 다음 canonical JSON bytes의 SHA-256이다.
+
+```json
+{"schemaVersion":1,"projectId":"wind-island","lane":"studio","artifactIds":["combat-loop-v3"],"artifactTypes":["character-skill-combat-monster"],"tags":["boss","counterplay"]}
+```
+
+request identity와 receipt는 NFC string, UTF-8, 정렬·중복 제거 array, schema key
+순서, 공백 없는 JSON object와 trailing LF 한 개로 직렬화한다. receipt key 순서는
+`schemaVersion`, `requestSha256`, `sourceTreeSha256`, `projectId`, `lane`, `policy`,
+`observations`, `applied`, `excluded`다. `policy`는 `scope`, `maxItems`,
+`candidateTtlDays` 순서다. `observations` 항목은 `memoryId`, `artifactId`, `locator`,
+`expectedSha256`, `observedSha256`, `status` 순서다. status와 digest는 다음처럼
+결속한다. `current`는 `observedSha256`이 non-null이고 `expectedSha256`과 같아야
+한다. `drift`는 non-null이고 expected와 달라야 한다. `missing|symlink|unreadable`은
+원문 bytes를 권한 있게 관찰하지 못한 상태이므로 `observedSha256:null`이어야 한다.
+이 조건을 벗어난 receipt는 schema와 runtime 모두 거부한다.
+`applied` 항목은 `memoryId`, `headEventId`, `fileSha256`, `excluded` 항목은
+`memoryId`, `reason` 순서다. observations는 `(memoryId, artifactId, locator)`, 나머지
+두 array는 `memoryId`의 UTF-8 byte 순으로 정렬한다. schema validation을 통과한
+canonical receipt 전체 bytes에서 `receiptSha256`을 계산한다.
+
+```json
+{"schemaVersion":1,"requestSha256":"0968f05ea689b0628fd0e7857c397c5c40d6662f3b7eaeb250e37999a4aba4e6","sourceTreeSha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","projectId":"wind-island","lane":"studio","policy":{"scope":"project","maxItems":5,"candidateTtlDays":30},"observations":[{"memoryId":"memory-studio-design-lesson-0f2a4c61d9ab34ef","artifactId":"playtest-session-04","locator":"evidence.yml#finding-07","expectedSha256":"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc","observedSha256":"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc","status":"current"}],"applied":[{"memoryId":"memory-studio-design-lesson-0f2a4c61d9ab34ef","headEventId":"mev1-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","fileSha256":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}],"excluded":[{"memoryId":"memory-studio-design-lesson-old","reason":"stale-source"}]}
+```
+
+위 request fixture의 exact `requestSha256`은
+`0968f05ea689b0628fd0e7857c397c5c40d6662f3b7eaeb250e37999a4aba4e6`이다. 같은
+request hash를 receipt 본문에 넣어 schema와 canonical key order를 적용한 예시의
+exact `receiptSha256`은
+`bd0c7ff75debd6e3abdc1607cde38b2e249f0cb5eba2d930b46b5ea3e96de358`이다.
+
+receipt는
+`derived/receipts/<request-sha256>/<receipt-sha256>/instances/<randomUUID>.json`에
+create-once publish한다. 앞선 publish가 끝난 뒤 같은 pair를 순차 재시도하면 bounded
+census에서 valid canonical bytes를 찾아 새 파일 없이 `present`와 기존
+bytewise-lowest path를 반환한다. 없을 때만 새 UUID instance를 만든다.
+
+같은 request 아래 서로 다른 `receiptSha256`는 정상 append-only history다. maxItems,
+관찰한 source tree, source digest drift, expiry boundary나 적용 결과가 달라지면 새
+receipt가 공존한다. receipt는 실제 판단에 사용한 `sourceTreeSha256`, `policy`와
+source binding별 expected/observed digest·상태, applied/excluded 결과를 기록한다.
+반면 request identity에는 관찰 상태, runtime config, `now`와 결과를 넣지 않아
+request hash를 현재값 권한으로 오인하지 않는다.
+
+`loadMemoryReceipt`는 exact `(requestSha256, receiptSha256)`만 읽는다. path에 적힌
+receipt hash와 canonical bytes hash·schema가 모두 맞는 valid instance가 있으면
+`ready`, instance가 없으면 `missing`, instance는 있지만 모두 hash/schema가 틀리면
+`corrupt`다. 다른 receipt hash는 이 결과에 영향을 주지 않는다.
+`listMemoryReceipts`는 request 아래 receipt hash별 valid/corrupt instance count와
+bytewise-lowest valid 상대 path만 UTF-8 byte 순으로 반환한다. 각
+`ReceiptHistoryMetadata`는 `receiptSha256`, `status: "valid"|"corrupt"`,
+`validInstanceCount`, `corruptInstanceCount`, `firstValidRelativePath: string|null`만
+포함한다. valid instance가 하나라도 있으면 `valid`, 없으면 `corrupt`다. winner나
+현재값은 선택하지 않는다.
+
+Markdown log는 receipt가 아니다. raw event/control fold에서 source
+`effective_at|recorded_at` 오름차순, 동률이면 event/marker ID의 UTF-8 byte 순으로
+만든 상태 변경 view이며
+`derived/logs/<source-tree-sha256>/<log-sha256>/instances/<randomUUID>.md`에 publish한다.
+request context, applied/excluded 목록과 derived 실행 시각을 log에 넣지 않는다.
+
+### Derived generation 한도·검증·동시성
+
+파생 내용의 기본값과 hard maximum은 index JSON 1 MiB(1,048,576 bytes), receipt
+JSON 256 KiB(262,144 bytes), Markdown view 1 MiB, Markdown log 1 MiB다. index
+`entries`는 최대 10,000개, receipt의 `observations`, `applied`, `excluded`는 각각
+최대 256개, receipt history 반환은 최대 256개다. 한 logical generation identity의
+local reservation은 최대 256개, 전체 derived cache의 global generation
+reservation은 최대 10,000개다. leak도 이 quota를 소비하므로 valid instance 수는
+reservation 수를 넘지 않는다.
+byte 상한은 JavaScript string length가 아니라 `Buffer.byteLength`와 filesystem
+`size` 기준이며 정확히 상한인 값은 허용한다.
+
+API의 `limits`는 `{ maxDirectoryEntries, maxCensusEntries,
+maxIdentityInstances, maxGenerationReservations, maxIndexBytes, maxReceiptBytes,
+maxViewBytes, maxLogBytes, maxIndexEntries, maxReceiptObservationItems,
+maxReceiptAppliedItems, maxReceiptExcludedItems }`다. 생략하면 차례로 256, 100,000,
+256, 10,000, 1,048,576, 262,144, 1,048,576, 1,048,576, 10,000, 256, 256,
+256을 쓴다. 모두 기본값과 hard maximum이 같으며 호출자는 1 이상의 정수로 낮출
+수만 있다. `listMemoryReceipts.maxItems`도 기본값과 hard maximum이 256이다.
+
+`maxIdentityInstances=256`과 `maxGenerationReservations=10000`은 publisher가
+create-once reservation으로 지키는 유일한 저장소 cardinality invariant다. 반면
+`maxDirectoryEntries=256`과 `maxCensusEntries=100000`은 untrusted derived tree를
+한 번 순회하는 작업량 budget이자 cache-health tripwire일 뿐, 저장소 cardinality
+invariant나 publish postcondition이 아니다.
+
+index, receipt, view와 log publisher·loader·list는 먼저 공통 bounded census를
+완료한다. 이 traversal은 `indexes|receipts|views|logs` generation/history tree만
+대상으로 하며 `.reservations`와 `_slots` quota namespace는 열거하지 않는다. quota
+namespace는 정해진 slot filename만 `open('wx')`·`lstat`으로 probe한다. 그래야
+global 10,000개·identity 256개 quota와 directory work budget이 독립적으로 유지된다.
+`opendir()` async iterator로 generation tree를 streaming하고 entry를 하나씩 센다.
+`readdir()`로 전체 child array를 만들지 않는다. directory·regular file·symlink·
+special entry와 corrupt·oversize·junk entry가 모두 budget을 소비한다.
+한 directory의 257번째 child 또는 전체 순회의 100,001번째 physical entry를 받는
+즉시 더 읽지 않고 `complete:false`와 각각
+`memory.derived_directory_limit_exceeded`, `memory.derived_census_limit_exceeded`를
+반환한다. publisher preflight가 불완전하면 reservation과 generation을 만들지 않고,
+loader/list는 앞서 본 valid generation이나 history도 선택하지 않는다.
+
+완전한 preflight 뒤 이번 publisher 또는 다른 프로세스의 동시 commit이 direct-child
+또는 census threshold를 넘길 수 있다. quota reservation을 얻어 commit한 generation은
+그대로 valid다. publisher는 physical tripwire를 postcondition으로 다시 주장하지
+않는다. 다음 scan/list/load/publish preflight가 `complete:false`로 아무 세대도
+선택하지 않으며,
+raw event/control append·scan과 기존 artifact workflow는 영향을 받지 않는다.
+회복은 derived cache reset이다. 같은 request의 정상 receipt history도 child
+tripwire를 넘을 수 있으며, 이는 데이터 conflict가 아니라 보수적인 cache-health
+상태다.
+
+count-then-create만으로는 cross-process 상한을 지킬 수 없으므로 publisher는 다음
+quota reservation을 사용한다. 입력 byte·array·canonical/schema 검증, bounded
+census와 sequential 동일 bytes 탐색을 차례로 마친 뒤 reservation으로 들어간다.
+
+1. `randomUUID()` instance ID를 고르고 `.reservations/global/00000.json`부터
+   `09999.json`까지 `open('wx')`로 첫 빈 global slot을 선점한다.
+2. global file descriptor를 연 채 해당 identity의 `_slots/000.json`부터
+   `255.json`까지 `open('wx')`로 첫 빈 local slot을 선점한다.
+3. global reservation에 `globalSlot`, `localSlot:null`, local reservation에 두
+   slot 번호를 넣은 canonical JSON을 완전히 쓰고 sync한다. 공통 key 순서는
+   `schemaVersion`, `kind`, `identitySha256`, `generationSha256`, `globalSlot`,
+   `localSlot`, `instanceId`이며 trailing LF 한 개를 포함해 4 KiB 이하여야 한다.
+4. 두 reservation이 sync된 뒤에만 `instances/<instance-id>.(json|md)`를
+   `O_CREAT|O_EXCL|O_NOFOLLOW`로 완전히 쓰고 sync한 뒤 read-back 검증한다.
+
+global slot이 없거나 local slot을 잡지 못하면 `complete:false`, status와
+generation path는 `null`, warning은 `memory.derived_limit_exceeded`이며 generation
+파일을 만들지 않는다. global 선점 뒤 crash, local 선점 실패나 generation write
+실패로 남은 reservation은 재사용·삭제하지 않는다. 누수는 사용 가능한 용량만
+줄이고 identity 256개·전체 10,000개 상한을 늘리지 못한다. sparse local
+reservation 수는 global reservation 수를 넘지 않는다. 회복은 raw event/control을
+보존한 채 `derived/` cache 전체를 reset하는 작업으로만 한다.
+비어 있거나 oversize·malformed인 reservation과 generation이 없는 reservation도
+occupied leak로 세고 `memory.derived_reservation_invalid` warning만 남긴다.
+generation 권한은 얻지 못하지만 census 자체를 불완전하게 만들지는 않는다.
+
+reservation의 `kind`는 `index|receipt|view|log`다. `identitySha256`은 각 값을
+8-byte unsigned big-endian length로 구분한 tuple
+`["memory-derived-identity-v1", kind, ...pathIdentityParts]`의 SHA-256이다.
+`pathIdentityParts`는 index/view/log에서 `sourceTreeSha256, generationSha256`,
+receipt에서 `requestSha256, receiptSha256`이다. `generationSha256`은 canonical
+content hash다.
+
+generation은 짝을 이룬 global/local reservation이 모두 존재하고 kind·identity·
+generation·global slot·instance와 path가 맞을 때만 valid다. local reservation의
+`localSlot`은 자기 filename과 같아야 한다.
+하나의 global slot은 정확히 하나의 local slot과만 짝을 이룬다. 같은 global slot을
+참조하는 두 번째 local reservation은 occupied invalid leak로 quota를 소비하고
+`memory.derived_reservation_invalid` warning을 남기며 어떠한 generation 권한도
+얻지 못한다. 원래의 exact pair만 계속 valid하다.
+reservation이 하나뿐이거나 불일치·malformed인 instance는 census budget을
+소비하는 corrupt generation이며 선택하지 않는다. warning에는 slot 번호, 안전한
+상대 path와 reason code만 넣는다.
+
+앞선 동일 bytes publish가 끝난 뒤의 순차 호출은 census에서 valid instance를 찾아
+`present`와 bytewise-lowest path를 반환하고 reservation이나 파일을 늘리지 않는다.
+반면 같은 preflight에서 기존 instance를 보지 못한 동시 contender는 각자 quota를
+선점해 UUID instance를 만들 수 있다. 여유 quota 안에서 성공한 결과는 모두
+`created|present`이고, 같은 bytes instance는 논리적으로 동등하다. 물리 중복은
+contender 수를 넘지 않으며 결함이나 conflict가 아니다. loader는 bytewise-lowest
+valid path를 읽고, 동시 publish 뒤 다음 preflight도 완전하면 순차 재시도는
+`present`로 끝난다. identity reservation 255개 또는 global reservation 9,999개가
+사용된 상태에서 두 contender가 마지막 logical quota slot을 경쟁하면 정확히 하나만
+`created`이고 loser는 `complete:false`, `memory.derived_limit_exceeded`다.
+
+publisher는 reservation 전에 입력 byte length와 array 수를 검사한다. 상한을
+넘기면 `complete:false`, `memory.derived_input_limit_exceeded`를 반환하고
+reservation이나 generation 파일을 만들지 않는다. loader는 entry를 census
+budget에 먼저 포함한 뒤 `lstat`으로
+regular file과 size를 확인하고, 상한 이하면 `limit + 1` bounded read로 race 중
+증가도 잡는다. 이어 UTF-8, JSON/Markdown parse, schema와 array bounds, canonical
+bytes, content hash와 claimed path 순으로 검사한다. oversize·symlink·special·
+invalid UTF-8·parse/schema/hash 오류는 안전한 상대 path와 reason code만 담은
+corrupt warning이며 raw bytes와 절대 경로를 노출하지 않는다. oversize generation의
+reason code는 `memory.derived_generation_oversize`다.
+
+census가 완전할 때 exact receipt의 모든 instance가 oversize면
+`loadMemoryReceipt`는 `status:corrupt`를 반환한다. index, view와 log loader도
+oversize instance를 corrupt로 제외하고 exact logical hash의 다른 valid instance만
+bytewise-lowest path로 읽는다. `listMemoryReceipts.maxItems`는 scan hard limit을
+늘리지 않고 반환 metadata만 줄인다.
+
+## 기억 이벤트 계약
+
+각 상태 변경은 새 Markdown 이벤트 한 파일로 append한다. 닫힌 envelope에는
+`schema_version`, `event_type`, `action`, `memory_id`, `operation_id`, 정렬되고
+중복 없는 `parent_event_ids`, `effective_at`, `actor`, `reason`을 둔다.
+`resolution`에만 `chosen_parent_event_id`를 허용한다. `action`은 capture에서
+`capture`, transition에서 실제 전이 이름, resolution에서 `resolution`이다. 그
+아래에는 현재 기억 레코드와 본문 전체를 snapshot으로 넣는다. logical record는
+`event_sha256`과 `event_id`를 포함하지 않으며 schema, template과 validator가 두
+필드를 거부한다. 여러 출처는 정렬된 `sources` 목록으로 기록한다.
 
 ```markdown
 ---
 schema_version: 1
-memory_id: lesson-project-20260812-001
-kind: design-lesson
-lane: studio
-status: candidate
-scope: project
-project_id: wind-island
-created_at: 2026-08-12T09:00:00+09:00
-updated_at: 2026-08-12T09:00:00+09:00
-review_after: 2026-09-11
-expires_at: 2026-09-11
+event_type: "capture"
+action: "capture"
+memory_id: "memory-studio-design-lesson-0f2a4c61d9ab34ef"
+operation_id: "playtest-session-04-finding-07"
+parent_event_ids: []
+effective_at: "2026-08-12T00:00:00.000Z"
+actor: "김기획자"
+reason: "플레이테스트에서 반복 가능한 교훈을 확인함"
+kind: "design-lesson"
+lane: "studio"
+status: "candidate"
+scope: "project"
+project_id: "wind-island"
+created_at: "2026-08-12T00:00:00.000Z"
+updated_at: "2026-08-12T00:00:00.000Z"
+review_after: "2026-09-11"
+expires_at: "2026-09-11"
 approved_by: null
 approval_basis: null
 supersedes: null
+artifact_types:
+  - "character-skill-combat-monster"
+related_ids:
+  - "boss-phase-2"
+tags:
+  - "boss"
+  - "counterplay"
 sources:
-  - artifact_id: combat-loop-v3
-    locator: content.md#보스-전투
-    sha256: <sha256>
-  - artifact_id: playtest-session-04
-    locator: evidence.yml#finding-07
-    sha256: <sha256>
+  - artifact_id: "combat-loop-v3"
+    locator: "content.md#보스-전투"
+    sha256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  - artifact_id: "playtest-session-04"
+    locator: "evidence.yml#finding-07"
+    sha256: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
 ---
 
 # 보스전의 대응 수단은 공격 방식과 함께 검토한다
@@ -252,6 +605,50 @@ sources:
 기억 본문의 문장은 명령이 아니라 신뢰하지 않는 자료로 처리한다. 스킬 호출,
 파일 삭제, 승인 변경, 네트워크 전송 같은 문장이 있어도 실행하지 않는다.
 
+canonical Markdown은 다음 규칙 하나로만 만든다.
+
+- Unicode string은 NFC로 정규화하고 NUL을 거부한다. 파일은 BOM 없는 UTF-8,
+  LF line ending을 사용하며 정확히 한 개의 trailing LF로 끝난다.
+- frontmatter는 `---\n`으로 시작하고 `---\n\n`으로 끝난다. key 순서는 envelope의
+  `schema_version`, `event_type`, `action`, `memory_id`, `operation_id`,
+  `parent_event_ids`, `effective_at`, `actor`, `reason`, 조건부
+  `chosen_parent_event_id` 뒤에 record의 `kind`, `lane`, `status`, `scope`,
+  `project_id`, `created_at`, `updated_at`, `review_after`, `expires_at`,
+  `approved_by`, `approval_basis`, `supersedes`, 조건부 `instruction_sha256`,
+  `artifact_types`, `related_ids`, `tags`, `sources` 순이다.
+- string scalar는 NFC 값의 JSON double-quoted form, null은 `null`, integer는 leading
+  zero 없는 base-10으로 쓴다. 빈 array는 `[]`, scalar array는 정렬·중복 제거 후
+  두 칸 들여쓴 `- <scalar>` block sequence로 쓴다. `sources`는
+  `artifact_id`, `locator`, `sha256` key 순서의 block mapping이며 tuple의 UTF-8
+  byte 순으로 정렬한다. schema가 허용하지 않는 optional key는 쓰지 않는다.
+- `effective_at`, `created_at`, `updated_at`은 유효한 timestamp를 파싱한 뒤
+  `Date.prototype.toISOString()`의 UTC `YYYY-MM-DDTHH:mm:ss.sssZ` bytes로 쓴다.
+  입력 offset 표기는 canonical Markdown에 그대로 남기지 않는다.
+- 본문은 `# 제목`, `## 발견한 내용`, `## 적용 조건`,
+  `## 적용하면 안 되는 경우`, `## 근거` 순서다. 각 값은 NFC와 LF로 바꾸고 각
+  line의 trailing space·tab과 앞뒤 blank line을 제거하되 내부 blank line은
+  보존한다. heading과 section 사이에는 빈 줄 하나만 둔다.
+
+event ID는 이 canonical Markdown 전체 bytes의 SHA-256이다. capture의
+`operation_id`는 검증된 upstream `eventId`다. transition과 resolution은 다음
+length-prefixed tuple로 `mop1-<sha256>`을 만든다. 각 tuple element는 UTF-8 byte
+앞에 unsigned 64-bit big-endian byte length를 붙이며, tuple 전체는 별도 구분자
+없이 이어 붙인다.
+
+```text
+[
+  "memory-operation-v1", memory_id, event_type, action, effective_at, actor, reason,
+  decimal(parent_count), ...sorted_parent_event_ids, chosen_parent_event_id_or_empty
+]
+```
+
+operation uniqueness 범위는 `(memory_id, operation_id)`다. 같은 memory 안에서
+같은 operation ID와 다른 event bytes가 발견되면 `duplicate-operation` 충돌이며,
+다른 memory가 같은 upstream ID를 쓰는 것은 충돌이 아니다. 같은 이벤트 ID와
+같은 canonical bytes는 멱등이고, 같은 ID에 다른 bytes가 있거나 commit 경로와
+내용 해시가 다르면 `memory.event_conflict`로 제외한다. 기존 bytes는 plugin API로
+고치지 않는다.
+
 ## 상태 모델
 
 ```text
@@ -270,13 +667,27 @@ candidate ──근거 확인──> verified ──사람 승인──> approve
 - 다른 기록이 대체하면 원본을 삭제하지 않고 `superseded`로 보존한다.
 - 승인되지 않은 후보는 기본 30일 뒤 `expired`가 된다.
 - 외부 정보는 `review_after`가 지나면 `stale`로 간주해 검색에서 제외한다.
-- 삭제 대신 상태와 `log.md` 이력을 남긴다. 명시적인 개인정보 삭제 요청은
+- 삭제 대신 transition 이벤트와 파생 log 세대를 남긴다. 명시적인 개인정보 삭제 요청은
   별도 안전 삭제 절차로 처리한다.
 
 허용 상태는 `candidate`, `verified`, `approved`, `expired`, `rejected`,
-`disputed`, `superseded`, `stale`로 닫는다. `lessons/retired/`는 별도 상태가
-아니라 `expired`, `rejected`, `superseded`, `stale` 기록을 모아 보여 주는 보관
-위치다. 상태를 바꾸지 않고 디렉터리만 옮겨 승인 여부를 우회할 수 없다.
+`disputed`, `superseded`, `stale`로 닫는다. capture는 parent가 없는 유일한
+root이고 transition은 parent 하나를 참조한다. 동시에 생긴 transition은 두
+head로 모두 보존하며 해당 기억 전체를 `concurrent-conflict`로 검색에서 제외한다.
+사람이 actor와 reason을 명시한 `resolution`은 작성 시 관찰한 head 집합만 정렬된
+parent로 기록하고 `chosen_parent_event_id`를 선택한다. parent는 최소 두 개이며
+서로의 ancestor일 수 없다. resolution은 기록한 parent만 소비한다. 작성자가
+관찰하지 못한 동시 transition은 별도 head로 남으므로 memory는 계속
+`concurrent-conflict`다. 같은 parent 집합에서 두 resolution이 동시에 생겨도 두
+resolution head가 모두 남아 conflict다. 새 snapshot은 선택한 head와 같거나, 그
+head에서 허용된 전이 하나를 적용한 값이어야 한다.
+
+접기(`fold`)는 sealed event 경로를 NFC/UTF-8 byte 순으로 읽고 commit claim,
+파일 이름 해시, 닫힌 schema, 출처와 상태 전이를 검사한다. snapshot의 기억
+identity와 본문은 parent와 같아야
+하며 허용된 상태·provenance 필드만 바꿀 수 있다. orphan parent, duplicate root,
+`(memory_id, operation_id)` 충돌, 불법 전이, supersedes cycle은 excluded conflict다. 순회 순서,
+mtime이나 wall clock으로 승자를 정하지 않는다.
 
 ## 적용 자격과 검색 순서
 
@@ -313,7 +724,8 @@ candidate ──근거 확인──> verified ──사람 승인──> approve
 ### `retrieve-approved-design-memory`
 
 - 기억 설정, 프로젝트 ID와 작업 영역을 확인한다.
-- `memory-index.json` 후보를 Markdown 원본과 다시 대조한다.
+- raw Markdown 이벤트와 quarantine marker를 scan/fold한 뒤 일치하는 JSON 색인
+  세대를 후보 탐색에 사용한다.
 - 승인되고 유효한 관련 기록만 최대 설정 개수만큼 반환한다.
 - 적용한 기억 ID와 출처 해시를 로컬 작업 기록에 남긴다.
 - 기억을 읽지 못하면 경고만 반환하고 기존 기획을 계속한다.
@@ -333,12 +745,15 @@ candidate ──근거 확인──> verified ──사람 승인──> approve
 
 ### `maintain-game-design-memory`
 
-- 중복 ID, 끊어진 출처, 순환 대체 관계를 검사한다.
+- 중복 operation, 끊어진 parent·출처, branch와 순환 대체 관계를 검사한다.
 - 출처 파일과 SHA-256을 다시 확인한다.
-- 만료·대체·충돌 상태를 갱신한다.
-- `index.md`, `log.md`, `memory-index.json`을 결정적으로 갱신한다.
-- 손상된 문서는 덮어쓰지 않고 복구 가능한 격리 위치로 원자 이동한다.
-- 기억 후보 열람, 승인, 거부, 폐기와 색인 재생성을 직접 요청할 수 있다.
+- 만료·대체·충돌 상태는 새 transition 이벤트로 append한다.
+- `index.md`, `log.md`, JSON 색인은 raw fold에서 결정적으로 만든 immutable
+  derived generation으로 publish한다.
+- 손상된 문서는 이동하거나 덮어쓰지 않고 content-addressed quarantine marker로
+  논리 격리한다.
+- 기억 후보 열람, 승인, 거부, 폐기, branch resolution과 색인 재생성을 직접
+  요청할 수 있다.
 
 세 스킬은 공통 소스에서 두 제품에 패키징한다. 기억 전용 에이전트는 추가하지
 않으며 기존 근거·문서 품질 검토 경계를 재사용한다.
@@ -427,24 +842,37 @@ GAME_DESIGN_MEMORY_GIT_MODE=local
 제외: 만료 1개, 출처 변경 1개
 ```
 
-세부 기록은 `.game-design/memory/receipts/`에 둔다. 기억 ID, 원본 해시,
-적용·제외 이유와 시간만 포함하며 기억 본문, `.env` 값, 비밀정보를 복제하지
-않는다. 기억을 사용하지 않았으면 별도 안내나 영수증을 만들지 않는다.
+세부 기록은 `v1/derived/receipts/`의 immutable JSON generation으로 append한다.
+기억 ID, head event ID와 해시, 적용 정책, source binding 관찰값과 적용·제외 이유만
+포함하며 기억 본문, `.env` 원문, 비밀정보와 derived 생성·실행 시각을 복제하지
+않는다. 허용 필드는
+`schemaVersion`, `requestSha256`, `sourceTreeSha256`, `projectId`, `lane`,
+`policy{scope,maxItems,candidateTtlDays}`, `applied`의
+`memoryId|headEventId|fileSha256`, `excluded`의 `memoryId|reason`, `observations`의
+`memoryId|artifactId|locator|expectedSha256|observedSha256|status`로 닫는다.
+기억을 사용하지 않았으면 별도 안내나 영수증을 만들지 않는다.
+
+event의 `effective_at`, record의 `created_at|updated_at`, quarantine marker의
+`recorded_at`은 입력 Markdown에 포함된 원천 시간이라 source ID와 fold의 일부다.
+derived log가 사건 순서를 보여 줄 때는 이 원천 값을 그대로 투영할 수 있다.
+반면 rebuild·retrieve·publish 실행 시각,
+`now`, `generatedAt`, `recordedAt`, `sourceUpdatedAt`은 receipt·log·index·view의
+논리 bytes에 넣지 않는다.
 
 ## 오류 처리
 
 | 상황 | 처리 |
 | --- | --- |
 | 기억 폴더 없음 | 첫 기록이 생길 때만 초기화 |
-| JSON 색인 없음·손상 | Markdown 원본에서 다시 생성 |
-| Markdown 기억 손상 | 적용하지 않고 복구 가능한 격리 위치로 이동 |
+| JSON 색인 세대 없음·손상 | raw Markdown 이벤트 fold에서 새 세대 생성 |
+| Markdown 이벤트 손상 | 원본은 그대로 두고 marker로 논리 격리 |
 | 원본 파일 없음 | `stale`로 표시하고 제외 |
 | 출처 해시 불일치 | 자동 갱신하지 않고 재검토 대상으로 전환 |
 | 승인 기록끼리 충돌 | 둘 다 적용하지 않고 결정 항목 생성 |
 | 기억 저장 실패 | 완성된 기획 결과물을 보존하고 경고 |
 | 잘못된 환경 설정 | 범위를 축소하거나 기억 기능만 중지 |
 | 비밀정보·개인정보 탐지 | 저장을 거부하고 값을 출력하지 않음 |
-| 저장소가 너무 큼 | 제한된 항목만 읽고 유지 관리 필요 상태 표시 |
+| 저장소가 너무 큼 | scan 중단, `complete:false`, 해당 store 전체의 승인 검색·색인 publish 제외, 유지 관리 필요 상태 표시 |
 
 기억 장애는 기본적으로 기존 기획을 계속하는 `fail-open` 보조 기능이다. 다만
 기억을 적용했다고 주장하는 경로는 ID, 상태, 범위와 출처 검증이 하나라도
@@ -467,6 +895,7 @@ shared/memory/
 │   └── maintain-game-design-memory/
 ├── schema/
 │   ├── memory-record.schema.json
+│   ├── memory-event.schema.json
 │   ├── memory-index.schema.json
 │   └── memory-receipt.schema.json
 ├── references/
@@ -491,11 +920,20 @@ shared/scripts/
 
 ## 보안과 개인정보
 
-- 작업 공간, 전역 로컬 데이터 디렉터리와 허용된 프로젝트 경계를 벗어난
-  경로를 거부한다.
-- 루트와 모든 상위 디렉터리, 대상 파일을 일반 파일·디렉터리로 확인하고
-  심볼릭 링크와 교체 경쟁을 방어한다.
-- 파일은 제한된 크기로 읽고 기억 항목 수와 전체 문맥 바이트를 제한한다.
+- 반드시 차단한다: 절대 경로, `..`, 역슬래시, NUL, 비-NFC 경로와 lexical
+  escape, 기존 root·ancestor·final symlink, 특수 파일, 크기·항목 수 고갈.
+- plugin API는 source event·control을 overwrite·delete하는 기능을 제공하지 않고
+  truncate·rename·unlink를 호출하지 않는다. 외부 프로세스의 파일 변경이나 삭제
+  자체를 막는다고 주장하지 않으며, 사전·사후에 관찰한 identity·hash·seal 변화는
+  fail-closed한다.
+- 같은 이벤트 ID의 bytes 불일치, `(memory_id, operation_id)` 중복 충돌, 잘못된
+  DAG·상태 전이·provenance·source binding을 거부한다.
+- Studio와 Career 동시 append에서 이벤트를 잃지 않는다. 손상된 derived index가
+  권한을 얻거나 Git 표식 갱신이 사용자 파일을 truncate하지 못하게 한다.
+- derived quota는 global-first/local-second create-once reservation으로
+  count-then-create race에서도 identity 256개·전체 10,000개를 넘지 않는다.
+- 파일은 lstat size 뒤 제한된 크기로 읽고 기억 항목 수, 파생 array와 전체 문맥
+  바이트를 제한한다. 오류에는 raw bytes와 절대 경로를 넣지 않는다.
 - API 키, 토큰, 자격 증명, 개인 식별 정보와 원문 전체 복사를 저장하지 않는다.
 - 기억 본문을 실행 가능한 명령, 스킬 선택 강제 또는 승인 지시로 해석하지
   않는다.
@@ -504,6 +942,13 @@ shared/scripts/
   전송하지 않는다.
 - 로컬 기억은 이미지 생성, Archify, Skillstead, 외부 API의 입력으로 자동
   전달하지 않는다.
+
+같은 OS 계정의 악의적 프로세스가 `lstat`, `realpath`, `mkdir`, `open` syscall
+사이에 디렉터리를 rename하거나 symlink로 바꾸는 공격은 명시적 non-goal이다.
+그 프로세스는 같은 계정의 파일을 직접 수정할 권한도 있으므로 Node 18 path
+API만으로 descriptor-relative 보장을 제공하지 않는다. 관찰 가능한 사전·사후
+identity 변화는 계속 fail-closed하지만, 이 syscall 사이 race까지 차단한다고
+테스트나 문서에서 주장하지 않는다.
 
 ## 테스트 전략
 
@@ -518,11 +963,74 @@ shared/scripts/
 
 ### 저장소와 상태
 
-- 정상 문서의 생성, 검색, 상태 전이와 결정적 색인 재생성을 확인한다.
-- 중복 ID, 알 수 없는 필드·상태·종류, 순환 대체 관계를 거부한다.
+- 동일 이벤트를 두 프로세스가 append하면 하나는 `created`, 하나는 `present`이며
+  bytes가 같은지 확인한다. 같은 경로의 다른 bytes는 원본을 보존하고 conflict다.
+- instance·claim write와 sync, commit hard link 전후에 프로세스를 중단한다. unsealed
+  partial은 권한을 얻지 못하며 같은 event 재시도가 `created|present`로 회복되는지
+  확인한다.
+- 서로 다른 동시 이벤트가 모두 남고, 같은 parent의 approve/reject branch는
+  검색에서 제외되며 사람이 만든 resolution이 기록한 branch head만 소비하는지
+  확인한다.
+- transition과 resolution, resolution 두 개가 동시에 생기면 resolution이 기록한
+  parent만 소비하고 새 event는 별도 head로 남아 conflict인지 확인한다.
+- 중복 operation, 알 수 없는 필드·상태·종류, orphan parent와 순환 대체 관계를
+  거부한다.
 - 후보가 적용되지 않고 승인 기록만 적용되는지 확인한다.
 - 만료, 출처 변경, 충돌과 대체 기록이 검색에서 제외되는지 확인한다.
-- 손상 색인은 Markdown에서 복구되고 손상 원본은 덮어쓰지 않는지 확인한다.
+- 손상·누락·복수 색인 세대는 raw fold에서 byte-identical 논리 색인으로 복구하고
+  기존 세대를 수정하지 않는지 확인한다.
+- receipt canonical JSON의 schema·key order·trailing LF와
+  `requestSha256|receiptSha256`를 exact 비교한다. 같은 request/same bytes generation은
+  순차 재시도에서 기존 valid instance를 `present`로 반환해 물리 파일이 늘지 않는지
+  확인한다. 같은 request에서 적어도 한 건은 계속 적용한 채 maxItems 변경, source
+  digest drift와 expiry boundary로 생긴 서로 다른 valid receipt는 정상 이력으로
+  공존한다. 각 receipt의 policy와 source observation이 실제 판단 입력과 일치하고
+  exact pair loader와 bounded history list가 winner나 현재값을 고르지 않는지
+  확인한다.
+- index·receipt·view·log의 동일 bytes를 quota 여유 상태에서 동시에 publish하면
+  결과가 모두 `created|present`, instance bytes가 동일하고 물리 중복 수가 contender
+  수 이내인지 확인한다. 다음 preflight도 완전한 상태의 순차 재시도는 `present`이며
+  파일이 더 늘지 않는다.
+- identity reservation 255개 또는 global reservation 9,999개를 점유한 뒤 두
+  publisher가 마지막 logical quota slot을 경쟁하면
+  정확히 하나만 `created`, loser는 `complete:false`와
+  `memory.derived_limit_exceeded`이고 상한을 넘는 generation이 없는지 확인한다.
+- global/local reservation이 같은 kind·length-prefixed identity hash·generation
+  hash·slot·instance ID를 canonical JSON 4 KiB 이하로 결속하고 둘 다 sync되기 전에는
+  generation을 만들지 않는지 확인한다.
+- receipt path가 주장한 hash와 canonical bytes hash·schema가 어긋나면 해당 logical
+  receipt의 instance만 corrupt로 세고, 같은 request의 다른 receipt를 conflict로
+  취급하지 않는지 확인한다.
+- index·receipt·view·log의 byte 상한과 index entries 10,000개, receipt 세 array
+  각각 256개의 경계값은 허용하고 limit+1은 reservation·파일 생성 전에 거부한다.
+  loader가 `lstat` size 뒤 bounded read, UTF-8, parse, schema/array, canonical bytes,
+  hash/path 순으로 검사하는지도 확인한다.
+- `opendir()` streaming traversal이 일반 directory의 257번째 child와 전체 순회의
+  100,001번째 physical entry를 받자마자 멈추고 `complete:false`와 전용 warning을
+  반환한다. `readdir()` whole-array를 쓰지 않고 directory·regular·symlink·special·
+  corrupt·oversize·junk entry를 모두 세며, 불완전한 census에서는 publisher·loader·
+  list가 generation이나 history를 선택하지 않는다.
+- 두 publisher가 완전한 preflight 뒤 동시에 commit해 direct-child 또는 전체
+  physical tripwire를 넘겨도 commit 세대는 valid다. 다음 scan/list/load/publish가
+  `complete:false`로 아무 세대도 선택하지 않고, source event/control append·scan과
+  artifact workflow가 계속되는지 확인한다.
+- tripwire 초과와 derived cache reset 전후에 raw fold bytes와 `sourceTreeSha256`가
+  바뀌지 않고 source append·scan budget도 derived junk의 영향을 받지 않는지
+  확인한다.
+- 같은 request의 정상 receipt history가 child tripwire를 넘기는 경우도 conflict가
+  아니라 cache reset이 필요한 보수적 cache-health 상태인지 확인한다.
+- census가 완전한 exact receipt의 oversize instance는 `corrupt`이고, warning에는
+  raw bytes와 절대 경로가 없는지 확인한다. global 선점 뒤 crash·local 선점 실패로
+  생긴 empty/malformed reservation은 generation 권한 없이 slot만 소비하고 cache
+  reset 전까지 용량만 줄인다.
+- receipt·log generation 추가가 `sourceTreeSha256`을 바꾸지 않고, Markdown log에
+  request context나 applied/excluded receipt data가 섞이지 않는지 확인한다.
+- hash·schema·본문이 손상된 이벤트는 이동·overwrite하지 않으며 marker append 뒤
+  해당 `memory_id` 전체가 영구 제외되고 approved ancestor가 되살아나지 않는지
+  확인한다. 복구는 새 memory ID만 허용한다.
+- source scan의 10,001번째 entry 앞에서 `complete:false`로 중단하고, 한도 뒤의
+  invalidating transition을 놓쳐도 이전 approved head를 반환하거나 색인을
+  publish하지 않는지 확인한다.
 
 ### 제품 경계
 
@@ -542,11 +1050,24 @@ shared/scripts/
 
 ### 적대적 경계
 
-- 작업 공간 탈출, 절대 경로, 심볼릭 링크, 특수 파일과 파일 교체를 거부한다.
+- `APPEND-IDEMPOTENT`, `APPEND-CONFLICT`, `APPEND-PARALLEL`, `BRANCH` 시나리오로
+  append와 fold의 보수적 동시 실행 계약을 검증한다.
+- `PATH` 시나리오로 절대 경로, `..`, 역슬래시, NUL, 비-NFC, ancestor·final
+  symlink, FIFO·socket과 oversize를 거부한다.
+- `CORRUPT`와 `INDEX` 시나리오로 손상 이벤트의 logical quarantine과 derived
+  generation 재생성을 검증한다.
+- `GIT` 시나리오로 두 플러그인의 lock 직렬화, malformed marker·사용자 변경·
+  stale lock의 warning-only 처리를 확인한다. 기억 이벤트는 그대로 남아야 한다.
+- `FAILPOINT`로 open·write·fsync·close 실패에서 성공을 보고하지 않고 기존
+  이벤트가 바뀌지 않는지 확인한다. 생성된 partial instance·claim은 권한을 얻지
+  못하며 재시도가 성공한다.
 - 기억 문서의 프롬프트 주입, 승인 변경과 파일 삭제 명령을 실행하지 않는다.
 - 다른 프로젝트 ID 위장, 출처 해시 조작과 만료일 우회를 거부한다.
 - 비밀정보와 개인정보가 기억·영수증·오류에 남지 않는다.
 - 대용량 파일, 과도한 항목 수와 검색 문맥을 제한한다.
+- 사전에 존재하거나 사후 관찰되는 swap은 fail-closed로 검증한다. 같은 OS 계정의
+  악의적 between-syscall directory swap은 `THREAT-BOUNDARY`에서 skipped non-goal로
+  기록하며 보장되는 보안 테스트로 세지 않는다.
 
 ### 패키징과 생명주기
 

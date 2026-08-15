@@ -10,6 +10,11 @@ import { auditTree } from "../../tooling/lib/tree-audit.mjs";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const productNames = ["game-design-career", "game-design-studio"];
+const inactiveReferenceSourceRuntimeTuples = new Set([
+  "skills/analyze-game-design-references/SKILL.md\0../../../scripts/analyze-game-design-references.mjs",
+  "skills/maintain-game-design-glossary/SKILL.md\0../../../scripts/manage-game-design-glossary.mjs",
+  "skills/maintain-game-design-glossary/SKILL.md\0../../../scripts/validate-game-design-writing-language.mjs",
+]);
 
 async function fixture(t, relativePath, bytes) {
   const root = await mkdtemp(path.join(tmpdir(), "tree-audit-test-"));
@@ -27,10 +32,12 @@ test("each generated plugin is UTF-8, self-contained, and free of sibling or hos
       packageName,
       siblingNames: productNames.filter((name) => name !== packageName),
       forbiddenAbsolutePaths: [repoRoot, path.dirname(repoRoot), homedir()],
+      inactiveRelativeReferenceTuples: inactiveReferenceSourceRuntimeTuples,
     });
     assert.ok(result.files > 100, `${packageName}: unexpectedly small snapshot`);
     assert.equal(result.files, result.utf8Files);
     assert.equal(result.symlinks, 0);
+    assert.deepEqual(result.usedInactiveRelativeReferenceTuples, [...inactiveReferenceSourceRuntimeTuples].sort());
   }
 });
 

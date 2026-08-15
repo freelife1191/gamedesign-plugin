@@ -13,6 +13,7 @@ Build a falsifiable model of the game, not a user manual. Keep every material cl
 
 1. Read `../../references/methods/reverse-design.md` before observing or structuring the analysis.
 2. Read `../../references/fact-inference-schema.json` before creating claim records. Preserve its fields and zero-evidence condition exactly.
+3. Use `analyze-game-design-references` for shared reference evidence, inventory, and comparison outputs. Preserve this skill's fact/inference schema and never upgrade a pending transfer proposal into a fact.
 
 ## Analyze
 

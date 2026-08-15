@@ -7,9 +7,10 @@ import { resolveImageProvider } from "../../shared/scripts/lib/image-provider.mj
 test("resolveImageProvider applies the closed provider decision table", () => {
   const cases = [
     [{ mode: "prompt-only", apiKeyPresent: true, codexCapability: { available: true } }, { provider: "none", reason: "prompt-only" }],
-    [{ mode: "select", apiKeyPresent: true, codexCapability: { available: true } }, { provider: "openai", reason: "api-key-present" }],
-    [{ mode: "required", apiKeyPresent: true, codexCapability: { available: true } }, { provider: "openai", reason: "api-key-present" }],
-    [{ mode: "all", apiKeyPresent: true, codexCapability: { available: false } }, { provider: "openai", reason: "api-key-present" }],
+    [{ mode: "select", providerPreference: "codex-first", apiKeyPresent: true, codexCapability: { available: true } }, { provider: "codex", reason: "codex-capability-available" }],
+    [{ mode: "required", providerPreference: "codex-first", apiKeyPresent: true, codexCapability: { available: false } }, { provider: "unavailable", reason: "paid-openai-opt-in-required" }],
+    [{ mode: "all", providerPreference: "openai", apiKeyPresent: true, codexCapability: { available: true } }, { provider: "openai", reason: "openai-explicit" }],
+    [{ mode: "all", providerPreference: "openai", apiKeyPresent: false, codexCapability: { available: true } }, { provider: "unavailable", reason: "openai-api-key-required" }],
     [{ mode: "required", apiKeyPresent: false, codexCapability: { available: true } }, { provider: "codex", reason: "codex-capability-available" }],
     [{ mode: "all", apiKeyPresent: false, codexCapability: true }, { provider: "codex", reason: "codex-capability-available" }],
     [{ mode: "select", apiKeyPresent: false, codexCapability: true }, { provider: "codex", reason: "codex-capability-available" }],
@@ -18,6 +19,21 @@ test("resolveImageProvider applies the closed provider decision table", () => {
   ];
 
   for (const [input, expected] of cases) assert.deepEqual(resolveImageProvider(input), expected);
+});
+
+test("Korean on-image text fails closed unless explicit gpt-image-2 OpenAI routing is current", () => {
+  assert.deepEqual(resolveImageProvider({
+    mode: "select", providerPreference: "codex-first", embeddedTextLocale: "ko-KR", model: "gpt-image-2",
+    apiKeyPresent: true, codexCapability: { available: true },
+  }), { provider: "unavailable", reason: "korean-text-requires-openai" });
+  assert.deepEqual(resolveImageProvider({
+    mode: "select", providerPreference: "openai", embeddedTextLocale: "ko-KR", model: "other-image-model",
+    apiKeyPresent: true, codexCapability: { available: true },
+  }), { provider: "unavailable", reason: "korean-text-requires-gpt-image-2" });
+  assert.deepEqual(resolveImageProvider({
+    mode: "select", providerPreference: "openai", embeddedTextLocale: "ko-KR", model: "gpt-image-2",
+    apiKeyPresent: true, codexCapability: { available: true },
+  }), { provider: "openai", reason: "korean-text-openai-required" });
 });
 
 test("resolveImageProvider normalizes capability-probe tri-state values without treating unknown as available", () => {
@@ -68,5 +84,13 @@ test("resolveImageProvider rejects unknown modes instead of guessing a provider"
   assert.throws(
     () => resolveImageProvider({ mode: "unbounded", apiKeyPresent: false, codexCapability: { available: true } }),
     /mode/i,
+  );
+  assert.throws(
+    () => resolveImageProvider({ mode: "required", providerPreference: "automatic-paid-fallback", apiKeyPresent: true, codexCapability: true }),
+    /preference/i,
+  );
+  assert.throws(
+    () => resolveImageProvider({ mode: "required", embeddedTextLocale: "guess-from-prompt", apiKeyPresent: false, codexCapability: true }),
+    /embedded text locale/i,
   );
 });

@@ -70,7 +70,7 @@ $game-design-studio:generate-image-assets artifact=artifacts/coop-rpg-brief, mod
 
 ## 내부 진행 흐름
 
-manifest와 finite jobs를 검증합니다. key가 있으면 OpenAI only, key가 없고 host capability가 available이면 Codex 경로, 둘 다 없으면 unavailable로 끝냅니다. 관련 역할은 다음 단계의 `visual-asset-reviewer`; 주 템플릿/profile은 현재 artifact 선택값; 다음 스킬은 `review-image-assets`입니다.
+manifest와 finite jobs를 검증합니다. 기본값은 `IMAGE_PROVIDER=codex-first`이며 API key 유무와 관계없이 사용 가능한 호스트 `image_gen`을 먼저 사용합니다. 호스트 결과가 만족스럽지 않거나 반복 실패하면 결과를 보존하고 유료 `gpt-image-2`의 비용·품질을 제안하되, 명시적 승인 전에는 호출하지 않습니다. 이미지 안에 한글이 필요하면 `IMAGE_EMBEDDED_TEXT_LOCALE=ko-KR`과 explicit OpenAI `gpt-image-2`가 필수입니다. 관련 역할은 다음 단계의 `visual-asset-reviewer`; 주 템플릿/profile은 현재 artifact 선택값; 다음 스킬은 `review-image-assets`입니다.
 
 ## 생성 파일과 결과 구조
 
@@ -121,7 +121,7 @@ $game-design-studio:review-image-assets artifact=<artifact-path> 기존 evidence
 <!-- PROMPT-TEMPLATES:START game-design-studio:generate-image-assets -->
 ### 재사용 프롬프트 템플릿
 
-- [beginner — 사용자 선택 stable asset 하나 생성](../../prompt-templates/studio/generate-image-assets.md#studiogenerate-image-assetsbeginner)
-- [standard — required mode receipt와 no-key capability 경계](../../prompt-templates/studio/generate-image-assets.md#studiogenerate-image-assetsstandard)
-- [advanced — all mode OpenAI-only failure와 provenance 분리](../../prompt-templates/studio/generate-image-assets.md#studiogenerate-image-assetsadvanced)
+- [beginner: 사용자 선택 stable asset 하나 생성](../../prompt-templates/studio/generate-image-assets.md#studiogenerate-image-assetsbeginner)
+- [standard: required mode receipt와 no-key capability 경계](../../prompt-templates/studio/generate-image-assets.md#studiogenerate-image-assetsstandard)
+- [advanced: all mode OpenAI-only failure와 provenance 분리](../../prompt-templates/studio/generate-image-assets.md#studiogenerate-image-assetsadvanced)
 <!-- PROMPT-TEMPLATES:END game-design-studio:generate-image-assets -->

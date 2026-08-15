@@ -325,3 +325,35 @@ Studio의 사례·스킬·템플릿을 선택할 때 자주 생기는 질문입�
 **관련 사례·스킬·템플릿:** [ST-G01](use-cases/concept-scenarios.md#st-g01-모바일-수집형-rpg라이브서비스), [ST-G10](use-cases/concept-scenarios.md#st-g10-교육사회문제접근성-중심-게임), [비전 스킬](skills/define-game-vision.md), `game-design-brief`를 참조합니다.
 
 **안전·근거·승인:** 사례를 시장 정답으로 일반화하지 않고, 사람 검토와 현재 프로젝트 evidence로 적용 범위를 승인합니다.
+
+### Q19. 이전 프로젝트 교훈을 다음 기획에 어떻게 안전하게 쓰는가?
+
+**결론:** 현재 프로젝트에서 이름이 확인된 사람이 승인한 기록만 참고합니다. 자동으로 남는 기록은 후보뿐이며 자동 승인되지 않습니다.
+
+**이유와 경계:** 출처 파일, 적용·제외 조건, 검토·만료 시점과 Studio 영역을 먼저 확인합니다. 충돌이나 손상이 있으면 어느 쪽도 임의로 고르지 않고 기존 기획은 기억 없이 계속합니다. 기억은 기준 기획 결과물과 플레이테스트 근거를 대신하지 않습니다.
+
+**실행 요청:**
+
+```text
+@Game Design Studio 기억 후보와 승인 기록을 보여 주고, 현재 보스전 기획에 적용할 수 없는 항목은 이유와 함께 제외해.
+```
+
+**비활성화와 관련 문서:** 완전히 끄려면 `GAME_DESIGN_MEMORY_ENABLED=false`를 설정하고, 한 번만 제외하려면 “이번 작업에서는 이전 기억을 사용하지 마.”라고 요청합니다. 자세한 관리와 복구 순서는 [Studio 프로젝트 기억](memory.md)을 따릅니다.
+
+### Q20. 컷씬 이미지는 언제 생성하고, 비용을 어떻게 통제하는가?
+
+**결론:** 컷씬은 prompt 작성, 비용 산정, 생성, 연속성 검토를 분리합니다. `style-master → reference-masters → keyframes → storyboard` 순서로만 진행하며, 각 wave는 count, model, quality, size, USD 범위, cap, retryReserve, pricing time과 `costStatus`를 공개한 뒤 이름을 기록한 실시간 승인을 받아야 합니다.
+
+**이유와 경계:** host 비용이 `unavailable`이면 무료로 간주하지 않고 provider 호출 0회로 멈춥니다. 이전 승인이나 포괄 승인은 재사용하지 않습니다. 대사만 바뀌는 variant에는 이미지를 만들지 않으며, visual variant는 새 derivative ID와 별도 비용·승인을 사용합니다. 실패 재시도는 현재 full-wave estimate와 남은 retryReserve가 그대로일 때 최신 retryable stable ID에만 허용합니다.
+
+**실행 요청:**
+
+```text
+@Game Design Studio $game-design-studio:design-cutscene-visual-preproduction으로 컷씬 brief와 beat, wave별 비용·승인 계획만 작성해. host 비용이 unavailable이면 provider를 호출하지 말고, 실패한 stable ID 재개 조건도 보존해.
+```
+
+**예상 결과:** `cutscene-brief`, `cutscene-shot-package`, `cutscene-prompt-package`, `cutscene-cost-estimate`, `cutscene-continuity-review`와 각 wave의 stable ID·비용 상태·승인 경계를 남깁니다.
+
+**관련 사례·스킬·템플릿:** [ST-C05](use-cases/competency-paths.md#st-c05-콘텐츠내러티브퀘스트npc), [ST-S16 직접 호출 흐름](skills/design-cutscene-visual-preproduction.md#직접-호출-활용-design-cutscene-visual-preproduction), [컷씬 비주얼 프리프로덕션](cutscene-visual-preproduction.md), [`design-cutscene-visual-preproduction`](skills/design-cutscene-visual-preproduction.md), 템플릿 `cutscene-visual-preproduction`을 함께 사용합니다.
+
+**안전·근거·승인:** 이전 승인·포괄 승인은 자동 승인으로 쓰지 않고, 사람의 이름 있는 실시간 승인을 현재 estimate·pricing snapshot·request schedule에 묶습니다. provider 실패 뒤에는 성공 asset·receipt와 terminal 결과를 보존하고, 같은 current full-wave estimate와 retryReserve가 확인된 최신 retryable stable ID에서만 재개합니다.

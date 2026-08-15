@@ -441,10 +441,12 @@ test('reports only a redacted image configuration and discoverable host image ca
   assert.deepEqual(output.capabilities.image_generation, { status: 'available', provider: 'codex-system-skill' });
   assert.deepEqual(context.imageConfig, {
     mode: 'select',
+    providerPreference: 'codex-first',
+    embeddedTextLocale: 'none',
     model: 'gpt-image-2',
     quality: 'low',
     apiKeyPresent: true,
-    sources: { mode: 'environment', model: 'default', quality: 'default', apiKey: 'environment' },
+    sources: { mode: 'environment', providerPreference: 'default', embeddedTextLocale: 'default', model: 'default', quality: 'default', apiKey: 'environment' },
     warnings: [],
   });
   assert.equal(JSON.stringify(output).includes('never-expose-this-key'), false);

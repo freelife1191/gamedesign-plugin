@@ -2,6 +2,8 @@
 
 App와 CLI는 설치·확인·활성화·제거 표면이 다릅니다. 사용하는 환경의 절차만 따르세요. 공식 기준은 [OpenAI Plugins](https://learn.chatgpt.com/docs/plugins), [Codex CLI plugin](https://learn.chatgpt.com/docs/developer-commands?surface=cli#cli-codex-plugin), [Codex CLI marketplace](https://learn.chatgpt.com/docs/developer-commands?surface=cli#cli-codex-plugin-marketplace)입니다.
 
+설치되는 구성은 제품 스킬 15개와 공통 스킬 8개, 모두 23개입니다. 공통 스킬에는 레퍼런스 분석과 용어 사전 관리가 포함됩니다. 설치·업데이트·제거는 프로젝트의 로컬 기억 폴더 `.game-design/`을 만들거나 지우지 않습니다. 기억의 기본값과 완전 비활성화 방법은 [Career 프로젝트 기억](memory.md)을 확인하세요.
+
 ## Codex App 설치
 
 1. 저장소 루트를 로컬 프로젝트 또는 작업 폴더로 열어 해당 repo context를 사용합니다.

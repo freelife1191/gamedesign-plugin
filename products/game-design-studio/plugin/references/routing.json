@@ -5,6 +5,7 @@
     "define-game-vision",
     "design-game-systems",
     "design-game-content",
+    "design-cutscene-visual-preproduction",
     "design-player-experience",
     "design-game-economy-and-liveops",
     "plan-game-production",
@@ -17,7 +18,12 @@
     "review-image-assets",
     "polish-game-design-writing",
     "humanize-korean",
-    "archify"
+    "archify",
+    "retrieve-approved-design-memory",
+    "capture-game-design-memory",
+    "maintain-game-design-memory",
+    "analyze-game-design-references",
+    "maintain-game-design-glossary"
   ],
   "roleIds": [
     "lead-game-designer",
@@ -52,6 +58,7 @@
       "skills/define-game-vision/SKILL.md",
       "skills/design-game-systems/SKILL.md",
       "skills/design-game-content/SKILL.md",
+      "skills/design-cutscene-visual-preproduction/SKILL.md",
       "skills/design-player-experience/SKILL.md",
       "skills/design-game-economy-and-liveops/SKILL.md",
       "skills/plan-game-production/SKILL.md",
@@ -64,7 +71,12 @@
       "skills/review-image-assets/SKILL.md",
       "skills/polish-game-design-writing/SKILL.md",
       "skills/humanize-korean/SKILL.md",
-      "skills/archify/SKILL.md"
+      "skills/archify/SKILL.md",
+      "skills/retrieve-approved-design-memory/SKILL.md",
+      "skills/capture-game-design-memory/SKILL.md",
+      "skills/maintain-game-design-memory/SKILL.md",
+      "skills/analyze-game-design-references/SKILL.md",
+      "skills/maintain-game-design-glossary/SKILL.md"
     ],
     "roles": [
       "agents/lead-game-designer.md",
@@ -97,8 +109,64 @@
       "references/methods/production.md",
       "assets/templates/game-design-review/content.md",
       "references/visualization-presets.json",
-      "references/export-recipes.md"
+      "references/export-recipes.md",
+      "references/shared/reference-intelligence/references/evidence-policy.md",
+      "references/shared/reference-intelligence/references/reference-analysis-flow.md",
+      "references/shared/reference-intelligence/schema/reference-analysis.schema.json",
+      "references/shared/reference-intelligence/schema/game-design-glossary.schema.json",
+      "references/shared/reference-intelligence/schema/glossary-receipt.schema.json"
     ]
+  },
+  "directUseReviewOwners": [
+    {
+      "skill": "retrieve-approved-design-memory",
+      "owners": ["lead-game-designer"],
+      "conditionalOwners": []
+    },
+    {
+      "skill": "capture-game-design-memory",
+      "owners": ["lead-game-designer"],
+      "conditionalOwners": []
+    },
+    {
+      "skill": "maintain-game-design-memory",
+      "owners": ["document-quality-editor"],
+      "conditionalOwners": []
+    },
+    {
+      "skill": "analyze-game-design-references",
+      "owners": ["lead-game-designer"],
+      "conditionalOwners": []
+    },
+    {
+      "skill": "maintain-game-design-glossary",
+      "owners": ["document-quality-editor"],
+      "conditionalOwners": []
+    }
+  ],
+  "memoryWorkflow": {
+    "retrieveSkill": "retrieve-approved-design-memory",
+    "captureSkill": "capture-game-design-memory",
+    "maintenanceSkill": "maintain-game-design-memory",
+    "retrievePlacement": "after-intake-before-specialist-routing",
+    "capturePlacement": "after-completion-gates",
+    "defaultScope": "project",
+    "defaultMaxItems": 5,
+    "requiresProjectId": true,
+    "dedicatedAgent": false
+  },
+  "referenceIntelligenceWorkflow": {
+    "analysisSkill": "analyze-game-design-references",
+    "glossarySkill": "maintain-game-design-glossary",
+    "transferState": "pending-review",
+    "outputs": ["reference-system-analysis", "reference-comparison", "design-transfer-decision"],
+    "profileIds": ["reference-system-analysis", "reference-comparison", "design-transfer-decision"]
+  },
+  "cutsceneWorkflow": {
+    "schemaVersion": 1,
+    "waves": ["style-master", "reference-masters", "keyframes", "storyboard"],
+    "downstream": ["plan-image-assets", "generate-image-assets", "review-image-assets"],
+    "approval": "stage-by-stage-live-host-user"
   },
   "qualityWorkflow": {
     "skill": "apply-document-quality-profile",
@@ -110,6 +178,7 @@
       "accessibility-platform-matrix",
       "character-skill-combat-monster-specification",
       "core-motivation-loop",
+      "cutscene-visual-preproduction",
       "data-table-contract",
       "design-review-decision-log",
       "economy-balance-specification",
@@ -200,6 +269,20 @@
       "completionGates": ["system-inputs-linked", "player-strategy-supported", "production-cost-accounted"]
     },
     {
+      "id": "cutscene-visual-preproduction",
+      "triggerIntents": ["컷씬 기획", "스토리보드", "시네마틱 이미지", "마스터 이미지", "컷씬 프롬프트", "컷씬 승인 후 생성"],
+      "requiredInputs": ["cutscene brief", "game-state return"],
+      "skill": "design-cutscene-visual-preproduction",
+      "eligibleProfiles": ["live-service-rpg", "mobile", "pc-console"],
+      "defaultReviewers": ["content-narrative-designer", "lead-game-designer"],
+      "maxReviewers": 3,
+      "references": ["references/methods/content-specification.md"],
+      "artifactType": "cutscene-visual-preproduction",
+      "completionGates": ["cutscene-continuity-current"],
+      "outputArtifacts": ["cutscene-brief", "cutscene-shot-package", "cutscene-prompt-package", "cutscene-cost-estimate", "cutscene-continuity-review"],
+      "outputTypes": ["cutscene-visual-preproduction"]
+    },
+    {
       "id": "player-experience",
       "triggerIntents": ["player experience", "UX flow", "tutorial", "accessibility", "input"],
       "requiredInputs": ["critical actions", "platform", "input methods", "first-session goal"],
@@ -284,6 +367,32 @@
       "artifactType": "canonical-artifact",
       "outputArtifacts": ["requested-md", "requested-pdf", "requested-docx", "requested-pptx", "qa-manifest"],
       "completionGates": ["canonical-artifact-valid", "format-preflight-complete", "requested-formats-recorded-in-qa-manifest", "canonical-artifact-preserved-on-failure"]
+    },
+    {
+      "id": "reference-game-analysis",
+      "triggerIntents": ["reference game analysis", "game comparison", "design transfer decision", "경쟁작 분석", "레퍼런스 게임 분석", "장르 시스템 인벤토리", "게임 시스템 비교", "증거와 추정 분리"],
+      "requiredInputs": ["reference brief", "reference set", "evidence scope", "project constraints"],
+      "skill": "analyze-game-design-references",
+      "eligibleProfiles": ["live-service-rpg", "mobile", "pc-console"],
+      "defaultReviewers": ["lead-game-designer"],
+      "maxReviewers": 3,
+      "references": ["references/shared/reference-intelligence/references/evidence-policy.md", "references/shared/reference-intelligence/references/reference-analysis-flow.md", "references/shared/reference-intelligence/schema/reference-analysis.schema.json"],
+      "artifactType": "reference-system-analysis",
+      "outputTypes": ["reference-system-analysis", "reference-comparison", "design-transfer-decision"],
+      "completionGates": ["inventory-before-evaluation", "evidence-and-claim-bindings-preserved", "transfer-pending-review"]
+    },
+    {
+      "id": "project-glossary-maintenance",
+      "triggerIntents": ["game design glossary", "terminology maintenance", "terminology findings", "게임 기획 용어 사전", "용어 후보", "용어 승인", "한국어 영어 용어 일관성"],
+      "requiredInputs": ["glossary candidates", "glossary snapshot", "human decision owner"],
+      "skill": "maintain-game-design-glossary",
+      "eligibleProfiles": ["live-service-rpg", "mobile", "pc-console"],
+      "defaultReviewers": ["document-quality-editor"],
+      "maxReviewers": 3,
+      "references": ["references/shared/reference-intelligence/references/evidence-policy.md", "references/shared/reference-intelligence/schema/game-design-glossary.schema.json", "references/shared/reference-intelligence/schema/glossary-receipt.schema.json"],
+      "artifactType": "game-design-glossary",
+      "outputTypes": ["game-design-glossary", "terminology-findings", "glossary-receipt"],
+      "completionGates": ["candidate-findings-emitted", "host-human-capability-required", "source-text-preserved"]
     }
   ]
 }

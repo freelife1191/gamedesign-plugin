@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { cp, lstat, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { chmod, cp, lstat, mkdir, mkdtemp, readFile, readdir, rm, utimes, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -56,7 +56,16 @@ async function snapshot(root) {
   return {
     status: runGit(root, ["status", "--porcelain=v1", "-z", "--untracked-files=all"]),
     files: await listWorkspaceBytes(root),
+    protectedLocalState: {
+      memory: await protectedFileIdentity(path.join(root, ".game-design/memory/v1/events/aa/memory-sentinel", `mev1-${"a".repeat(64)}.md`)),
+      gitExclude: await protectedFileIdentity(path.join(root, ".git/info/exclude")),
+    },
   };
+}
+
+async function protectedFileIdentity(filename) {
+  const [bytes, stats] = await Promise.all([readFile(filename), lstat(filename)]);
+  return { bytes, mode: stats.mode, mtimeMs: stats.mtimeMs };
 }
 
 function writingSource(suffix = "문장이 기계적으로 나열되어 있습니다.") {
@@ -85,6 +94,17 @@ async function dirtyRepository(t, prefix) {
   });
   await writeFile(path.join(root, "content.md"), writingSource());
   await writeFile(path.join(root, "notes.txt"), "사용자가 작성 중인 추적되지 않은 메모\n");
+  const memorySentinel = path.join(root, ".game-design/memory/v1/events/aa/memory-sentinel", `mev1-${"a".repeat(64)}.md`);
+  const gitExclude = path.join(root, ".git/info/exclude");
+  await mkdir(path.dirname(memorySentinel), { recursive: true });
+  await mkdir(path.dirname(gitExclude), { recursive: true });
+  await writeFile(memorySentinel, "dirty-worktree-memory-must-survive\n");
+  await writeFile(gitExclude, "existing user exclusion\n.game-design/memory/\n");
+  await chmod(memorySentinel, 0o640);
+  await chmod(gitExclude, 0o600);
+  const timestamp = new Date("2026-08-12T00:00:00.000Z");
+  await utimes(memorySentinel, timestamp, timestamp);
+  await utimes(gitExclude, timestamp, timestamp);
   return root;
 }
 

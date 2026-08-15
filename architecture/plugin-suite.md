@@ -57,16 +57,16 @@ flowchart TB
 ```text
 plugins/game-design-<product>/
 ├── .codex-plugin/plugin.json
-├── skills/                         # 제품 10개 + svg-infographic 1개
+├── skills/                         # Studio 24개 / Career 23개 설치 스킬
 │   ├── <product-skill>/
 │   │   ├── SKILL.md
 │   │   ├── agents/openai.yaml      # 필요한 스킬에만 존재
 │   │   ├── references/             # 필요한 스킬에만 존재
 │   │   └── scripts/                # 필요한 스킬에만 존재
 │   └── svg-infographic/            # Skillstead 0.8.3
-├── agents/                         # 역할 프롬프트 6개
+├── agents/                         # Studio 12개 / Career 10개 역할 프롬프트
 ├── hooks/hooks.json
-├── scripts/                        # shared runtime 3개
+├── scripts/                        # 공통·제품 실행 스크립트 30개
 ├── references/
 │   ├── shared/                     # Core, Current, export, 책임 게이트
 │   ├── source/docs/                # 원문 49개
@@ -87,7 +87,7 @@ plugins/game-design-<product>/
 
 ### Studio
 
-- 제품 스킬: 비전, 시스템, 콘텐츠, 플레이어 경험, 경제·LiveOps, 제작, 검토, 도식화, export와 오케스트레이션
+- 제품 스킬: 비전, 시스템, 콘텐츠, 플레이어 경험, 경제·LiveOps, 제작, 검토, 컷씬 프리프로덕션, 도식화, export와 오케스트레이션
 - 역할: lead, system/economy, content/narrative, UX/accessibility, LiveOps/data, production feasibility
 - 프로필: `universal-core`를 항상 먼저 적용하고 `live-service-rpg`, `mobile`, `pc-console`을 canonical order로 합성
 - 제품 helper: 프로필 합성, 역할 finding 병합, 시나리오 검증, source document 공개 재배포 가드, 시각화 증거, export job 검증
@@ -105,6 +105,18 @@ plugins/game-design-<product>/
 
 Career는 작은 채용 표본을 시장 전체로 일반화하지 않고, 학력·나이·전공·배경만으로 경로를 순위화하지 않습니다.
 
+## 공통 설계 지능 모듈
+
+두 제품은 같은 원천에서 빌드된 프로젝트 기억, 레퍼런스 분석과 용어 사전 런타임을 각 설치 패키지 안에 독립적으로 포함합니다. 이 모듈들은 Canonical Artifact나 사람 결정을 대신하지 않습니다.
+
+| 모듈 | 입력과 처리 | 결과와 권한 경계 |
+| --- | --- | --- |
+| 프로젝트 기억 | 플레이테스트·검토·학습 결과에서 출처와 적용·제외 범위를 가진 후보를 만들고, 현재 출처와 만료 상태를 다시 확인 | 이름이 기록된 사람이 승인한 기억만 다음 작업에 적용. 저장소 문제나 opt-out이면 원래 작업은 기억 없이 계속 |
+| 레퍼런스 인텔리전스 | 분석 브리프(brief), 증거 등록부, 시스템 지도, 핵심 반복(Core Loop)·장기 반복(Meta Loop), 경제·사용자 경험(UX)·운영 구조와 미확인 질문을 분리 | 관찰·추론·설계 전환 제안을 구분. `adopt`, `adapt`, `reject`, `hold`는 검토 대기 제안이며 자동 승인하지 않음 |
+| 용어 사전 | 한국어·영어 후보, 정의, 문서별 출현 위치와 영향 목록을 계산 | 이름이 기록된 사람의 결정과 정확한 스냅샷 없이 용어집을 갱신하거나 본문을 자동 치환하지 않음 |
+
+Studio의 컷씬 프리프로덕션은 이 공통 모듈과 별도인 제품 경로입니다. `style-master → reference-masters → keyframes → storyboard` 순서를 따르고, 프롬프트만 제공할지·비용만 계산할지·승인 뒤 생성할지를 분리합니다. 한글 픽셀 텍스트가 없으면 호스트 `image_gen`을 먼저 사용하고, 한글이 필수일 때만 explicit OpenAI `gpt-image-2`를 사용합니다. 유료 품질은 `low` 기본, `medium` 선택, `high` 예외 원칙을 따릅니다. 현재 견적, 이름이 기록된 승인과 선행 단계(wave) 완료가 없으면 생성 제공자(provider)를 호출하지 않습니다.
+
 ## 런타임 오케스트레이션
 
 ```mermaid
@@ -115,9 +127,12 @@ sequenceDiagram
     participant R as 역할 프롬프트
     participant C as Canonical Artifact
     participant X as 시각화·내보내기
+    participant M as 기억·레퍼런스·용어
 
     U->>O: 목표, 자료, 제약, 완료 조건
     O->>O: 단계·프로필과 최소 스킬 체인 선택
+    O->>M: 승인된 기억 조회·근거/용어 맥락 확인
+    M-->>O: 적용 기록·분석 제안·용어 영향 목록
     O->>W: 정규화된 작업 envelope
     W-->>C: 초안·근거·결정
     O->>R: 역할별 독립 검토
@@ -157,6 +172,8 @@ plugin manifest에는 hook 필드를 추가하지 않고 기본 발견 경로 `h
 | reference/evidence audit | 원문 인덱스, 최신성, source mapping과 drift |
 | vendor hash | Skillstead 0.8.3 원본과 lock의 byte 일치 |
 | unit/contract/product/E2E | schema, 스킬, 역할, hook, 제품 시나리오 |
+| 기억·레퍼런스·용어 안전성 | 출처 변경(drift), 승인 권한, 보수적 근거 판정, 원문 무치환과 복구(rollback) |
+| 컷씬 생애주기(lifecycle) | 프롬프트 전용(prompt-only), 비용·상한(cap), 이름이 기록된 승인, 순차 단계(wave), 부분 재시도와 연속성 관문(continuity gate) |
 | clean build drift | 편집 원천과 committed snapshot 일치 |
 | official package/skill validation | plugin manifest와 모든 스킬 구조 |
 | isolation smoke | 저장소와 sibling 없이 단독 package 실행 |

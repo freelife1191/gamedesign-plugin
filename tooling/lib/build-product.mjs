@@ -8,16 +8,89 @@ import { assertNoSymlinkPath, comparePaths, joinWithin, normalizeRelativePath } 
 import { loadProductContract } from "./product-contract.mjs";
 
 const sharedMappings = {
-  knowledge: ["shared/knowledge", "references/shared/knowledge"],
-  templates: ["shared/templates", "assets/shared/templates"],
-  "responsible-design": ["shared/responsible-design", "references/shared/responsible-design"],
-  export: ["shared/export", "references/shared/export"],
-  vendor: ["shared/vendor/skillstead/svg-infographic/0.9.0", "skills/svg-infographic"],
-  archify: ["shared/vendor/archify/archify/2.13.0", "skills/archify"],
-  "im-not-ai": ["shared/vendor/im-not-ai/humanize-korean/v2.3.0", "skills/humanize-korean"],
-  "document-quality": ["shared/document-quality", "references/shared/document-quality"],
-  "image-assets": ["shared/image-assets", "references/shared/image-assets"],
+  knowledge: [["shared/knowledge", "references/shared/knowledge"]],
+  templates: [["shared/templates", "assets/shared/templates"]],
+  "responsible-design": [["shared/responsible-design", "references/shared/responsible-design"]],
+  export: [["shared/export", "references/shared/export"]],
+  vendor: [["shared/vendor/skillstead/svg-infographic/0.9.0", "skills/svg-infographic"]],
+  archify: [["shared/vendor/archify/archify/2.13.0", "skills/archify"]],
+  "im-not-ai": [["shared/vendor/im-not-ai/humanize-korean/v2.3.0", "skills/humanize-korean"]],
+  "document-quality": [["shared/document-quality", "references/shared/document-quality"]],
+  "image-assets": [["shared/image-assets", "references/shared/image-assets"]],
+  memory: [
+    ["shared/memory/skills", "skills"],
+    ["shared/memory/schema", "references/shared/memory/schema"],
+    ["shared/memory/references", "references/shared/memory/references"],
+    ["shared/memory/templates", "references/shared/memory/templates"],
+  ],
+  "reference-intelligence": [
+    ["shared/reference-intelligence/skills", "skills"],
+    ["shared/reference-intelligence/schema", "references/shared/reference-intelligence/schema"],
+    ["shared/reference-intelligence/catalog", "references/shared/reference-intelligence/catalog"],
+    ["shared/reference-intelligence/references", "references/shared/reference-intelligence/references"],
+    ["shared/reference-intelligence/templates", "references/shared/reference-intelligence/templates"],
+  ],
 };
+const sharedMemoryInventory = Object.freeze({
+  "shared/memory/skills": Object.freeze([
+    "capture-game-design-memory/SKILL.md",
+    "maintain-game-design-memory/SKILL.md",
+    "retrieve-approved-design-memory/SKILL.md",
+  ]),
+  "shared/memory/schema": Object.freeze([
+    "memory-config.schema.json",
+    "memory-event.schema.json",
+    "memory-index.schema.json",
+    "memory-receipt.schema.json",
+    "memory-record.schema.json",
+  ]),
+  "shared/memory/references": Object.freeze([
+    "memory-lifecycle.md",
+    "memory-policy.md",
+  ]),
+  "shared/memory/templates": Object.freeze([
+    "index.md",
+    "log.md",
+    "memory-record.md",
+  ]),
+});
+const sharedReferenceIntelligenceInventory = Object.freeze({
+  "shared/reference-intelligence/skills": Object.freeze([
+    "analyze-game-design-references/SKILL.md",
+    "analyze-game-design-references/agents/openai.yaml",
+    "maintain-game-design-glossary/SKILL.md",
+    "maintain-game-design-glossary/agents/openai.yaml",
+  ]),
+  "shared/reference-intelligence/schema": Object.freeze([
+    "game-design-glossary.schema.json",
+    "glossary-receipt.schema.json",
+    "reference-analysis.schema.json",
+  ]),
+  "shared/reference-intelligence/catalog": Object.freeze([
+    "overlays/business-model.json",
+    "overlays/genre.json",
+    "overlays/platform.json",
+    "overlays/play-mode.json",
+    "source-register.json",
+    "system-atlas.json",
+  ]),
+  "shared/reference-intelligence/references": Object.freeze([
+    "evidence-policy.md",
+    "reference-analysis-flow.md",
+  ]),
+  "shared/reference-intelligence/templates": Object.freeze([
+    "analysis-priority.md",
+    "atlas-selection.json",
+    "brief.json",
+    "brief.md",
+    "comparison-matrix.md",
+    "evidence-register.yml",
+    "reference-set.yml",
+    "system-inventory.json",
+    "transfer-decisions.md",
+    "verification-queue.md",
+  ]),
+});
 const sourceOnlySkillsteadFallbacks = Object.freeze({
   "game-design-career": Object.freeze({
     path: "skills/visualize-career-roadmap/scripts/run-skillstead.mjs",
@@ -29,7 +102,29 @@ const sourceOnlySkillsteadFallbacks = Object.freeze({
   }),
 });
 const packageLinkProjections = Object.freeze({
+  "game-design-career": Object.freeze([
+    Object.freeze({
+      path: /^README\.md$/u,
+      source: "../../../shared/reference-intelligence/skills/analyze-game-design-references/SKILL.md",
+      package: "skills/analyze-game-design-references/SKILL.md",
+    }),
+    Object.freeze({
+      path: /^README\.md$/u,
+      source: "../../../shared/reference-intelligence/skills/maintain-game-design-glossary/SKILL.md",
+      package: "skills/maintain-game-design-glossary/SKILL.md",
+    }),
+  ]),
   "game-design-studio": Object.freeze([
+    Object.freeze({
+      path: /^README\.md$/u,
+      source: "../../../shared/reference-intelligence/skills/analyze-game-design-references/SKILL.md",
+      package: "skills/analyze-game-design-references/SKILL.md",
+    }),
+    Object.freeze({
+      path: /^README\.md$/u,
+      source: "../../../shared/reference-intelligence/skills/maintain-game-design-glossary/SKILL.md",
+      package: "skills/maintain-game-design-glossary/SKILL.md",
+    }),
     Object.freeze({
       path: /^skills\/[^/]+\/SKILL\.md$/u,
       source: "../../../../../shared/responsible-design/gates.json",
@@ -264,12 +359,21 @@ function addEntry(targets, entry, destinationPrefix, sourceLabel) {
   );
   const existing = targets.get(relativePath);
   if (existing) {
+    if (isReferenceIntelligenceDestination(relativePath)) {
+      throw new Error(`Reference-intelligence destination collision at ${relativePath} between ${existing.sourceLabel} and ${sourceLabel}`);
+    }
     if (!existing.bytes.equals(entry.bytes)) {
       throw new Error(`Content collision at ${relativePath} between ${existing.sourceLabel} and ${sourceLabel}`);
     }
     return;
   }
   targets.set(relativePath, { bytes: entry.bytes, relativePath, sourceLabel });
+}
+
+function isReferenceIntelligenceDestination(relativePath) {
+  return relativePath.startsWith("skills/analyze-game-design-references/")
+    || relativePath.startsWith("skills/maintain-game-design-glossary/")
+    || relativePath.startsWith("references/shared/reference-intelligence/");
 }
 
 function removeSourceOnlySkillsteadFallback(entry, productName) {
@@ -301,6 +405,24 @@ function isRealEnvironmentFile(relativePath) {
 function assertNoRealEnvironmentFiles(entries, sourceLabel) {
   if (entries.some(({ relativePath }) => isRealEnvironmentFile(relativePath))) {
     throw new Error(`Real .env or secret environment variant is not allowed in ${sourceLabel}`);
+  }
+}
+
+function assertExactSharedMemoryInventory(sourceRelative, entries) {
+  const expected = sharedMemoryInventory[sourceRelative];
+  if (!expected) throw new Error(`Unknown shared memory package root: ${sourceRelative}`);
+  const actual = entries.map(({ relativePath }) => relativePath).sort(comparePaths);
+  if (actual.length !== expected.length || actual.some((relativePath, index) => relativePath !== expected[index])) {
+    throw new Error(`Unexpected shared memory package file in ${sourceRelative}`);
+  }
+}
+
+function assertExactSharedReferenceIntelligenceInventory(sourceRelative, entries) {
+  const expected = sharedReferenceIntelligenceInventory[sourceRelative];
+  if (!expected) throw new Error(`Unknown shared reference-intelligence package root: ${sourceRelative}`);
+  const actual = entries.map(({ relativePath }) => relativePath).sort(comparePaths);
+  if (actual.length !== expected.length || actual.some((relativePath, index) => relativePath !== expected[index])) {
+    throw new Error(`Unexpected shared reference-intelligence package file in ${sourceRelative}`);
   }
 }
 
@@ -355,13 +477,18 @@ export async function buildProduct({ repoRoot, productName, stagingRoot, staging
   const targets = new Map();
 
   for (const moduleName of product.sharedModules) {
-    const [sourceRelative, destinationPrefix] = sharedMappings[moduleName];
-    await assertNoSymlinkPath(absoluteRepoRoot, sourceRelative, "shared module");
-    const entries = await collectTree(joinWithin(absoluteRepoRoot, sourceRelative), { label: sourceRelative });
-    assertNoRealEnvironmentFiles(entries, sourceRelative);
-    for (const entry of entries) addEntry(targets, entry, destinationPrefix, `shared:${moduleName}`);
+    const moduleEntries = [];
+    for (const [sourceRelative, destinationPrefix] of sharedMappings[moduleName]) {
+      await assertNoSymlinkPath(absoluteRepoRoot, sourceRelative, "shared module");
+      const entries = await collectTree(joinWithin(absoluteRepoRoot, sourceRelative), { label: sourceRelative });
+      assertNoRealEnvironmentFiles(entries, sourceRelative);
+      if (moduleName === "memory") assertExactSharedMemoryInventory(sourceRelative, entries);
+      if (moduleName === "reference-intelligence") assertExactSharedReferenceIntelligenceInventory(sourceRelative, entries);
+      moduleEntries.push(...entries);
+      for (const entry of entries) addEntry(targets, entry, destinationPrefix, `shared:${moduleName}`);
+    }
     if (moduleName === "image-assets") {
-      const example = entries.find(({ relativePath }) => relativePath === ".env.example");
+      const example = moduleEntries.find(({ relativePath }) => relativePath === ".env.example");
       if (!example) throw new Error("Missing shared/image-assets/.env.example");
       addEntry(targets, example, "", "shared:image-assets-root-example");
     }

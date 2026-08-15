@@ -1,0 +1,25 @@
+{
+  "referenceContexts": [
+    { "contextId": "context-id", "referenceId": "reference-id", "version": "1", "platform": "pc" }
+  ],
+  "evidence": [{
+    "availability": "available",
+    "claim": "Record only what the source directly supports.",
+    "claimKind": "observation",
+    "contextId": "context-id",
+    "evidenceId": "evidence-id",
+    "limitation": null,
+    "referenceId": "reference-id",
+    "sourceType": "direct-play",
+    "systemIds": ["core-play"],
+    "verificationQuestion": null
+  }],
+  "claims": [{
+    "category": "general",
+    "causal": false,
+    "claimId": "claim-id",
+    "evidenceIds": ["evidence-id"],
+    "kind": "observation",
+    "systemIds": ["core-play"]
+  }]
+}

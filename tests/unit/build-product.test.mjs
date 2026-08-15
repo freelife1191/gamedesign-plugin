@@ -46,6 +46,19 @@ async function createRepo(t, mutate = async () => {}) {
   await writeText(repoRoot, "shared/responsible-design/safety.md", "safety\n");
   await writeText(repoRoot, "shared/export/export.md", "export\n");
   await writeText(repoRoot, "shared/vendor/skillstead/svg-infographic/0.9.0/SKILL.md", "vendor\n");
+  await writeText(repoRoot, "shared/memory/skills/retrieve-approved-design-memory/SKILL.md", "retrieve\n");
+  await writeText(repoRoot, "shared/memory/skills/capture-game-design-memory/SKILL.md", "capture\n");
+  await writeText(repoRoot, "shared/memory/skills/maintain-game-design-memory/SKILL.md", "maintain\n");
+  await writeText(repoRoot, "shared/memory/schema/memory-config.schema.json", "{}\n");
+  await writeText(repoRoot, "shared/memory/schema/memory-event.schema.json", "{}\n");
+  await writeText(repoRoot, "shared/memory/schema/memory-record.schema.json", "{}\n");
+  await writeText(repoRoot, "shared/memory/schema/memory-index.schema.json", "{}\n");
+  await writeText(repoRoot, "shared/memory/schema/memory-receipt.schema.json", "{}\n");
+  await writeText(repoRoot, "shared/memory/references/memory-policy.md", "policy\n");
+  await writeText(repoRoot, "shared/memory/references/memory-lifecycle.md", "lifecycle\n");
+  await writeText(repoRoot, "shared/memory/templates/index.md", "template\n");
+  await writeText(repoRoot, "shared/memory/templates/log.md", "log\n");
+  await writeText(repoRoot, "shared/memory/templates/memory-record.md", "record\n");
   await writeText(repoRoot, "shared/hooks/runtime.mjs", "export default {};\n");
   await writeText(repoRoot, "shared/scripts/check.mjs", "export default true;\n");
   await writeText(repoRoot, "docs/guides/one.md", "one\n");
@@ -119,6 +132,70 @@ test("document-quality is copied deterministically and rejects collisions and sy
   });
 });
 
+test("memory maps skills, schemas, references, and templates to independent package destinations", async (t) => {
+  await t.test("exact paths and bytes", async (t) => {
+    const fixture = await createRepo(t, async ({ contract, repoRoot }) => {
+      contract.sharedModules.push("memory");
+      await writeJson(path.join(repoRoot, "products/minimal-product/product.json"), contract);
+    });
+    const result = await buildProduct({ ...fixture, productName: "minimal-product" });
+    for (const relativePath of [
+      "skills/capture-game-design-memory/SKILL.md",
+      "skills/maintain-game-design-memory/SKILL.md",
+      "skills/retrieve-approved-design-memory/SKILL.md",
+      "references/shared/memory/schema/memory-config.schema.json",
+      "references/shared/memory/schema/memory-event.schema.json",
+      "references/shared/memory/schema/memory-record.schema.json",
+      "references/shared/memory/schema/memory-index.schema.json",
+      "references/shared/memory/schema/memory-receipt.schema.json",
+      "references/shared/memory/references/memory-policy.md",
+      "references/shared/memory/references/memory-lifecycle.md",
+      "references/shared/memory/templates/index.md",
+      "references/shared/memory/templates/log.md",
+      "references/shared/memory/templates/memory-record.md",
+    ]) assert.ok(result.files.includes(relativePath), relativePath);
+    assert.deepEqual(
+      await readFile(path.join(result.outputDir, "references/shared/memory/schema/memory-receipt.schema.json")),
+      await readFile(path.join(fixture.repoRoot, "shared/memory/schema/memory-receipt.schema.json")),
+    );
+  });
+
+  await t.test("module omission, unexpected files, overlay collision, symlink, and real env remain fail-closed", async (t) => {
+    const omitted = await createRepo(t);
+    const omittedBuild = await buildProduct({ ...omitted, productName: "minimal-product" });
+    assert.equal(omittedBuild.files.some((file) => file.includes("memory")), false);
+
+    const collision = await createRepo(t, async ({ contract, repoRoot }) => {
+      contract.sharedModules.push("memory");
+      await writeJson(path.join(repoRoot, "products/minimal-product/product.json"), contract);
+      await writeText(repoRoot, "products/minimal-product/plugin/skills/capture-game-design-memory/SKILL.md", "overlay\n");
+    });
+    await assert.rejects(() => buildProduct({ ...collision, productName: "minimal-product" }), /content collision/i);
+
+    const unexpected = await createRepo(t, async ({ contract, repoRoot }) => {
+      contract.sharedModules.push("memory");
+      await writeJson(path.join(repoRoot, "products/minimal-product/product.json"), contract);
+      await writeText(repoRoot, "shared/memory/references/unexpected.md", "must not package\n");
+    });
+    await assert.rejects(() => buildProduct({ ...unexpected, productName: "minimal-product" }), /unexpected shared memory package file/i);
+    await assert.rejects(() => lstat(path.join(unexpected.stagingRoot, "minimal-product")), /ENOENT/);
+
+    const linked = await createRepo(t, async ({ contract, repoRoot }) => {
+      contract.sharedModules.push("memory");
+      await writeJson(path.join(repoRoot, "products/minimal-product/product.json"), contract);
+      await symlink("memory-policy.md", path.join(repoRoot, "shared/memory/references/policy-link.md"));
+    });
+    await assert.rejects(() => buildProduct({ ...linked, productName: "minimal-product" }), /symlink/i);
+
+    const env = await createRepo(t, async ({ contract, repoRoot }) => {
+      contract.sharedModules.push("memory");
+      await writeJson(path.join(repoRoot, "products/minimal-product/product.json"), contract);
+      await writeText(repoRoot, "shared/memory/schema/.env", "SECRET=must-not-package\n");
+    });
+    await assert.rejects(() => buildProduct({ ...env, productName: "minimal-product" }), /real \.env|secret environment/i);
+  });
+});
+
 test("image-assets is packaged with an exact root example and rejects unsafe package inputs", async (t) => {
   async function imageFixture(t, mutate = async () => {}) {
     return createRepo(t, async ({ contract, repoRoot, stagingRoot }) => {
@@ -168,6 +245,55 @@ test("image-assets is packaged with an exact root example and rejects unsafe pac
     const result = await buildProduct({ ...fixture, productName: "minimal-product" });
     assert.equal(result.files.some((file) => file.includes("image-assets") || file === ".env.example"), false);
   });
+});
+
+test("memory 없이 기존 공유 모듈의 모든 source-to-destination 바이트를 보존한다", async (t) => {
+  const fixture = await createRepo(t, async ({ contract, repoRoot }) => {
+    contract.sharedModules.push("archify", "im-not-ai", "document-quality", "image-assets");
+    await writeJson(path.join(repoRoot, "products/minimal-product/product.json"), contract);
+    await writeText(repoRoot, "shared/vendor/archify/archify/2.13.0/SKILL.md", "archify skill\n");
+    await writeText(repoRoot, "shared/vendor/archify/archify/2.13.0/bin/archify.mjs", "archify binary\n");
+    await writeText(repoRoot, "shared/vendor/archify/vendor.lock.json", "archify lock\n");
+    await writeText(repoRoot, "shared/vendor/im-not-ai/humanize-korean/v2.3.0/SKILL.md", "humanize skill\n");
+    await writeText(repoRoot, "shared/vendor/im-not-ai/LICENSE", "im-not-ai license\n");
+    await writeText(repoRoot, "shared/document-quality/schema/profile.json", "{\"stable\":true}\n");
+    await writeText(repoRoot, "shared/document-quality/templates/finding.md", "finding\n");
+    await writeText(repoRoot, "shared/image-assets/.env.example", "IMAGE_GEN_MODE=prompt-only\n");
+    await writeText(repoRoot, "shared/image-assets/schema/image-config.schema.json", "{}\n");
+    await writeText(repoRoot, "shared/image-assets/templates/prompt.md", "prompt\n");
+  });
+  const result = await buildProduct({ ...fixture, productName: "minimal-product" });
+  const mappings = [
+    ["shared/knowledge", "references/shared/knowledge"],
+    ["shared/templates", "assets/shared/templates"],
+    ["shared/responsible-design", "references/shared/responsible-design"],
+    ["shared/export", "references/shared/export"],
+    ["shared/vendor/skillstead/svg-infographic/0.9.0", "skills/svg-infographic"],
+    ["shared/vendor/archify/archify/2.13.0", "skills/archify"],
+    ["shared/vendor/im-not-ai/humanize-korean/v2.3.0", "skills/humanize-korean"],
+    ["shared/document-quality", "references/shared/document-quality"],
+    ["shared/image-assets", "references/shared/image-assets"],
+  ];
+
+  for (const [sourceRelative, destinationPrefix] of mappings) {
+    const sourceEntries = await copyTree.collectTree(path.join(fixture.repoRoot, sourceRelative), { label: sourceRelative });
+    for (const { relativePath, bytes } of sourceEntries) {
+      const destination = path.join(result.outputDir, destinationPrefix, relativePath);
+      assert.deepEqual(await readFile(destination), bytes, `${sourceRelative}/${relativePath}`);
+    }
+  }
+  assert.deepEqual(
+    await readFile(path.join(result.outputDir, ".env.example")),
+    await readFile(path.join(fixture.repoRoot, "shared/image-assets/.env.example")),
+  );
+  assert.deepEqual(
+    await readFile(path.join(result.outputDir, "references/shared/vendor/archify/vendor.lock.json")),
+    await readFile(path.join(fixture.repoRoot, "shared/vendor/archify/vendor.lock.json")),
+  );
+  assert.deepEqual(
+    await readFile(path.join(result.outputDir, "third-party/im-not-ai/LICENSE")),
+    await readFile(path.join(fixture.repoRoot, "shared/vendor/im-not-ai/LICENSE")),
+  );
 });
 
 test("different bytes targeting one package path are rejected", async (t) => {

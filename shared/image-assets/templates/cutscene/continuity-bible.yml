@@ -1,0 +1,12 @@
+cutsceneId: cutscene-example
+characterAnchors:
+  - characterId: player
+    preserve: [silhouette, coat damage, left-to-right screen direction]
+  - characterId: companion
+    preserve: [key prop, right-hand grip, concerned expression]
+environmentAnchors:
+  - locationId: exit-gate
+    preserve: [arch shape, gate damage, cold exterior light direction]
+stateChanges:
+  - afterShotId: SHOT-01
+    changed: [gate is blocked, player objective becomes alternate route]

@@ -1,0 +1,11 @@
+cutsceneId: cutscene-example
+shots:
+  - shotId: SHOT-01
+    beatId: BEAT-01
+    purpose: Show the blocked exit and the companion's reaction.
+    camera: Wide eye-level frame, slow push toward the gate.
+    blocking: Player screen-left, companion screen-right, gate centered.
+    continuity: Preserve left-to-right travel and the key held by the companion.
+    lighting: Cold exterior light from the gate; warm interior rim light.
+    subtitleSafeArea: Lower center clear of faces and key prop.
+    transition: Cut from gameplay and hold on the gate before return.

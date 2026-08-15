@@ -159,7 +159,7 @@ function containsRawVendorCli(text) {
   return false;
 }
 
-function assertTextIsSafe({ text, relativePath, packageRoot, siblingNames, forbiddenAbsolutePaths }) {
+function assertTextIsSafe({ text, relativePath, packageRoot, siblingNames, forbiddenAbsolutePaths, inactiveRelativeReferenceTuples, usedInactiveRelativeReferenceTuples }) {
   for (const sibling of siblingNames) {
     if (relativePath.includes(sibling) || text.includes(sibling)) {
       throw new Error(`${relativePath} references sibling package ${sibling}`);
@@ -178,6 +178,8 @@ function assertTextIsSafe({ text, relativePath, packageRoot, siblingNames, forbi
     const pathPart = token.split(/[?#]/u, 1)[0];
     const resolved = path.resolve(packageRoot, path.dirname(relativePath), pathPart);
     if (!inside(packageRoot, resolved)) {
+      const tuple = `${relativePath}\0${pathPart}`;
+      if (inactiveRelativeReferenceTuples?.has(tuple)) { usedInactiveRelativeReferenceTuples.add(tuple); continue; }
       if (/(?:^|[/\\])shared[/\\]/u.test(token)) {
         throw new Error(`${relativePath} contains repo-only shared fallback: ${token}`);
       }
@@ -191,8 +193,9 @@ export async function auditTree({
   packageName,
   siblingNames = [],
   forbiddenAbsolutePaths = [],
+  inactiveRelativeReferenceTuples,
 }) {
-  if (typeof root !== "string" || typeof packageName !== "string" || packageName.length === 0) {
+  if (typeof root !== "string" || typeof packageName !== "string" || packageName.length === 0 || (inactiveRelativeReferenceTuples !== undefined && !(inactiveRelativeReferenceTuples instanceof Set))) {
     throw new TypeError("root and packageName are required");
   }
   const absoluteRoot = path.resolve(root);
@@ -208,6 +211,7 @@ export async function auditTree({
   const siblings = [...new Set(siblingNames)].sort(comparePaths);
   let files = 0;
   let utf8Files = 0;
+  const usedInactiveRelativeReferenceTuples = new Set();
 
   async function visit(directory, prefix = "") {
     const entries = await readdir(directory, { withFileTypes: true });
@@ -238,6 +242,8 @@ export async function auditTree({
         packageRoot: canonicalRoot,
         siblingNames: siblings,
         forbiddenAbsolutePaths: forbidden,
+        inactiveRelativeReferenceTuples,
+        usedInactiveRelativeReferenceTuples,
       });
       files += 1;
       utf8Files += 1;
@@ -245,5 +251,5 @@ export async function auditTree({
   }
 
   await visit(canonicalRoot);
-  return { files, utf8Files, symlinks: 0 };
+  return { files, utf8Files, symlinks: 0, usedInactiveRelativeReferenceTuples: [...usedInactiveRelativeReferenceTuples].sort(comparePaths) };
 }

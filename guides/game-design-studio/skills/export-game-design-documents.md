@@ -123,7 +123,7 @@ $game-design-studio:export-game-design-documents 기존 artifact와 준비 manif
 <!-- PROMPT-TEMPLATES:START game-design-studio:export-game-design-documents -->
 ### 재사용 프롬프트 템플릿
 
-- [beginner — Markdown terminal handoff를 준비하는 문서 출력](../../prompt-templates/studio/export-game-design-documents.md#studioexport-game-design-documentsbeginner)
-- [standard — PDF·DOCX capability preflight를 갖춘 문서 출력](../../prompt-templates/studio/export-game-design-documents.md#studioexport-game-design-documentsstandard)
-- [advanced — PPTX story·format QA와 부분 재개를 갖춘 문서 출력](../../prompt-templates/studio/export-game-design-documents.md#studioexport-game-design-documentsadvanced)
+- [beginner: Markdown terminal handoff를 준비하는 문서 출력](../../prompt-templates/studio/export-game-design-documents.md#studioexport-game-design-documentsbeginner)
+- [standard: PDF·DOCX capability preflight를 갖춘 문서 출력](../../prompt-templates/studio/export-game-design-documents.md#studioexport-game-design-documentsstandard)
+- [advanced: PPTX story·format QA와 부분 재개를 갖춘 문서 출력](../../prompt-templates/studio/export-game-design-documents.md#studioexport-game-design-documentsadvanced)
 <!-- PROMPT-TEMPLATES:END game-design-studio:export-game-design-documents -->

@@ -56,7 +56,7 @@
 
 ## 스킬 워크벤치
 
-[스킬 워크벤치](skill-workbench.md)는 설치된 Studio 스킬 15개의 직접 호출 신호, 피할 때, 입력, 결과와 조건부 다음 handoff를 연결합니다. 실제 입력과 완료 계약은 [스킬 레퍼런스](../skills/README.md)에서 확인하세요.
+[스킬 워크벤치](skill-workbench.md)는 설치된 Studio 스킬 24개의 직접 호출 신호, 피할 때, 입력, 결과와 조건부 다음 handoff를 연결합니다. 컷씬은 [컷씬 비주얼 프리프로덕션](../cutscene-visual-preproduction.md)의 직렬 wave·비용·승인 계약을 따릅니다. 실제 입력과 완료 계약은 [스킬 레퍼런스](../skills/README.md)에서 확인하세요.
 
 ## Studio FAQ
 

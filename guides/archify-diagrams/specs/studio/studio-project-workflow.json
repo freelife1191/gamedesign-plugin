@@ -12,14 +12,14 @@
       {
         "id": "vision-to-review",
         "label": "비전에서 사람 결정까지",
-        "focus": ["vision_approval", "canonical_artifact", "domain_design", "specialist_review", "finding_decision"],
-        "note": "승인된 플레이어 경험은 전문 검토 결과가 사람의 결정으로 돌아오기 전에 기준 문서가 됩니다."
+        "focus": ["vision_approval", "canonical_artifact", "reference_analysis", "glossary_review", "domain_design", "specialist_review", "finding_decision"],
+        "note": "승인된 플레이어 경험과 레퍼런스 근거, 용어 후보를 함께 검토한 뒤 설계 결정을 기준 문서에 남깁니다."
       },
       {
         "id": "asset-evidence",
         "label": "이미지와 형식 근거",
-        "focus": ["image_asset_plan", "image_asset_review", "format_qa_export"],
-        "note": "이미지 계획과 사람 승인은 내보낸 형식에 필요한 렌더러별 품질 검토와 분리합니다."
+        "focus": ["image_asset_plan", "cutscene_waves", "image_asset_review", "format_qa_export"],
+        "note": "이미지는 호스트 image_gen을 먼저 사용하고, 한글 픽셀 텍스트만 gpt-image-2로 보냅니다. 유료 전환과 품질은 비용 안내 뒤 사람이 승인합니다."
       },
       {
         "id": "resume-contract",
@@ -34,6 +34,8 @@
     { "id": "studio", "label": "게임 디자인 스튜디오" },
     { "id": "specialists", "label": "전문 검토" },
     { "id": "assets_renderer", "label": "자산과 렌더러" },
+    { "id": "cutscene", "label": "컷씬 프리프로덕션" },
+    { "id": "intelligence", "label": "레퍼런스와 용어" },
     { "id": "resume", "label": "보류 작업과 재개", "variant": "exception" }
   ],
   "phases": [
@@ -41,29 +43,33 @@
     { "id": "design", "label": "설계와 결정", "fromCol": 2, "toCol": 3 },
     { "id": "evidence", "label": "자산과 내보내기 근거", "fromCol": 4, "toCol": 5, "variant": "dashed" }
   ],
-  "groups": [
-    { "id": "canonical_design", "label": "기준 설계 기록", "lane": "studio", "fromCol": 1, "toCol": 2, "variant": "emphasis" },
-    { "id": "asset_evidence", "label": "제공자와 형식 근거", "lane": "assets_renderer", "fromCol": 4, "toCol": 5, "variant": "security" }
-  ],
-  "mainPath": ["vision_approval", "canonical_artifact", "domain_design", "specialist_review", "finding_decision", "image_asset_plan", "image_asset_review", "format_qa_export"],
+  "mainPath": ["vision_approval", "canonical_artifact", "domain_design", "specialist_review", "finding_decision", "image_asset_plan", "cutscene_waves", "image_asset_review", "format_qa_export"],
   "nodes": [
     { "id": "vision_approval", "lane": "human", "col": 0, "type": "external", "label": "비전 승인", "sublabel": "플레이어·재미·비목표" },
     { "id": "resume_context", "lane": "resume", "col": 4, "width": 72, "type": "messagebus", "label": "작업 재개", "sublabel": "같은 보류 작업" },
-    { "id": "canonical_artifact", "lane": "studio", "col": 1, "width": 52, "type": "database", "label": "기준", "sublabel": "결정 기록" },
+    { "id": "canonical_artifact", "lane": "studio", "col": 1, "width": 52, "type": "database", "label": "기준", "sublabel": "승인 맥락" },
     { "id": "domain_design", "lane": "studio", "col": 2, "width": 52, "type": "backend", "label": "범위", "sublabel": "설계 영역" },
+    { "id": "reference_analysis", "lane": "intelligence", "col": 2, "width": 92, "type": "database", "label": "레퍼런스 분석", "sublabel": "관찰·추론·비교" },
+    { "id": "glossary_review", "lane": "intelligence", "col": 5, "width": 68, "type": "security", "label": "용어 검토", "sublabel": "후보·영향·승인" },
     { "id": "specialist_review", "lane": "specialists", "col": 3, "type": "security", "label": "전문 검토", "sublabel": "품질·실현성" },
     { "id": "finding_decision", "lane": "human", "col": 4, "type": "external", "label": "결정", "sublabel": "수정·예외·보류", "tag": "사람 결정" },
-    { "id": "image_asset_plan", "lane": "assets_renderer", "col": 4, "width": 68, "type": "cloud", "label": "자산 계획", "sublabel": "요청문" },
+    { "id": "image_asset_plan", "lane": "assets_renderer", "col": 4, "width": 92, "type": "cloud", "label": "자산 계획", "sublabel": "호스트 우선·한글 유료" },
+    { "id": "cutscene_waves", "lane": "cutscene", "col": 4, "width": 116, "type": "backend", "label": "컷씬 4단계", "sublabel": "마스터→참조→키프레임→보드" },
     { "id": "image_asset_review", "lane": "human", "col": 5, "type": "external", "label": "이미지 승인", "sublabel": "이미지" },
     { "id": "format_qa_export", "lane": "assets_renderer", "col": 5, "width": 68, "type": "security", "label": "형식 검토", "sublabel": "내보내기" }
   ],
   "edges": [
-    { "from": "vision_approval", "to": "canonical_artifact", "role": "main", "variant": "emphasis" },
+    { "from": "vision_approval", "to": "canonical_artifact", "role": "main", "variant": "emphasis", "fromSide": "bottom", "toSide": "top" },
     { "from": "canonical_artifact", "to": "domain_design", "role": "main", "route": "straight", "fromSide": "right", "toSide": "left" },
+    { "from": "canonical_artifact", "to": "reference_analysis", "role": "branch", "variant": "default", "route": "return-left", "fromSide": "left", "toSide": "left" },
+    { "from": "reference_analysis", "to": "glossary_review", "role": "branch", "variant": "security", "route": "straight", "fromSide": "right", "toSide": "left" },
+    { "from": "glossary_review", "to": "finding_decision", "role": "branch", "variant": "emphasis", "fromSide": "bottom", "toSide": "top", "via": [[625, 800], [20, 800], [20, 40], [500, 40]] },
     { "from": "domain_design", "to": "specialist_review", "role": "main" },
     { "from": "specialist_review", "to": "finding_decision", "role": "main", "variant": "security" },
     { "from": "finding_decision", "to": "image_asset_plan", "role": "main", "variant": "emphasis" },
-    { "from": "image_asset_plan", "to": "image_asset_review", "role": "main", "variant": "security" },
+    { "from": "image_asset_plan", "to": "image_asset_review", "role": "branch", "variant": "security" },
+    { "from": "image_asset_plan", "to": "cutscene_waves", "role": "main", "variant": "emphasis" },
+    { "from": "cutscene_waves", "to": "image_asset_review", "role": "main", "variant": "security" },
     { "from": "image_asset_review", "to": "format_qa_export", "role": "main", "variant": "emphasis" },
     { "from": "image_asset_review", "to": "resume_context", "label": "보류", "role": "branch", "variant": "dashed", "route": "outside-right", "fromSide": "right", "toSide": "right", "channelX": 704 },
     { "from": "resume_context", "to": "image_asset_review", "label": "재개", "role": "return", "variant": "dashed", "route": "outside-right", "fromSide": "right", "toSide": "right", "channelX": 736, "labelDy": 24 }
@@ -79,10 +85,21 @@
       ]
     },
     {
+      "dot": "cyan",
+      "title": "설계 지능 입력",
+      "items": [
+        "승인된 기억만 출처·적용 범위·검토 시점을 다시 확인해 사용합니다",
+        "레퍼런스 근거는 관찰과 추론을 분리하고 설계 전환 제안은 사람이 결정합니다",
+        "용어 사전 후보는 문서 영향 목록을 먼저 만들고 승인 전 원문을 자동 치환하지 않습니다"
+      ]
+    },
+    {
       "dot": "amber",
       "title": "자산과 내보내기 경계",
       "items": [
-        "이미지 계획은 제공자 작업 전에 안정된 자산 ID와 요청문을 보존합니다",
+        "일반·컷씬 이미지는 image_gen을 먼저 쓰고 한글 픽셀 텍스트만 gpt-image-2로 보냅니다",
+        "유료 품질은 low 기본, medium 선택, high 예외이며 비용 승인 전에는 호출하지 않습니다",
+        "컷씬 프리프로덕션은 style-master → reference-masters → keyframes → storyboard 네 단계의 프롬프트·비용·승인을 분리하며 승인 전 provider 호출 0회입니다",
         "이미지 승인은 사람 검토 단계로 남깁니다",
         "내보내기 형식에는 렌더러별 품질 검토 근거가 필요합니다"
       ]

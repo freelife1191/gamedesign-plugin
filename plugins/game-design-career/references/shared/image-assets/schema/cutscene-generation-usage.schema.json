@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.game-design-plugin/shared/image-assets/schema/cutscene-generation-usage.schema.json",
+  "$defs": {
+    "waveId": { "enum": ["style-master", "reference-masters", "keyframes", "storyboard"] },
+    "assetId": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+    "opaqueId": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "usage": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["status", "reason"], "properties": { "status": { "const": "unavailable" }, "reason": { "enum": ["provider-not-called", "provider-usage-unavailable", "provider-usage-invalid"] } } },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["inputTokens", "inputTextTokens", "inputImageTokens", "outputTokens", "totalTokens"],
+          "properties": {
+            "inputTokens": { "type": "integer", "minimum": 0 }, "inputTextTokens": { "type": "integer", "minimum": 0 },
+            "inputImageTokens": { "type": "integer", "minimum": 0 }, "cachedTextTokens": { "type": "integer", "minimum": 0 },
+            "cachedImageTokens": { "type": "integer", "minimum": 0 }, "outputTokens": { "type": "integer", "minimum": 0 },
+            "totalTokens": { "type": "integer", "minimum": 0 }
+          }
+        }
+      ]
+    },
+    "actualCost": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["status", "usd"], "properties": { "status": { "const": "known" }, "usd": { "type": "number", "minimum": 0 } } },
+        { "type": "object", "additionalProperties": false, "required": ["status", "reason"], "properties": { "status": { "const": "unavailable" }, "reason": { "enum": ["provider-usage-unavailable", "provider-usage-invalid", "cached-token-breakdown-unavailable"] } } }
+      ]
+    }
+  },
+  "oneOf": [
+    {
+      "type": "object", "additionalProperties": false,
+      "required": ["schemaVersion", "kind", "waveId", "assetId", "attemptId", "attemptSequence", "assetAttemptOrdinal", "requestSha256", "pricingSnapshotSha256", "costEstimateSha256", "authorizedMaximumUsd", "authorizedAt", "sha256"],
+      "properties": {
+        "schemaVersion": { "const": 2 }, "kind": { "const": "authorization" }, "waveId": { "$ref": "#/$defs/waveId" }, "assetId": { "$ref": "#/$defs/assetId" },
+        "attemptId": { "$ref": "#/$defs/opaqueId" }, "attemptSequence": { "type": "integer", "minimum": 1 }, "assetAttemptOrdinal": { "type": "integer", "minimum": 1 },
+        "requestSha256": { "$ref": "#/$defs/sha256" }, "pricingSnapshotSha256": { "$ref": "#/$defs/sha256" }, "costEstimateSha256": { "$ref": "#/$defs/sha256" },
+        "authorizedMaximumUsd": { "type": "number", "exclusiveMinimum": 0 }, "authorizedAt": { "type": "string", "format": "date-time" }, "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    {
+      "type": "object", "additionalProperties": false,
+      "required": ["schemaVersion", "kind", "waveId", "assetId", "attemptId", "attemptSequence", "assetAttemptOrdinal", "authorizationSha256", "providerRequestId", "providerOutcome", "assetOutcome", "retryDisposition", "usage", "actualCost", "completedAt", "sha256"],
+      "properties": {
+        "schemaVersion": { "const": 2 }, "kind": { "const": "outcome" }, "waveId": { "$ref": "#/$defs/waveId" }, "assetId": { "$ref": "#/$defs/assetId" },
+        "attemptId": { "$ref": "#/$defs/opaqueId" }, "attemptSequence": { "type": "integer", "minimum": 1 }, "assetAttemptOrdinal": { "type": "integer", "minimum": 1 },
+        "authorizationSha256": { "$ref": "#/$defs/sha256" }, "providerRequestId": { "$ref": "#/$defs/opaqueId" },
+        "providerOutcome": { "enum": ["success", "provider-failure", "transport-failure", "not-called"] },
+        "assetOutcome": { "enum": ["success", "retryable-failure", "terminal-failure", "not-attempted"] },
+        "retryDisposition": { "enum": ["retryable", "none"] }, "usage": { "$ref": "#/$defs/usage" }, "actualCost": { "$ref": "#/$defs/actualCost" },
+        "completedAt": { "type": "string", "format": "date-time" }, "sha256": { "$ref": "#/$defs/sha256" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "providerOutcome": { "const": "not-called" } } },
+          "then": {
+            "properties": {
+              "assetOutcome": { "const": "not-attempted" },
+              "retryDisposition": { "const": "none" },
+              "actualCost": { "properties": { "status": { "const": "known" }, "usd": { "const": 0 } } }
+            }
+          },
+          "else": { "properties": { "assetOutcome": { "not": { "const": "not-attempted" } } } }
+        },
+        {
+          "if": { "properties": { "assetOutcome": { "const": "retryable-failure" } } },
+          "then": { "properties": { "retryDisposition": { "const": "retryable" } } },
+          "else": { "properties": { "retryDisposition": { "const": "none" } } }
+        },
+        {
+          "if": { "allOf": [
+            { "properties": { "usage": { "type": "object", "required": ["status"], "properties": { "status": { "const": "unavailable" } } } }, "required": ["usage"] },
+            { "properties": { "providerOutcome": { "not": { "const": "not-called" } } }, "required": ["providerOutcome"] }
+          ] },
+          "then": { "properties": { "actualCost": { "type": "object", "required": ["status"], "properties": { "status": { "const": "unavailable" } } } } }
+        },
+        {
+          "if": { "properties": { "providerOutcome": { "const": "not-called" } }, "required": ["providerOutcome"] },
+          "then": { "properties": { "usage": { "type": "object", "required": ["reason"], "properties": { "reason": { "const": "provider-not-called" } } } } }
+        },
+        {
+          "if": { "allOf": [
+            { "properties": { "providerOutcome": { "not": { "const": "not-called" } } }, "required": ["providerOutcome"] },
+            { "properties": { "usage": { "type": "object", "required": ["reason"], "properties": { "reason": { "const": "provider-not-called" } } } }, "required": ["usage"] }
+          ] },
+          "then": false
+        },
+        {
+          "if": { "allOf": [
+            { "properties": { "providerOutcome": { "not": { "const": "not-called" } } }, "required": ["providerOutcome"] },
+            { "properties": { "usage": { "type": "object", "required": ["reason"], "properties": { "reason": { "const": "provider-usage-invalid" } } } }, "required": ["usage"] }
+          ] },
+          "then": { "properties": { "actualCost": { "type": "object", "required": ["status", "reason"], "properties": { "status": { "const": "unavailable" }, "reason": { "const": "provider-usage-invalid" } } } } }
+        },
+        {
+          "if": { "allOf": [
+            { "properties": { "providerOutcome": { "not": { "const": "not-called" } } }, "required": ["providerOutcome"] },
+            { "properties": { "usage": { "type": "object", "required": ["reason"], "properties": { "reason": { "const": "provider-usage-unavailable" } } } }, "required": ["usage"] }
+          ] },
+          "then": { "properties": { "actualCost": { "type": "object", "required": ["status", "reason"], "properties": { "status": { "const": "unavailable" }, "reason": { "const": "provider-usage-unavailable" } } } } }
+        }
+      ]
+    }
+  ]
+}

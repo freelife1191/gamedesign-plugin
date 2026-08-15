@@ -2141,6 +2141,67 @@
     }
   },
   {
+    "id": "st-s16",
+    "scope": "game-design-studio-skill",
+    "title": "컷씬 비주얼 프리프로덕션 직접 호출",
+    "description": "style-master → reference-masters → keyframes → storyboard 순서로 진행합니다.",
+    "alt": "컷씬 네 단계와 선택적 이미지 생성 승인 흐름",
+    "type": "skill-flow",
+    "display_contract": "explicit-steps",
+    "eyebrow": "ST-S16 · SKILL",
+    "conclusion": "image_gen을 먼저 사용합니다. 한글 텍스트는 gpt-image-2를 쓰고, 화질은 low 기본·medium 선택·high 예외입니다. 승인 전에는 provider를 호출하지 않습니다.",
+    "steps": [
+      {
+        "stage": "trigger",
+        "label": "style-master",
+        "detail": "스타일 기준 이미지"
+      },
+      {
+        "stage": "필수 입력",
+        "label": "reference-masters",
+        "detail": "인물·배경·소품 기준"
+      },
+      {
+        "stage": "skill-owned work",
+        "label": "keyframes",
+        "detail": "장면별 핵심 프레임"
+      },
+      {
+        "stage": "output",
+        "label": "storyboard",
+        "detail": "최종 장면 흐름"
+      },
+      {
+        "stage": "next route",
+        "label": "승인·연속성 검토",
+        "detail": "image_gen 우선·유료 생성 선택"
+      }
+    ],
+    "source_paths": [
+      "guides/game-design-studio/skills/design-cutscene-visual-preproduction.md"
+    ],
+    "used_by": [
+      "guides/game-design-studio/skills/design-cutscene-visual-preproduction.md"
+    ],
+    "semantic": {
+      "skill": "design-cutscene-visual-preproduction",
+      "outputs": [
+        "cutscene-brief",
+        "cutscene-shot-package",
+        "cutscene-prompt-package",
+        "cutscene-cost-estimate",
+        "cutscene-continuity-review"
+      ],
+      "next_routes": [
+        "plan-image-assets",
+        "generate-image-assets",
+        "review-image-assets"
+      ],
+      "required_input": "cutscene brief + game-state return",
+      "next_condition": "current estimate + named live approval → wave dispatch"
+    }
+  },
+  {
     "id": "ca-c01",
     "anchor": "ca-c01-기획-직무와-전문-분야-탐색",
     "scope": "game-design-career-use-case",

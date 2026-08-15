@@ -397,3 +397,25 @@ $game-design-career:orchestrate-game-design-career artifact=game-design-career/<
 **사람 검토·근거·권리·비보장:** 사람 Career Lead가 근거·권리·공개 경계, `evidence gaps`와 다음 행동을 검토합니다. 플러그인의 초안·점수·정리는 합격, 채용, 승진 또는 회사 평가를 보장하지 않습니다.
 
 **실패·재개·관련 경로:** 근거가 stale이거나 불완전하면 unknown과 재검색 조건을 **보존 → 사람 확인 → 재개**합니다. [CA-C08](use-cases/competency-paths.md#ca-c08-면접주니어-성장직무-전환), [Career 오케스트레이터](skills/orchestrate-game-design-career.md), [성장·전환 레시피](recipes/junior-growth-transition.md)를 연결합니다.
+
+### Q19. 이전 학습·포트폴리오 교훈을 다음 작업에 어떻게 안전하게 쓰는가?
+
+**결론:** 현재 프로젝트에서 이름이 확인된 사람이 승인한 기록만 참고합니다. 자동으로 남는 기록은 후보뿐이며 자동 승인되지 않습니다.
+
+**언제·왜:** 출처 파일, 적용·제외 조건, 검토·만료 시점과 Career 영역을 먼저 확인합니다. 충돌이나 손상이 있으면 어느 쪽도 임의로 고르지 않고 기존 작업은 기억 없이 계속합니다. 기억은 공고, 피드백과 개인 기여 근거를 대신하지 않습니다.
+
+**실행 요청:**
+
+```text
+@Game Design Career 기억 후보와 승인 기록을 보여 주고, 현재 포트폴리오 작업에 적용할 수 없는 항목은 이유와 함께 제외해.
+```
+
+```text
+$game-design-career:retrieve-approved-design-memory project=career-project-id context=portfolio-work
+```
+
+**예상 결과·읽는 순서:** `approved-memory-guidance` 결과를 `memory-application-report → memory ID → source binding → apply/exclusion reason` 순서로 읽습니다. 현재 포트폴리오에 적용한 승인 기록과 제외한 기록을 함께 보여 주므로, 출처 연결과 적용 범위를 다시 확인할 수 있습니다.
+
+**사람 검토·근거·권리·비보장:** 사람 포트폴리오 검토자가 출처, 공개 권리와 개인 기여 경계를 다시 확인합니다. `적용·제외 사유`가 있어도 기억은 공고·피드백·개인 기여 근거나 합격 가능성을 대신하거나 보장하지 않습니다.
+
+**실패·재개·관련 경로:** 기억 저장소가 없거나 출처가 달라지면 해당 항목과 이유를 **보존 → 사람 확인 → 재개**하고, 기억 없이 기존 작업을 이어 갑니다. [CA-C06](use-cases/competency-paths.md#ca-c06-창작-기획-포트폴리오), [Career 프로젝트 기억](memory.md), [포트폴리오 레시피](recipes/portfolio-build-review.md)를 따릅니다.

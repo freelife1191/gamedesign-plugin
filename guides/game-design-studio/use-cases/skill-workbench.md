@@ -33,6 +33,7 @@
 | 스킬 | 직접 호출 신호 | 피할 때 | 입력 | 결과 | 다음 스킬 | 상세 가이드 |
 | --- | --- | --- | --- | --- | --- | --- |
 | `plan-image-assets` | `$game-design-studio:plan-image-assets` — finite slot | bytes 생성·승인 때 | profile·stable ID·mode | manifest·prompts | select/required/all 생성 또는 diagram | [직접 호출](../skills/plan-image-assets.md#직접-호출-활용-plan-image-assets) |
+| `design-cutscene-visual-preproduction` | `$game-design-studio:design-cutscene-visual-preproduction` — cutscene wave·continuity | provider 호출·포괄 승인 때 | beat·shot·continuity·finite cap | prompt package·estimate·continuity review | current 승인 wave만 image dispatch | [직접 호출](../skills/design-cutscene-visual-preproduction.md#직접-호출-활용-design-cutscene-visual-preproduction) |
 | `generate-image-assets` | `$game-design-studio:generate-image-assets` — finite declared job | prompt-only·diagram slot | selected receipt·prompt | draft·provenance | named human image review | [직접 호출](../skills/generate-image-assets.md#직접-호출-활용-generate-image-assets) |
 | `review-image-assets` | `$game-design-studio:review-image-assets` — named human review | rights·reviewer가 없을 때 | draft·source·placement | lifecycle receipt | approved export preflight | [직접 호출](../skills/review-image-assets.md#직접-호출-활용-review-image-assets) |
 
@@ -49,5 +50,20 @@
 | 스킬 | 직접 호출 신호 | 피할 때 | 입력 | 결과 | 다음 스킬 | 상세 가이드 |
 | --- | --- | --- | --- | --- | --- | --- |
 | `export-game-design-documents` | `$game-design-studio:export-game-design-documents` — approved format handoff | blocker·rights가 남을 때 | canonical artifact·formats·audience | export manifest·format jobs | pending→downstream; unavailable→resume | [직접 호출](../skills/export-game-design-documents.md#직접-호출-활용-export-game-design-documents) |
+
+## 프로젝트 기억
+
+| 스킬 | 직접 호출 신호 | 피할 때 | 입력 | 결과 | 다음 스킬 | 상세 가이드 |
+| --- | --- | --- | --- | --- | --- | --- |
+| `retrieve-approved-design-memory` | `$game-design-studio:retrieve-approved-design-memory` — 승인된 프로젝트 교훈 조회 | 이번 요청에서 기억을 쓰지 않기로 했을 때 | project ID·현재 요청·설정 | 적용·제외 기록 | 선택된 Studio 작업 | [프로젝트 기억](../memory.md) |
+| `capture-game-design-memory` | `$game-design-studio:capture-game-design-memory` — 근거 있는 교훈 후보 제안 | 추측·일회성 문구·민감 정보만 있을 때 | 검증한 결과·출처·분류 receipt | candidate 기록 | 사람 확인·관리 | [프로젝트 기억](../memory.md) |
+| `maintain-game-design-memory` | `$game-design-studio:maintain-game-design-memory` — 후보 확인·승인·거부·폐기 | 이름이 확인된 사람의 판단이 없을 때 | 후보 ID·출처·사람의 결정 | 상태 이력·충돌 안내 | Studio 작업 재개 | [프로젝트 기억](../memory.md) |
+
+## 레퍼런스 분석·용어 사전
+
+| 스킬 | 직접 호출 신호 | 피할 때 | 입력 | 결과 | 다음 스킬 | 상세 가이드 |
+| --- | --- | --- | --- | --- | --- | --- |
+| `analyze-game-design-references` | `$game-design-studio:analyze-game-design-references` — 경쟁작 관찰과 시스템 비교 | 단일 규칙 명세만 바로 작성할 때 | 결정 질문·관찰 근거·프로젝트 제약 | 시스템 지도·심층 분석·`pending-review` 설계 전환 제안 | 사람 검토 또는 시스템 설계 | [경쟁작·레퍼런스 분석](../reference-analysis.md) |
+| `maintain-game-design-glossary` | `$game-design-studio:maintain-game-design-glossary` — 용어 후보와 스냅샷 검토 | 원문을 자동으로 바꾸려 할 때 | 문서·근거 ID·사람 결정 | 후보·findings·승인된 용어 스냅샷 | 사람의 원문 반영 결정 | [용어 사전 검토](../glossary.md) |
 
 이미지 mode는 `prompt-only`, `select`, `required`, `all`의 기존 artifact-local 선택을 그대로 따릅니다. `prompt-only`는 prompt·placeholder만 보존하고 생성 없음입니다. `select`는 사용자가 제공한 ordered exact stable IDs로 finite generation을 선택합니다. host adapter가 immutable selection receipt를 공급합니다. `required`와 `all`은 declared finite generation만 허용합니다. 이 generation selection은 승인 결정이 아닙니다. named human decision은 `concept-draft → document-approved → production-candidate` lifecycle promotion에만 필요하며, 각 승격의 reviewer·scope·evidence를 대체하지 않습니다. SVG는 Skillstead wrapper의 source mapping·lint·renderer fallback 경계를 우회하지 않습니다.

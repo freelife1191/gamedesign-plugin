@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { chmod, mkdir, readFile, realpath, utimes, writeFile } from "node:fs/promises";
+import { chmod, lstat, mkdir, readFile, realpath, utimes, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import { homedir } from "node:os";
@@ -9,6 +9,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { buildProduct } from "./lib/build-product.mjs";
 import { collectTree } from "./lib/copy-tree.mjs";
 import { hashFileEntries, sha256 } from "./lib/hash.mjs";
+import { classifyInactiveReferenceIntelligenceSourcePaths, parseReferenceIntelligenceContract, referenceIntelligenceContractLayouts } from "./lib/reference-intelligence-contract.mjs";
 import { auditTree } from "./lib/tree-audit.mjs";
 
 const PRODUCT_NAMES = Object.freeze(["game-design-career", "game-design-studio"]);
@@ -26,6 +27,32 @@ const DEPLOYMENT_TRANSFORMS = Object.freeze({
   ]),
   "game-design-studio": Object.freeze([]),
 });
+
+function isInside(root, candidate) {
+  const relative = path.relative(root, candidate);
+  return relative === "" || (!relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative));
+}
+
+async function inactiveReferenceIntelligenceSourceRuntimes(packageRoot) {
+  const inactive = [];
+  for (const skillId of Object.keys(referenceIntelligenceContractLayouts)) {
+    const relativeSkill = `skills/${skillId}/SKILL.md`;
+    const skillPath = path.join(packageRoot, relativeSkill);
+    const stats = await lstat(skillPath);
+    if (stats.isSymbolicLink() || !stats.isFile()) throw new Error(`${skillId} reference-intelligence skill identity mismatch`);
+    const contract = parseReferenceIntelligenceContract(await readFile(skillPath, "utf8"));
+    const installedCounterparts = new Set();
+    for (const relativePath of Object.values(contract.layouts?.installed ?? {}).flat()) {
+      const target = path.resolve(path.dirname(skillPath), relativePath);
+      if (!isInside(packageRoot, target)) throw new Error(`${skillId} reference-intelligence installed contract escapes package root`);
+      const targetStats = await lstat(target);
+      if (targetStats.isSymbolicLink() || !targetStats.isFile()) throw new Error(`${skillId} reference-intelligence installed contract target is not a regular file`);
+      installedCounterparts.add(target);
+    }
+    inactive.push(...classifyInactiveReferenceIntelligenceSourcePaths({ packageRoot, skillPath, contract, installedCounterparts }));
+  }
+  return inactive;
+}
 
 function occurrences(source, needle) {
   let count = 0;
@@ -112,12 +139,19 @@ export async function syncShared({ repoRoot, productName, stagingRoot, stagingCa
     productName,
     sourceDateEpoch,
   });
+  const inactiveSourceRuntimes = await inactiveReferenceIntelligenceSourceRuntimes(build.outputDir);
+  const inactiveRelativeReferenceTuples = new Set(inactiveSourceRuntimes.map(({ tuple }) => tuple));
+  if (inactiveRelativeReferenceTuples.size !== 3) throw new Error("reference-intelligence inactive source tuple contract mismatch");
   const audit = await auditTree({
     root: build.outputDir,
     packageName: productName,
     siblingNames: PRODUCT_NAMES.filter((name) => name !== productName),
     forbiddenAbsolutePaths: [path.resolve(repoRoot), path.dirname(path.resolve(repoRoot)), homedir()],
+    inactiveRelativeReferenceTuples,
   });
+  if (JSON.stringify(audit.usedInactiveRelativeReferenceTuples) !== JSON.stringify([...inactiveRelativeReferenceTuples].sort())) {
+    throw new Error("reference-intelligence inactive source tuple consumption mismatch");
+  }
   return { ...build, files: [...manifest.files.map(({ path: file }) => file), "BUILD-MANIFEST.json"], manifest, transformed, audit };
 }
 

@@ -1,6 +1,6 @@
 # Career 스킬 워크벤치
 
-이 표는 설치된 Career 스킬 18개를 한 번씩만 분류합니다. 입력과 output 하나가 확정된 작업은 직접 스킬 호출로 시작하고, 여러 단계·역할·우선순위가 섞일 때만 오케스트레이터로 범위를 나눕니다. 생성·렌더·추천은 사람 승인이나 채용 결과를 대신하지 않습니다.
+이 표는 설치된 Career 스킬 23개를 한 번씩만 분류합니다. 입력과 output 하나가 확정된 작업은 직접 스킬 호출로 시작하고, 여러 단계·역할·우선순위가 섞일 때만 오케스트레이터로 범위를 나눕니다. 생성·렌더·추천은 사람 승인이나 채용 결과를 대신하지 않습니다.
 
 ## 역할·근거 lane
 
@@ -12,6 +12,8 @@
 | [`map-game-design-career`](../skills/map-game-design-career.md) | 한 역할의 current evidence와 gap만 비교할 때 | `career-strategist`가 사실·추론·제안을 구분합니다. |
 | [`orchestrate-game-design-career`](../skills/orchestrate-game-design-career.md) | 여러 Career stage와 completion gate를 한 brief로 묶을 때 | route 선택은 사실·추론·제안과 named owner를 보존합니다. |
 | [`research-game-design-jobs`](../skills/research-game-design-jobs.md) | 한 role·level·region의 current posting sample만 조사할 때 | `sourceUrl`, `location`, `retrievalDate`, `region`, sample boundary, `reviewAfter`가 없으면 current claim을 만들지 않습니다. |
+| [`analyze-game-design-references`](../reference-analysis.md) | 경쟁작 관찰을 포트폴리오 분석 근거로 정리할 때 | 관찰·추론·가설을 나누고, 설계 전환 제안은 `pending-review`로 남깁니다. |
+| [`maintain-game-design-glossary`](../glossary.md) | 용어 후보와 스냅샷을 검토할 때 | 원문 자동 치환 없이 사람이 승인한 용어만 스냅샷에 넣습니다. |
 
 직접 스킬은 입력과 output이 하나로 확정됐을 때만 사용합니다. 여러 단계와 우선순위가 남으면 오케스트레이터가 route를 정한 후 같은 직접 스킬로 돌아옵니다.
 
@@ -46,6 +48,14 @@
 | 스킬 | 직접 호출할 때 | evidence와 사람 경계 |
 | --- | --- | --- |
 | [`export-career-documents`](../skills/export-career-documents.md) | 하나의 승인 대기 Artifact의 format job을 준비할 때 | renderer 실행과 파일 생성은 downstream workflow가 확인하며 준비 단계에서 성공을 약속하지 않습니다. |
+
+## 프로젝트 기억 lane
+
+| 스킬 | 직접 호출할 때 | evidence와 사람 경계 |
+| --- | --- | --- |
+| [`retrieve-approved-design-memory`](../memory.md) | 현재 프로젝트의 승인된 Career·공통 교훈만 시작 전에 확인할 때 | 출처·만료·lane이 맞지 않는 기록은 제외하며 기억 오류가 나도 기존 작업을 계속합니다. |
+| [`capture-game-design-memory`](../memory.md) | 근거가 연결된 작업 결과에서 재사용할 교훈 후보를 제안할 때 | 자동 기록은 후보까지만 가능하며 추측·개인정보·비공개 원문은 남기지 않습니다. |
+| [`maintain-game-design-memory`](../memory.md) | 후보의 출처를 확인하고 이름이 확인된 사람이 검증·승인·거부·폐기할 때 | 사람의 판단과 이유 없이는 상태를 바꾸지 않고, 충돌하면 다시 선택을 요청합니다. |
 
 ## 경계와 재개
 

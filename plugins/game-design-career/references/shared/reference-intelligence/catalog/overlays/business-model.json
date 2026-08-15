@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "overlays": [
+    {
+      "overlayId": "ad-supported",
+      "questions": [
+        { "questionId": "monetization-ad-supported-disclosure", "systemId": "monetization", "applicability": "conditional", "rationale": "Ad placement and reward disclosure need observation when ads are offered.", "conditions": ["Apply when the reference presents advertisements or rewarded ads."], "verificationPrompts": ["What ad choices, rewards, and disclosures are directly visible?"] }
+      ]
+    },
+    {
+      "overlayId": "free-to-play",
+      "questions": [
+        { "questionId": "monetization-free-to-play-offers", "systemId": "monetization", "applicability": "conditional", "rationale": "Offer surfaces can be inspected without concluding their effect on performance or retention.", "conditions": ["Apply when access is free and optional paid offers are visible."], "verificationPrompts": ["Which offers, prices, and probability disclosures are directly observable?"] }
+      ]
+    },
+    {
+      "overlayId": "live-season",
+      "questions": [
+        { "questionId": "meta-liveops-season-cadence", "systemId": "meta-liveops", "applicability": "conditional", "rationale": "Season cadence is relevant when a season surface is observable.", "conditions": ["Apply when a seasonal or live event structure is evidenced."], "verificationPrompts": ["What changes at season boundaries and what remains persistent?"] }
+      ]
+    },
+    {
+      "overlayId": "premium",
+      "questions": [
+        { "questionId": "monetization-premium-entitlement", "systemId": "monetization", "applicability": "conditional", "rationale": "Purchase and entitlement boundaries should be checked for a premium reference.", "conditions": ["Apply when the reference has a paid purchase or edition structure."], "verificationPrompts": ["What purchase, edition, or downloadable-content entitlements are observable?"] }
+      ]
+    },
+    {
+      "overlayId": "subscription",
+      "questions": [
+        { "questionId": "monetization-subscription-access", "systemId": "monetization", "applicability": "conditional", "rationale": "Access and renewal surfaces may affect the observed entitlement path.", "conditions": ["Apply when recurring subscription access is visible."], "verificationPrompts": ["What access, renewal, or cancellation information is directly visible?"] }
+      ]
+    },
+    {
+      "overlayId": "ugc",
+      "questions": [
+        { "questionId": "collection-crafting-ugc-governance", "systemId": "collection-crafting", "applicability": "conditional", "rationale": "Creation and sharing need separate analysis from default game rules.", "conditions": ["Apply when user-generated content can be created or shared."], "verificationPrompts": ["What creation, publication, discovery, and removal paths are visible?"] }
+      ]
+    }
+  ]
+}

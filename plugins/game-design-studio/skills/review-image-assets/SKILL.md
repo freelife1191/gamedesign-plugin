@@ -25,6 +25,10 @@ Use `reviewImageAssetWorkflow` from packaged `scripts/run-image-asset-workflow.m
 
 The host-user adapter supplies the closed receipt object; an arbitrary disk JSON is not trusted as user input. Product specialist IDs such as `visual-asset-reviewer` and `art-brief-director` cannot stand in for a named human reviewer, and the workflow writes the validated receipt under its host event ID.
 
+## Cutscene continuity handoff
+
+For `design-cutscene-visual-preproduction`, invoke `review-cutscene-continuity.mjs` with current plan and manifest bindings. Record blocking continuity findings against affected stable IDs; do not grant approval. A current continuity gate is required before deriving `document-approved` or `production-candidate`, and this review never replaces current-wave live host-user approval.
+
 ## Output contract
 
 Return stable asset ID, evidence-bounded findings, named human decision record, requested/accepted transition, lifecycle receipt, unresolved blockers, and derivative eligibility. Never treat reviewer inference, an agent recommendation, or output bytes as approval.

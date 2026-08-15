@@ -1,0 +1,8 @@
+cutsceneId: cutscene-example
+beats:
+  - beatId: BEAT-01
+    purpose: Establish the immediate player objective and threat.
+    entryState: Player has control near the exit gate.
+    exitState: Player understands the gate is blocked.
+    emotionalShift: alert-to-urgent
+    nextBeatId: BEAT-02

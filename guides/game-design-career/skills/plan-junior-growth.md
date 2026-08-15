@@ -140,7 +140,7 @@ $game-design-career:visualize-career-roadmap artifact=<artifact-path> 기존 evi
 <!-- PROMPT-TEMPLATES:START game-design-career:plan-junior-growth -->
 ### 재사용 프롬프트 템플릿
 
-- [beginner — 4주 관찰 가능한 성장 목표](../../prompt-templates/career/plan-junior-growth.md#careerplan-junior-growthbeginner)
-- [standard — 12주 증거 프로젝트](../../prompt-templates/career/plan-junior-growth.md#careerplan-junior-growthstandard)
-- [advanced — 전환 준비도와 fresh requirement](../../prompt-templates/career/plan-junior-growth.md#careerplan-junior-growthadvanced)
+- [beginner: 4주 관찰 가능한 성장 목표](../../prompt-templates/career/plan-junior-growth.md#careerplan-junior-growthbeginner)
+- [standard: 12주 증거 프로젝트](../../prompt-templates/career/plan-junior-growth.md#careerplan-junior-growthstandard)
+- [advanced: 전환 준비도와 fresh requirement](../../prompt-templates/career/plan-junior-growth.md#careerplan-junior-growthadvanced)
 <!-- PROMPT-TEMPLATES:END game-design-career:plan-junior-growth -->

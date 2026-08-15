@@ -125,7 +125,7 @@ $game-design-studio:visualize-game-design artifact=<artifact-path> 기존 eviden
 <!-- PROMPT-TEMPLATES:START game-design-studio:svg-infographic -->
 ### 재사용 프롬프트 템플릿
 
-- [beginner — 간단한 source-mapped SVG 흐름](../../prompt-templates/studio/svg-infographic.md#studiosvg-infographicbeginner)
-- [standard — source-backed 2× PNG가 있는 SVG handoff](../../prompt-templates/studio/svg-infographic.md#studiosvg-infographicstandard)
-- [advanced — lint 0 warning/error·접근성·human approval SVG QA](../../prompt-templates/studio/svg-infographic.md#studiosvg-infographicadvanced)
+- [beginner: 간단한 source-mapped SVG 흐름](../../prompt-templates/studio/svg-infographic.md#studiosvg-infographicbeginner)
+- [standard: source-backed 2× PNG가 있는 SVG handoff](../../prompt-templates/studio/svg-infographic.md#studiosvg-infographicstandard)
+- [advanced: lint 0 warning/error·접근성·human approval SVG QA](../../prompt-templates/studio/svg-infographic.md#studiosvg-infographicadvanced)
 <!-- PROMPT-TEMPLATES:END game-design-studio:svg-infographic -->

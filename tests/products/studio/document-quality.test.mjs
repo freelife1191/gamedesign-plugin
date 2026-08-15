@@ -160,7 +160,7 @@ test("Studio routing applies quality before generation without changing reviewer
     templateMap: "references/document-quality/template-profile-map.json",
     profileRoot: "references/shared/document-quality/profiles/studio",
     profileIds: [
-      "accessibility-platform-matrix", "character-skill-combat-monster-specification", "core-motivation-loop",
+      "accessibility-platform-matrix", "character-skill-combat-monster-specification", "core-motivation-loop", "cutscene-visual-preproduction",
       "data-table-contract", "design-review-decision-log", "economy-balance-specification", "executive-pitch",
       "game-design-brief", "liveops-event-experiment-plan", "master-gdd", "narrative-quest-npc-specification",
       "playtest-metrics-report", "production-scope-milestone-risk-plan", "rule-state-exception-matrix",
@@ -168,7 +168,7 @@ test("Studio routing applies quality before generation without changing reviewer
     ],
   });
   assert.ok(routing.routes.every(({ maxReviewers }) => maxReviewers <= 3));
-  assert.match(orchestrator, /apply-document-quality-profile.*before content generation and asset planning/isu);
+  assert.match(orchestrator, /select exact domain routes, artifacts, profiles, quality\/image work/isu);
   assert.match(gates, /draft.*structurally-complete.*evidence-reviewed.*visual-reviewed.*document-approved/isu);
   assert.match(gates, /state envelope.*artifact-inspection.*receipt/isu);
   assert.match(gates, /generated images?.*rendered files?.*do not.*approval/isu);

@@ -139,7 +139,7 @@ $game-design-career:export-career-documents artifact=<artifact-path> 기존 evid
 <!-- PROMPT-TEMPLATES:START game-design-career:visualize-career-roadmap -->
 ### 재사용 프롬프트 템플릿
 
-- [beginner — 역할 비교 흐름 시각화](../../prompt-templates/career/visualize-career-roadmap.md#careervisualize-career-roadmapbeginner)
-- [standard — 역량 dependency와 evidence map](../../prompt-templates/career/visualize-career-roadmap.md#careervisualize-career-roadmapstandard)
-- [advanced — Archify 우선 로드맵 fallback·receipt](../../prompt-templates/career/visualize-career-roadmap.md#careervisualize-career-roadmapadvanced)
+- [beginner: 역할 비교 흐름 시각화](../../prompt-templates/career/visualize-career-roadmap.md#careervisualize-career-roadmapbeginner)
+- [standard: 역량 dependency와 evidence map](../../prompt-templates/career/visualize-career-roadmap.md#careervisualize-career-roadmapstandard)
+- [advanced: Archify 우선 로드맵 fallback·receipt](../../prompt-templates/career/visualize-career-roadmap.md#careervisualize-career-roadmapadvanced)
 <!-- PROMPT-TEMPLATES:END game-design-career:visualize-career-roadmap -->

@@ -13,7 +13,7 @@ import {
   buildProofCommand,
   captureFileIdentity,
   createSmokeFailure,
-  PACKAGED_SKILL_COUNT,
+  PACKAGED_SKILL_COUNTS,
   parseExecJsonl,
   preservePrimarySmokeFailure,
   PROOF_HARNESS_PATH,
@@ -47,8 +47,11 @@ test("codex exec uses the slow marketplace timeout through its runner seam", () 
   ]]);
 });
 
-test("marketplace smoke expects fifteen product skills plus three bundled skills", () => {
-  assert.equal(PACKAGED_SKILL_COUNT, 18);
+test("marketplace smoke expects each product's exact installed skill inventory", () => {
+  assert.deepEqual(PACKAGED_SKILL_COUNTS, {
+    "game-design-career": 23,
+    "game-design-studio": 24,
+  });
 });
 
 test("marketplace smoke starts from an ordinary Korean request without naming a skill", () => {

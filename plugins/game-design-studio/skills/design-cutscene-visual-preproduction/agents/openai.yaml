@@ -1,0 +1,4 @@
+interface:
+  display_name: "Design Cutscene Visual Preproduction"
+  short_description: "Plan controlled cutscene visual preproduction"
+  default_prompt: "Use $design-cutscene-visual-preproduction to prepare this cutscene visual preproduction package."

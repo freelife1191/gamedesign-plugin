@@ -1,7 +1,7 @@
 import { readFile, realpath } from "node:fs/promises";
 
 import { loadUseCaseManifest } from "./use-case-guides.mjs";
-import { collectProductInventory } from "./user-guides.mjs";
+import { collectProductInventory, SOURCE_BOUND_MEMORY_SKILL_IDS, SOURCE_BOUND_REFERENCE_INTELLIGENCE_SKILL_IDS } from "./user-guides.mjs";
 import {
   assertNoSymlinkPath,
   assertUniqueNormalizedPaths,
@@ -11,7 +11,7 @@ import {
 
 export const PROMPT_LEVELS = Object.freeze(["beginner", "standard", "advanced"]);
 export const PROMPT_KIND_COUNTS = Object.freeze({
-  "skill-template": 96,
+  "skill-template": 99,
   "use-case": 36,
   recipe: 12,
   "suite-case": 8,
@@ -27,7 +27,15 @@ const PRODUCT_REPOSITORY_IDS = Object.freeze({
   studio: "game-design-studio",
   career: "game-design-career",
 });
-const BUNDLED_DEPENDENCY_SKILL_IDS = new Set(["archify", "humanize-korean"]);
+// These installed skills use source-bound product guides instead of the generic
+// prompt-template catalog. They remain part of the package inventory, but
+// deliberately have no generated prompt-template entries.
+const BUNDLED_DEPENDENCY_SKILL_IDS = new Set([
+  "archify",
+  "humanize-korean",
+  ...SOURCE_BOUND_MEMORY_SKILL_IDS,
+  ...SOURCE_BOUND_REFERENCE_INTELLIGENCE_SKILL_IDS,
+]);
 const ENTRY_KEYS = new Set([
   "id", "kind", "product", "title", "display_title", "sample_result_excerpt", "purpose", "audiences", "intents", "level",
   "source_case_id",

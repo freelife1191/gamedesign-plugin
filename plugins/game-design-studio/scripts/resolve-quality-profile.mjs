@@ -27,13 +27,13 @@ const knownPresetIds = new Set([
 ]);
 const trustedIndexAnchors = {
   studio: {
-    count: 17,
-    digest: "a72d061c272d86d6eb3daaf6d8541498765d4474d5b01a494522ec7e10f59ca7",
+    count: 21,
+    digest: "b2333da6f292e71dae29e4198ee7ac3e9d8db4ca7090f89a745065d5b10fd70c",
     ids: [
       "accessibility-platform-matrix", "character-skill-combat-monster-specification", "core-motivation-loop",
-      "data-table-contract", "design-review-decision-log", "economy-balance-specification", "executive-pitch",
+      "cutscene-visual-preproduction", "data-table-contract", "design-review-decision-log", "design-transfer-decision", "economy-balance-specification", "executive-pitch",
       "game-design-brief", "liveops-event-experiment-plan", "master-gdd", "narrative-quest-npc-specification",
-      "playtest-metrics-report", "production-scope-milestone-risk-plan", "rule-state-exception-matrix",
+      "playtest-metrics-report", "production-scope-milestone-risk-plan", "reference-comparison", "reference-system-analysis", "rule-state-exception-matrix",
       "system-feature-specification", "ui-ux-flow-state-specification", "vision-one-pager",
     ],
   },

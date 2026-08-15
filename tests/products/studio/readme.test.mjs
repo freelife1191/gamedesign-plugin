@@ -14,6 +14,10 @@ const pluginRoot = path.join(repoRoot, "products/game-design-studio/plugin");
 const readmePath = path.join(pluginRoot, "README.md");
 const temporaryDirectories = [];
 const canonicalSourceLinks = new Map([
+  ["README.md", new Map([
+    ["../../../shared/reference-intelligence/skills/analyze-game-design-references/SKILL.md", "reference-intelligence/skills/analyze-game-design-references/SKILL.md"],
+    ["../../../shared/reference-intelligence/skills/maintain-game-design-glossary/SKILL.md", "reference-intelligence/skills/maintain-game-design-glossary/SKILL.md"],
+  ])],
   ["skills/define-game-vision/SKILL.md", new Map([["../../../../../shared/responsible-design/gates.json", "responsible-design/gates.json"]])],
   ["skills/design-game-content/SKILL.md", new Map([["../../../../../shared/responsible-design/gates.json", "responsible-design/gates.json"]])],
   ["skills/design-game-economy-and-liveops/SKILL.md", new Map([["../../../../../shared/responsible-design/gates.json", "responsible-design/gates.json"]])],
@@ -51,6 +55,7 @@ const skillIds = [
   "define-game-vision",
   "design-game-systems",
   "design-game-content",
+  "design-cutscene-visual-preproduction",
   "design-player-experience",
   "design-game-economy-and-liveops",
   "plan-game-production",
@@ -117,20 +122,34 @@ const qualityProfileIds = [
 ];
 
 const topLevelScriptIds = [
+  "analyze-game-design-references.mjs",
   "build-image-asset-plan.mjs",
   "capability-probe.mjs",
+  "capture-design-memory.mjs",
   "compile-image-prompts.mjs",
   "data-only-snapshot.mjs",
+  "estimate-cutscene-image-cost.mjs",
   "generate-openai-images.mjs",
+  "load-memory-config.mjs",
+  "maintain-design-memory.mjs",
+  "manage-game-design-glossary.mjs",
+  "plan-cutscene-visual-preproduction.mjs",
   "quality-source-anchors.mjs",
   "resolve-quality-profile.mjs",
+  "retrieve-design-memory.mjs",
+  "review-cutscene-continuity.mjs",
+  "run-approved-cutscene-image-stage.mjs",
   "run-game-design-writing-polish.mjs",
   "run-image-asset-workflow.mjs",
   "stop-artifact-review.mjs",
   "validate-artifact.mjs",
+  "validate-cutscene-visual-preproduction.mjs",
+  "validate-design-memory.mjs",
+  "validate-game-design-writing-language.mjs",
   "validate-image-assets.mjs",
   "validate-image-config.mjs",
   "validate-quality-profile.mjs",
+  "validate-reference-intelligence.mjs",
   "validate-reference-preset.mjs",
   "validate-writing-revision.mjs",
 ];
@@ -510,8 +529,8 @@ test("release documentation ships the plugin license and third-party notices", a
 
 test("README exposes every shipped skill, role asset, profile, and canonical template", async () => {
   const readme = await readFile(readmePath, "utf8");
-  assert.match(readme, /제품 스킬 15개/u, "README states the direct product-skill count");
-  assert.match(readme, /설치 스킬(?:은|이) 18개/u, "README states the complete installed-skill count");
+  assert.match(readme, /제품 스킬 16개/u, "README states the direct product-skill count");
+  assert.match(readme, /설치 스킬(?:은|이) 24개/u, "README states the complete installed-skill count");
   assert.doesNotMatch(readme, /Skillstead `svg-infographic` 0\.8\.3/u, "README does not advertise the superseded Skillstead release");
   assert.deepEqual(tableIds(readme, "스킬 카탈로그"), skillIds);
   assert.deepEqual(tableIds(readme, "전문 역할 프롬프트"), roleIds);
@@ -745,7 +764,10 @@ test("README documents the closed Studio document-quality workflow and installed
     "tracked `.env`",
     "IMAGE_MODEL=gpt-image-2",
     "IMAGE_QUALITY=low",
-    "OpenAI only",
+    "IMAGE_PROVIDER=codex-first",
+    "IMAGE_PROVIDER=openai를 명시적으로 선택했을 때만 사용합니다",
+    "IMAGE_EMBEDDED_TEXT_LOCALE=ko-KR",
+    "image_gen",
     "Codex/host",
     "immutable receipt",
     "assets/prompts/image-prompts.md",
@@ -809,7 +831,11 @@ test("root README describes both packaged quality-profile catalogs without sourc
 test("README local links resolve inside the source plugin root", async () => {
   const links = localMarkdownLinks(await readFile(readmePath, "utf8"));
   assert.ok(links.length > 0, "README must link to inspectable local contracts");
-  for (const target of links) await assertContainedLink(pluginRoot, readmePath, target);
+  for (const target of links) {
+    const expectedCanonicalTarget = canonicalSourceLinks.get("README.md")?.get(target);
+    if (expectedCanonicalTarget) await assertCanonicalSourceLink(readmePath, target, expectedCanonicalTarget);
+    else await assertContainedLink(pluginRoot, readmePath, target);
+  }
 });
 
 test("source and clean-built Markdown links stay inside their own plugin roots", async () => {
@@ -909,13 +935,14 @@ test("review skill projects the canonical finding template into the package", as
 
 test("README explains the source overlay and complete independent built-plugin structure", async () => {
   const readme = await readFile(readmePath, "utf8");
+  assert.doesNotMatch(readme, /agents\/ \(9개\)/u, "Studio README must not retain the stale nine-agent count");
   for (const pathOrCount of [
     "products/game-design-studio/plugin",
     "plugins/game-design-studio",
     ".codex-plugin/plugin.json",
-    "skills/ (18개)",
-    "<15개 Studio 제품 스킬>",
-    "skills/svg-infographic/",
+    "skills/ (24개)",
+    "<16개 Studio 제품 스킬>",
+    "svg-infographic/",
     "agents/ (12개)",
     "hooks/hooks.json",
     "scripts/",
@@ -949,4 +976,11 @@ test("README explains the source overlay and complete independent built-plugin s
   assert.ok(readme.includes("4개: universal core 1 + 선택 프로필 3"));
   assert.ok(readme.includes("저수준 `buildProduct()` 출력에는 `BUILD-MANIFEST.json`이 없습니다"));
   assert.ok(readme.includes("이 suite distribution snapshot에는 `BUILD-MANIFEST.json`이 있으며"));
+});
+
+test("Studio guide keeps the first-start checklist in a single ordered sequence", async () => {
+  const guide = await readFile(path.join(repoRoot, "guides/game-design-studio/README.md"), "utf8");
+  const section = guide.match(/## 처음 시작하기\n\n([\s\S]*?)\n\n---/u)?.[1] ?? "";
+  const numbers = [...section.matchAll(/^(\d+)\./gmu)].map((match) => Number(match[1]));
+  assert.deepEqual(numbers, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 });

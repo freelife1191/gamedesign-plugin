@@ -42,7 +42,9 @@ const catalogs = {
     "ui-ux-flow-state-specification", "economy-balance-specification",
     "liveops-event-experiment-plan", "accessibility-platform-matrix",
     "production-scope-milestone-risk-plan", "playtest-metrics-report",
-    "design-review-decision-log", "executive-pitch",
+    "design-review-decision-log", "executive-pitch", "design-transfer-decision",
+    "reference-comparison", "reference-system-analysis",
+    "cutscene-visual-preproduction",
   ],
   career: [
     "career-stage-role-map", "competency-matrix", "learning-roadmap", "job-posting-evidence",

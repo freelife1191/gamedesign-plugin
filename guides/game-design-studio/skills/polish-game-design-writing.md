@@ -71,7 +71,7 @@
 <!-- PROMPT-TEMPLATES:START game-design-studio:polish-game-design-writing -->
 ### 재사용 프롬프트 템플릿
 
-- [beginner — 게임 기획 문장 윤문 초안](../../prompt-templates/studio/polish-game-design-writing.md#studiopolish-game-design-writingbeginner)
-- [standard — 보호 기록을 갖춘 기획 문장 검수](../../prompt-templates/studio/polish-game-design-writing.md#studiopolish-game-design-writingstandard)
-- [advanced — 보류 상태를 지키는 기획 윤문](../../prompt-templates/studio/polish-game-design-writing.md#studiopolish-game-design-writingadvanced)
+- [beginner: 게임 기획 문장 윤문 초안](../../prompt-templates/studio/polish-game-design-writing.md#studiopolish-game-design-writingbeginner)
+- [standard: 보호 기록을 갖춘 기획 문장 검수](../../prompt-templates/studio/polish-game-design-writing.md#studiopolish-game-design-writingstandard)
+- [advanced: 보류 상태를 지키는 기획 윤문](../../prompt-templates/studio/polish-game-design-writing.md#studiopolish-game-design-writingadvanced)
 <!-- PROMPT-TEMPLATES:END game-design-studio:polish-game-design-writing -->

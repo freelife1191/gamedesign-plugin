@@ -125,6 +125,57 @@ test("generateOpenAIImages posts one bounded OpenAI request and atomically promo
   assert.match(result.results[0].provenance.prompt_digest, /^[a-f0-9]{64}$/u);
 });
 
+test("generateOpenAIImages authorizes every retried provider attempt immediately before fetch", async (t) => {
+  const root = await staging(t);
+  const authorizations = [];
+  let fetches = 0;
+  const result = await generateOpenAIImages({
+    jobs: [job()], apiKey: key, model: "gpt-image-2", quality: "low", now, stagingRoot: root, sleepFn: async () => {},
+    beforeProvider: ({ asset_id, attempt_ordinal }) => authorizations.push([asset_id, attempt_ordinal]),
+    fetchFn: async () => {
+      fetches += 1;
+      return fetches === 1 ? response({ status: 500, body: { error: {} } }) : successResponse();
+    },
+  });
+  assert.deepEqual(authorizations, [["hero-image", 1], ["hero-image", 2]]);
+  assert.equal(fetches, 2);
+  assert.equal(result.results[0].asset_id, "hero-image");
+});
+
+test("OpenAI outcomes distinguish provider response from final publication for retries, transport, malformed 2xx, corrupt PNG, and success", async (t) => {
+  const cases = [
+    {
+      name: "500-then-success",
+      fetches: [response({ status: 500, body: { error: { type: "server_error" } }, requestId: "req-500" }), successResponse()],
+      expected: [["provider-failure", "retryable-failure", "retryable"], ["success", "success", "none"]],
+    },
+    { name: "transport", throws: true, expected: [["transport-failure", "retryable-failure", "retryable"]] },
+    { name: "malformed", fetches: [response({ status: 200, body: { data: [] }, requestId: "req-malformed" })], expected: [["provider-failure", "terminal-failure", "none"]] },
+    { name: "corrupt", fetches: [response({ status: 200, body: { data: [{ b64_json: Buffer.from("not-png").toString("base64") }] }, requestId: "req-corrupt" })], expected: [["success", "terminal-failure", "none"]] },
+    { name: "success", fetches: [successResponse()], expected: [["success", "success", "none"]] },
+  ];
+  for (const fixture of cases) {
+    const root = await staging(t);
+    const assetId = `case-${fixture.name}`;
+    const outcomes = [];
+    let call = 0;
+    await generateOpenAIImages({
+      jobs: [job({ asset_id: assetId, output: { path: `assets/generated/${assetId}.png`, width: 1024, height: 1024, format: "png" } })],
+      apiKey: key, model: "gpt-image-2", quality: "low", now, stagingRoot: root, sleepFn: async () => {},
+      beforeProvider: ({ attempt_ordinal }) => ({ attempt_ordinal }),
+      afterProvider: async ({ providerOutcome, assetOutcome, retryDisposition }) => {
+        if (assetOutcome === "success") assert.equal((await lstat(path.join(root, "assets", "generated", `${assetId}.png`))).isFile(), true);
+        outcomes.push([providerOutcome, assetOutcome, retryDisposition]);
+      },
+      fetchFn: async () => {
+        if (fixture.throws) throw new Error("transport");
+        const next = fixture.fetches[call]; call += 1; return next;
+      },
+    });
+    assert.deepEqual(outcomes, fixture.expected, fixture.name);
+  }
+});
+
 test("promoteValidatedPng rejects truncated, corrupt, and incomplete PNG structures before publishing", async (t) => {
   const root = await staging(t);
   const valid = png();
@@ -192,6 +243,22 @@ test("generateOpenAIImages sends master-referenced gpt-image-2 jobs as ordered m
   assert.equal(calls[0].options.body.has("input_fidelity"), false);
   assert.deepEqual(calls[0].options.body.getAll("image[]").map((file) => file.name), ["hero-master.png"]);
   assert.deepEqual(Buffer.from(await calls[0].options.body.getAll("image[]")[0].arrayBuffer()), png());
+});
+
+test("generateOpenAIImages revalidates the exact master file before every internal retry", async (t) => {
+  const root = await staging(t);
+  const masterPath = path.join(root, "assets", "generated", "hero-master.png");
+  await mkdir(path.dirname(masterPath), { recursive: true });
+  await writeFile(masterPath, png());
+  let calls = 0;
+  const result = await generateOpenAIImages({
+    jobs: [derivativeJob()], apiKey: key, model: "gpt-image-2", quality: "low", now, stagingRoot: root,
+    fetchFn: async () => { calls += 1; return response({ status: 500, body: { error: { type: "server_error" } } }); },
+    sleepFn: async () => { await writeFile(masterPath, png(1024, 1008)); },
+  });
+
+  assert.equal(calls, 1);
+  assert.deepEqual(result.failures, [{ asset_id: "hero-derivative", generation_state: "qa-failed", reason: "invalid-generation-reference", attempts: 1 }]);
 });
 
 test("generateOpenAIImages pins root-to-leaf identities and rejects deterministic root or parent swaps before provider delivery", async (t) => {

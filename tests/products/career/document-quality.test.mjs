@@ -165,7 +165,7 @@ test("Career routing inserts quality application before content and preserves re
   });
   assert.ok(routing.routes.every(({ roles }) => roles.length <= 3));
   assert.deepEqual(stages.reviewDispatch.mergeKeys, ["severity", "evidence-gap-id", "artifact-section-id", "role-priority"]);
-  assert.match(orchestrator, /apply-document-quality-profile.*before content generation and asset planning/isu);
+  assert.match(orchestrator, /select the ordered skill chain, quality\/image work/isu);
   assert.match(gates, /draft.*structurally-complete.*evidence-reviewed.*visual-reviewed.*document-approved/isu);
   assert.match(gates, /state envelope.*artifact-inspection.*receipt/isu);
   assert.match(gates, /generated images?.*rendered files?.*do not.*approval/isu);

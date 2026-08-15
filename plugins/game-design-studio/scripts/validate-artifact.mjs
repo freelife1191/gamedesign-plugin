@@ -70,7 +70,8 @@ function rejectUnsupportedYaml(source) {
     [/(^|\s)![A-Za-z0-9_!/-]+/, 'tags'],
     [/^\s*<<\s*:/m, 'merge keys'],
     [/^\s*\?/m, 'complex mapping keys'],
-    [/(^|:\s*)[\[{]/m, 'flow collections'],
+    [/(^|:\s*)\{/m, 'flow collections'],
+    [/(^|:\s*)\[(?!\])/m, 'flow collections'],
     [/:\s*>[-+]?\s*$/m, 'folded block scalars'],
     [/:\s*\|(?:[+-]|[1-9])[^\s#]*\s*$/m, 'block scalar indicators'],
   ];
@@ -85,6 +86,7 @@ function rejectUnsupportedYaml(source) {
 }
 
 function parseScalar(value, line) {
+  if (value === '[]') return [];
   if (/^(?:null|~)$/i.test(value)) return null;
   if (/^(?:true|false)$/i.test(value)) return value.toLowerCase() === 'true';
   if (/^-?(?:0|[1-9]\d*)(?:\.\d+)?$/.test(value)) return Number(value);

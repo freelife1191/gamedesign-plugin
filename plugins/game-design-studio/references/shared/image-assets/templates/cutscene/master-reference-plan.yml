@@ -1,0 +1,14 @@
+cutsceneId: cutscene-example
+waves:
+  - id: style-master
+    assets: [cutscene-example-style-master-style-01]
+    approval: Lock material, shape language, contrast, palette, and forbidden styles.
+  - id: reference-masters
+    assets: [cutscene-example-reference-master-character-01, cutscene-example-reference-master-environment-01, cutscene-example-reference-master-prop-01]
+    approval: Lock character state, location landmarks, prop form, and color-lighting anchors.
+  - id: keyframes
+    assets: [cutscene-example-keyframe-beat-01]
+    approval: Confirm the major readable emotional turn.
+  - id: storyboard
+    assets: [cutscene-example-storyboard-shot-01]
+    approval: Confirm connecting shots, safe areas, and required visual variants.

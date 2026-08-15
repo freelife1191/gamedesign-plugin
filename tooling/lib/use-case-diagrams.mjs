@@ -97,6 +97,9 @@ function assertStringArray(value, label) {
 
 function validateStudioSemanticContract(source) {
   if (!isStudioSource(source)) return;
+  if (source.display_contract != null && source.display_contract !== "explicit-steps") {
+    throw new TypeError("Studio diagram source display_contract is unsupported");
+  }
   if (source.steps.length !== 5) throw new TypeError("Studio diagram source must contain exactly five stages");
   if (!isObject(source.semantic)) throw new TypeError("Studio diagram source semantic must be an object");
   assertStringArray(source.semantic.outputs, "Studio diagram source semantic.outputs");
@@ -240,6 +243,7 @@ function visibleStep(source, step, index) {
     return step;
   }
   const displayed = { ...step, stage: ["요청", "필수 입력", "스킬 작업", "결과", "다음 작업"][index] ?? step.stage };
+  if (source.display_contract === "explicit-steps") return displayed;
   if (index === 1) return { ...displayed, label: "입력 계약", exact: [source.semantic.required_input] };
   if (index === 2) return { ...displayed, exact: [source.semantic.skill] };
   if (index === 3) return { ...displayed, exact: source.semantic.outputs };

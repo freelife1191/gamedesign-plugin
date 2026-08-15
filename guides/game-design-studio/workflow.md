@@ -4,8 +4,11 @@ Studio는 기준 Markdown을 먼저 만들고 선택 기능을 뒤에 붙입니�
 
 [한국어 Archify 전체 프로젝트 워크플로 열기](../assets/archify/studio/studio-project-workflow.html)
 
+각 작업은 현재 프로젝트에서 승인된 Studio·공통 기억을 먼저 조회하되 출처가 달라졌거나 검토·만료 시점을 지난 기록은 제외합니다. 경쟁작이나 장르 관습이 필요하면 [레퍼런스 분석](reference-analysis.md)으로 관찰과 추론을 분리하고, 문서 용어가 흔들리면 [용어 사전](glossary.md)으로 후보와 영향 범위를 검토합니다. 결과를 검증한 뒤에는 재사용 가치가 있는 교훈만 후보로 남기며 자동 승인하지 않습니다. 기억을 끄거나 조회·저장에 문제가 생기면 아래 워크플로는 기억 없이 그대로 진행됩니다. 설정과 관리 방법은 [Studio 프로젝트 기억](memory.md)을 확인하세요.
+
 ```text
 비전
+→ 승인된 기억·레퍼런스·용어 확인
 → 시스템·콘텐츠·UX·경제·제작
 → 전문 검토
 → 이미지·도식 자산
@@ -34,6 +37,8 @@ Studio는 기준 Markdown을 먼저 만들고 선택 기능을 뒤에 붙입니�
 
 병렬로 작성해도 결과를 합칠 때는 Canonical Artifact의 안정적인 섹션과 결정 기록을 기준으로 충돌을 보존합니다.
 
+경쟁작 분석 결과는 정답이 아니라 관찰 근거와 `adopt`, `adapt`, `reject`, `hold` 제안입니다. 용어 후보도 자동 치환하지 않으며, 이름이 기록된 사람이 한국어·영어 선호 표현과 문서 범위를 승인한 뒤 별도 수정안에 반영합니다.
+
 ## 3. 검토
 
 요청 범위에 필요한 전문 역할만 선택해 품질, 실행 가능성, 접근성, 경제, 근거와 책임 있는 설계를 검토합니다. 충돌하는 권고는 한쪽을 지우지 않고 결정 항목으로 남깁니다.
@@ -45,6 +50,7 @@ Studio는 기준 Markdown을 먼저 만들고 선택 기능을 뒤에 붙입니�
 이미지와 구조적 도식을 구분합니다.
 
 - 이미지: Quality Profile 뒤에 `plan-image-assets`로 stable asset ID와 prompt를 만들고, 설정된 provider로만 생성한 뒤 `review-image-assets`에서 사람이 승인합니다.
+- 컷씬: [컷씬 비주얼 프리프로덕션](cutscene-visual-preproduction.md)에서 `style-master → reference-masters → keyframes → storyboard`를 직렬로 진행합니다. 각 wave는 비용 공개와 이름을 기록한 승인 전까지 provider 호출 0회입니다.
 - 도식: 흐름, 상태, 루프와 의존성은 Skillstead SVG로 만들고 Chromium이 있으면 정확한 2× PNG를 렌더합니다. SVG lint와 시각 QA 전에는 검증 완료가 아닙니다.
 
 선택 capability가 없으면 prompt, placeholder, SVG 원본 또는 기존 검증 자산을 보존하고 해당 단계만 차단합니다.

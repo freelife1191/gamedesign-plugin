@@ -3,7 +3,7 @@
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { constants } from "node:fs";
-import { access, copyFile, mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
+import { access, copyFile, mkdir, readFile, readdir, rename, rm, symlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import process from "node:process";
@@ -101,6 +101,31 @@ export async function resolvePluginSkill(kind, { env = process.env, home = os.ho
   const entries = (await readdir(root, { withFileTypes: true })).filter((entry) => entry.isDirectory()).map((entry) => entry.name).sort((a, b) => compareNumericVersions(b, a));
   if (!entries.length) throw new Error(`Official ${kind} skill cache is unavailable`);
   return path.join(root, entries[0], "skills", kind === "presentations" ? "presentations" : "documents");
+}
+
+export async function preparePresentationWorkspace({ presentations, runtime, workspace }) {
+  const nodeModules = path.join(runtime.dependenciesRoot, "node", "node_modules");
+  const runtimeBinDir = path.join(runtime.dependenciesRoot, "bin", "override");
+  const env = {
+    RUNTIME_NODE: runtime.commands.node,
+    RUNTIME_NODE_MODULES: nodeModules,
+    RUNTIME_BIN_DIR: runtimeBinDir,
+  };
+  const legacySetup = path.join(presentations, "container_tools", "setup_artifact_tool_workspace.mjs");
+  let legacySetupAvailable = true;
+  try {
+    await access(legacySetup);
+  } catch (error) {
+    if (error?.code !== "ENOENT") throw error;
+    legacySetupAvailable = false;
+  }
+  if (legacySetupAvailable) {
+    run(runtime.commands.node, [legacySetup, "--workspace", workspace], { env });
+    return env;
+  }
+  await mkdir(workspace, { recursive: true });
+  await symlink(nodeModules, path.join(workspace, "node_modules"), process.platform === "win32" ? "junction" : "dir");
+  return env;
 }
 
 export async function renderSavedPptxQa({ pptx, qaDir, previewBase, quickLook, chrome, runtime, caseInfo }) {
@@ -263,10 +288,13 @@ async function main() {
     const workspace = path.join(stageQaRoot, "artifact-tool-workspace");
     const previewBase = path.join(stageQaRoot, ".docx-preview");
     const presentationBuildQa = path.join(stageQaRoot, ".presentation-build");
-    run(runtime.commands.node, [path.join(presentations, "container_tools", "setup_artifact_tool_workspace.mjs"), "--workspace", workspace]);
+    const presentationRuntimeEnv = await preparePresentationWorkspace({ presentations, runtime, workspace });
     const pptGenerator = path.join(workspace, "generate_presentation.mjs");
     await copyFile(path.join(FORMATS_ROOT, "generators", "generate_presentation.mjs"), pptGenerator);
-    const env = { PATH: `${path.join(runtime.dependenciesRoot, "bin", "override")}${path.delimiter}${process.env.PATH || ""}` };
+    const env = {
+      ...presentationRuntimeEnv,
+      PATH: `${presentationRuntimeEnv.RUNTIME_BIN_DIR}${path.delimiter}${process.env.PATH || ""}`,
+    };
     const toolMetadata = {
       libreOffice: version(runtime.commands.soffice),
       poppler: version(runtime.commands.pdftoppm, ["-v"]),

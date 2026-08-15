@@ -37,6 +37,10 @@ def content_for(case, source_root):
             {
                 "title": "운영 판단 요약",
                 "lead": f"일일 미션에서 소프트 재화를 공급하고 업그레이드에서 소비한다. 목표 보유량은 {economy['targetInventory']:,}이다.",
+                "docxLeadLines": [
+                    "일일 미션에서 소프트 재화를 공급하고 업그레이드에서 소비한다.",
+                    f"목표 보유량은 {economy['targetInventory']:,}이다.",
+                ],
                 "bullets": ["실물 가격 환산은 숨기지 않는다.", "확률은 공개한다.", "승인 범위 밖의 성과는 주장하지 않는다."],
                 "sourcePointers": ["result.json#/domain/economy", "approval-snapshot.json#/responsibleGates/0"],
             },
@@ -204,8 +208,12 @@ def make_docx(case, sections, output):
             set_run_font(p.add_run("근거 기반 실행 참고서"), size=13, color="475569")
             doc.add_paragraph()
         doc.add_heading(section["title"], level=1)
-        p = doc.add_paragraph(section["lead"])
-        for run in p.runs: set_run_font(run)
+        p = doc.add_paragraph()
+        lead_lines = section.get("docxLeadLines", [section["lead"]])
+        for line_index, line in enumerate(lead_lines):
+            if line_index:
+                p.add_run().add_break()
+            set_run_font(p.add_run(line))
         for item in section.get("bullets", []):
             p = doc.add_paragraph(style="List Bullet")
             set_run_font(p.add_run(item))
