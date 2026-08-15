@@ -180,7 +180,7 @@ const readmeSkillsteadDiagrams = [
     section: "케이스별 프롬프트로 시작하기",
     id: "prompt-to-result-flow",
     alt: "요청문에서 기획 결과와 다음 요청으로 이어지는 흐름",
-    pngQuery: "?v=20260815-humanized-1",
+    pngFile: "prompt-to-result-flow-v0.1.png",
     phrases: ["플러그인 선택", "원하는 작업 예시 선택", "전문 스킬 실행", "기획 결과 폴더", "사람 검토", "검토 반영 후 재개"],
   },
   {
@@ -1847,12 +1847,12 @@ async function assertReadmeSkillsteadDiagrams(markdown) {
   const assetDirectory = path.join(root, "guides/assets/readme");
   assertReadmeSkillsteadAssetNames(await readdir(assetDirectory));
   for (const diagram of readmeSkillsteadDiagrams) {
-    const { section: sectionHeading, id, alt, pngQuery = "" } = diagram;
+    const { section: sectionHeading, id, alt, pngFile = `${id}.png` } = diagram;
     const sectionBody = exactSection(markdown, sectionHeading);
     const body = diagram.subsection ? exactSection(sectionBody, diagram.subsection, 3) : sectionBody;
-    const png = `guides/assets/readme/${id}.png`;
+    const png = `guides/assets/readme/${pngFile}`;
     const svg = `guides/assets/readme/${id}.svg`;
-    const embed = `[![${alt}](${png}${pngQuery})](${svg})`;
+    const embed = `[![${alt}](${png})](${svg})`;
     assert.ok(body.includes(embed), `${id}: ${sectionHeading} must embed the exact PNG-to-SVG pair`);
 
     const pngPath = assertContainedPath(readmePath, png, root);
@@ -1874,7 +1874,7 @@ async function assertReadmeSkillsteadDiagrams(markdown) {
 }
 
 function assertReadmeSkillsteadAssetNames(files) {
-  const expectedFiles = readmeSkillsteadDiagrams.flatMap(({ id }) => [`${id}.png`, `${id}.svg`]).sort();
+  const expectedFiles = readmeSkillsteadDiagrams.flatMap(({ id, pngFile = `${id}.png` }) => [pngFile, `${id}.svg`]).sort();
   assert.deepEqual([...files].sort(), expectedFiles, "README explainers own exactly ten Skillstead PNG/SVG pairs");
 }
 
