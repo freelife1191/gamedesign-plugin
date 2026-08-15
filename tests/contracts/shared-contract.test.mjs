@@ -57,6 +57,7 @@ test("shared contract documentation has the exact twelve-module mapping and curr
   const modules = [
     "knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets", "memory", "reference-intelligence", "updates",
   ];
+  assert.match(documentation, /두 제품은 현재 12개 모듈을 모두 선언한다\./u);
   const table = documentation.slice(documentation.indexOf("| Module | Source | Built destination |"), documentation.indexOf("Product files do not silently override shared files."));
   const rows = table.split("\n").slice(2).filter((line) => line.startsWith("| "))
     .map((line) => line.split("|").slice(1, -1).map((cell) => cell.trim()));
