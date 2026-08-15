@@ -6,8 +6,14 @@ import test from "node:test";
 
 import { buildProduct } from "../../tooling/lib/build-product.mjs";
 import * as copyTree from "../../tooling/lib/copy-tree.mjs";
+import { vendorMappings } from "../../tooling/lib/vendor-components.mjs";
 
 const fixtureRoot = new URL("../fixtures/minimal-product/", import.meta.url);
+const vendorLocks = Object.freeze({
+  skillstead: Object.freeze({ repository: "https://github.com/kyungseo/skillstead", tag: "svg-infographic/v0.9.0", commit: "6e5b850f66716af9eb3c6a79f60e4f8ff5716dee", treeRoot: "svg-infographic/0.9.0", skillPath: "skills/svg-infographic" }),
+  archify: Object.freeze({ repository: "https://github.com/tt-a1i/archify", tag: "v2.13.0", commit: "2c1f8ac2ca28a26d0b68043ec80c9554e20ff0e3", treeRoot: "archify/2.13.0", skillPath: "archify" }),
+  "im-not-ai": Object.freeze({ repository: "https://github.com/epoko77-ai/im-not-ai", tag: "v2.3.0", commit: "82137e858763dadb99561f194c5c00465735017b", treeRoot: "humanize-korean/v2.3.0", skillPath: "codex/skills/humanize-korean" }),
+});
 
 async function writeJson(filePath, value) {
   await mkdir(path.dirname(filePath), { recursive: true });
@@ -18,6 +24,24 @@ async function writeText(root, relativePath, contents) {
   const filePath = path.join(root, relativePath);
   await mkdir(path.dirname(filePath), { recursive: true });
   await writeFile(filePath, contents);
+}
+
+async function writeVendorLocks(repoRoot, overrides = {}) {
+  for (const [id, base] of Object.entries(vendorLocks)) {
+    const component = { ...base, ...overrides[id] };
+    await writeJson(path.join(repoRoot, "shared/vendor", id, "vendor.lock.json"), {
+      schemaVersion: 1,
+      upstream: {
+        repository: component.repository,
+        tag: component.tag,
+        commit: component.commit,
+        releasedAt: "2026-08-15T00:00:00.000Z",
+        skillPath: component.skillPath,
+      },
+      license: { spdx: "MIT", path: "LICENSE", sha256: "0".repeat(64) },
+      tree: { root: component.treeRoot, files: [] },
+    });
+  }
 }
 
 async function createRepo(t, mutate = async () => {}) {
@@ -46,6 +70,7 @@ async function createRepo(t, mutate = async () => {}) {
   await writeText(repoRoot, "shared/responsible-design/safety.md", "safety\n");
   await writeText(repoRoot, "shared/export/export.md", "export\n");
   await writeText(repoRoot, "shared/vendor/skillstead/svg-infographic/0.9.0/SKILL.md", "vendor\n");
+  await writeVendorLocks(repoRoot);
   await writeText(repoRoot, "shared/memory/skills/retrieve-approved-design-memory/SKILL.md", "retrieve\n");
   await writeText(repoRoot, "shared/memory/skills/capture-game-design-memory/SKILL.md", "capture\n");
   await writeText(repoRoot, "shared/memory/skills/maintain-game-design-memory/SKILL.md", "maintain\n");
@@ -247,13 +272,13 @@ test("image-assets is packaged with an exact root example and rejects unsafe pac
   });
 });
 
-test("memory 없이 기존 공유 모듈의 모든 source-to-destination 바이트를 보존한다", async (t) => {
+test("vendor lock의 Archify 2.14 트리를 source-to-destination 바이트로 보존한다", async (t) => {
   const fixture = await createRepo(t, async ({ contract, repoRoot }) => {
     contract.sharedModules.push("archify", "im-not-ai", "document-quality", "image-assets");
     await writeJson(path.join(repoRoot, "products/minimal-product/product.json"), contract);
-    await writeText(repoRoot, "shared/vendor/archify/archify/2.13.0/SKILL.md", "archify skill\n");
-    await writeText(repoRoot, "shared/vendor/archify/archify/2.13.0/bin/archify.mjs", "archify binary\n");
-    await writeText(repoRoot, "shared/vendor/archify/vendor.lock.json", "archify lock\n");
+    await writeVendorLocks(repoRoot, { archify: { tag: "v2.14.0", treeRoot: "archify/2.14.0" } });
+    await writeText(repoRoot, "shared/vendor/archify/archify/2.14.0/SKILL.md", "archify skill\n");
+    await writeText(repoRoot, "shared/vendor/archify/archify/2.14.0/bin/archify.mjs", "archify binary\n");
     await writeText(repoRoot, "shared/vendor/im-not-ai/humanize-korean/v2.3.0/SKILL.md", "humanize skill\n");
     await writeText(repoRoot, "shared/vendor/im-not-ai/LICENSE", "im-not-ai license\n");
     await writeText(repoRoot, "shared/document-quality/schema/profile.json", "{\"stable\":true}\n");
@@ -268,9 +293,7 @@ test("memory 없이 기존 공유 모듈의 모든 source-to-destination 바이�
     ["shared/templates", "assets/shared/templates"],
     ["shared/responsible-design", "references/shared/responsible-design"],
     ["shared/export", "references/shared/export"],
-    ["shared/vendor/skillstead/svg-infographic/0.9.0", "skills/svg-infographic"],
-    ["shared/vendor/archify/archify/2.13.0", "skills/archify"],
-    ["shared/vendor/im-not-ai/humanize-korean/v2.3.0", "skills/humanize-korean"],
+    ...Object.values(vendorMappings({ repoRoot: fixture.repoRoot })).flat(),
     ["shared/document-quality", "references/shared/document-quality"],
     ["shared/image-assets", "references/shared/image-assets"],
   ];

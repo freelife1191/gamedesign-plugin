@@ -155,6 +155,29 @@ async function sharedPackageMirrorFixture(t, {
     entries: [excludedEntry("README.md"), entry],
   });
   await writeRelative(repoRoot, entry.origin_source.source_document, originContent);
+  await writeRelative(repoRoot, "shared/vendor/archify/vendor.lock.json", JSON.stringify({
+    schemaVersion: 1,
+    upstream: {
+      repository: "https://github.com/tt-a1i/archify",
+      tag: "v2.13.0",
+      commit: "2c1f8ac2ca28a26d0b68043ec80c9554e20ff0e3",
+      releasedAt: "2026-08-15T00:00:00.000Z",
+      skillPath: "archify",
+    },
+    license: { spdx: "MIT", path: "LICENSE", sha256: "0".repeat(64) },
+    tree: { root: "archify/2.13.0", files: [] },
+  }));
+  for (const [id, repository, tag, commit, treeRoot] of [
+    ["skillstead", "https://github.com/kyungseo/skillstead", "svg-infographic/v0.9.0", "6e5b850f66716af9eb3c6a79f60e4f8ff5716dee", "svg-infographic/0.9.0"],
+    ["im-not-ai", "https://github.com/epoko77-ai/im-not-ai", "v2.3.0", "82137e858763dadb99561f194c5c00465735017b", "humanize-korean/v2.3.0"],
+  ]) {
+    await writeRelative(repoRoot, `shared/vendor/${id}/vendor.lock.json`, JSON.stringify({
+      schemaVersion: 1,
+      upstream: { repository, tag, commit, releasedAt: "2026-08-15T00:00:00.000Z", skillPath: "fixture" },
+      license: { spdx: "MIT", path: "LICENSE", sha256: "0".repeat(64) },
+      tree: { root: treeRoot, files: [] },
+    }));
+  }
   await writeRelative(repoRoot, "products/game-design-studio/product.json", JSON.stringify({
     schemaVersion: 1,
     name: "game-design-studio",

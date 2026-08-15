@@ -55,16 +55,31 @@ const sharedVendorSkills = Object.freeze([
     id: "svg-infographic",
     skillPath: ["skillstead", "svg-infographic", "0.9.0", "SKILL.md"],
     lockPath: ["skillstead", "vendor.lock.json"],
+    repository: "https://github.com/kyungseo/skillstead",
+    tag: "svg-infographic/v0.9.0",
+    commit: "6e5b850f66716af9eb3c6a79f60e4f8ff5716dee",
+    treeRoot: "svg-infographic/0.9.0",
+    skillPathValue: "skills/svg-infographic",
   },
   {
     id: "archify",
     skillPath: ["archify", "archify", "2.13.0", "SKILL.md"],
     lockPath: ["archify", "vendor.lock.json"],
+    repository: "https://github.com/tt-a1i/archify",
+    tag: "v2.13.0",
+    commit: "2c1f8ac2ca28a26d0b68043ec80c9554e20ff0e3",
+    treeRoot: "archify/2.13.0",
+    skillPathValue: "archify",
   },
   {
     id: "humanize-korean",
     skillPath: ["im-not-ai", "humanize-korean", "v2.3.0", "SKILL.md"],
     lockPath: ["im-not-ai", "vendor.lock.json"],
+    repository: "https://github.com/epoko77-ai/im-not-ai",
+    tag: "v2.3.0",
+    commit: "82137e858763dadb99561f194c5c00465735017b",
+    treeRoot: "humanize-korean/v2.3.0",
+    skillPathValue: "codex/skills/humanize-korean",
   },
 ]);
 const sharedVendorSkillIds = sharedVendorSkills.map(({ id }) => id).sort();
@@ -84,11 +99,16 @@ const expectedSkillIdsByProduct = Object.freeze(Object.fromEntries(
 async function withGuideFixture({ omitDocumentedSkill, omitVendorSkill } = {}, check) {
   const root = await mkdtemp(path.join(tmpdir(), "user-guides-"));
   try {
-    for (const { id, skillPath, lockPath } of sharedVendorSkills) {
+    for (const { id, skillPath, lockPath, repository, tag, commit, treeRoot, skillPathValue } of sharedVendorSkills) {
       const vendorRoot = path.join(root, "shared/vendor", ...skillPath.slice(0, -1));
       await mkdir(vendorRoot, { recursive: true });
       await mkdir(path.join(root, "shared/vendor", ...lockPath.slice(0, -1)), { recursive: true });
-      await writeFile(path.join(root, "shared/vendor", ...lockPath), "{\"fixture\":true}\n");
+      await writeFile(path.join(root, "shared/vendor", ...lockPath), `${JSON.stringify({
+        schemaVersion: 1,
+        upstream: { repository, tag, commit, releasedAt: "2026-08-15T00:00:00.000Z", skillPath: skillPathValue },
+        license: { spdx: "MIT", path: "LICENSE", sha256: "0".repeat(64) },
+        tree: { root: treeRoot, files: [] },
+      })}\n`);
       if (id !== omitVendorSkill) await writeFile(path.join(vendorRoot, "SKILL.md"), "# Shared vendor skill\n");
     }
     for (const skillId of sharedMemorySkills) {
@@ -188,6 +208,21 @@ test("product inventory matches the frozen product and shared skill sets", async
     assert.deepEqual(inventory.skillIds, expectedSkillIdsByProduct[productId]);
     assert.equal(inventory.templateIds.length, 15);
   }
+});
+
+test("product inventory resolves Archify from a stable 2.14 vendor lock tree", async () => {
+  await withGuideFixture({}, async (root) => {
+    const lockPath = path.join(root, "shared/vendor/archify/vendor.lock.json");
+    const lock = JSON.parse(await readFile(lockPath, "utf8"));
+    lock.upstream.tag = "v2.14.0";
+    lock.tree.root = "archify/2.14.0";
+    await writeFile(lockPath, `${JSON.stringify(lock)}\n`);
+    const skillRoot = path.join(root, "shared/vendor/archify/archify/2.14.0");
+    await mkdir(skillRoot, { recursive: true });
+    await writeFile(path.join(skillRoot, "SKILL.md"), "# Shared vendor skill\n");
+
+    assert.ok((await collectProductInventory(root, "game-design-career")).skillIds.includes("archify"));
+  });
 });
 
 test("Markdown helpers expose only visible links and headings", () => {

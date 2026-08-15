@@ -5,6 +5,7 @@ import path from "node:path";
 import { comparePaths, joinWithin, normalizeRelativePath } from "./paths.mjs";
 import { findStructuralDuplicates } from "./archify-signature.mjs";
 import { loadProductContract } from "./product-contract.mjs";
+import { vendorMappings } from "./vendor-components.mjs";
 
 export const DELIVERY_STATES = Object.freeze([
   "not-applicable", "planned", "spec-authored", "auto-validated",
@@ -53,18 +54,6 @@ const SHARED_PACKAGE_MIRROR_MAPPINGS = Object.freeze([
     module: "image-assets",
     sourceRoot: "shared/image-assets",
     destinationRoot: "references/shared/image-assets",
-  }),
-  Object.freeze({
-    id: "archify",
-    module: "archify",
-    sourceRoot: "shared/vendor/archify/archify/2.13.0",
-    destinationRoot: "skills/archify",
-  }),
-  Object.freeze({
-    id: "im-not-ai",
-    module: "im-not-ai",
-    sourceRoot: "shared/vendor/im-not-ai/humanize-korean/v2.3.0",
-    destinationRoot: "skills/humanize-korean",
   }),
   Object.freeze({
     id: "memory",
@@ -303,7 +292,7 @@ function validateSelectedState(entry, label, errors) {
   }
 }
 
-function packageMirrorMappingFor(entry) {
+function packageMirrorMappingFor(entry, repoRoot) {
   const productName = PRODUCT_PACKAGE_NAMES[entry.product];
   if (productName === undefined || !isNonemptyString(entry.source_document)) return undefined;
   let sourceDocument;
@@ -319,6 +308,22 @@ function packageMirrorMappingFor(entry) {
     const destinationPrefix = `${mapping.destinationRoot}/`;
     if (packageRelative.startsWith(destinationPrefix)) {
       return { ...mapping, sourceDocument, suffix: packageRelative.slice(destinationPrefix.length) };
+    }
+  }
+  if (repoRoot === undefined) return undefined;
+  for (const [module, mappings] of Object.entries(vendorMappings({ repoRoot })).filter(([module]) => module !== "vendor")) {
+    for (const [sourceRoot, destinationRoot] of mappings) {
+      const destinationPrefix = `${destinationRoot}/`;
+      if (packageRelative.startsWith(destinationPrefix)) {
+        return {
+          id: module === "vendor" ? "skillstead" : module,
+          module,
+          sourceRoot,
+          destinationRoot,
+          sourceDocument,
+          suffix: packageRelative.slice(destinationPrefix.length),
+        };
+      }
     }
   }
   return undefined;
@@ -337,9 +342,9 @@ function validateOriginSource(entry, mapping, label, errors) {
   }
 }
 
-function validateExcludedEntry(entry, index, errors, seenIds, seenRecords) {
+function validateExcludedEntry(entry, index, errors, seenIds, seenRecords, repoRoot) {
   const label = `entry[${index}]`;
-  const mapping = packageMirrorMappingFor(entry);
+  const mapping = packageMirrorMappingFor(entry, repoRoot);
   if (!assertExactKeys(entry, mapping === undefined ? EXCLUDED_KEYS : EXCLUDED_ORIGIN_KEYS, label, errors)) return;
   validateCommonEntry(entry, label, errors, seenIds, seenRecords);
   if (entry.decision !== "excluded") errors.push(`${label}.decision must be excluded`);
@@ -381,7 +386,7 @@ async function assertRegularContained(repoRoot, relativePath, label, { required 
 }
 
 async function assertPackageMirrorOrigin(repoRoot, entry) {
-  const mapping = packageMirrorMappingFor(entry);
+  const mapping = packageMirrorMappingFor(entry, repoRoot);
   if (mapping === undefined) return;
   const label = `entry ${entry.id}`;
   const product = await loadProductContract({ repoRoot, productName: PRODUCT_PACKAGE_NAMES[entry.product] });
@@ -493,7 +498,7 @@ export async function validateArchifyCatalog(catalog, { repoRoot } = {}) {
       continue;
     }
     if (entry.decision === "selected") validateSelectedEntry(entry, index, errors, seenIds, seenRecords, priorities);
-    else if (entry.decision === "excluded") validateExcludedEntry(entry, index, errors, seenIds, seenRecords);
+    else if (entry.decision === "excluded") validateExcludedEntry(entry, index, errors, seenIds, seenRecords, repoRoot);
     else errors.push(`entry[${index}].decision is invalid`);
   }
   if (repoRoot !== undefined && errors.length === 0) {
@@ -524,7 +529,7 @@ export async function validateArchifyCatalog(catalog, { repoRoot } = {}) {
       } catch (error) {
         errors.push(error instanceof Error ? error.message : String(error));
       }
-      if (entry.decision === "excluded" && packageMirrorMappingFor(entry) !== undefined) {
+      if (entry.decision === "excluded" && packageMirrorMappingFor(entry, repoRoot) !== undefined) {
         try {
           await assertPackageMirrorOrigin(repoRoot, entry);
         } catch (error) {

@@ -9,6 +9,7 @@ import {
   validateArchifyCatalog,
 } from "../../tooling/lib/archify-catalog.mjs";
 import { findStructuralDuplicates } from "../../tooling/lib/archify-signature.mjs";
+import { vendorMappings } from "../../tooling/lib/vendor-components.mjs";
 import {
   collectMarkdownHeadings,
   extractMarkdownLinks,
@@ -258,8 +259,8 @@ test("production shared package mirrors retain structured build origins", async 
 
   const mappings = new Map([
     ["document-quality", ["shared/document-quality", "references/shared/document-quality"]],
-    ["archify", ["shared/vendor/archify/archify/2.13.0", "skills/archify"]],
-    ["im-not-ai", ["shared/vendor/im-not-ai/humanize-korean/v2.3.0", "skills/humanize-korean"]],
+    ["archify", vendorMappings({ repoRoot }).archify[0]],
+    ["im-not-ai", vendorMappings({ repoRoot })["im-not-ai"][0]],
     ["reference-intelligence", ["shared/reference-intelligence", "references/shared/reference-intelligence"]],
     ["image-assets", ["shared/image-assets", "references/shared/image-assets"]],
     ["studio-cutscene-skill", ["products/game-design-studio/plugin/skills/design-cutscene-visual-preproduction", "skills/design-cutscene-visual-preproduction"]],

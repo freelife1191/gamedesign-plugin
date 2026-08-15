@@ -9,15 +9,18 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { buildProduct } from "../../tooling/lib/build-product.mjs";
+import { loadVendorComponents } from "../../tooling/lib/vendor-components.mjs";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const updaterUrl = new URL("../../tooling/sync-diagram-skills.mjs", import.meta.url);
 const productNames = ["game-design-studio", "game-design-career"];
+const installedVendorComponents = new Map(loadVendorComponents({ repoRoot }).map((component) => [component.id, component]));
+const vendorTreeRoot = (id) => installedVendorComponents.get(id).sourceRoot.slice(`shared/vendor/${id}/`.length);
 
 const EXPECTED = Object.freeze({
   skillstead: Object.freeze({
     root: "shared/vendor/skillstead",
-    treeRoot: "svg-infographic/0.9.0",
+    treeRoot: vendorTreeRoot("skillstead"),
     files: 55,
     treeDigest: "36ea6022bdc2d534fd54cc239c96eb739bac82618ba88ee49e2d8265f232337b",
     lock: Object.freeze({
@@ -45,7 +48,7 @@ const EXPECTED = Object.freeze({
   }),
   archify: Object.freeze({
     root: "shared/vendor/archify",
-    treeRoot: "archify/2.13.0",
+    treeRoot: vendorTreeRoot("archify"),
     files: 60,
     treeDigest: "695f85131e0f0313d83046380ea308a3e93566a0289dbe7ccba23638082b62ea",
     lock: Object.freeze({
@@ -254,9 +257,9 @@ test("offline diagram vendor verifier rejects a changed payload byte, symlink, a
   globalThis.fetch = async () => { throw new Error("offline verification must not use network"); };
   try {
     for (const [name, mutation, expected] of [
-      ["skillstead", async (root) => writeFile(path.join(root, EXPECTED.skillstead.treeRoot, "SKILL.md"), "tampered\n"), { code: "DIAGRAM_VENDOR_FILE_HASH_MISMATCH", path: "svg-infographic/0.9.0/SKILL.md" }],
-      ["archify", async (root) => { const target = path.join(root, EXPECTED.archify.treeRoot, "schemas/common.schema.json"); await rm(target); await symlink("architecture.schema.json", target); }, { code: "DIAGRAM_VENDOR_SYMLINK", path: "archify/2.13.0/schemas/common.schema.json" }],
-      ["archify", async (root) => writeFile(path.join(root, EXPECTED.archify.treeRoot, "bin/unreviewed-update.mjs"), "export {};\n"), { code: "DIAGRAM_VENDOR_UNREGISTERED_FILE", path: "archify/2.13.0/bin/unreviewed-update.mjs" }],
+      ["skillstead", async (root) => writeFile(path.join(root, EXPECTED.skillstead.treeRoot, "SKILL.md"), "tampered\n"), { code: "DIAGRAM_VENDOR_FILE_HASH_MISMATCH", path: `${EXPECTED.skillstead.treeRoot}/SKILL.md` }],
+      ["archify", async (root) => { const target = path.join(root, EXPECTED.archify.treeRoot, "schemas/common.schema.json"); await rm(target); await symlink("architecture.schema.json", target); }, { code: "DIAGRAM_VENDOR_SYMLINK", path: `${EXPECTED.archify.treeRoot}/schemas/common.schema.json` }],
+      ["archify", async (root) => writeFile(path.join(root, EXPECTED.archify.treeRoot, "bin/unreviewed-update.mjs"), "export {};\n"), { code: "DIAGRAM_VENDOR_UNREGISTERED_FILE", path: `${EXPECTED.archify.treeRoot}/bin/unreviewed-update.mjs` }],
     ]) {
       const root = await copiedVendor(t, name);
       await mutation(root);

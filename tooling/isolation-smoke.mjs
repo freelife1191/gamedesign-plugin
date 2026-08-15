@@ -24,6 +24,7 @@ import { sha256 } from "./lib/hash.mjs";
 import { auditTree } from "./lib/tree-audit.mjs";
 import { scanJavaScriptImports } from "./lib/js-import-scanner.mjs";
 import { classifyInactiveReferenceIntelligenceSourcePaths, parseReferenceIntelligenceContract, referenceIntelligenceContractLayouts } from "./lib/reference-intelligence-contract.mjs";
+import { loadVendorComponents } from "./lib/vendor-components.mjs";
 
 const TEMP_PREFIX = "game-design-isolation-";
 const PRODUCT_NAMES = Object.freeze(["game-design-career", "game-design-studio"]);
@@ -147,7 +148,10 @@ async function inactiveReferenceIntelligenceSourceRuntimes(pluginRoot) {
   return inactive;
 }
 
-async function verifyVendor(pluginRoot, { name, skillId, tag, treeRoot, files }) {
+async function verifyVendor(pluginRoot, { component, files }) {
+  const { id: name, destinationRoot, installedTag: tag, sourceRoot } = component;
+  const skillId = path.posix.basename(destinationRoot);
+  const treeRoot = sourceRoot.slice(`shared/vendor/${name}/`.length);
   const lock = JSON.parse(await readFile(path.join(pluginRoot, `references/shared/vendor/${name}/vendor.lock.json`), "utf8"));
   if (lock?.upstream?.tag !== tag || lock?.tree?.root !== treeRoot || !Array.isArray(lock.tree.files)) {
     throw new Error(`${name} package-local vendor lock mismatch`);
@@ -314,9 +318,10 @@ async function verifyOne({ repoRoot, productName, isolationRoot, mutateCopy, act
     throw new Error("reference-intelligence inactive source tuple consumption mismatch");
   }
 
+  const vendorComponents = new Map(loadVendorComponents({ repoRoot }).map((component) => [component.id, component]));
   const vendors = await Promise.all([
-    verifyVendor(pluginRoot, { name: "skillstead", skillId: "svg-infographic", tag: "svg-infographic/v0.9.0", treeRoot: "svg-infographic/0.9.0", files: 55 }),
-    verifyVendor(pluginRoot, { name: "archify", skillId: "archify", tag: "v2.13.0", treeRoot: "archify/2.13.0", files: 60 }),
+    verifyVendor(pluginRoot, { component: vendorComponents.get("skillstead"), files: 55 }),
+    verifyVendor(pluginRoot, { component: vendorComponents.get("archify"), files: 60 }),
   ]);
   const hooks = JSON.parse(await readFile(path.join(pluginRoot, "hooks/hooks.json"), "utf8"));
   exactHookCommand(hooks, "SessionStart");

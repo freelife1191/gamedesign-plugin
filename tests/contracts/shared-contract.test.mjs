@@ -14,6 +14,7 @@ import { collectTree } from "../../tooling/lib/copy-tree.mjs";
 import { loadProductContract, validateProductContract } from "../../tooling/lib/product-contract.mjs";
 import { verifyDiagramSkillVendor } from "../../tooling/sync-diagram-skills.mjs";
 import { scanJavaScriptImports } from "../../tooling/lib/js-import-scanner.mjs";
+import { vendorMappings } from "../../tooling/lib/vendor-components.mjs";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const sourceDocumentCategories = ["career", "fun-intent", "systems", "content", "feedback"];
@@ -26,9 +27,9 @@ const sharedMappings = new Map([
   ["templates", [["shared/templates", "assets/shared/templates"]]],
   ["responsible-design", [["shared/responsible-design", "references/shared/responsible-design"]]],
   ["export", [["shared/export", "references/shared/export"]]],
-  ["vendor", [["shared/vendor/skillstead/svg-infographic/0.9.0", "skills/svg-infographic"]]],
-  ["archify", [["shared/vendor/archify/archify/2.13.0", "skills/archify"]]],
-  ["im-not-ai", [["shared/vendor/im-not-ai/humanize-korean/v2.3.0", "skills/humanize-korean"]]],
+  ["vendor", vendorMappings({ repoRoot }).vendor],
+  ["archify", vendorMappings({ repoRoot }).archify],
+  ["im-not-ai", vendorMappings({ repoRoot })["im-not-ai"]],
   ["document-quality", [["shared/document-quality", "references/shared/document-quality"]]],
   ["image-assets", [["shared/image-assets", "references/shared/image-assets"]]],
   ["memory", [
@@ -44,6 +45,7 @@ const sharedMappings = new Map([
     ["shared/reference-intelligence/references", "references/shared/reference-intelligence/references"],
     ["shared/reference-intelligence/templates", "references/shared/reference-intelligence/templates"],
   ]],
+  ["updates", [["shared/updates", "references/shared/updates"]]],
 ]);
 
 async function readJson(relativePath) {
@@ -121,7 +123,7 @@ async function validateDiscoveredProducts({ sourceRoot, stagingRoot, referenceIn
   for (const productName of productNames) {
     if (!productLanes.has(productName)) throw new Error(`Unexpected product contract: products/${productName}/product.json`);
     const product = await loadProductContract({ repoRoot: sourceRoot, productName });
-    assert.deepEqual(product.sharedModules, ["knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets", "memory", "reference-intelligence"]);
+    assert.deepEqual(product.sharedModules, ["knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets", "memory", "reference-intelligence", "updates"]);
     assert.equal(product.sharedRuntime, true);
     assert.deepEqual(product.sourceRoots, ["plugin"]);
     assert.deepEqual(product.sourceDocumentCategories, sourceDocumentCategories);
@@ -375,7 +377,7 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
   const selectableFixture = {
     ...fixtureProduct,
     name: "game-design-studio",
-    sharedModules: [...fixtureProduct.sharedModules, "archify", "im-not-ai", "document-quality", "image-assets", "memory", "reference-intelligence"],
+    sharedModules: [...fixtureProduct.sharedModules, "archify", "im-not-ai", "document-quality", "image-assets", "memory", "reference-intelligence", "updates"],
     sourceDocumentCategories,
   };
   delete selectableFixture.sourceDocuments;

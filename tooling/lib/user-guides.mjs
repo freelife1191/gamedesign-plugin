@@ -1,11 +1,8 @@
 import { lstat, readdir, readFile, realpath } from "node:fs/promises";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
-import {
-  isCompletePng,
-  parseViewBox,
-  pngDims,
-} from "../../shared/vendor/skillstead/svg-infographic/0.9.0/scripts/render.mjs";
+import { loadVendorComponents } from "./vendor-components.mjs";
 
 export const PRODUCT_IDS = Object.freeze([
   "game-design-career",
@@ -62,14 +59,11 @@ export async function collectProductInventory(repoRoot, productId) {
   if (!PRODUCT_IDS.includes(productId)) throw new Error("unknown product: " + productId);
   const productRoot = path.join(repoRoot, "products", productId, "plugin");
   const productSkills = await directoryIds(path.join(productRoot, "skills"), "SKILL.md");
-  const vendorSkill = path.join(
-    repoRoot,
-    "shared/vendor/skillstead/svg-infographic/0.9.0/SKILL.md",
-  );
+  const vendors = new Map(loadVendorComponents({ repoRoot }).map((component) => [component.id, component]));
   const sharedSkills = [
-    ["svg-infographic", vendorSkill],
-    ["archify", path.join(repoRoot, "shared/vendor/archify/archify/2.13.0/SKILL.md")],
-    ["humanize-korean", path.join(repoRoot, "shared/vendor/im-not-ai/humanize-korean/v2.3.0/SKILL.md")],
+    ["svg-infographic", path.join(repoRoot, vendors.get("skillstead").sourceRoot, "SKILL.md")],
+    ["archify", path.join(repoRoot, vendors.get("archify").sourceRoot, "SKILL.md")],
+    ["humanize-korean", path.join(repoRoot, vendors.get("im-not-ai").sourceRoot, "SKILL.md")],
     ...SOURCE_BOUND_MEMORY_SKILL_IDS.map((id) => [id, path.join(repoRoot, "shared/memory/skills", id, "SKILL.md")]),
     ...SOURCE_BOUND_REFERENCE_INTELLIGENCE_SKILL_IDS.map((id) => [id, path.join(repoRoot, "shared/reference-intelligence/skills", id, "SKILL.md")]),
   ];
@@ -1330,6 +1324,15 @@ function pathValues(value) {
   return [];
 }
 
+async function loadSkillsteadRenderer(repoRoot) {
+  const skillstead = loadVendorComponents({ repoRoot }).find(({ id }) => id === "skillstead");
+  const renderer = await import(pathToFileURL(path.join(repoRoot, skillstead.sourceRoot, "scripts/render.mjs")).href);
+  if (typeof renderer.isCompletePng !== "function" || typeof renderer.parseViewBox !== "function" || typeof renderer.pngDims !== "function") {
+    throw new Error("Skillstead renderer exports are unavailable");
+  }
+  return renderer;
+}
+
 async function validateDiagramManifest(repoRoot, errors, counts, useCases) {
   const manifestPath = path.join(repoRoot, "guides/assets/diagram-manifest.json");
   let manifest;
@@ -1357,6 +1360,7 @@ async function validateDiagramManifest(repoRoot, errors, counts, useCases) {
     }
   }
   const ids = new Set();
+  let renderer;
   for (const [index, diagram] of diagrams.entries()) {
     const label = `diagram ${index + 1}`;
     if (!diagram || typeof diagram !== "object") {
@@ -1385,16 +1389,17 @@ async function validateDiagramManifest(repoRoot, errors, counts, useCases) {
     if (pngPath) counts.png += 1;
     if (!svgPath || !pngPath) continue;
     try {
-      const viewBox = parseViewBox(await readFile(svgPath, "utf8"));
+      renderer ??= await loadSkillsteadRenderer(repoRoot);
+      const viewBox = renderer.parseViewBox(await readFile(svgPath, "utf8"));
       if (!viewBox) {
         errors.push(`${label} SVG must have a valid viewBox`);
         continue;
       }
-      if (!isCompletePng(pngPath)) {
+      if (!renderer.isCompletePng(pngPath)) {
         errors.push(`${label} PNG must be complete and end at IEND`);
         continue;
       }
-      const dimensions = pngDims(pngPath);
+      const dimensions = renderer.pngDims(pngPath);
       if (dimensions.w !== viewBox.w * 2 || dimensions.h !== viewBox.h * 2) {
         errors.push(`${label} PNG dimensions must equal exactly 2× SVG viewBox`);
       }

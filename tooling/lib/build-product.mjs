@@ -6,15 +6,13 @@ import { collectTree } from "./copy-tree.mjs";
 import { hashFileEntries } from "./hash.mjs";
 import { assertNoSymlinkPath, comparePaths, joinWithin, normalizeRelativePath } from "./paths.mjs";
 import { loadProductContract } from "./product-contract.mjs";
+import { vendorMappings } from "./vendor-components.mjs";
 
-const sharedMappings = {
+const staticSharedMappings = {
   knowledge: [["shared/knowledge", "references/shared/knowledge"]],
   templates: [["shared/templates", "assets/shared/templates"]],
   "responsible-design": [["shared/responsible-design", "references/shared/responsible-design"]],
   export: [["shared/export", "references/shared/export"]],
-  vendor: [["shared/vendor/skillstead/svg-infographic/0.9.0", "skills/svg-infographic"]],
-  archify: [["shared/vendor/archify/archify/2.13.0", "skills/archify"]],
-  "im-not-ai": [["shared/vendor/im-not-ai/humanize-korean/v2.3.0", "skills/humanize-korean"]],
   "document-quality": [["shared/document-quality", "references/shared/document-quality"]],
   "image-assets": [["shared/image-assets", "references/shared/image-assets"]],
   memory: [
@@ -95,11 +93,9 @@ const sharedReferenceIntelligenceInventory = Object.freeze({
 const sourceOnlySkillsteadFallbacks = Object.freeze({
   "game-design-career": Object.freeze({
     path: "skills/visualize-career-roadmap/scripts/run-skillstead.mjs",
-    source: '    path.resolve(path.dirname(ownPath), "../../../../../../shared/vendor/skillstead/svg-infographic/0.9.0"),\n',
   }),
   "game-design-studio": Object.freeze({
     path: "skills/visualize-game-design/scripts/run-skillstead.mjs",
-    source: '    path.resolve(path.dirname(ownPath), "../../../../../../shared/vendor/skillstead/svg-infographic/0.9.0"),\n',
   }),
 });
 const packageLinkProjections = Object.freeze({
@@ -377,13 +373,14 @@ function isReferenceIntelligenceDestination(relativePath) {
     || relativePath.startsWith("references/shared/reference-intelligence/");
 }
 
-function removeSourceOnlySkillsteadFallback(entry, productName) {
+function removeSourceOnlySkillsteadFallback(entry, productName, skillsteadSourceRoot) {
   const fallback = sourceOnlySkillsteadFallbacks[productName];
   if (!fallback || entry.relativePath !== fallback.path) return entry;
+  const sourceFallback = `    path.resolve(path.dirname(ownPath), "../../../../../../${skillsteadSourceRoot}"),\n`;
   const source = entry.bytes.toString("utf8");
-  const count = source.split(fallback.source).length - 1;
+  const count = source.split(sourceFallback).length - 1;
   if (count !== 1) throw new Error(`Expected one source-only Skillstead fallback in ${fallback.path}; found ${count}`);
-  return { ...entry, bytes: Buffer.from(source.replace(fallback.source, "")) };
+  return { ...entry, bytes: Buffer.from(source.replace(sourceFallback, "")) };
 }
 
 function projectPackageLocalLinks(entry, productName) {
@@ -475,6 +472,7 @@ export async function buildProduct({ repoRoot, productName, stagingRoot, staging
   });
   const product = await loadProductContract({ repoRoot: absoluteRepoRoot, productName });
   const productRoot = path.join(absoluteRepoRoot, "products", productName);
+  const sharedMappings = { ...staticSharedMappings, ...vendorMappings({ repoRoot: absoluteRepoRoot }) };
   const targets = new Map();
 
   for (const moduleName of product.sharedModules) {
@@ -527,7 +525,7 @@ export async function buildProduct({ repoRoot, productName, stagingRoot, staging
     for (const entry of entries) {
       addEntry(
         targets,
-        projectPackageLocalLinks(removeSourceOnlySkillsteadFallback(entry, productName), productName),
+        projectPackageLocalLinks(removeSourceOnlySkillsteadFallback(entry, productName, sharedMappings.vendor[0][0]), productName),
         "",
         `product:${sourceRoot}`,
       );
