@@ -6,11 +6,12 @@ import { pathToFileURL } from "node:url";
 
 const MARKETPLACE_NAME = "game-design-suite";
 const PLUGINS = new Set(["game-design-studio", "game-design-career"]);
-const VERSION = /^(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/u;
+const STABLE_VERSION = /^(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/u;
 const LIST_KEYS = ["installed", "available"];
 const PLUGIN_KEYS = ["pluginId", "name", "marketplaceName", "version", "installed", "enabled", "source", "marketplaceSource", "installPolicy", "authPolicy"];
 const LOCAL_SOURCE_KEYS = ["source", "path"];
 const MARKETPLACE_SOURCE_KEYS = ["sourceType", "source"];
+const COMPARISON_KEYS = ["plugin", "installedVersion", "availableVersion", "status"];
 
 function plainObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value) && Object.getPrototypeOf(value) === Object.prototype;
@@ -23,7 +24,7 @@ function exactKeys(value, keys) {
 }
 
 function validVersion(value) {
-  return typeof value === "string" && VERSION.test(value);
+  return typeof value === "string" && STABLE_VERSION.test(value);
 }
 
 function fail(kind) {
@@ -61,16 +62,31 @@ function validatePlugin(value, installed) {
   };
 }
 
+function comparisonFor(installed, available) {
+  const availableByPlugin = new Map(available.map((entry) => [entry.plugin, entry.version]));
+  return installed.map(({ plugin, version }) => {
+    const availableVersion = availableByPlugin.get(plugin) ?? null;
+    return {
+      plugin,
+      installedVersion: version,
+      availableVersion,
+      status: availableVersion === null ? "not-comparable" : "comparable",
+    };
+  });
+}
+
 function freezeInspection({ sourceType, installed, available }) {
   const result = {
     marketplace: { name: MARKETPLACE_NAME, sourceType },
     installed: installed.map(({ plugin, version }) => ({ plugin, version })),
     available: available.map(({ plugin, version }) => ({ plugin, version })),
+    comparisons: comparisonFor(installed, available),
   };
   return Object.freeze({
     marketplace: Object.freeze(result.marketplace),
     installed: Object.freeze(result.installed.map(Object.freeze)),
     available: Object.freeze(result.available.map(Object.freeze)),
+    comparisons: Object.freeze(result.comparisons.map(Object.freeze)),
   });
 }
 
@@ -88,8 +104,8 @@ function parseInspection(stdout) {
   const available = parsed.available.map((entry) => validatePlugin(entry, false));
   const entries = [...installed, ...available];
   if (entries.length === 0 || new Set(entries.map(({ sourceType }) => sourceType)).size !== 1) fail("marketplace inspection");
-  const pluginIds = entries.map(({ plugin }) => plugin);
-  if (new Set(pluginIds).size !== pluginIds.length) fail("marketplace inspection");
+  if (new Set(installed.map(({ plugin }) => plugin)).size !== installed.length
+    || new Set(available.map(({ plugin }) => plugin)).size !== available.length) fail("marketplace inspection");
   return freezeInspection({ sourceType: entries[0].sourceType, installed, available });
 }
 
@@ -113,13 +129,29 @@ export function inspectPluginUpdates({ codexPath = "codex", marketplaceName = MA
   return parseInspection(receipt.stdout);
 }
 
+function compareNumeric(left, right) {
+  if (left.length !== right.length) return left.length > right.length ? 1 : -1;
+  return left === right ? 0 : left > right ? 1 : -1;
+}
+
+function compareStableVersions(left, right) {
+  const leftParts = left.split("+", 1)[0].split(".");
+  const rightParts = right.split("+", 1)[0].split(".");
+  for (const index of [0, 1, 2]) {
+    const compared = compareNumeric(leftParts[index], rightParts[index]);
+    if (compared !== 0) return compared;
+  }
+  return 0;
+}
+
 export function planApprovedPluginUpdate({ marketplace, plugin, installedVersion, availableVersion } = {}) {
   if (!exactKeys(marketplace, ["name", "sourceType"])
     || marketplace.name !== MARKETPLACE_NAME
     || !["local", "git"].includes(marketplace.sourceType)
     || !PLUGINS.has(plugin)
     || !validVersion(installedVersion)
-    || !validVersion(availableVersion)) fail("update plan");
+    || !validVersion(availableVersion)
+    || compareStableVersions(availableVersion, installedVersion) <= 0) fail("update plan");
   const add = ["plugin", "add", `${plugin}@${MARKETPLACE_NAME}`, "--json"];
   const plan = marketplace.sourceType === "git"
     ? [["plugin", "marketplace", "upgrade", MARKETPLACE_NAME, "--json"], add]
@@ -127,11 +159,14 @@ export function planApprovedPluginUpdate({ marketplace, plugin, installedVersion
   return Object.freeze(plan.map((argv) => Object.freeze([...argv])));
 }
 
-function selectedInstalledVersion(inspection, plugin) {
-  const installed = inspection.installed.find((entry) => entry.plugin === plugin);
-  if (!installed) fail("update plan");
-  const available = inspection.available.find((entry) => entry.plugin === plugin);
-  return { installedVersion: installed.version, availableVersion: available?.version ?? installed.version };
+function selectedComparison(inspection, plugin) {
+  const comparison = inspection.comparisons.find((entry) => entry.plugin === plugin);
+  if (!comparison || !exactKeys(comparison, COMPARISON_KEYS)) fail("update plan");
+  return comparison;
+}
+
+function notComparablePlan(plugin) {
+  return { status: "not-comparable", plugin, reason: "same-plugin available version is absent" };
 }
 
 function cli() {
@@ -144,9 +179,22 @@ function cli() {
   }
   try {
     const inspection = inspectPluginUpdates({ codexPath: process.env.CODEX_PATH ?? "codex" });
-    const result = args[0] === "--inspect"
-      ? inspection
-      : planApprovedPluginUpdate({ marketplace: inspection.marketplace, plugin: args[1], ...selectedInstalledVersion(inspection, args[1]) });
+    if (args[0] === "--inspect") {
+      process.stdout.write(`${JSON.stringify(inspection)}\n`);
+      return;
+    }
+    const comparison = selectedComparison(inspection, args[1]);
+    if (comparison.status === "not-comparable") {
+      process.stdout.write(`${JSON.stringify(notComparablePlan(args[1]))}\n`);
+      process.exitCode = 1;
+      return;
+    }
+    const result = planApprovedPluginUpdate({
+      marketplace: inspection.marketplace,
+      plugin: args[1],
+      installedVersion: comparison.installedVersion,
+      availableVersion: comparison.availableVersion,
+    });
     process.stdout.write(`${JSON.stringify(result)}\n`);
   } catch {
     process.stdout.write('{"error":"plugin inspection failed"}\n');

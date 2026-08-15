@@ -52,6 +52,12 @@ test("inspects only the marketplace available-list command and removes cache pat
     marketplace: { name: marketplace, sourceType: "local" },
     installed: [{ plugin: "game-design-studio", version: "0.1.0" }],
     available: [{ plugin: "game-design-career", version: "0.1.1" }],
+    comparisons: [{
+      plugin: "game-design-studio",
+      installedVersion: "0.1.0",
+      availableVersion: null,
+      status: "not-comparable",
+    }],
   });
   assert.equal(JSON.stringify(got).includes("/private/tmp"), false, "inspection result does not expose absolute cache or marketplace paths");
 });
@@ -113,6 +119,17 @@ test("plans Git updates with marketplace refresh first and local updates with pl
   }), [
     ["plugin", "add", "game-design-studio@game-design-suite", "--json"],
   ]);
+});
+
+test("refuses equal, downgrade, prerelease, and non-canonical semantic versions", () => {
+  const base = {
+    marketplace: { name: marketplace, sourceType: "local" },
+    plugin: "game-design-studio",
+    installedVersion: "0.1.0",
+  };
+  for (const availableVersion of ["0.1.0", "0.0.9", "0.1.1-rc.1", "0.1.1-01", "01.1.1"]) {
+    assert.throws(() => planApprovedPluginUpdate({ ...base, availableVersion }), /Invalid plugin update plan/u, availableVersion);
+  }
 });
 
 test("rejects an unknown approval target or malformed version instead of constructing argv", () => {

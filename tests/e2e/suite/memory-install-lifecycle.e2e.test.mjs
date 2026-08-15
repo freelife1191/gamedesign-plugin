@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { chmod, cp, lstat, mkdir, mkdtemp, readFile, readdir, rm, utimes, writeFile } from "node:fs/promises";
+import { chmod, cp, lstat, mkdir, mkdtemp, readFile, readdir, readlink, rm, symlink, utimes, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -38,9 +38,31 @@ async function assertSameIdentity(filename, expected, label) {
   assert.deepEqual(await fileIdentity(filename), expected, label);
 }
 
-async function treeBytes(root) {
-  const files = await collectTree(root, { label: "isolated Codex state" });
-  return Promise.all(files.map(async ({ relativePath }) => [relativePath, await readFile(path.join(root, relativePath))]));
+async function treeIdentity(root) {
+  async function visit(relativePath) {
+    const filename = path.join(root, relativePath);
+    const stats = await lstat(filename);
+    const entry = {
+      relativePath,
+      type: stats.isDirectory() ? "directory" : stats.isFile() ? "file" : stats.isSymbolicLink() ? "symlink" : "other",
+      mode: stats.mode,
+      mtimeMs: stats.mtimeMs,
+    };
+    if (stats.isFile()) entry.bytes = await readFile(filename);
+    if (stats.isSymbolicLink()) entry.link = await readlink(filename);
+    if (!stats.isDirectory()) return [entry];
+    const children = await readdir(filename);
+    const nested = await Promise.all(children.sort().map((child) => visit(path.join(relativePath, child))));
+    return [entry, ...nested.flat()];
+  }
+  return visit(".");
+}
+
+async function assertIsolatedTreesPreserved(before, { workspace, home, codexHome, cacheRoot }, stage) {
+  const actual = await Promise.all([treeIdentity(workspace), treeIdentity(home), treeIdentity(codexHome), treeIdentity(cacheRoot)]);
+  for (const [index, label] of ["workspace", "HOME", "CODEX_HOME", "plugin cache"].entries()) {
+    assert.deepEqual(actual[index], before[index], `${stage}: ${label}`);
+  }
 }
 
 function localCodex() {
@@ -163,18 +185,30 @@ test("explicit plugin update inspection and planning leave isolated Codex state 
     mkdir(env.CODEX_HOME, { recursive: true }),
     mkdir(env.TMPDIR, { recursive: true }),
   ]);
+  const workspaceSentinel = path.join(workspace, "workspace-sentinel.txt");
+  const wikiSentinel = path.join(workspace, "docs", "LLM WIKI", "temporary-sentinel.txt");
+  await mkdir(path.dirname(wikiSentinel), { recursive: true });
+  await Promise.all([writeFile(workspaceSentinel, "workspace state must survive\\n"), writeFile(wikiSentinel, "temporary wiki-named state must survive\\n")]);
+  await Promise.all([chmod(workspaceSentinel, 0o640), chmod(wikiSentinel, 0o600)]);
+  const sentinelTime = new Date("2026-08-15T00:00:00.000Z");
+  await Promise.all([utimes(workspaceSentinel, sentinelTime, sentinelTime), utimes(wikiSentinel, sentinelTime, sentinelTime)]);
   const evidence = [];
   const command = ({ stage, args }) => runLocalPluginCommand({ codex, cwd: workspace, env, evidence, stage, args });
   command({ stage: "marketplace-add", args: ["marketplace", "add", sourceRoot] });
   command({ stage: "studio-add", args: ["add", `game-design-studio@${marketplace}`] });
 
-  const availableManifest = path.join(sourceRoot, "plugins", "game-design-career", ".codex-plugin", "plugin.json");
-  const availablePlugin = JSON.parse(await readFile(availableManifest, "utf8"));
-  availablePlugin.version = "0.1.1";
-  await writeFile(availableManifest, `${JSON.stringify(availablePlugin, null, 2)}\n`);
+  const installedSourceManifest = path.join(sourceRoot, "plugins", "game-design-studio", ".codex-plugin", "plugin.json");
+  const installedSourcePlugin = JSON.parse(await readFile(installedSourceManifest, "utf8"));
+  installedSourcePlugin.version = "0.1.1";
+  await writeFile(installedSourceManifest, `${JSON.stringify(installedSourcePlugin, null, 2)}\n`);
+  const codexRuntimeTmp = path.join(root, "codex-cli-runtime-tmp");
+  await mkdir(codexRuntimeTmp, { recursive: true });
+  await rm(path.join(env.CODEX_HOME, "tmp"), { recursive: true, force: true });
+  await symlink(codexRuntimeTmp, path.join(env.CODEX_HOME, "tmp"), "dir");
+  command({ stage: "inspection-list-preflight", args: ["list", "--marketplace", marketplace, "--available"] });
 
   const cacheRoot = path.join(env.CODEX_HOME, "plugins", "cache", marketplace, "game-design-studio", "0.1.0");
-  const before = await Promise.all([treeBytes(env.HOME), treeBytes(env.CODEX_HOME), treeBytes(cacheRoot)]);
+  const before = await Promise.all([treeIdentity(workspace), treeIdentity(env.HOME), treeIdentity(env.CODEX_HOME), treeIdentity(cacheRoot)]);
   const inspected = inspectPluginUpdates({
     codexPath: codex,
     marketplaceName: marketplace,
@@ -185,10 +219,12 @@ test("explicit plugin update inspection and planning leave isolated Codex state 
   assert.deepEqual(inspected, {
     marketplace: { name: marketplace, sourceType: "local" },
     installed: [{ plugin: "game-design-studio", version: "0.1.0" }],
-    available: [{ plugin: "game-design-career", version: "0.1.1" }],
-  }, "real local Codex list reports the installed and available versions after only the source manifest changes");
+    available: [{ plugin: "game-design-career", version: "0.1.0" }],
+    comparisons: [{ plugin: "game-design-studio", installedVersion: "0.1.0", availableVersion: null, status: "not-comparable" }],
+  }, "real local Codex does not treat an installed source manifest change as authoritative available update evidence");
+  assert.equal(inspected.available.some((entry) => entry.plugin === "game-design-studio"), false, "--available remains unrelated uninstalled inventory for the installed Studio plugin");
   assert.equal(JSON.stringify(inspected).includes(path.resolve(env.CODEX_HOME)), false, "inspection does not expose the isolated cache path");
-  assert.deepEqual(await Promise.all([treeBytes(env.HOME), treeBytes(env.CODEX_HOME), treeBytes(cacheRoot)]), before, "API inspection does not mutate HOME, CODEX_HOME, or plugin cache bytes");
+  await assertIsolatedTreesPreserved(before, { workspace, home: env.HOME, codexHome: env.CODEX_HOME, cacheRoot }, "API inspection preserves all isolated state");
 
   const script = path.join(repoRoot, "shared", "scripts", "inspect-game-design-plugin-updates.mjs");
   const inspectRun = spawnSync(process.execPath, [script, "--inspect"], {
@@ -200,7 +236,7 @@ test("explicit plugin update inspection and planning leave isolated Codex state 
   });
   assert.equal(inspectRun.status, 0, inspectRun.stderr);
   assert.deepEqual(JSON.parse(inspectRun.stdout), inspected, "--inspect prints the read-only inspection result");
-  assert.deepEqual(await Promise.all([treeBytes(env.HOME), treeBytes(env.CODEX_HOME), treeBytes(cacheRoot)]), before, "--inspect does not mutate HOME, CODEX_HOME, or plugin cache bytes");
+  await assertIsolatedTreesPreserved(before, { workspace, home: env.HOME, codexHome: env.CODEX_HOME, cacheRoot }, "--inspect preserves all isolated state");
 
   const planRun = spawnSync(process.execPath, [script, "--plan", "game-design-studio"], {
     cwd: workspace,
@@ -209,9 +245,9 @@ test("explicit plugin update inspection and planning leave isolated Codex state 
     shell: false,
     timeout: 30_000,
   });
-  assert.equal(planRun.status, 0, planRun.stderr);
-  assert.deepEqual(JSON.parse(planRun.stdout), [["plugin", "add", "game-design-studio@game-design-suite", "--json"]], "--plan prints argv without executing it for a local marketplace");
-  assert.deepEqual(await Promise.all([treeBytes(env.HOME), treeBytes(env.CODEX_HOME), treeBytes(cacheRoot)]), before, "--plan does not mutate HOME, CODEX_HOME, or plugin cache bytes");
+  assert.equal(planRun.status, 1, "--plan refuses to infer a same-plugin update from uninstalled inventory");
+  assert.deepEqual(JSON.parse(planRun.stdout), { status: "not-comparable", plugin: "game-design-studio", reason: "same-plugin available version is absent" }, "--plan returns a closed non-comparable result instead of argv");
+  await assertIsolatedTreesPreserved(before, { workspace, home: env.HOME, codexHome: env.CODEX_HOME, cacheRoot }, "--plan preserves all isolated state");
   assert.equal(evidence.every((entry) => entry.args.every((argument) => argument !== "upgrade")), true, "test setup never upgrades the marketplace");
 });
 
