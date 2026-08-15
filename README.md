@@ -250,6 +250,10 @@ codex plugin list
 
 Marketplace refresh와 설치 패키지 교체는 서로 다른 작업입니다.
 
+`SessionStart`는 처음 시작할 때와 마지막 확인 뒤 7일이 지난 뒤에만 번들 업데이트를 확인합니다. 결과는 “플러그인 업데이트를 확인해 줘”라는 **알림**일 뿐이며, 플러그인을 자동으로 업데이트하거나 다시 설치하지 않습니다. 확인을 끄려면 Codex를 시작할 환경에 `GAME_DESIGN_UPDATE_CHECKS=false`를 설정하세요. Skillstead·Archify·im-not-ai 번들은 다음 suite release 전까지 현재 버전으로 고정됩니다. 설치된 캐시 폴더는 직접 편집하지 마세요.
+
+`codex plugin list --available`은 설치하지 않은 플러그인 목록을 보여 주는 용도입니다. Codex 0.147.0에서는 이미 설치한 플러그인의 더 새로운 원천 버전을 판별하지 않습니다. 알림을 본 뒤에는 아래처럼 marketplace 종류에 맞는 명시적 명령을 실행하고, 마지막에 새 채팅 또는 새 세션을 열어 새 설치본을 사용하세요.
+
 #### Codex App
 
 1. 로컬 checkout을 갱신하고 저장소 루트에서 `npm run build`와 `npm run validate`를 실행합니다.
@@ -289,7 +293,7 @@ codex plugin add game-design-career@game-design-suite
 codex plugin list
 ```
 
-Git marketplace를 등록했다면 재설치 전에 `codex plugin marketplace upgrade game-design-suite`로 설치 가능한 snapshot을 refresh할 수 있습니다. 이 명령은 설치된 플러그인을 교체하지 않으므로 위 제거·재설치 단계를 계속 수행해야 합니다.
+Git marketplace를 등록했다면 재설치 전에 `codex plugin marketplace upgrade game-design-suite`로 설치 가능한 snapshot을 refresh할 수 있습니다. 이 명령은 설치된 플러그인을 교체하지 않으므로 위 제거·재설치 단계를 계속 수행해야 합니다. 로컬 marketplace는 Git fetch 대상이 아니므로 checkout을 갱신하고 `npm run build`를 실행한 뒤 같은 제거·재설치 순서를 따릅니다.
 
 ---
 

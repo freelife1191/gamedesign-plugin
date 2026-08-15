@@ -4,6 +4,12 @@
 
 Product lane은 루트에서 `npm run test:shared-contract`를 실행해 이 체크포인트를 검증한다.
 
+## 업데이트 알림 계약
+
+`SessionStart`는 처음 시작할 때와 마지막 확인 뒤 7일이 지난 뒤에만 번들 업데이트를 확인한다. 결과는 “플러그인 업데이트를 확인해 줘”라는 알림이며, 플러그인을 자동으로 업데이트하거나 다시 설치하지 않는다. 확인을 끄려면 `GAME_DESIGN_UPDATE_CHECKS=false`를 설정한다. Skillstead·Archify·im-not-ai 번들은 다음 suite release 전까지 현재 버전으로 고정되고, 설치된 캐시 폴더는 직접 편집하지 마십시오.
+
+`codex plugin list --available`은 설치하지 않은 플러그인 inventory일 뿐이다. Codex 0.147.0에서는 설치한 플러그인의 더 새로운 원천 버전을 판별하지 않는다. Git marketplace는 사용자가 `codex plugin marketplace upgrade game-design-suite`를 명시적으로 실행한 뒤 제거·재설치한다. 로컬 marketplace는 Git fetch 대상이 아니므로 checkout을 갱신하고 suite build를 실행한 뒤 제거·재설치한다. 어느 경우나 새 채팅 또는 새 세션에서 새 설치본을 사용한다.
+
 ## Product contract and source root
 
 각 product는 `products/<product-name>/product.json`과 하나 이상의 source root를 가진다. 기본 source root layout은 `products/<product-name>/plugin/`이다. `product.json`은 `shared/contracts/product.schema.json` 및 `tooling/lib/product-contract.mjs` 양쪽을 만족해야 하며 다음 필드가 필수다.

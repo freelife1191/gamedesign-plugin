@@ -37,6 +37,10 @@ codex plugin add game-design-studio@game-design-suite
 
 ## 업데이트와 제거
 
+`SessionStart`는 처음 시작할 때와 마지막 확인 뒤 7일이 지난 뒤에만 번들 업데이트를 확인합니다. 결과는 “플러그인 업데이트를 확인해 줘”라는 **알림**일 뿐이며, 플러그인을 자동으로 업데이트하거나 다시 설치하지 않습니다. 확인을 끄려면 `GAME_DESIGN_UPDATE_CHECKS=false`를 설정하세요. Skillstead·Archify·im-not-ai 번들은 다음 suite release 전까지 현재 버전으로 고정됩니다. 설치된 캐시 폴더는 직접 편집하지 마세요.
+
+`codex plugin list --available`은 설치하지 않은 플러그인 목록만 보여 줍니다. Codex 0.147.0에서는 이미 설치한 Studio의 새 원천 버전을 판별하지 않습니다. 알림을 본 뒤에만 아래 명령을 명시적으로 실행하고, 재설치가 끝나면 새 채팅 또는 새 세션을 열어 새 설치본을 사용하세요.
+
 Git marketplace로 등록한 경우 snapshot을 갱신하고 플러그인을 다시 설치합니다.
 
 ```bash
@@ -44,7 +48,7 @@ codex plugin marketplace upgrade game-design-suite
 codex plugin add game-design-studio@game-design-suite
 ```
 
-로컬 저장소 marketplace는 Git fetch 대상이 아닙니다. 저장소를 갱신하고 suite build로 `plugins/game-design-studio`를 다시 만든 뒤, 설치된 snapshot을 명시적으로 제거하고 다시 추가합니다.
+로컬 marketplace(저장소 경로 등록)는 Git fetch 대상이 아닙니다. 저장소를 갱신하고 suite build로 `plugins/game-design-studio`를 다시 만든 뒤, 설치된 snapshot을 명시적으로 제거하고 다시 추가합니다.
 
 ```bash
 codex plugin remove game-design-studio@game-design-suite
@@ -82,7 +86,7 @@ plugins/game-design-studio/
 │   ├── <16개 Studio 제품 스킬>/
 │   │   └── scripts/                 # 필요한 스킬에만 있는 product helper
 │   ├── analyze-game-design-references/ # 근거를 분리해 레퍼런스를 분석
-│   ├── archify/                      # vendored Archify 2.13.0
+│   ├── archify/                      # vendored Archify 2.14.0
 │   ├── capture-game-design-memory/   # 검증한 교훈을 후보로 기록
 │   ├── humanize-korean/              # vendored im-not-ai
 │   ├── maintain-game-design-glossary/ # 용어 후보와 사람 검토 결정 관리

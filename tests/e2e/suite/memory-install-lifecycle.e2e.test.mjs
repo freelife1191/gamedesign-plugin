@@ -199,7 +199,7 @@ test("explicit plugin update inspection and planning leave isolated Codex state 
 
   const installedSourceManifest = path.join(sourceRoot, "plugins", "game-design-studio", ".codex-plugin", "plugin.json");
   const installedSourcePlugin = JSON.parse(await readFile(installedSourceManifest, "utf8"));
-  installedSourcePlugin.version = "0.1.1";
+  installedSourcePlugin.version = "0.1.2";
   await writeFile(installedSourceManifest, `${JSON.stringify(installedSourcePlugin, null, 2)}\n`);
   const codexRuntimeTmp = path.join(root, "codex-cli-runtime-tmp");
   await mkdir(codexRuntimeTmp, { recursive: true });
@@ -207,7 +207,7 @@ test("explicit plugin update inspection and planning leave isolated Codex state 
   await symlink(codexRuntimeTmp, path.join(env.CODEX_HOME, "tmp"), "dir");
   command({ stage: "inspection-list-preflight", args: ["list", "--marketplace", marketplace, "--available"] });
 
-  const cacheRoot = path.join(env.CODEX_HOME, "plugins", "cache", marketplace, "game-design-studio", "0.1.0");
+  const cacheRoot = path.join(env.CODEX_HOME, "plugins", "cache", marketplace, "game-design-studio", "0.1.1");
   const before = await Promise.all([treeIdentity(workspace), treeIdentity(env.HOME), treeIdentity(env.CODEX_HOME), treeIdentity(cacheRoot)]);
   const inspected = inspectPluginUpdates({
     codexPath: codex,
@@ -218,9 +218,9 @@ test("explicit plugin update inspection and planning leave isolated Codex state 
   });
   assert.deepEqual(inspected, {
     marketplace: { name: marketplace, sourceType: "local" },
-    installed: [{ plugin: "game-design-studio", version: "0.1.0" }],
-    available: [{ plugin: "game-design-career", version: "0.1.0" }],
-    comparisons: [{ plugin: "game-design-studio", installedVersion: "0.1.0", availableVersion: null, status: "not-comparable" }],
+    installed: [{ plugin: "game-design-studio", version: "0.1.1" }],
+    available: [{ plugin: "game-design-career", version: "0.1.1" }],
+    comparisons: [{ plugin: "game-design-studio", installedVersion: "0.1.1", availableVersion: null, status: "not-comparable" }],
   }, "real local Codex does not treat an installed source manifest change as authoritative available update evidence");
   assert.equal(inspected.available.some((entry) => entry.plugin === "game-design-studio"), false, "--available remains unrelated uninstalled inventory for the installed Studio plugin");
   assert.equal(JSON.stringify(inspected).includes(path.resolve(env.CODEX_HOME)), false, "inspection does not expose the isolated cache path");
@@ -279,7 +279,7 @@ test("one local Codex workspace preserves project memory while both products ins
   };
   const command = ({ stage, args }) => runLocalPluginCommand({ codex, cwd: workspace, env, evidence, stage, args });
   const selector = (product) => `${product}@${marketplace}`;
-  const cacheRoot = (product) => path.join(env.CODEX_HOME, "plugins", "cache", marketplace, product, "0.1.0");
+  const cacheRoot = (product) => path.join(env.CODEX_HOME, "plugins", "cache", marketplace, product, "0.1.1");
 
   const market = command({ stage: "marketplace-add", args: ["marketplace", "add", repoRoot] });
   assert.equal(market.marketplaceName, marketplace, "exact local marketplace name");

@@ -145,7 +145,7 @@ test("generated snapshots contain the exact clean product build plus the suite m
 
       assert.equal(pathsUnder(packageFiles, "skills/").filter((file) => file.endsWith("/SKILL.md")).length, productName === "game-design-studio" ? 24 : 23);
       assert.equal(pathsUnder(packageFiles, "skills/").filter((file) => file.endsWith("/SKILL.md") && !file.startsWith("skills/svg-infographic/")).length, productName === "game-design-studio" ? 23 : 22);
-      assert.equal(pathsUnder(packageFiles, "scripts/").filter((file) => /^scripts\/[^/]+\.mjs$/u.test(file)).length, 30);
+      assert.equal(pathsUnder(packageFiles, "scripts/").filter((file) => /^scripts\/[^/]+\.mjs$/u.test(file)).length, 32);
       assert.equal(
         pathsUnder(packageFiles, "agents/").filter((file) => file.endsWith(".md")).length,
         productName === "game-design-studio" ? 12 : 10,
@@ -231,7 +231,16 @@ test("generated snapshots contain the exact clean product build plus the suite m
         );
         assert.equal(/(?:^|\/)(?:authoring[-_])?(?:source[-_])?map(?:\.json)?$/iu.test(relativePath), false, `${productName}: authoring source map ${relativePath}`);
         assert.doesNotMatch(bytes.toString("utf8"), /(?:\/Users\/|\/home\/|[A-Za-z]:\\Users\\)/u, `${productName}: absolute host path ${relativePath}`);
-        assert.doesNotMatch(bytes.toString("utf8"), new RegExp(productName === "game-design-studio" ? "game-design-career" : "game-design-studio", "u"), `${productName}: sibling reference ${relativePath}`);
+        if (relativePath === "references/shared/updates/update-policy.json") {
+          assert.deepEqual(JSON.parse(bytes.toString("utf8")).productIds, ["game-design-studio", "game-design-career"], `${productName}: shared update policy names the suite products`);
+        } else if (relativePath === "scripts/inspect-game-design-plugin-updates.mjs") {
+          assert.match(bytes.toString("utf8"), /const PLUGINS = new Set\(\["game-design-studio", "game-design-career"\]\)/u, `${productName}: update inspector names only the suite products`);
+        } else if (relativePath === "scripts/lib/update-advisory.mjs") {
+          const source = bytes.toString("utf8");
+          assert.ok(source.includes('policy.productIds[0] !== "game-design-studio"') && source.includes('policy.productIds[1] !== "game-design-career"'), `${productName}: update advisory validates the exact suite products`);
+        } else {
+          assert.doesNotMatch(bytes.toString("utf8"), new RegExp(productName === "game-design-studio" ? "game-design-career" : "game-design-studio", "u"), `${productName}: sibling reference ${relativePath}`);
+        }
       }
 
       if (productName === "game-design-studio") {

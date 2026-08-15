@@ -169,7 +169,7 @@ test("marketplace runner owns the canonical artifact scaffold and verifies a rea
 
 async function traceFixture() {
   const root = await mkdtemp(path.join(os.tmpdir(), "marketplace-trace-"));
-  const cacheRoot = path.join(root, "cache", product, "0.1.0");
+  const cacheRoot = path.join(root, "cache", product, "0.1.1");
   const skillPath = path.join(cacheRoot, "skills/orchestrate-game-design-career/SKILL.md");
   const validatorPath = path.join(cacheRoot, "scripts/validate-artifact.mjs");
   const routingPath = path.join(cacheRoot, "references/routing.json");
@@ -511,12 +511,12 @@ for (const mutation of [
 const cliContext = {
   repoRoot: "/repo",
   productName: product,
-  cacheRoot: "/temp/cache/game-design-career/0.1.0",
+  cacheRoot: "/temp/cache/game-design-career/0.1.1",
 };
 const cliSamples = {
   marketplaceAdd: { marketplaceName: "game-design-suite", installedRoot: "/repo", alreadyAdded: false },
-  pluginAdd: { pluginId, name: product, marketplaceName: "game-design-suite", version: "0.1.0", installedPath: cliContext.cacheRoot, authPolicy: "ON_USE" },
-  pluginList: { installed: [{ pluginId, name: product, marketplaceName: "game-design-suite", version: "0.1.0", installed: true, enabled: true, source: { source: "local", path: "/repo/plugins/game-design-career" }, marketplaceSource: { sourceType: "local", source: "/repo" }, installPolicy: "AVAILABLE", authPolicy: "ON_USE" }], available: [] },
+  pluginAdd: { pluginId, name: product, marketplaceName: "game-design-suite", version: "0.1.1", installedPath: cliContext.cacheRoot, authPolicy: "ON_USE" },
+  pluginList: { installed: [{ pluginId, name: product, marketplaceName: "game-design-suite", version: "0.1.1", installed: true, enabled: true, source: { source: "local", path: "/repo/plugins/game-design-career" }, marketplaceSource: { sourceType: "local", source: "/repo" }, installPolicy: "AVAILABLE", authPolicy: "ON_USE" }], available: [] },
   pluginRemove: { pluginId, name: product, marketplaceName: "game-design-suite" },
   marketplaceRemove: { marketplaceName: "game-design-suite", installedRoot: null },
   marketplaceList: { marketplaces: [] },

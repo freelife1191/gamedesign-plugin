@@ -20,7 +20,7 @@ const temporaryDirs = [];
 const UPDATE_CHECKED_AT = Date.parse('2026-08-15T00:00:00.000Z');
 const UPDATE_COMPONENTS = [
   { id: 'skillstead', repository: 'https://github.com/kyungseo/skillstead', installedTag: 'svg-infographic/v0.9.0' },
-  { id: 'archify', repository: 'https://github.com/tt-a1i/archify', installedTag: 'v2.13.0' },
+  { id: 'archify', repository: 'https://github.com/tt-a1i/archify', installedTag: 'v2.14.0' },
   { id: 'im-not-ai', repository: 'https://github.com/epoko77-ai/im-not-ai', installedTag: 'v2.3.0' },
 ];
 
@@ -83,7 +83,7 @@ function runInjectedProbe({
   home,
   workspace,
   now = UPDATE_CHECKED_AT,
-  archifyTag = 'v2.14.0',
+  archifyTag = 'v2.15.0',
   offline = false,
   neverResolving = false,
   optOut = false,
@@ -199,7 +199,7 @@ test('SessionStart surfaces injected update advisories without changing capabili
   const current = runInjectedProbe({
     home: currentHome,
     workspace,
-    archifyTag: 'v2.13.0',
+    archifyTag: 'v2.14.0',
   });
   assert.equal(current.updates.status, 'current');
   assert.equal(current.updates.notification, null);

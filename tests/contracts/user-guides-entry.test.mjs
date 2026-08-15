@@ -6,6 +6,53 @@ import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
 
+function section(markdown, heading) {
+  const lines = markdown.split("\n");
+  const start = lines.findIndex((line) => /^#{2,3} /u.test(line) && line.slice(line.indexOf(" ") + 1) === heading);
+  assert.notEqual(start, -1, `missing ${heading} section`);
+  const level = lines[start].indexOf(" ");
+  const end = lines.findIndex((line, index) => index > start && /^#{2,3} /u.test(line) && line.indexOf(" ") <= level);
+  return lines.slice(start + 1, end === -1 ? undefined : end);
+}
+
+function parseUpdateGuide(markdown, heading) {
+  const lines = section(markdown, heading);
+  const prose = lines.filter((line) => line.trim() && !line.startsWith("```")).join("\n");
+  const fencedCommands = markdown.split("```").filter((_, index) => index % 2 === 1)
+    .flatMap((block) => block.split("\n").filter((line) => line.startsWith("codex plugin ")));
+  const inlineCommands = [...markdown.matchAll(/`(codex plugin [^`]+)`/gmu)].map((match) => match[1]);
+  return {
+    advisory: prose.includes("알림") && prose.includes("자동으로 업데이트") && prose.includes("다시 설치하지 않"),
+    firstRunAndInterval: prose.includes("처음") && prose.includes("7일"),
+    optOut: prose.includes("GAME_DESIGN_UPDATE_CHECKS=false"),
+    localAndGit: prose.includes("Git marketplace") && prose.includes("로컬 marketplace"),
+    handoff: prose.includes("새 채팅") || prose.includes("새 세션"),
+    pinnedBundles: prose.includes("고정") && prose.includes("suite release"),
+    cacheBoundary: prose.includes("설치된 캐시") && prose.includes("직접 편집하지 마"),
+    explicitCommands: [...fencedCommands, ...inlineCommands],
+  };
+}
+
+test("update guides express advisory-only lifecycle semantics through their parsed sections", async () => {
+  const sources = [
+    ["README.md", "업데이트·재설치하기"],
+    ["products/game-design-studio/plugin/README.md", "업데이트와 제거"],
+    ["products/game-design-career/plugin/README.md", "업데이트와 제거"],
+    ["shared/contracts/README.md", "업데이트 알림 계약"],
+  ];
+  for (const [filename, heading] of sources) {
+    const guide = parseUpdateGuide(await readFile(path.join(root, filename), "utf8"), heading);
+    assert.equal(guide.advisory, true, `${filename}: notification remains advisory-only`);
+    assert.equal(guide.firstRunAndInterval, true, `${filename}: explains first run and seven-day interval`);
+    assert.equal(guide.optOut, true, `${filename}: explains opt-out`);
+    assert.equal(guide.localAndGit, true, `${filename}: distinguishes local and Git marketplaces`);
+    assert.equal(guide.handoff, true, `${filename}: requires a new conversation/session handoff`);
+    assert.equal(guide.pinnedBundles, true, `${filename}: keeps bundles pinned until a suite release`);
+    assert.equal(guide.cacheBoundary, true, `${filename}: never asks users to edit installed cache folders`);
+    assert.equal(guide.explicitCommands.some((command) => command.includes("marketplace upgrade")), true, `${filename}: update execution stays an explicit command`);
+  }
+});
+
 for (const product of ["game-design-studio", "game-design-career"]) {
   test(product + " entry guide separates App and CLI workflows", async () => {
     const base = path.join(root, "guides", product);

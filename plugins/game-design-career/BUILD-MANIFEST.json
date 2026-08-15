@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "name": "game-design-career",
   "sourceDateEpoch": 0,
-  "treeSha256": "e12d380c20d7424c57016608ef4340ff130f7d4428fc940b8a8a643506506a9a",
+  "treeSha256": "6e055ddca5c4f5760ad241ce668414133038ceff1908a64e1cfb2fa4d7a60806",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
-      "sha256": "096830e3c0c31b672d68a3cf0f69a9c2710dc2737ca4700444d298024b183f00",
+      "sha256": "eafc6e2ce652ab9c69201d959f146e90c7ca51292540ffe8cb26fcb75fe52d1d",
       "size": 1068
     },
     {
@@ -21,8 +21,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "9d8fcf9fac819143a13da09215979843c4498418811064ec7517144d7a074cef",
-      "size": 62242
+      "sha256": "048d8c7d11076c645c663c41f7d29f58be1f3459b8b2bb86cfca5374b519b551",
+      "size": 63045
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -1581,8 +1581,8 @@
     },
     {
       "path": "scripts/check-game-design-updates.mjs",
-      "sha256": "ed9c500dd805d2485f6349ac88107f7bd5cdeb0a66a5b8f99df4ea176b12cd9e",
-      "size": 19591
+      "sha256": "31cc9bfa3e96edd659f359765cf256488507c25bc75e02fcde8a1ebe53e458bd",
+      "size": 19812
     },
     {
       "path": "scripts/compile-image-prompts.mjs",

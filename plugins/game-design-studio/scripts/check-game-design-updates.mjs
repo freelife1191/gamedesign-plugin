@@ -323,8 +323,14 @@ async function publishCache({ cachePath, record, fsOps }) {
 }
 
 async function loadJson(pluginRoot, filename, fsOps) {
-  const text = await fsOps.readFile(path.join(pluginRoot, "shared", "updates", filename), "utf8");
-  return JSON.parse(text);
+  for (const relativeDirectory of ["references/shared/updates", "shared/updates"]) {
+    try {
+      return JSON.parse(await fsOps.readFile(path.join(pluginRoot, relativeDirectory, filename), "utf8"));
+    } catch (error) {
+      if (error?.code !== "ENOENT") throw error;
+    }
+  }
+  throw new Error(`missing update configuration: ${filename}`);
 }
 
 function installedFromManifest(manifest) {
