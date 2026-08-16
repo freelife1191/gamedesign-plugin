@@ -636,7 +636,7 @@ test("Studio image and export guides document runtime precedence and downstream 
   const exportsGuide = await readFile(path.join(base, "exports.md"), "utf8");
   const exportSkill = await readFile(path.join(base, "skills/export-game-design-documents.md"), "utf8");
   const imagePlan = await readFile(path.join(base, "skills/plan-image-assets.md"), "utf8");
-  for (const phrase of ["workflow 호출 때마다", "현재 process environment", ".env보다 우선", "새 채팅", "새 세션"]) {
+  for (const phrase of ["작업 흐름을 호출할 때마다", "현재 프로세스 환경 변수", "`.env`보다 우선", "새 채팅", "새 세션"]) {
     assert.ok(images.includes(phrase), `Studio image guide missing ${phrase}`);
   }
   for (const phrase of ["MD terminal validation", "<artifact-path>", "<export-manifest-path>", "새 세션", "downstream workflow"]) {

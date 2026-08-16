@@ -100,7 +100,7 @@ $game-design-studio:review-image-assets artifact=<artifact-path> 컷씬 lineage�
 
 ## 관련 문서
 
-[컷씬 비주얼 프리프로덕션 How-to](../cutscene-visual-preproduction.md), [이미지 자산](../image-assets.md), [문서 품질](../document-quality.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)
+[컷씬 장면·이미지 사전 설계](../cutscene-visual-preproduction.md), [이미지 자산](../image-assets.md), [문서 품질](../document-quality.md), [스킬 선택표](README.md), [제품 전체 작업 흐름](../workflow.md)
 
 <!-- PROMPT-TEMPLATES:START game-design-studio:design-cutscene-visual-preproduction -->
 ### 재사용 프롬프트 템플릿

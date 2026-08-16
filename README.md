@@ -2,7 +2,7 @@
 
 게임을 기획하는 학생·기획자·멘토가 **아이디어를 검토 가능한 기획 문서로 만들도록** 돕는 두 개의 독립 플러그인입니다. 완성한 기획은 학습과 포트폴리오 작업으로도 이어집니다. **Game Design Studio**는 게임의 규칙·콘텐츠·UX·제작 범위를 설계합니다. **Game Design Career**는 역할 탐색·역기획·포트폴리오·면접·성장 계획을 돕습니다.
 
-**기준 기획 결과물 (Canonical Artifact)**은 한 작업에서 기준으로 삼는 결과 폴더입니다. `content.md`에 기획 본문을, `evidence.yml`에 근거를, `decisions/`에 선택 이유를 담아 두므로 다음 수정·검토·내보내기에서도 같은 기준을 사용할 수 있습니다.
+**기준 기획 결과물 (Canonical Artifact)** 은 한 작업에서 기준으로 삼는 결과 폴더입니다. `content.md`에 기획 본문을, `evidence.yml`에 근거를, `decisions/`에 선택 이유를 담아 두므로 다음 수정·검토·내보내기에서도 같은 기준을 사용할 수 있습니다.
 
 이 도구는 판단과 근거 관리를 돕지만 재미, 흥행, 매출, 채용·합격, 법률 준수, 플랫폼 승인 또는 사람 승인을 보장하지 않습니다. 결과를 사용하거나 공개하기 전에는 검토 담당자를 정해야 합니다. 그 담당자가 사실, 범위, 권리와 품질을 확인합니다.
 
@@ -40,7 +40,19 @@
 - **Game Design Career**는 직무 탐색, 역기획, 학습 계획, 포트폴리오, 면접과 주니어 성장 계획을 정리합니다.
 - 두 제품을 함께 쓰면 Studio에서 검토한 기획을 Career의 포트폴리오와 면접 준비 자료로 연결합니다. 두 결과 폴더와 승인 기록은 따로 관리합니다.
 
-간단한 요청은 플러그인이 목적을 파악해 필요한 스킬과 검토 역할을 고릅니다. 작업 순서를 세밀하게 조정해야 할 때만 상세 가이드의 스킬 ID와 실행 순서를 직접 지정하면 됩니다. 결과를 자동으로 승인하지 않습니다. 검토 담당자의 이름을 기록한 뒤 그 담당자가 사실·권리·범위를 확인해 승인하거나 보류합니다.
+#### 🤝 두 제품이 함께 쓰는 기능
+
+두 제품에서는 **경쟁작·레퍼런스 분석**, **한국어·영어 용어 사전**, **프로젝트 기억** 기능을 모두 사용할 수 있습니다. LLM Wiki는 대화와 문서에서 다시 쓸 만한 정보를 모아 두고, 나중에 필요한 내용을 찾아 쓰는 지식 기록 방식입니다. 프로젝트 기억은 이 방식을 게임 기획 작업에 맞게 제한적으로 적용합니다.
+
+**모든 대화와 문서를 자동으로 저장하지 않습니다.** 출처와 적용 범위, 검토 시점, 사람의 승인 여부를 확인한 기록만 다음 작업에 활용합니다.
+
+#### 🎬 Studio에서 준비하는 이미지
+
+**Game Design Studio**에는 컷씬 이미지 제작을 준비하는 전용 기능도 있습니다. 장면 구성, 마스터 이미지, 생성 순서와 검토 기준을 먼저 정한 뒤 이미지 제작으로 넘어갑니다. 일반 게임 이미지는 **프롬프트와 예상 비용을 먼저 확인한 후 생성합니다.** 완성된 결과는 사람이 검토합니다.
+
+#### ✅ 요청과 검토 원칙
+
+원하는 작업을 평소 쓰는 말로 설명하면 플러그인이 요청 목적에 맞는 스킬과 검토 역할을 고릅니다. 상세 가이드의 스킬 ID와 실행 순서는 작업 흐름을 직접 조정할 때만 지정합니다. **결과물을 자동으로 승인하지는 않습니다.** 검토 담당자의 이름을 기록한 뒤, 그 담당자가 사실과 권리, 적용 범위를 확인해 승인하거나 보류합니다.
 
 ### 🎯 왜 만들었나요?
 
@@ -67,7 +79,7 @@
 
 ### ⚙️ 짧게 요청해도 체계가 작동합니다
 
-Studio에는 제품 스킬 16개와 공통 스킬 8개, 설치 스킬 24개가 들어갑니다. Career에는 제품 스킬 15개와 공통 스킬 8개, 설치 스킬 23개가 들어갑니다. 공통 스킬에는 레퍼런스 분석과 용어 사전 관리도 포함합니다. Studio에는 전문 역할 12개, Career에는 전문 역할 10개가 있으며 요청에 맞는 역할만 골라 씁니다. 사용자가 스킬 이름을 일일이 나열할 필요는 없습니다. 요청이 분명하면 가장 짧은 전문 경로를 선택하고 복합 요청은 오케스트레이터가 필요한 단계만 묶습니다.
+Studio에는 제품 스킬 16개와 공통 스킬 8개, 설치 스킬 24개가 들어갑니다. Career에는 제품 스킬 15개와 공통 스킬 8개, 설치 스킬 23개가 들어갑니다. 공통 스킬은 레퍼런스 분석, 용어 사전 관리와 프로젝트 기억을 담당합니다. 컷씬 장면·이미지 사전 설계는 Studio 전용 스킬입니다. Studio에는 전문 역할 12개, Career에는 전문 역할 10개가 있으며 요청에 맞는 역할만 골라 씁니다. 사용자가 스킬 이름을 일일이 나열할 필요는 없습니다. 요청이 분명하면 가장 짧은 전문 경로를 선택하고 복합 요청은 오케스트레이터가 필요한 단계만 묶습니다.
 
 시작할 때 `SessionStart` 훅이 문서 변환기, 브라우저와 이미지 생성 기능을 확인합니다. 작업이 끝날 때는 `Stop` 훅이 표시된 기준 기획 결과물과 요청한 형식을 다시 점검합니다. 두 훅 모두 결과를 자동으로 승인하지 않습니다. 검토 담당자가 승인하거나 보류합니다. 보류 이유와 남은 작업을 기록해 다음 요청에서 보류한 지점부터 다시 시작합니다.
 
@@ -93,13 +105,14 @@ Studio에는 제품 스킬 16개와 공통 스킬 8개, 설치 스킬 24개가 �
 | 화면 흐름과 접근성 점검 | 첫 플레이, 입력, 오류·복구 상태, 튜토리얼과 접근성 대안을 확인 | 화면·사용자 경험 흐름, 접근성·플랫폼 확인표 |
 | 경제와 운영 계획 검토 | 재화의 획득·소비, 성장 속도, 상점, 이벤트 실험, 중단·되돌리기 조건을 분리 | 경제 균형 명세, 라이브 운영 실험 계획 |
 | 제작 범위 정하기 | 팀·일정·의존성·시제품·완료 기준과 포기할 조건을 함께 검토 | 제작 범위·일정·위험 계획, 검토 결정 기록 |
-| 이전 프로젝트 교훈 이어 쓰기 | 출처·적용 범위·승인 상태가 확인된 로컬 기록만 다음 작업의 참고 자료로 연결 | 적용·제외 기록, 검토 대기 후보, 사람 승인 이력 |
+| **이전 프로젝트 교훈 이어 쓰기** | 출처·적용 범위·승인 상태가 확인된 로컬 기록만 다음 작업의 참고 자료로 연결 | 적용·제외 기록, 검토 대기 후보, 사람 승인 이력 |
 | 학습과 취업 준비 | 직무 탐색, 채용 공고 조사, 역기획, 학습 계획, 포트폴리오, 면접과 성장 계획을 연결 | 역할 지도, 역량 차이, 12주 계획, 포트폴리오 사례, 면접 기록 |
 | 한국어 문서 다듬기 | [im-not-ai](https://github.com/epoko77-ai/im-not-ai)를 내부 스킬로 사용해 번역투와 기계적인 문장을 찾고 사실·수치·식별자(ID)·승인 상태를 보호한 채 수정안과 검증 기록을 남김 | 윤문 초안, 변경 검증 기록, 사람이 반영할 수정안 |
 | 흐름과 구조 설명하기 | [Skillstead](https://github.com/kyungseo/skillstead)로 편집 가능한 SVG와 검증용 2배 PNG를 만들고 [Archify](https://github.com/tt-a1i/archify)로 관계를 따라가며 살펴볼 수 있는 HTML 구조도를 제작 | SVG·PNG 도식, Archify HTML, 렌더·검수 기록 |
 | 문서 형식으로 전달하기 | 기준 결과와 승인된 자산을 보존한 채 MD·PDF·DOCX·PPTX 형식별 준비와 화면 검수를 분리 | 원본 MD, 검증된 PDF·DOCX·PPTX, 형식별 결과 기록 |
-| 경쟁작·레퍼런스 분석과 용어 사전 | [Studio 분석](guides/game-design-studio/reference-analysis.md)·[Studio 용어 사전](guides/game-design-studio/glossary.md), [Career 분석](guides/game-design-career/reference-analysis.md)·[Career 용어 사전](guides/game-design-career/glossary.md)에서 관찰 근거, 설계 전환 제안과 승인 전 용어 후보를 분리 | 비교작 근거 등록부, 시스템 지도, 검토 대기 제안, 승인된 용어 스냅샷 |
-| 컷씬 장면·프롬프트·이미지 준비 | [컷씬 비주얼 프리프로덕션](guides/game-design-studio/cutscene-visual-preproduction.md)에서 Prompt Only, Estimate Only, Generate After Approval을 분리하고 `style-master → reference-masters → keyframes → storyboard` 순서를 검토 | 컷씬 브리프(brief), 장면(shot)·연속성 패키지, 단계(wave)별 비용·승인 기록과 검토된 이미지 후보 |
+| **경쟁작·레퍼런스 분석과 용어 사전** | [Studio 분석](guides/game-design-studio/reference-analysis.md)·[Studio 용어 사전](guides/game-design-studio/glossary.md), [Career 분석](guides/game-design-career/reference-analysis.md)·[Career 용어 사전](guides/game-design-career/glossary.md)에서 관찰 근거, 설계 전환 제안과 승인 전 용어 후보를 분리 | 비교작 근거 등록부, 시스템 지도, 검토 대기 제안, 승인된 용어 스냅샷 |
+| **게임 이미지 계획·프롬프트·생성·검토** | [Studio 이미지](guides/game-design-studio/image-assets.md)·[Career 이미지](guides/game-design-career/image-assets.md)에서 안정 자산 ID, 배치와 대체 텍스트를 먼저 정하고 `image_gen`을 사용합니다. 한글 문자가 필요하거나 무료 결과가 부족하면 비용·품질 안내와 사람 승인을 거쳐 `gpt-image-2`를 선택 | 이미지 목록, Markdown·JSON 프롬프트, 출처·생성·승인 기록과 검토된 이미지 후보 |
+| **컷씬 장면·프롬프트·이미지 준비** | [컷씬 장면·이미지 사전 설계](guides/game-design-studio/cutscene-visual-preproduction.md)에서 **프롬프트만 준비**, **비용만 확인**, **승인 후 생성**을 나누고 `style-master → reference-masters → keyframes → storyboard` 순서를 검토 | 컷씬 개요, 장면·연속성 패키지, 단계별 비용·승인 기록과 검토된 이미지 후보 |
 
 #### 🎨 게임 이미지는 먼저 기준부터 정합니다
 
@@ -171,11 +184,11 @@ Studio에서 검토한 전투 시스템 기획을 Career 포트폴리오 사례�
 
 | `.env` 변수 | 기본값 | 설정 결과 |
 | --- | --- | --- |
-| `GAME_DESIGN_MEMORY_ENABLED` | `true` | `false`이면 기억 읽기·쓰기와 후보·색인·사용 기록을 모두 끔 |
-| `GAME_DESIGN_MEMORY_SCOPE` | `project` | `project`, `workspace`, `global` 중 검색 범위를 선택 |
+| `GAME_DESIGN_MEMORY_ENABLED` | **`true`** | `false`이면 기억 읽기·쓰기와 후보·색인·사용 기록을 모두 끔 |
+| `GAME_DESIGN_MEMORY_SCOPE` | **`project`** | `project`, `workspace`, `global` 중 검색 범위를 선택 |
 | `GAME_DESIGN_MEMORY_MAX_ITEMS` | `5` | 한 작업에 적용할 승인 기록 수를 1~10개로 제한 |
 | `GAME_DESIGN_MEMORY_CANDIDATE_TTL_DAYS` | `30` | 승인 전 후보의 유효 기간을 1~365일로 설정 |
-| `GAME_DESIGN_MEMORY_GIT_MODE` | `local` | `local`은 로컬 제외, `tracked`는 사용자가 Git 추적 여부를 결정 |
+| `GAME_DESIGN_MEMORY_GIT_MODE` | **`local`** | `local`은 로컬 제외, `tracked`는 사용자가 Git 추적 여부를 결정 |
 
 ```text
 @Game Design Studio 지난 플레이테스트 결과와 승인된 프로젝트 교훈을 참고해서
@@ -1755,7 +1768,7 @@ Studio는 제품 스킬 16개와 공통 스킬 8개로 총 24개, Career는 제�
 | 경쟁작 레퍼런스 분석 (`analyze-game-design-references`) | 경쟁작 관찰을 시스템 비교와 검토 대기 설계 전환 제안으로 정리할 때 | 시스템 지도, 심층 분석과 `pending-review` 설계 전환 제안을 기록합니다. | `$game-design-studio:analyze-game-design-references` | [Studio 경쟁작 레퍼런스 분석 가이드](guides/game-design-studio/reference-analysis.md) |
 | 기획 구조 도식 만들기 (`archify`) | 시스템 구성·작업 흐름을 탐색 가능한 HTML로 설명할 때 | 시스템 구성과 작업 흐름을 탐색 가능한 HTML 구조 도식으로 만듭니다. | `$game-design-studio:archify` | [기획 구조 도식 만들기 상세 가이드](guides/game-design-studio/skills/archify.md) |
 | 게임 비전 정의 (`define-game-vision`) | 대상 플레이어와 핵심 재미를 한 문장으로 정할 때 | 대상 플레이어, 핵심 재미와 검증 기준을 정리해 게임 방향 원칙을 만듭니다. | `$game-design-studio:define-game-vision` | [게임 비전 정의 상세 가이드](guides/game-design-studio/skills/define-game-vision.md) |
-| 컷씬 비주얼 프리프로덕션 (`design-cutscene-visual-preproduction`) | 컷씬의 shot, 마스터 프롬프트, 파생 이미지와 연속성을 순서대로 준비할 때 | 컷씬 brief, shot, 프롬프트, 비용 승인과 연속성 검토를 순서대로 묶습니다. | `$game-design-studio:design-cutscene-visual-preproduction` | [컷씬 비주얼 프리프로덕션 스킬](guides/game-design-studio/skills/design-cutscene-visual-preproduction.md) |
+| 컷씬 장면·이미지 사전 설계 (`design-cutscene-visual-preproduction`) | 컷씬의 장면, 마스터 프롬프트, 파생 이미지와 연속성을 순서대로 준비할 때 | 컷씬 개요, 장면, 프롬프트, 비용 승인과 연속성 검토를 순서대로 묶습니다. | `$game-design-studio:design-cutscene-visual-preproduction` | [컷씬 장면·이미지 사전 설계 스킬](guides/game-design-studio/skills/design-cutscene-visual-preproduction.md) |
 | 게임 콘텐츠 설계 (`design-game-content`) | 퀘스트·레벨·캐릭터의 선택과 결과를 설계할 때 | 퀘스트, 레벨, 조우와 캐릭터를 제작 가능한 콘텐츠 명세로 만듭니다. | `$game-design-studio:design-game-content` | [게임 콘텐츠 설계 상세 가이드](guides/game-design-studio/skills/design-game-content.md) |
 | 경제와 라이브 운영 설계 (`design-game-economy-and-liveops`) | 재화·보상·이벤트의 측정 기준을 정할 때 | 재화 흐름, 성장, 보상과 운영 결정을 경제 명세로 만듭니다. | `$game-design-studio:design-game-economy-and-liveops` | [경제와 라이브 운영 설계 상세 가이드](guides/game-design-studio/skills/design-game-economy-and-liveops.md) |
 | 게임 시스템 설계 (`design-game-systems`) | 규칙·상태·예외를 구현 가능한 기준으로 정리할 때 | 규칙, 상태, 우선순위, 예외와 데이터 관계를 시스템 명세로 만듭니다. | `$game-design-studio:design-game-systems` | [게임 시스템 설계 상세 가이드](guides/game-design-studio/skills/design-game-systems.md) |
@@ -2012,7 +2025,7 @@ generated snapshot: plugins/game-design-career/
 | `load-memory-config.mjs` | 로컬 기억 사용 범위와 개수·기간·Git 모드를 안전한 값으로 읽습니다. |
 | `maintain-design-memory.mjs` | 후보 목록, 사람 승인·거부·폐기, 충돌과 색인 복구를 관리합니다. |
 | `manage-game-design-glossary.mjs` | 용어 후보, 오버레이와 사람 결정 기록을 관리합니다. |
-| `plan-cutscene-visual-preproduction.mjs` | 컷씬 brief, shot, 프롬프트와 serial wave 계획을 만듭니다. |
+| `plan-cutscene-visual-preproduction.mjs` | 컷씬 개요, 장면, 프롬프트와 단계별 생성 계획을 만듭니다. |
 | `quality-source-anchors.mjs` | 문서 품질 원본의 바이트와 의미 기준점을 고정합니다. |
 | `resolve-quality-profile.mjs` | 문서 품질 기준을 선택·합성하고 상태 기록을 만듭니다. |
 | `retrieve-design-memory.mjs` | 승인된 관련 기억만 조회하고 적용·제외 기록을 남깁니다. |
@@ -2087,7 +2100,7 @@ generated snapshot: plugins/game-design-career/
 cp .env.example .env
 ```
 
-- `IMAGE_GEN_MODE=prompt-only`: 외부 호출 없이 이미지 프롬프트와 자리표시자만 보존
+- **`IMAGE_GEN_MODE=prompt-only`**: 외부 호출 없이 이미지 프롬프트와 자리표시자만 보존
 - `IMAGE_GEN_MODE=select`: 지정한 안정 자산 ID (stable asset ID)만 생성 후보로 전달
 - `IMAGE_GEN_MODE=required`: 필수 자산만 생성하되 이미지 제공자 (provider)가 없으면 차단
 - `IMAGE_GEN_MODE=all`: 목록 (manifest)의 모든 생성 가능한 자산을 후보로 전달
@@ -2100,7 +2113,7 @@ IMAGE_MODEL=gpt-image-2
 IMAGE_QUALITY=low
 ```
 
-`codex-first`는 API key 보유 여부와 관계없이 사용 가능한 호스트 `image_gen`을 먼저 선택합니다. 호스트 실패나 품질 불만족 뒤에 유료 API로 자동 전환하지 않습니다. `IMAGE_PROVIDER=openai`를 선택하고 비용 안내와 현재 승인을 마친 경우에만 OpenAI를 사용합니다. 이미지 안에 한글 문자가 필요하면 `IMAGE_EMBEDDED_TEXT_LOCALE=ko-KR`, `IMAGE_PROVIDER=openai`, `IMAGE_MODEL=gpt-image-2`가 필수입니다.
+`codex-first`는 API 키 보유 여부와 관계없이 사용 가능한 호스트 `image_gen`을 먼저 선택합니다. 호스트가 실패하거나 결과가 만족스럽지 않아도 유료 API로 자동 전환하지 않습니다. `IMAGE_PROVIDER=openai`를 선택하고 비용 안내와 현재 승인을 마친 경우에만 OpenAI를 사용합니다. 이미지 안에 한글 문자가 필요하면 `IMAGE_EMBEDDED_TEXT_LOCALE=ko-KR`, `IMAGE_PROVIDER=openai`, `IMAGE_MODEL=gpt-image-2`가 필수입니다.
 
 유료 품질은 대부분 `low`로 충분합니다. `medium`은 마스터 키 이미지나 선택된 고품질 결과에만 사용하고, `high`는 영상용 핵심 프레임이나 게임 원화처럼 세부 묘사가 반드시 필요한 예외에만 추가 비용을 알리고 승인받아 사용합니다. 모든 결과에 `high`를 권하지 않습니다.
 
@@ -2133,12 +2146,16 @@ MD는 렌더러 사용 가능 여부 (renderer capability)와 무관하게 항�
 | --- | --- | --- |
 | 설치하고 활성화하기 | [Studio 설치](guides/game-design-studio/installation.md) | [Career 설치](guides/game-design-career/installation.md) |
 | 첫 기준 결과 폴더 (Artifact) 만들기 | [Studio 빠른 시작](guides/game-design-studio/quick-start.md) | [Career 빠른 시작](guides/game-design-career/quick-start.md) |
-| 전체 workflow와 재개 조건 보기 | [Studio workflow](guides/game-design-studio/workflow.md) | [Career workflow](guides/game-design-career/workflow.md) |
+| 전체 작업 흐름과 재개 조건 보기 | [Studio 전체 작업 흐름](guides/game-design-studio/workflow.md) | [Career 전체 작업 흐름](guides/game-design-career/workflow.md) |
 | 스킬을 직접 호출하기 | [Studio 스킬](guides/game-design-studio/skills/README.md) | [Career 스킬](guides/game-design-career/skills/README.md) |
 | 기준 결과 폴더 (Artifact) 템플릿 고르기 | [Studio 템플릿](guides/game-design-studio/templates.md) | [Career 템플릿](guides/game-design-career/templates.md) |
 | 활용 사례 (use case)로 탐색하기 | [Studio 활용 사례](guides/game-design-studio/use-cases/README.md) | [Career 활용 사례](guides/game-design-career/use-cases/README.md) |
 | 자주 묻는 질문 확인하기 | [Studio FAQ](guides/game-design-studio/faq.md) | [Career FAQ](guides/game-design-career/faq.md) |
+| 승인된 프로젝트 기억을 조회·관리하기 | [Studio 프로젝트 기억](guides/game-design-studio/memory.md) | [Career 프로젝트 기억](guides/game-design-career/memory.md) |
+| 경쟁작·레퍼런스의 게임 시스템 분석하기 | [Studio 레퍼런스 분석](guides/game-design-studio/reference-analysis.md) | [Career 레퍼런스 분석](guides/game-design-career/reference-analysis.md) |
+| 한국어·영어 용어 사전 관리하기 | [Studio 용어 사전 가이드](guides/game-design-studio/glossary.md) | [Career 용어 사전 가이드](guides/game-design-career/glossary.md) |
 | 이미지 자산 계획·검토하기 | [Studio 이미지](guides/game-design-studio/image-assets.md) | [Career 이미지](guides/game-design-career/image-assets.md) |
+| 컷씬 장면·이미지 사전 설계하기 | [Studio 컷씬](guides/game-design-studio/cutscene-visual-preproduction.md) | **Studio 전용** |
 | SVG·PNG로 시각화하기 | [Studio 시각화](guides/game-design-studio/visualization.md) | [Career 시각화](guides/game-design-career/visualization.md) |
 | MD·PDF·DOCX·PPTX 준비하기 | [Studio 내보내기](guides/game-design-studio/exports.md) | [Career 내보내기](guides/game-design-career/exports.md) |
 

@@ -50,7 +50,7 @@ Studio는 기준 Markdown을 먼저 만들고 선택 기능을 뒤에 붙입니�
 이미지와 구조적 도식을 구분합니다.
 
 - 이미지: Quality Profile 뒤에 `plan-image-assets`로 stable asset ID와 prompt를 만들고, 설정된 provider로만 생성한 뒤 `review-image-assets`에서 사람이 승인합니다.
-- 컷씬: [컷씬 비주얼 프리프로덕션](cutscene-visual-preproduction.md)에서 `style-master → reference-masters → keyframes → storyboard`를 직렬로 진행합니다. 각 wave는 비용 공개와 이름을 기록한 승인 전까지 provider 호출 0회입니다.
+- 컷씬: [컷씬 장면·이미지 사전 설계](cutscene-visual-preproduction.md)에서 `style-master → reference-masters → keyframes → storyboard` 순서로 진행합니다. 각 단계는 비용을 공개하고 이름이 기록된 사람의 승인을 받기 전까지 이미지 제공자를 호출하지 않습니다.
 - 도식: 흐름, 상태, 루프와 의존성은 Skillstead SVG로 만들고 Chromium이 있으면 정확한 2× PNG를 렌더합니다. SVG lint와 시각 QA 전에는 검증 완료가 아닙니다.
 
 선택 capability가 없으면 prompt, placeholder, SVG 원본 또는 기존 검증 자산을 보존하고 해당 단계만 차단합니다.

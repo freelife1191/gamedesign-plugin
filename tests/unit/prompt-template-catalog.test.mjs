@@ -819,7 +819,7 @@ function assertCutscenePromptCards(entries) {
       id: "st-s16",
       svg: "guides/assets/game-design-studio/skills/design-cutscene-visual-preproduction.svg",
       png: "guides/assets/game-design-studio/skills/design-cutscene-visual-preproduction.png",
-      alt: "컷씬 비주얼 프리프로덕션 흐름",
+      alt: "컷씬 장면·이미지 사전 설계 흐름",
     });
   }
   const advanced = cards.at(-1);

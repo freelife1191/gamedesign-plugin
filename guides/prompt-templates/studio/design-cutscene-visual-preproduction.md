@@ -104,7 +104,7 @@ $game-design-studio:design-cutscene-visual-preproduction artifact=[컷씬 목적
 - ID: st-s16
 - SVG: guides/assets/game-design-studio/skills/design-cutscene-visual-preproduction.svg
 - PNG: guides/assets/game-design-studio/skills/design-cutscene-visual-preproduction.png
-- 대체 텍스트: 컷씬 비주얼 프리프로덕션 흐름
+- 대체 텍스트: 컷씬 장면·이미지 사전 설계 흐름
 
 ### 사람 검토
 #### 승인 경계
@@ -235,7 +235,7 @@ $game-design-studio:design-cutscene-visual-preproduction artifact=[컷씬 brief]
 - ID: st-s16
 - SVG: guides/assets/game-design-studio/skills/design-cutscene-visual-preproduction.svg
 - PNG: guides/assets/game-design-studio/skills/design-cutscene-visual-preproduction.png
-- 대체 텍스트: 컷씬 비주얼 프리프로덕션 흐름
+- 대체 텍스트: 컷씬 장면·이미지 사전 설계 흐름
 
 ### 사람 검토
 #### 승인 경계
@@ -372,7 +372,7 @@ $game-design-studio:design-cutscene-visual-preproduction artifact=[current wave]
 - ID: st-s16
 - SVG: guides/assets/game-design-studio/skills/design-cutscene-visual-preproduction.svg
 - PNG: guides/assets/game-design-studio/skills/design-cutscene-visual-preproduction.png
-- 대체 텍스트: 컷씬 비주얼 프리프로덕션 흐름
+- 대체 텍스트: 컷씬 장면·이미지 사전 설계 흐름
 
 ### 사람 검토
 #### 승인 경계

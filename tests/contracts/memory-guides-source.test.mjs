@@ -249,14 +249,20 @@ test("source inventories and product documentation list the frozen cutscene inve
 });
 
 test("cutscene guide keeps copyable requests and frozen Studio/Career inventories", async () => {
-  const guide = parseCutsceneGuide(await readFile(path.join(root, "guides/game-design-studio/cutscene-visual-preproduction.md"), "utf8"));
-  assert.deepEqual(guide.headings.slice(0, 5), [
+  const source = await readFile(path.join(root, "guides/game-design-studio/cutscene-visual-preproduction.md"), "utf8");
+  const guide = parseCutsceneGuide(source);
+  assert.match(source, /^# 컷씬 장면·이미지 사전 설계$/mu);
+  assert.deepEqual(guide.headings, [
     "제공자와 품질을 먼저 고르기",
-    "컷씬 비주얼 프리프로덕션",
-    "Prompt Only",
-    "Estimate Only",
-    "Generate After Approval",
+    "세 가지 작업 모드",
+    "🔄 작업 순서와 인계",
   ]);
+  assert.deepEqual(headingNames(source, 3).slice(0, 3), [
+    "📝 프롬프트만 준비하기 (`Prompt Only`)",
+    "💰 비용만 확인하기 (`Estimate Only`)",
+    "🎬 승인 후 생성하기 (`Generate After Approval`)",
+  ]);
+  assert.doesNotMatch(source, /^#{1,3} (?:컷씬 비주얼 프리프로덕션|Prompt Only|Estimate Only|Generate After Approval|작업 순서와 handoff)$/gmu);
   assert.deepEqual(guide.requestBlocks, cutsceneGuideRequests);
 
   const inventories = {};
@@ -273,6 +279,67 @@ test("cutscene guide keeps copyable requests and frozen Studio/Career inventorie
     studio: { routing: 23, installed: 24, topLevelScripts: 32 },
     career: { routing: 22, installed: 23, topLevelScripts: 32 },
   });
+});
+
+test("recent feature guides keep Korean-first headings and visible safety boundaries", async () => {
+  const [studioReadme, guideIndex, projectMemory, studioImages, careerImages] = await Promise.all([
+    readFile(path.join(root, "guides/game-design-studio/README.md"), "utf8"),
+    readFile(path.join(root, "guides/README.md"), "utf8"),
+    readFile(path.join(root, "guides/project-memory.md"), "utf8"),
+    readFile(path.join(root, "guides/game-design-studio/image-assets.md"), "utf8"),
+    readFile(path.join(root, "guides/game-design-career/image-assets.md"), "utf8"),
+  ]);
+
+  for (const markdown of [studioReadme, guideIndex]) {
+    assert.match(markdown, /\[컷씬 장면·이미지 사전 설계\]\(game-design-studio\/cutscene-visual-preproduction\.md\)|\[컷씬 장면·이미지 사전 설계\]\(cutscene-visual-preproduction\.md\)/u);
+    assert.doesNotMatch(markdown, /컷씬 비주얼 프리프로덕션/u);
+  }
+
+  assert.match(projectMemory, /\*\*이름이 확인된 사람이 승인해야 현재 기록이 됩니다\.\*\*/u);
+  assert.match(projectMemory, /\*\*채팅 전체, 작업 폴더의 모든 문서와 사용자 행동을 자동 수집하지 않습니다\.\*\*/u);
+  for (const layer of ["기준 기획 결과물과 근거", "기억 원본", "검색용 파생 자료"]) {
+    assert.match(projectMemory, new RegExp(`^\\| \\*\\*${escapeRegExp(layer)}\\*\\* \\|`, "mu"), `memory layer is scannable: ${layer}`);
+  }
+  for (const [setting, value] of [
+    ["GAME_DESIGN_MEMORY_ENABLED", "true"],
+    ["GAME_DESIGN_MEMORY_SCOPE", "project"],
+    ["GAME_DESIGN_MEMORY_GIT_MODE", "local"],
+  ]) {
+    assert.match(projectMemory, new RegExp("^\\| `" + escapeRegExp(setting) + "` \\| \\*\\*`" + escapeRegExp(value) + "`\\*\\* \\|", "mu"), `memory default is visible: ${setting}`);
+  }
+
+  for (const markdown of [studioImages, careerImages]) {
+    for (const heading of [
+      "🧭 생성 모드 선택 (`IMAGE_GEN_MODE`)",
+      "💰 제공자 선택과 비용 절약",
+      "✅ 승인 경계",
+    ]) assert.match(markdown, new RegExp(`^## ${escapeRegExp(heading)}$`, "mu"));
+    assert.doesNotMatch(markdown, /^## (?:IMAGE_GEN_MODE|Provider routing과 비용 절약)$/gmu);
+    assert.match(markdown, /\*\*API 키가 있어도 유료 사용 승인으로 보지 않습니다\.\*\*/u);
+    assert.match(markdown, /\*\*자동으로 유료 이미지 제공자로 전환하지 않습니다\.\*\*/u);
+    assert.match(markdown, /^\| \*\*`prompt-only`\*\* \| \*\*외부 호출 0회\.\*\*/mu);
+    assert.doesNotMatch(markdown, /^\| \*\*`(?:select|required|all)`\*\* \|/gmu, "only the safe default mode is emphasized");
+  }
+
+  assert.match(studioImages, /^## 권리 상태와 사용 중단$/mu);
+  assert.match(studioImages, /^## 도식과 삽화의 구분$/mu);
+  assert.match(careerImages, /^## Career 이미지 계획$/mu);
+  assert.match(careerImages, /^## 개인정보와 공정성$/mu);
+
+  const cutsceneEntryGuides = await Promise.all([
+    "guides/game-design-studio/installation.md",
+    "guides/game-design-studio/quick-start.md",
+    "guides/game-design-studio/workflow.md",
+    "guides/game-design-studio/faq.md",
+    "guides/game-design-studio/use-cases/README.md",
+    "guides/use-cases/README.md",
+    "guides/game-design-studio/skills/README.md",
+    "guides/game-design-studio/skills/design-cutscene-visual-preproduction.md",
+    "guides/prompt-templates/studio/design-cutscene-visual-preproduction.md",
+  ].map((relative) => readFile(path.join(root, relative), "utf8")));
+  for (const markdown of cutsceneEntryGuides) {
+    assert.doesNotMatch(markdown, /컷씬 비주얼 프리프로덕션|컷씬 이미지 프리프로덕션/u);
+  }
 });
 
 test("cutscene guide contracts reject reordered requests and unsafe generation wording", async () => {
@@ -369,10 +436,10 @@ test("cutscene Korean source keeps quick-rule boundaries and the runtime dispatc
     assert.match(source, /컷씬|style-master/u, `${files[index]}: meaningful cutscene source`);
   }
   const [howTo, skillGuide, catalog] = sources;
-  assert.match(howTo, /견적 초안은 미리 만들 수 있습니다[\s\S]*style-master.*current estimate.*이름을 기록한 실시간 승인[\s\S]*style-master.*선행 wave가 없/u);
-  assert.match(howTo, /style-master.*뒤의 wave[\s\S]*직전 모든 wave가 완료/u);
-  assert.match(howTo, /keyframes.*완료.*storyboard의 generation-ready binding과 유료 dispatch에만 필요/u);
-  assert.match(howTo, /storyboard의 기획·검토·견적 초안은 먼저 만들 수 있/u);
+  assert.match(howTo, /다음 단계의 기획과 비용 초안은 미리 만들 수 있습니다[\s\S]*style-master.*유효한 비용 계산.*이름을 기록한 실시간 승인[\s\S]*선행 단계가 없는 `style-master`/u);
+  assert.match(howTo, /style-master.*뒤의 단계[\s\S]*앞선 모든 단계가 완료/u);
+  assert.match(howTo, /keyframes.*완료.*스토리보드의 생성 준비 연결과 유료 생성에만 필요/u);
+  assert.match(howTo, /스토리보드 기획·검토·비용 초안은 먼저 만들 수 있/u);
   assert.match(skillGuide, /style-master.*current estimate.*이름 있는 실시간 승인[\s\S]*style-master.*선행 조건이 없/u);
   assert.match(skillGuide, /뒤의 wave.*모든 선행 wave 완료/u);
   assert.match(catalog, /paid dispatch.*current estimate.*named approval[\s\S]*style-master 뒤의 wave.*선행 wave 완료/u);

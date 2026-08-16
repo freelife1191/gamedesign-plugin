@@ -389,7 +389,7 @@ const readableSkillMetadata = new Map([
     ["apply-document-quality-profile", ["문서 품질 기준 적용", "문서 목적과 형식에 맞는 품질 기준을 고정하고 선택 기록을 만듭니다."]],
     ["archify", ["기획 구조 도식 만들기", "시스템 구성과 작업 흐름을 탐색 가능한 HTML 구조 도식으로 만듭니다."]],
     ["define-game-vision", ["게임 비전 정의", "대상 플레이어, 핵심 재미와 검증 기준을 정리해 게임 방향 원칙을 만듭니다."]],
-    ["design-cutscene-visual-preproduction", ["컷씬 비주얼 프리프로덕션", "컷씬 brief, shot, 프롬프트, 비용 승인과 연속성 검토를 순서대로 묶습니다."]],
+    ["design-cutscene-visual-preproduction", ["컷씬 장면·이미지 사전 설계", "컷씬 개요, 장면, 프롬프트, 비용 승인과 연속성 검토를 순서대로 묶습니다."]],
     ["design-game-content", ["게임 콘텐츠 설계", "퀘스트, 레벨, 조우와 캐릭터를 제작 가능한 콘텐츠 명세로 만듭니다."]],
     ["design-game-economy-and-liveops", ["경제와 라이브 운영 설계", "재화 흐름, 성장, 보상과 운영 결정을 경제 명세로 만듭니다."]],
     ["design-game-systems", ["게임 시스템 설계", "규칙, 상태, 우선순위, 예외와 데이터 관계를 시스템 명세로 만듭니다."]],
@@ -442,7 +442,7 @@ const readableSkillUsage = new Map([
     ["apply-document-quality-profile", "문서의 독자·형식·검토 기준을 먼저 고정할 때"],
     ["archify", "시스템 구성·작업 흐름을 탐색 가능한 HTML로 설명할 때"],
     ["define-game-vision", "대상 플레이어와 핵심 재미를 한 문장으로 정할 때"],
-    ["design-cutscene-visual-preproduction", "컷씬의 shot, 마스터 프롬프트, 파생 이미지와 연속성을 순서대로 준비할 때"],
+    ["design-cutscene-visual-preproduction", "컷씬의 장면, 마스터 프롬프트, 파생 이미지와 연속성을 순서대로 준비할 때"],
     ["design-game-content", "퀘스트·레벨·캐릭터의 선택과 결과를 설계할 때"],
     ["design-game-economy-and-liveops", "재화·보상·이벤트의 측정 기준을 정할 때"],
     ["design-game-systems", "규칙·상태·예외를 구현 가능한 기준으로 정리할 때"],
@@ -2242,6 +2242,85 @@ test("root README explains the plugin purpose, audience, evidence, and honest li
   for (const [label, mutated] of mutations) {
     assert.notEqual(mutated, readme, `${label}: mutation changes the README`);
     await assert.rejects(() => assertPluginIntroduction(mutated), undefined, label);
+  }
+});
+
+test("root README makes project memory, reference, glossary, image, and cutscene workflows easy to find", async () => {
+  const readme = await readFile(path.join(root, "README.md"), "utf8");
+  const introductionBlocks = [
+    "#### 🤝 두 제품이 함께 쓰는 기능\n\n두 제품에서는 **경쟁작·레퍼런스 분석**, **한국어·영어 용어 사전**, **프로젝트 기억** 기능을 모두 사용할 수 있습니다. LLM Wiki는 대화와 문서에서 다시 쓸 만한 정보를 모아 두고, 나중에 필요한 내용을 찾아 쓰는 지식 기록 방식입니다. 프로젝트 기억은 이 방식을 게임 기획 작업에 맞게 제한적으로 적용합니다.\n\n**모든 대화와 문서를 자동으로 저장하지 않습니다.** 출처와 적용 범위, 검토 시점, 사람의 승인 여부를 확인한 기록만 다음 작업에 활용합니다.",
+    "#### 🎬 Studio에서 준비하는 이미지\n\n**Game Design Studio**에는 컷씬 이미지 제작을 준비하는 전용 기능도 있습니다. 장면 구성, 마스터 이미지, 생성 순서와 검토 기준을 먼저 정한 뒤 이미지 제작으로 넘어갑니다. 일반 게임 이미지는 **프롬프트와 예상 비용을 먼저 확인한 후 생성합니다.** 완성된 결과는 사람이 검토합니다.",
+    "#### ✅ 요청과 검토 원칙\n\n원하는 작업을 평소 쓰는 말로 설명하면 플러그인이 요청 목적에 맞는 스킬과 검토 역할을 고릅니다. 상세 가이드의 스킬 ID와 실행 순서는 작업 흐름을 직접 조정할 때만 지정합니다. **결과물을 자동으로 승인하지는 않습니다.** 검토 담당자의 이름을 기록한 뒤, 그 담당자가 사실과 권리, 적용 범위를 확인해 승인하거나 보류합니다.",
+  ];
+  const assertFeatureFindability = (markdown) => {
+    const introduction = subsection(markdown, "🧩 어떤 플러그인인가요?");
+    assert.ok(
+      introduction.includes(introductionBlocks.join("\n\n")),
+      "plugin introduction separates and emphasizes shared capabilities, Studio image work, and review rules",
+    );
+    for (const phrase of [
+      "#### 🤝 두 제품이 함께 쓰는 기능",
+      "**경쟁작·레퍼런스 분석**, **한국어·영어 용어 사전**, **프로젝트 기억**",
+      "LLM Wiki는 대화와 문서에서 다시 쓸 만한 정보를 모아 두고, 나중에 필요한 내용을 찾아 쓰는 지식 기록 방식입니다",
+      "**모든 대화와 문서를 자동으로 저장하지 않습니다.**",
+      "#### 🎬 Studio에서 준비하는 이미지",
+      "일반 게임 이미지는 **프롬프트와 예상 비용을 먼저 확인한 후 생성합니다.**",
+      "#### ✅ 요청과 검토 원칙",
+      "**결과물을 자동으로 승인하지는 않습니다.**",
+      "검토 담당자의 이름을 기록한 뒤, 그 담당자가 사실과 권리, 적용 범위를 확인해 승인하거나 보류합니다",
+    ]) assert.ok(introduction.includes(phrase), `plugin introduction names the capability: ${phrase}`);
+
+    const routing = subsection(markdown, "⚙️ 짧게 요청해도 체계가 작동합니다");
+    assert.match(routing, /공통 스킬은 레퍼런스 분석, 용어 사전 관리와 프로젝트 기억을 담당합니다/u);
+    assert.match(routing, /컷씬 장면·이미지 사전 설계는 Studio 전용 스킬입니다/u);
+
+    const capabilities = subsection(markdown, "🛠️ 이 플러그인으로 할 수 있는 일");
+    for (const phrase of [
+      "게임 이미지 계획·프롬프트·생성·검토",
+      "guides/game-design-studio/image-assets.md",
+      "guides/game-design-career/image-assets.md",
+      "image_gen",
+      "gpt-image-2",
+    ]) assert.ok(capabilities.includes(phrase), `capability table exposes the game-image workflow: ${phrase}`);
+    for (const label of [
+      "이전 프로젝트 교훈 이어 쓰기",
+      "경쟁작·레퍼런스 분석과 용어 사전",
+      "게임 이미지 계획·프롬프트·생성·검토",
+      "컷씬 장면·프롬프트·이미지 준비",
+    ]) assert.match(capabilities, new RegExp(`^\\| \\*\\*${escapeRegExp(label)}\\*\\* \\|`, "mu"), `recent capability row is scannable: ${label}`);
+
+    const details = section(markdown, "상세 가이드에서 더 알아보기");
+    for (const target of [
+      "guides/game-design-studio/memory.md",
+      "guides/game-design-career/memory.md",
+      "guides/game-design-studio/reference-analysis.md",
+      "guides/game-design-career/reference-analysis.md",
+      "guides/game-design-studio/glossary.md",
+      "guides/game-design-career/glossary.md",
+      "guides/game-design-studio/cutscene-visual-preproduction.md",
+    ]) assert.ok(details.includes(`](${target})`), `detailed guide table links ${target}`);
+    assert.match(details, /컷씬 장면·이미지 사전 설계하기[^\n]*\*\*Studio 전용\*\*/u);
+    assert.doesNotMatch(markdown, /컷씬 비주얼 프리프로덕션/u, "root README explains the cutscene workflow in Korean");
+    assert.doesNotMatch(markdown, /컷씬(?:의)? (?:brief|shot)|serial wave|Prompt Only, Estimate Only, Generate After Approval/u, "root README keeps cutscene descriptions Korean-first");
+    for (const phrase of ["프롬프트만 준비", "비용만 확인", "승인 후 생성"]) {
+      assert.ok(capabilities.includes(phrase), `cutscene capability uses Korean-first mode wording: ${phrase}`);
+    }
+    assert.match(markdown, /^- \*\*`IMAGE_GEN_MODE=prompt-only`\*\*: 외부 호출 없이/mu);
+    assert.match(markdown, /컷씬 개요, 장면, 프롬프트와 단계별 생성 계획을 만듭니다/u);
+  };
+
+  assert.doesNotThrow(() => assertFeatureFindability(readme));
+  for (const [label, phrase] of [
+    ["missing shared capability block", introductionBlocks[0]],
+    ["missing Studio image block", introductionBlocks[1]],
+    ["missing request and review block", introductionBlocks[2]],
+    ["missing common-skill boundary", "공통 스킬은 레퍼런스 분석, 용어 사전 관리와 프로젝트 기억을 담당합니다"],
+    ["missing general image workflow", "게임 이미지 계획·프롬프트·생성·검토"],
+    ["missing detailed cutscene route", "[Studio 컷씬](guides/game-design-studio/cutscene-visual-preproduction.md)"],
+  ]) {
+    const mutated = readme.replace(phrase, "누락된 기능 안내");
+    assert.notEqual(mutated, readme, `${label}: mutation changes the README`);
+    assert.throws(() => assertFeatureFindability(mutated), undefined, label);
   }
 });
 

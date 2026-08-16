@@ -21,7 +21,7 @@ Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스
 | 단일 명세 | [스킬 워크벤치](use-cases/skill-workbench.md) | 상태·예외·UX·콘텐츠 중 하나의 검토 가능한 작업 초안 | [Studio FAQ](faq.md) |
 | 전체 프로젝트 | [새 게임 GDD 레시피](recipes/new-game-gdd.md) | 범위·검토 gate와 재개 조건이 있는 Studio Artifact | [결과물 카탈로그](../use-cases/output-catalog.md) |
 
-작은 실습과 단일 명세도 `content.md`와 근거를 남기며, 전체 프로젝트는 이를 대체하지 않고 범위와 사람 결정을 추가합니다. 최소·선택·확장 결과와 Studio → Career handoff는 [결과물 카탈로그](../use-cases/output-catalog.md)에서 확인합니다.
+작은 실습과 단일 명세도 `content.md`와 근거를 남기며, 전체 프로젝트는 이를 대체하지 않고 범위와 사람 결정을 추가합니다. 최소·선택·확장 결과와 Studio → Career 인계는 [결과물 카탈로그](../use-cases/output-catalog.md)에서 확인합니다.
 
 ---
 
@@ -33,7 +33,7 @@ Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스
 | --- | --- | --- |
 | 기획 입문 학생 | [역량 사례](use-cases/competency-paths.md) | 작게 검증할 플레이 경험의 약속, 플레이 흐름 또는 규칙 초안 |
 | 솔로·인디 개발자 | [콘셉트 사례](use-cases/concept-scenarios.md) | 제약·scope·prototype 질문이 있는 설계 경로 |
-| 현업 기획자 | [스킬 워크벤치](use-cases/skill-workbench.md) | 특정 작업의 입력, 결과와 다음 handoff |
+| 현업 기획자 | [스킬 워크벤치](use-cases/skill-workbench.md) | 특정 작업의 입력, 결과와 다음 인계 |
 | 팀 리드·교육자·멘토 | [역량 사례](use-cases/competency-paths.md)와 [Studio FAQ](faq.md) | 검토 기준, 사람 결정과 재개 질문 |
 
 ### 직접 호출 또는 오케스트레이션
@@ -61,7 +61,7 @@ Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스
 - [프로젝트 기억](memory.md): 승인된 설계 교훈의 로컬 보관, 요청별 제외와 후보 관리 방법을 확인합니다.
 - [경쟁작·레퍼런스 분석](reference-analysis.md): 관찰 근거로 시스템을 비교하고 adopt·adapt·reject·hold 제안을 사람에게 검토받습니다.
 - [용어 사전 검토](glossary.md): 후보 용어를 사람 승인과 스냅샷에 묶고 원문 자동 치환을 막습니다.
-- [컷씬 비주얼 프리프로덕션](cutscene-visual-preproduction.md): shot, 프롬프트, wave별 비용·승인과 continuity gate를 분리합니다.
+- [컷씬 장면·이미지 사전 설계](cutscene-visual-preproduction.md): 장면, 프롬프트, 단계별 비용·승인과 연속성 검토를 나눕니다.
 - [Studio FAQ](faq.md): 현재 막힌 질문의 실행 요청과 관련 사례를 찾습니다.
 - [공통 결과물 카탈로그](../use-cases/output-catalog.md): 최소·선택·확장 결과와 Canonical Artifact 읽는 순서를 확인합니다.
 - [요청문 템플릿 허브](../prompt-templates/README.md): 사용자 유형·난이도별 요청과 예상 결과를 비교합니다.
@@ -77,7 +77,7 @@ Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스
 4. [목적별 레시피](#목적별-레시피) 하나를 선택합니다.
 5. [전체 워크플로](workflow.md)에서 현재 단계와 다음 사람 결정을 확인합니다.
 6. [이미지 자산](image-assets.md)에서 image slot과 사람 승인 경계를 계획합니다.
-7. 컷씬 이미지가 필요하면 [컷씬 비주얼 프리프로덕션](cutscene-visual-preproduction.md)에서 Prompt Only, Estimate Only, Generate After Approval 순서를 확인합니다.
+7. 컷씬 이미지가 필요하면 [컷씬 장면·이미지 사전 설계](cutscene-visual-preproduction.md)에서 **프롬프트만 준비**, **비용만 확인**, **승인 후 생성** 순서를 확인합니다.
 8. [시각화](visualization.md)에서 Skillstead SVG와 PNG 검증을 준비합니다.
 9. [MD·PDF·DOCX·PPTX 내보내기](exports.md)에서 필요한 형식만 준비합니다.
 10. 막히면 [문제 해결](troubleshooting.md)에서 보존된 결과로 재개합니다.
@@ -112,7 +112,7 @@ Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스
 - [프로젝트 기억](memory.md)
 - [경쟁작·레퍼런스 분석](reference-analysis.md)
 - [용어 사전 검토](glossary.md)
-- [컷씬 비주얼 프리프로덕션](cutscene-visual-preproduction.md)
+- [컷씬 장면·이미지 사전 설계](cutscene-visual-preproduction.md)
 - [문제 해결](troubleshooting.md)
 
 전체 레퍼런스:
@@ -124,7 +124,7 @@ Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스
 - [시각화](visualization.md)
 - [MD·PDF·DOCX·PPTX 내보내기](exports.md)
 
-각 스킬 ID는 [스킬 24개](skills/README.md)에서 해당 상세 가이드로 직접 연결됩니다. 컷씬 전용 순서는 [컷씬 비주얼 프리프로덕션](cutscene-visual-preproduction.md)에서 확인합니다. 각 템플릿의 용도와 복사 가능한 요청문은 [템플릿 15개](templates.md)에 있습니다.
+각 스킬 ID는 [스킬 24개](skills/README.md)에서 해당 상세 가이드로 직접 연결됩니다. 컷씬 전용 순서는 [컷씬 장면·이미지 사전 설계](cutscene-visual-preproduction.md)에서 확인합니다. 각 템플릿의 용도와 복사 가능한 요청문은 [템플릿 15개](templates.md)에 있습니다.
 
 ---
 

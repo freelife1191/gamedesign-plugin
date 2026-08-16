@@ -354,6 +354,6 @@ Studio의 사례·스킬·템플릿을 선택할 때 자주 생기는 질문입�
 
 **예상 결과:** `cutscene-brief`, `cutscene-shot-package`, `cutscene-prompt-package`, `cutscene-cost-estimate`, `cutscene-continuity-review`와 각 wave의 stable ID·비용 상태·승인 경계를 남깁니다.
 
-**관련 사례·스킬·템플릿:** [ST-C05](use-cases/competency-paths.md#st-c05-콘텐츠내러티브퀘스트npc), [ST-S16 직접 호출 흐름](skills/design-cutscene-visual-preproduction.md#직접-호출-활용-design-cutscene-visual-preproduction), [컷씬 비주얼 프리프로덕션](cutscene-visual-preproduction.md), [`design-cutscene-visual-preproduction`](skills/design-cutscene-visual-preproduction.md), 템플릿 `cutscene-visual-preproduction`을 함께 사용합니다.
+**관련 사례·스킬·템플릿:** [ST-C05](use-cases/competency-paths.md#st-c05-콘텐츠내러티브퀘스트npc), [ST-S16 직접 호출 흐름](skills/design-cutscene-visual-preproduction.md#직접-호출-활용-design-cutscene-visual-preproduction), [컷씬 장면·이미지 사전 설계](cutscene-visual-preproduction.md), [`design-cutscene-visual-preproduction`](skills/design-cutscene-visual-preproduction.md), 템플릿 `cutscene-visual-preproduction`을 함께 사용합니다.
 
 **안전·근거·승인:** 이전 승인·포괄 승인은 자동 승인으로 쓰지 않고, 사람의 이름 있는 실시간 승인을 현재 estimate·pricing snapshot·request schedule에 묶습니다. provider 실패 뒤에는 성공 asset·receipt와 terminal 결과를 보존하고, 같은 current full-wave estimate와 retryReserve가 확인된 최신 retryable stable ID에서만 재개합니다.
