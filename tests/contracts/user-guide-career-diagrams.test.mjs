@@ -536,7 +536,7 @@ test("Career recipe rejects every product SKILL Output and Completion source mut
 
 test("Career manifest keeps unique global IDs and exactly six complete Career diagram pairs", async () => {
   const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
-  assert.equal(manifest.diagrams.length, 91, "global diagram count");
+  assert.equal(manifest.diagrams.length, 93, "global diagram count");
   assert.equal(new Set(manifest.diagrams.map(({ id }) => id)).size, manifest.diagrams.length, "global diagram IDs must be unique");
   const career = manifest.diagrams.filter(({ scope }) => scope === "game-design-career");
   assert.equal(career.length, 6, "Career diagram count");

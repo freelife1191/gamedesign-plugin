@@ -2021,11 +2021,11 @@ test("complete aggregate guide validation composes the production use-case cover
 
   assert.equal(result.ok, true, result.errors.join("\n"));
   assert.deepEqual(result.counts, {
-    guides: 157,
+    guides: 158,
     skillGuides: 47,
     templates: 30,
-    svg: 91,
-    png: 91,
+    svg: 93,
+    png: 93,
     audiencePaths: 6,
     useCases: 36,
     skillCases: 31,
@@ -2046,10 +2046,10 @@ test("production diagram manifest keeps the exact complete scope inventory", asy
     "game-design-career-skill",
   ].map((scope) => [scope, manifest.diagrams.filter((diagram) => diagram.scope === scope).length]));
 
-  assert.equal(manifest.diagrams.length, 91);
-  assert.equal(new Set(manifest.diagrams.map(({ id }) => id)).size, 91);
+  assert.equal(manifest.diagrams.length, 93);
+  assert.equal(new Set(manifest.diagrams.map(({ id }) => id)).size, 93);
   assert.deepEqual(scopeCounts, {
-    shared: 6,
+    shared: 8,
     "game-design-studio": 6,
     "game-design-career": 6,
     "use-case-audience": 6,
@@ -3348,7 +3348,8 @@ test("Career FAQ exactly follows routing metadata and rejects exhaustive contrac
     }
     const caseTarget = `${contract.case.path}#${contract.case.anchor}`;
     assert.throws(() => assertCareerFaq(markdown.replace(recovery, recovery.replace(caseTarget, `${contract.case.path}#missing-anchor`))), /canonical case link/, `${answer.heading} case-anchor mutation`);
-    assert.throws(() => assertCareerFaq(markdown.replace(recovery, recovery.replace(contract.skillPath, "skills/not-installed.md"))), /canonical skill link/, `${answer.heading} skill-link mutation`);
+    const exactSkillLink = `](${contract.skillPath})`;
+    assert.throws(() => assertCareerFaq(markdown.replace(recovery, recovery.replace(exactSkillLink, "](skills/not-installed.md)"))), /canonical skill link/, `${answer.heading} skill-link mutation`);
     assert.throws(() => assertCareerFaq(markdown.replace(recovery, recovery.replace(contract.recipePath, "recipes/not-installed.md"))), /canonical recipe link/, `${answer.heading} recipe-link mutation`);
     for (const token of contract.recovery.sequence) {
       assert.throws(() => assertCareerFaq(markdown.replace(recovery, recovery.replace(token, ""))), /canonical recovery sequence|canonical recovery owner/, `${answer.heading} recovery token mutation: ${token}`);

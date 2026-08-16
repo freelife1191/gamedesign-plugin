@@ -4,6 +4,10 @@
 
 공통 저장 계층과 설정은 [프로젝트 기억 공통 가이드](../project-memory.md)에서 확인하세요. [프로젝트 기억 수명주기 Archify 도식](../assets/archify/suite/suite-project-memory-lifecycle.html)은 설정, 승인 기록 조회, 후보와 사람 결정이 다음 작업으로 이어지는 순서를 보여 줍니다.
 
+[![설정 확인부터 승인된 프로젝트 기억 재사용까지 이어지는 흐름](../assets/shared/project-memory-reuse-flow.png)](../assets/shared/project-memory-reuse-flow.svg)
+
+정적 도식은 Career 영역에서 승인 기록을 조회하고, 맞지 않는 기록을 제외하며, 새 교훈을 사람 검토로 넘기는 순서를 간단히 보여 줍니다.
+
 ## 어떤 기록을 기억하는가
 
 반복해서 적용할 학습 방식, 검토에서 확인한 포트폴리오 제약, 면접 피드백과 사용자가 명시한 문서 작성 선호를 기록할 수 있습니다. 역할 탐색·공고 조사·역기획·포트폴리오·면접·성장 작업은 Career 영역(`career`)에서, Studio 결과의 사실과 공개 범위처럼 두 제품이 함께 써야 하는 결정만 공통 영역(`common`)에서 다룹니다.

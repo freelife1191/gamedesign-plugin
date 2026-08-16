@@ -43,6 +43,10 @@ IMAGE_QUALITY=low
 - 유료 생성은 초안·스토리보드·variant 대부분을 `low`로 만듭니다. `medium`은 마스터 키 이미지나 고화질 필요가 확인된 결과에만, `high`는 영상용 핵심 프레임이나 게임 원화처럼 예외적으로 필요한 경우에만 추가 비용과 이유를 알리고 승인받아 사용합니다.
 - API key, authorization, base64와 raw image bytes는 public 결과나 log에 남기지 않습니다.
 
+[![image_gen부터 유료 생성 승인까지 이어지는 이미지 제작 흐름](../assets/shared/image-provider-cost-routing.png)](../assets/shared/image-provider-cost-routing.svg)
+
+도식은 `prompt-only`, 무료 우선 생성, 유료 전환 제안과 승인 후 생성 경계를 함께 보여 줍니다.
+
 ## 계획과 생성
 
 `plan-image-assets`는 profile slot, explicit count, stable source ID, placement, alt text, dimensions와 preserve/exclude를 manifest에 기록합니다. `generate-image-assets`는 mode와 immutable receipt가 허용한 finite jobs만 실행하고 generation/provenance와 approval state를 분리합니다. 부분 성공이나 policy block도 asset별 상태로 남깁니다.

@@ -44,7 +44,9 @@ AI가 작업 결과에서 찾은 교훈은 검토 대기 후보까지만 기록�
 6. 재사용할 가치가 있는 새 교훈은 검토 대기 후보로 제안합니다.
 7. 이름이 확인된 사람이 후보를 승인·거부·폐기하면 새 결정 사건을 기억 원본에 추가합니다.
 
-[프로젝트 기억을 저장하고 다시 쓰는 Archify 흐름](assets/archify/suite/suite-project-memory-lifecycle.html)에서 설정, 조회, 검증, 후보와 사람 승인 사이의 연결을 확인할 수 있습니다.
+[![설정 확인부터 승인된 프로젝트 기억 재사용까지 이어지는 흐름](assets/shared/project-memory-reuse-flow.png)](assets/shared/project-memory-reuse-flow.svg)
+
+위 정적 도식은 기억을 사용하지 않는 분기와 사람 결정까지 빠르게 보여 줍니다. [프로젝트 기억을 저장하고 다시 쓰는 Archify 흐름](assets/archify/suite/suite-project-memory-lifecycle.html)에서는 설정, 조회, 검증, 후보와 사람 승인 사이의 연결을 단계별로 살펴볼 수 있습니다.
 
 ## 기록하지 않거나 적용하지 않는 내용
 

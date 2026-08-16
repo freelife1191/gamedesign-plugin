@@ -1354,7 +1354,7 @@ async function validateDiagramManifest(repoRoot, errors, counts, useCases) {
       + useCases.counts.careerCases
       + useCases.counts.studioSkillCases
       + useCases.counts.careerSkillCases;
-    const expectedDiagramTotal = 18 + registered;
+    const expectedDiagramTotal = 20 + registered;
     if (diagrams.length !== expectedDiagramTotal) {
       errors.push(`diagram manifest must contain exactly ${expectedDiagramTotal} entries, found ${diagrams.length}`);
     }

@@ -1,11 +1,11 @@
 # 공통 Skillstead 시각 품질 검사
 
-상태: **검증됨** — 2026-08-06에 Studio product wrapper로 lint, Chromium render, 두 단계 픽셀 검사를 완료했습니다. SVG가 편집 가능한 원본이고 PNG는 후처리하지 않은 Chromium 2× 파생물입니다.
+상태: **검증됨** — 2026-08-16에 Studio product wrapper로 lint, Chromium render, 두 단계 픽셀 검사를 완료했습니다. SVG가 편집 가능한 원본이고 PNG는 후처리하지 않은 Chromium 2× 파생물입니다.
 
 ## 렌더러와 공통 검사
 
 - 실행 파일: `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`
-- 버전: `Google Chrome 151.0.7922.76`
+- 버전: `Google Chrome 151.0.7922.138`
 - wrapper: `products/game-design-studio/plugin/skills/visualize-game-design/scripts/run-skillstead.mjs`
 - lint: `node .../run-skillstead.mjs lint guides/assets/shared/*.svg` — 오류 0건, 경고 0건
 - render: `node .../run-skillstead.mjs render guides/assets/shared/<id>.svg guides/assets/shared/<id>.png`
@@ -19,10 +19,12 @@
 | `app-cli-install-flow` | App/CLI 두 lane이 명확히 분리됨 | pill·카드·명령 label의 clipping/overflow 없음 | 각 lane이 좌→우; 36px shaft와 head, 12px gap | 두 installation guide의 App 새 채팅·CLI 새 세션을 반영 |
 | `canonical-artifact-lifecycle` | 작성→검토→사람 결정과 하단 결과가 한 화면에 보임 | gate pill, 상태 문구, 하단 strip containment 정상 | 좌→우 승인 흐름 뒤 하향 arrow; shaft/head 접합 정상, endpoint `y=664`에서 target `y=676`까지 12px gap | Studio/Career workflow의 Canonical Artifact·전문 검토·사람 결정을 반영 |
 | `image-generation-mode-routing` | `생성 요청?` decision에서 no/default와 yes 분기가 즉시 구분됨 | 모든 mode glyph 정상, 카드·merge/footer strip overflow 없음 | yes는 bus center `x=880, y=375`로 연결되고 `select`/`required`/`all` center `x=640/880/1120`에 33px branch와 12px target gap으로 동등 분기; 네 결과가 하단 공통 경계로 merge됨 | 두 image-assets guide의 `prompt-only`, `select`, `required`, `all`, selection receipt 및 manifest 경계를 반영 |
+| `image-provider-cost-routing` | 한글 여부와 무료 결과 검토에서 무료·유료 경로가 분명히 갈림 | 한글·영문 model/quality 글리프, 카드와 승인 pill의 clipping·overflow 없음 | prompt-only 하향 분기와 image_gen→결과 확인 경로를 분리하고, 한글 필요·반복 실패만 유료 제안과 사람 승인으로 연결 | 두 image-assets guide의 image_gen 우선, gpt-image-2 사용 제안, low 기본·medium 선택·high 예외와 승인 전 유료 호출 0회 경계를 반영 |
 | `image-asset-lifecycle` | draft→review→approved→후속 review가 명확함 | reviewer pill·status·하단 strip 모두 containment 정상 | 좌→우 및 하향 단계; shaft/head 정상, endpoint `y=648`에서 target `y=660`까지 12px gap | 두 image-assets guide의 `concept-draft`, `document-approved`, `production-candidate` 및 named human review를 반영 |
 | `document-export-flow` | preflight, 공통 상태 rail, MD/PDF/DOCX/PPTX 형식별 검증이 즉시 구분됨 | status pill·형식 label 모두 clipping/overflow 없음 | 공통 상태 arrow tip `y=488`→panel top `y=500`는 12px gap; panel bus `y=540`에서 네 card top `y=590`까지 endpoint `y=578`의 38px branch와 12px target gap으로 연속 분배 | 두 exports guide의 모든 공통 상태 `not-requested`/`blocked`/`pending`/`unavailable`과 MD canonical text, PDF page QA, DOCX OOXML QA, PPTX story/slide QA를 반영 |
+| `project-memory-reuse-flow` | 설정→조회→재검증→현재 작업 참고→후보 검토의 주 경로와 비활성·제외 분기가 구분됨 | `.env`, 경로, Studio·Career 글리프와 모든 카드의 containment 정상 | 승인 기록만 주 경로로 보내고 비활성·오류와 부적합 기록은 하향 분기; 사람 결정 뒤 로컬 기록에서 다음 요청 조회로 되먹임 | 프로젝트 기억 가이드의 LLM Wiki 제한, 출처·범위 재검증, 사람 승인, `.game-design/memory/` 추가 전용 기록과 자동 전송 없음 경계를 반영 |
 
-초기 lint 경고 하나(`plugin-selection-flow`의 `공통 marketplace 설치` text overflow 추정)는 label을 `marketplace 설치`로 줄인 뒤 재-lint하여 경고 0건으로 해소했습니다. Fix round 1에서는 전체 SVG를 다시 lint/render하고 모든 PNG를 두 단계로 재검사했습니다. Fix round 2에서는 영향을 받은 두 PNG를 canonical Chrome으로 재렌더하고 high/original 두 단계에서 bus·branch·target gap과 canvas containment를 재확인했습니다.
+초기 lint 경고 하나(`plugin-selection-flow`의 `공통 marketplace 설치` text overflow 추정)는 label을 `marketplace 설치`로 줄인 뒤 재-lint하여 경고 0건으로 해소했습니다. Fix round 1에서는 전체 SVG를 다시 lint/render하고 모든 PNG를 두 단계로 재검사했습니다. Fix round 2에서는 영향을 받은 두 PNG를 canonical Chrome으로 재렌더하고 high/original 두 단계에서 bus·branch·target gap과 canvas containment를 재확인했습니다. 2026-08-16에는 새 이미지 제공자·비용 경로와 프로젝트 기억 재사용 흐름을 원본 해상도로 확인했으며, 첫 렌더에서 붐비던 분기 레이블과 화살표 끝점을 정리한 뒤 오류·경고 0건으로 다시 렌더했습니다.
 
 ## Studio recipe 도식 검사 — 2026-08-06
 

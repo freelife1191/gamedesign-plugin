@@ -45,6 +45,10 @@ label, position, inferred intent, agent selection과 arbitrary JSON은 `select` 
 - 유료 품질은 `low`가 기본입니다. `medium`은 선택된 마스터·키 이미지에만, `high`는 영상용 핵심 프레임이나 게임 원화처럼 예외적으로 필요한 경우에만 비용과 이유를 확인한 뒤 사용합니다.
 - API key, authorization, base64, raw image bytes와 private config는 public 결과나 log에 노출하지 않습니다.
 
+[![image_gen부터 유료 생성 승인까지 이어지는 이미지 제작 흐름](../assets/shared/image-provider-cost-routing.png)](../assets/shared/image-provider-cost-routing.svg)
+
+도식은 `prompt-only`, 무료 우선 생성, 유료 전환 제안과 승인 후 생성 경계를 함께 보여 줍니다.
+
 ## Career planning
 
 portfolio proof, recruiter presentation, 역기획 evidence와 roadmap에 이미지를 쓸 때 target role/level과 source section을 연결합니다. current evidence를 이미지가 대신하지 못하며 실제 project·employer identity를 prompt에 유출하지 않습니다. 사실·추론·제안과 검색일·지역·표본 boundary는 canonical artifact가 authority입니다.

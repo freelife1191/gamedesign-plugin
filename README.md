@@ -107,6 +107,10 @@ Studio에는 제품 스킬 16개와 공통 스킬 8개, 설치 스킬 24개가 �
 
 기본 설정은 외부 호출이 없는 `prompt-only`이고, 생성할 때도 `IMAGE_PROVIDER=codex-first`로 Codex의 호스트 `image_gen`을 먼저 사용합니다. API key가 있어도 유료 호출 승인으로 간주하지 않습니다. 호스트 결과가 만족스럽지 않거나 반복 실패하면 결과를 보존한 뒤 비용과 품질을 알려 주고 `gpt-image-2` 전환을 제안하며, 사용자가 명시적으로 승인한 경우에만 실행합니다. 이미지 픽셀 안에 한글 문자가 반드시 들어가야 할 때는 `IMAGE_EMBEDDED_TEXT_LOCALE=ko-KR`과 `gpt-image-2`를 사용합니다. 생성 중 일부가 실패해도 작성한 프롬프트, 성공한 파일과 재개 지점은 남습니다. 생성된 이미지는 모두 검토 전 초안으로 시작합니다. 검토 담당자가 문서 안에서의 쓰임, 읽기 쉬움, 대체 텍스트, 출처, 권리와 사용 범위를 확인해 승인해야 최종 MD·PDF·DOCX·PPTX에 넣을 수 있습니다.
 
+[![image_gen부터 유료 생성 승인까지 이어지는 이미지 제작 흐름](guides/assets/shared/image-provider-cost-routing.png)](guides/assets/shared/image-provider-cost-routing.svg)
+
+이미지를 누르면 무료 경로, 유료 전환 제안, 품질 선택과 사람 승인 경계를 담은 편집 가능한 SVG가 열립니다.
+
 ### 💬 처음에는 이렇게 물어보세요
 
 스킬 이름이나 사례 번호를 몰라도 됩니다. 가진 자료와 원하는 결과를 한 문장으로 말하세요. 모르는 항목은 `미정`이라고 적으면 됩니다.
@@ -181,6 +185,10 @@ Studio에서 검토한 전투 시스템 기획을 Career 포트폴리오 사례�
 기억 후보를 보여줘.
 이 교훈은 앞으로 이 프로젝트에 적용해.
 ```
+
+[![설정 확인부터 승인된 프로젝트 기억 재사용까지 이어지는 흐름](guides/assets/shared/project-memory-reuse-flow.png)](guides/assets/shared/project-memory-reuse-flow.svg)
+
+이미지를 누르면 기억을 사용하지 않는 분기, 제외 이유 기록, 사람 결정과 다음 요청 재사용까지 담은 편집 가능한 SVG가 열립니다.
 
 [프로젝트 기억 공통 가이드](guides/project-memory.md)는 LLM Wiki와의 차이, 저장 계층, 설정과 이전 기록 재사용 순서를 설명합니다. 제품별 범위와 후보 관리 방법은 [Studio 프로젝트 기억](guides/game-design-studio/memory.md)과 [Career 프로젝트 기억](guides/game-design-career/memory.md)에서 확인하세요.
 

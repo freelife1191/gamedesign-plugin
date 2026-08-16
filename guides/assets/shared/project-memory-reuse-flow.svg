@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900" role="img" aria-labelledby="title desc" style="font-family:Pretendard,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif">
+  <title id="title">승인된 프로젝트 기억만 다음 작업에 참고합니다</title>
+  <desc id="desc">LLM Wiki의 장기 축적 원리를 로컬 프로젝트 기억으로 제한해 사용합니다. 환경 설정과 프로젝트를 확인하고 승인 기록을 조회한 뒤 출처, 범위, 만료, 충돌을 다시 검사합니다. 새 교훈은 검토 후보로 남기며, 사람이 승인한 기록만 다음 요청에서 다시 조회합니다.</desc>
+  <style>
+    svg{--bg:#FFFFFF;--ink:#1F2733;--muted:#5B6675;--hair:#D6E0EC;--blue:#1F6FB2;--blue-fill:#E8F1FB;--violet:#534AB7;--violet-fill:#ECEBFB;--green:#0F7A5F;--green-fill:#E7F5EF;--amber:#A86700;--amber-fill:#FFF3DF;--rose:#A52B5D;--rose-fill:#FCECF3}.title{fill:var(--ink);font-weight:700}.body{fill:var(--muted)}.card-title{font-weight:700}.line{fill:none;stroke:#5B6675;stroke-width:2.5}.feedback{fill:none;stroke:var(--blue);stroke-width:2.5;stroke-dasharray:8 7}.failopen{fill:none;stroke:var(--amber);stroke-width:2.5;stroke-dasharray:7 6}.on-accent{fill:#FFFFFF}
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="11.25" markerHeight="11.25" markerUnits="userSpaceOnUse" orient="auto"><path d="M2 2 L10 6 L2 10" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow-blue" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="11.25" markerHeight="11.25" markerUnits="userSpaceOnUse" orient="auto"><path d="M2 2 L10 6 L2 10" fill="none" stroke="#1F6FB2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow-amber" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="11.25" markerHeight="11.25" markerUnits="userSpaceOnUse" orient="auto"><path d="M2 2 L10 6 L2 10" fill="none" stroke="#A86700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  </defs>
+  <rect width="1400" height="900" fill="var(--bg)"/>
+  <rect x="40" y="48" width="6" height="72" rx="3" fill="var(--green)"/>
+  <text x="70" y="74" class="title" font-size="42">승인된 프로젝트 기억만 다음 작업에 참고합니다</text>
+  <text x="70" y="110" class="body" font-size="20">LLM Wiki 원리를 로컬 기록과 사람 승인 안에서 제한적으로 사용합니다.</text>
+  <rect x="40" y="168" width="1320" height="664" rx="20" fill="#F4F8FC" stroke="var(--hair)"/>
+
+  <path class="line" data-flow-edge="config-to-approved" data-from="memory-config" data-to="approved-memory" d="M288 348H316" marker-end="url(#arrow)"/>
+  <path class="line" data-flow-edge="approved-to-validation" data-from="approved-memory" data-to="memory-validation" d="M536 348H564" marker-end="url(#arrow)"/>
+  <path class="line" data-flow-edge="validation-to-work" data-from="memory-validation" data-to="current-work" d="M784 348H812" marker-end="url(#arrow)"/>
+  <path class="line" data-flow-edge="work-to-candidate" data-from="current-work" data-to="memory-candidate" d="M1032 348H1060" marker-end="url(#arrow)"/>
+  <path class="failopen" data-flow-edge="memory-disabled" data-from="memory-config" data-to="memory-free-work" stroke-dasharray="7 6" d="M184 446V548" marker-end="url(#arrow-amber)"/>
+  <path class="failopen" data-flow-edge="validation-excluded" data-from="memory-validation" data-to="memory-exclusion" stroke-dasharray="7 6" d="M680 446V548" marker-end="url(#arrow-amber)"/>
+  <path class="line" data-flow-edge="candidate-to-decision" data-from="memory-candidate" data-to="memory-decision" d="M1176 446V488H912V548" marker-end="url(#arrow)"/>
+  <path class="line" data-flow-edge="decision-to-local-event" data-from="memory-decision" data-to="local-memory-event" d="M1016 632H1044" marker-end="url(#arrow)"/>
+  <path class="feedback" data-flow-edge="approved-memory-reuse" data-from="local-memory-event" data-to="approved-memory" stroke-dasharray="8 7" d="M1176 716V768H432V458" marker-end="url(#arrow-blue)"/>
+
+  <text x="214" y="520" fill="var(--amber)" font-size="16">비활성화·오류</text>
+  <text x="710" y="520" fill="var(--amber)" font-size="16">맞지 않음</text>
+  <text x="756" y="790" fill="var(--blue)" font-size="16" text-anchor="middle">다음 요청에서 다시 조회</text>
+
+  <g data-flow-node="memory-config" aria-label="읽기 순서 1: 설정과 프로젝트 확인">
+    <rect x="80" y="250" width="208" height="196" rx="14" fill="var(--blue-fill)" stroke="var(--blue)" stroke-width="2"/>
+    <text x="184" y="306" class="card-title" fill="#124267" font-size="20" text-anchor="middle">설정·프로젝트 확인</text>
+    <text x="184" y="344" class="body" font-size="11" text-anchor="middle">GAME_DESIGN_MEMORY_ENABLED</text>
+    <text x="184" y="376" class="body" font-size="16" text-anchor="middle">.env · project ID</text>
+    <text x="184" y="404" class="body" font-size="16" text-anchor="middle">제품 영역</text>
+  </g>
+  <g data-flow-node="approved-memory" aria-label="읽기 순서 2: 승인 기록 조회">
+    <rect x="328" y="250" width="208" height="196" rx="14" fill="var(--violet-fill)" stroke="var(--violet)" stroke-width="2"/>
+    <text x="432" y="320" class="card-title" fill="#3C3489" font-size="23" text-anchor="middle">승인 기록 조회</text>
+    <text x="432" y="360" class="body" font-size="16" text-anchor="middle">현재 요청과 관련된</text>
+    <text x="432" y="390" class="body" font-size="16" text-anchor="middle">승인 상태만 선택</text>
+  </g>
+  <g data-flow-node="memory-validation" aria-label="읽기 순서 3: 출처 범위 만료 충돌 확인">
+    <rect x="576" y="250" width="208" height="196" rx="14" fill="var(--amber-fill)" stroke="var(--amber)" stroke-width="2"/>
+    <text x="680" y="306" class="card-title" fill="#814600" font-size="20" text-anchor="middle">출처·범위 다시 확인</text>
+    <text x="680" y="348" class="body" font-size="16" text-anchor="middle">만료·충돌·손상 제외</text>
+    <text x="680" y="380" class="body" font-size="16" text-anchor="middle">제외 이유도 기록</text>
+  </g>
+  <g data-flow-node="current-work" aria-label="읽기 순서 4: 현재 작업에 참고">
+    <rect x="824" y="250" width="208" height="196" rx="14" fill="var(--green-fill)" stroke="var(--green)" stroke-width="2"/>
+    <text x="928" y="320" class="card-title" fill="#085041" font-size="23" text-anchor="middle">현재 작업에 참고</text>
+    <text x="928" y="360" class="body" font-size="16" text-anchor="middle">Studio·Career 범위 유지</text>
+    <text x="928" y="388" class="body" font-size="16" text-anchor="middle">근거를 대신하지 않음</text>
+    <text x="928" y="416" class="body" font-size="16" text-anchor="middle">사람 판단은 별도</text>
+  </g>
+  <g data-flow-node="memory-candidate" aria-label="읽기 순서 5: 새 교훈은 검토 후보">
+    <rect x="1072" y="250" width="208" height="196" rx="14" fill="#FFFFFF" stroke="#697587" stroke-width="2"/>
+    <text x="1176" y="320" class="card-title" fill="#455264" font-size="20" text-anchor="middle">새 교훈은 검토 후보</text>
+    <text x="1176" y="360" class="body" font-size="16" text-anchor="middle">출처와 적용·제외 조건</text>
+    <text x="1176" y="386" class="body" font-size="16" text-anchor="middle">검토 전에는</text>
+    <text x="1176" y="414" class="body" font-size="16" text-anchor="middle">재사용하지 않음</text>
+  </g>
+  <g data-flow-node="memory-free-work" aria-label="분기: 기억 없이 작업">
+    <rect x="80" y="560" width="208" height="144" rx="14" fill="#FFFFFF" stroke="var(--amber)" stroke-width="2"/>
+    <text x="184" y="616" class="card-title" fill="#814600" font-size="22" text-anchor="middle">기억 없이 작업</text>
+    <text x="184" y="656" class="body" font-size="16" text-anchor="middle">기존 기획 흐름은 계속</text>
+  </g>
+  <g data-flow-node="memory-exclusion" aria-label="분기: 제외 이유 기록">
+    <rect x="576" y="560" width="208" height="144" rx="14" fill="#FFFFFF" stroke="var(--amber)" stroke-width="2"/>
+    <text x="680" y="616" class="card-title" fill="#814600" font-size="22" text-anchor="middle">제외 이유 기록</text>
+    <text x="680" y="650" class="body" font-size="16" text-anchor="middle">현재 작업에는</text>
+    <text x="680" y="678" class="body" font-size="16" text-anchor="middle">적용하지 않음</text>
+  </g>
+  <g data-flow-node="memory-decision" data-human-gate="이름이 확인된 사람" data-gate-role="memory-decision" aria-label="읽기 순서 6: 사람이 승인 거부 폐기 결정">
+    <rect x="808" y="560" width="208" height="144" rx="14" fill="var(--rose-fill)" stroke="var(--rose)" stroke-width="2"/>
+    <rect x="832" y="576" width="160" height="30" rx="15" fill="var(--rose)"/>
+    <text x="912" y="591" class="on-accent" font-size="14" text-anchor="middle" dominant-baseline="central">이름이 확인된 사람</text>
+    <text x="912" y="636" class="card-title" fill="#7A1942" font-size="22" text-anchor="middle">승인·거부·폐기</text>
+    <text x="912" y="672" class="body" font-size="15" text-anchor="middle">결정 이유와 시점 기록</text>
+  </g>
+  <g data-flow-node="local-memory-event" aria-label="읽기 순서 7: 로컬 기억 사건 추가">
+    <rect x="1056" y="560" width="240" height="156" rx="14" fill="var(--green-fill)" stroke="var(--green)" stroke-width="2"/>
+    <text x="1176" y="610" class="card-title" fill="#085041" font-size="22" text-anchor="middle">로컬 기록 추가</text>
+    <text x="1176" y="650" class="body" font-size="16" text-anchor="middle">.game-design/memory/</text>
+    <text x="1176" y="680" class="body" font-size="15" text-anchor="middle">자동 커밋·원격 전송 없음</text>
+  </g>
+</svg>

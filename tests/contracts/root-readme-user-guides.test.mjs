@@ -1902,8 +1902,15 @@ function assertSharedPngLinks(markdown) {
       start: match.index,
       end: match.index + match[0].length,
     }));
-  assert.ok(pngEmbeds.length >= 1 && pngEmbeds.length <= 3, "root README must embed one to three shared PNG diagrams");
-  assert.ok(pngEmbeds.some(({ png }) => png === "guides/assets/shared/plugin-selection-flow.png"), "root README must embed plugin-selection-flow.png");
+  assert.deepEqual(
+    pngEmbeds.map(({ png }) => png).sort(),
+    [
+      "guides/assets/shared/image-provider-cost-routing.png",
+      "guides/assets/shared/plugin-selection-flow.png",
+      "guides/assets/shared/project-memory-reuse-flow.png",
+    ],
+    "root README embeds the three canonical shared overview diagrams",
+  );
   for (const { png, start, end } of pngEmbeds) {
     const svg = png.replace(/\.png$/, ".svg");
     assert.equal(markdown[start - 1], "[", `shared PNG must begin a link wrapper: ${png}`);

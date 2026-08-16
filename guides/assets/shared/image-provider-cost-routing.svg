@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900" role="img" aria-labelledby="title desc" style="font-family:Pretendard,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif">
+  <title id="title">한글이 없는 이미지는 image_gen부터 만듭니다</title>
+  <desc id="desc">프롬프트만 받는 경로와 실제 생성 경로를 나누고, 이미지 안에 한글이 없으면 image_gen을 먼저 사용합니다. 한글이 필요하거나 무료 결과가 맞지 않을 때는 비용과 품질을 안내한 뒤 사용자 승인으로 gpt-image-2를 선택합니다.</desc>
+  <style>
+    svg{--bg:#FFFFFF;--ink:#1F2733;--muted:#5B6675;--hair:#D6E0EC;--blue:#1F6FB2;--blue-fill:#E8F1FB;--violet:#534AB7;--violet-fill:#ECEBFB;--green:#0F7A5F;--green-fill:#E7F5EF;--amber:#A86700;--amber-fill:#FFF3DF;--rose:#A52B5D;--rose-fill:#FCECF3}.title{fill:var(--ink);font-weight:700}.body{fill:var(--muted)}.card-title{font-weight:700}.line{fill:none;stroke:#5B6675;stroke-width:2.5}.branch{fill:none;stroke:var(--amber);stroke-width:2.5;stroke-dasharray:7 6}.on-accent{fill:#FFFFFF}
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="11.25" markerHeight="11.25" markerUnits="userSpaceOnUse" orient="auto"><path d="M2 2 L10 6 L2 10" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow-amber" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="11.25" markerHeight="11.25" markerUnits="userSpaceOnUse" orient="auto"><path d="M2 2 L10 6 L2 10" fill="none" stroke="#A86700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  </defs>
+  <rect width="1400" height="900" fill="var(--bg)"/>
+  <rect x="40" y="48" width="6" height="72" rx="3" fill="var(--blue)"/>
+  <text x="70" y="74" class="title" font-size="42">한글이 없는 이미지는 image_gen부터 만듭니다</text>
+  <text x="70" y="110" class="body" font-size="20">한글이 필요하거나 무료 결과가 맞지 않을 때만 비용과 품질을 확인하고 유료 경로를 선택합니다.</text>
+  <rect x="40" y="168" width="1320" height="664" rx="20" fill="#F4F8FC" stroke="var(--hair)"/>
+
+  <path class="line" data-flow-edge="scope-to-text-check" data-from="work-scope" data-to="korean-text-check" d="M292 350H328" marker-end="url(#arrow)"/>
+  <path class="line" data-flow-edge="text-check-to-imagegen" data-from="korean-text-check" data-to="imagegen-first" d="M572 350H608" marker-end="url(#arrow)"/>
+  <path class="line" data-flow-edge="imagegen-to-review" data-from="imagegen-first" data-to="result-review" d="M852 350H888" marker-end="url(#arrow)"/>
+  <path class="line" data-flow-edge="scope-to-prompt-only" data-from="work-scope" data-to="prompt-only" d="M186 448V540" marker-end="url(#arrow)"/>
+  <path class="branch" data-flow-edge="korean-to-paid-proposal" data-from="korean-text-check" data-to="paid-proposal" d="M456 448V496H516V540" marker-end="url(#arrow-amber)"/>
+  <path class="branch" data-flow-edge="review-to-paid-proposal" data-from="result-review" data-to="paid-proposal" d="M1006 448V496H624V540" marker-end="url(#arrow-amber)"/>
+  <path class="line" data-flow-edge="paid-proposal-to-approval" data-from="paid-proposal" data-to="paid-approval" d="M772 632H808" marker-end="url(#arrow)"/>
+  <path class="line" data-flow-edge="review-to-draft" data-from="result-review" data-to="concept-draft" d="M1112 350H1340V724H1332" marker-end="url(#arrow)"/>
+  <path class="line" data-flow-edge="approval-to-draft" data-from="paid-approval" data-to="concept-draft" d="M1072 632H1088V724H1100" marker-end="url(#arrow)"/>
+
+  <text x="500" y="488" fill="var(--amber)" font-size="16" text-anchor="middle">한글 필요</text>
+  <text x="820" y="488" fill="var(--amber)" font-size="16" text-anchor="middle">불만족·반복 실패</text>
+
+  <g data-flow-node="work-scope" aria-label="읽기 순서 1: 이미지 작업 범위">
+    <rect x="80" y="252" width="212" height="196" rx="14" fill="var(--blue-fill)" stroke="var(--blue)" stroke-width="2"/>
+    <circle cx="186" cy="300" r="24" fill="#D7E9FB"/>
+    <path d="M176 294H196M176 302H190M176 310H186" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"/>
+    <text x="186" y="348" class="card-title" fill="#124267" font-size="24" text-anchor="middle" dominant-baseline="central">이미지 작업 범위</text>
+    <text x="186" y="386" class="body" font-size="17" text-anchor="middle">프롬프트 또는 실제 생성</text>
+  </g>
+  <g data-flow-node="korean-text-check" aria-label="읽기 순서 2: 이미지 안에 한글이 필요한가요?">
+    <rect x="340" y="252" width="232" height="196" rx="14" fill="var(--violet-fill)" stroke="var(--violet)" stroke-width="2"/>
+    <text x="456" y="306" class="card-title" fill="#3C3489" font-size="21" text-anchor="middle">이미지 안에 한글이</text>
+    <text x="456" y="334" class="card-title" fill="#3C3489" font-size="21" text-anchor="middle">필요한가요?</text>
+    <text x="456" y="360" class="body" font-size="17" text-anchor="middle">설명 언어가 아니라</text>
+    <text x="456" y="390" class="body" font-size="17" text-anchor="middle">이미지 안 글자를 확인</text>
+    <text x="456" y="420" class="body" font-size="15" text-anchor="middle">없으면 무료 경로</text>
+  </g>
+  <g data-flow-node="imagegen-first" aria-label="읽기 순서 3: image_gen 먼저">
+    <rect x="620" y="252" width="232" height="196" rx="14" fill="var(--green-fill)" stroke="var(--green)" stroke-width="2"/>
+    <circle cx="736" cy="300" r="24" fill="#D5F0E7"/>
+    <path d="M726 300H746M736 290V310M729 293L743 307M743 293L729 307" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round"/>
+    <text x="736" y="348" class="card-title" fill="#085041" font-size="25" text-anchor="middle" dominant-baseline="central">image_gen 먼저</text>
+    <text x="736" y="386" class="body" font-size="17" text-anchor="middle">사용 가능한 호스트 생성</text>
+  </g>
+  <g data-flow-node="result-review" aria-label="읽기 순서 4: 무료 결과 확인">
+    <rect x="900" y="252" width="212" height="196" rx="14" fill="#FFFFFF" stroke="#697587" stroke-width="2"/>
+    <text x="1006" y="328" class="card-title" fill="#455264" font-size="24" text-anchor="middle">결과 확인</text>
+    <text x="1006" y="368" class="body" font-size="17" text-anchor="middle">용도·구도·일관성</text>
+    <text x="1006" y="398" class="body" font-size="17" text-anchor="middle">충분하면 초안으로 보존</text>
+  </g>
+  <g data-flow-node="prompt-only" aria-label="분기: 프롬프트만 전달">
+    <rect x="80" y="552" width="212" height="160" rx="14" fill="#FFFFFF" stroke="var(--blue)" stroke-width="2"/>
+    <text x="186" y="606" class="card-title" fill="#124267" font-size="23" text-anchor="middle">프롬프트만 전달</text>
+    <text x="186" y="646" class="body" font-size="17" text-anchor="middle">실제 생성 0회</text>
+    <text x="186" y="676" class="body" font-size="16" text-anchor="middle">순차 생성 안내 포함</text>
+  </g>
+  <g data-flow-node="paid-proposal" data-paid-provider="gpt-image-2" aria-label="분기: gpt-image-2 사용 제안과 비용 품질 안내">
+    <rect x="360" y="552" width="412" height="160" rx="14" fill="var(--amber-fill)" stroke="var(--amber)" stroke-width="2"/>
+    <text x="566" y="590" class="card-title" fill="#814600" font-size="23" text-anchor="middle">gpt-image-2 사용 제안</text>
+    <text x="566" y="624" fill="#814600" font-size="18" text-anchor="middle">비용·품질 안내</text>
+    <text x="566" y="656" class="body" font-size="16" text-anchor="middle">low 기본 · medium 선택 · high 예외</text>
+    <text x="566" y="684" class="body" font-size="15" text-anchor="middle">한글 필수 또는 무료 결과 미달</text>
+  </g>
+  <g data-flow-node="paid-approval" data-human-gate="이름이 확인된 사용자" data-gate-role="paid-generation-approval" aria-label="읽기 순서 5: 사용자 승인">
+    <rect x="820" y="552" width="252" height="160" rx="14" fill="var(--rose-fill)" stroke="var(--rose)" stroke-width="2"/>
+    <rect x="852" y="572" width="188" height="32" rx="16" fill="var(--rose)"/>
+    <text x="946" y="588" class="on-accent" font-size="15" text-anchor="middle" dominant-baseline="central">이름이 확인된 사용자</text>
+    <text x="946" y="638" class="card-title" fill="#7A1942" font-size="23" text-anchor="middle">사용자 승인</text>
+    <text x="946" y="676" class="body" font-size="16" text-anchor="middle">승인 전 유료 호출 0회</text>
+  </g>
+  <g data-flow-node="concept-draft" aria-label="읽기 순서 6: 검토용 초안">
+    <rect x="1112" y="664" width="208" height="120" rx="14" fill="var(--green-fill)" stroke="var(--green)" stroke-width="2"/>
+    <text x="1216" y="710" class="card-title" fill="#085041" font-size="22" text-anchor="middle">검토용 초안</text>
+    <text x="1216" y="748" class="body" font-size="15" text-anchor="middle">생성만으로 최종 승인 아님</text>
+  </g>
+</svg>
