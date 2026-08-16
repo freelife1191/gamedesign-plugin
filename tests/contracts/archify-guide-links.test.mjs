@@ -284,19 +284,19 @@ test("production-link parser covers rendered Markdown references and raw anchors
 
 test("inventory intro rejects multi-digit and single-claim count drift", () => {
   const intro = [
-    "현재 4개 `selected` 항목은 모두 committed `spec`을 가집니다.",
-    "한국어 HTML 4개를 `published` 상태로 공개합니다.",
-    "현재 4개 `selected` spec은 검증을 통과했습니다.",
-    "`published`는 4개입니다.",
+    "현재 5개 `selected` 항목은 모두 committed `spec`을 가집니다.",
+    "한국어 HTML 5개를 `published` 상태로 공개합니다.",
+    "현재 5개 `selected` spec은 검증을 통과했습니다.",
+    "`published`는 5개입니다.",
     "",
     "## 증거와 전수 범위",
   ].join("\n");
-  const expected = { selectedCount: 4, publishedCount: 4 };
+  const expected = { selectedCount: 5, publishedCount: 5 };
   assert.doesNotThrow(() => assertCurrentInventoryIntro(intro, expected));
   for (const [label, markdown] of [
-    ["multi-digit selected", intro.replace("현재 4개 `selected` 항목", "현재 14개 `selected` 항목")],
-    ["one selected claim", intro.replace("현재 4개 `selected` spec", "현재 5개 `selected` spec")],
-    ["one published claim", intro.replace("`published`는 4개", "`published`는 5개")],
+    ["multi-digit selected", intro.replace("현재 5개 `selected` 항목", "현재 15개 `selected` 항목")],
+    ["one selected claim", intro.replace("현재 5개 `selected` spec", "현재 6개 `selected` spec")],
+    ["one published claim", intro.replace("`published`는 5개", "`published`는 6개")],
   ]) {
     assert.throws(
       () => assertCurrentInventoryIntro(markdown, expected),

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "workflow",
+  "quality": "showcase",
+  "checksPassed": 9,
+  "checkCount": 9,
+  "errors": 0,
+  "warnings": 0,
+  "compositionProfile": "showcase",
+  "compositionStatus": "pass",
+  "input": "guides/archify-diagrams/specs/suite/suite-project-memory-lifecycle.json",
+  "output": "guides/assets/archify/suite/suite-project-memory-lifecycle.html",
+  "specification": {
+    "sha256": "da41a6e3d678b4b82931999b6dfbd60ff59c0d4f7c285b8de67716fdfe397455",
+    "bytes": 5297
+  },
+  "artifact": {
+    "sha256": "8dae8969287b9498265e6187e6ff8327bed1fd27c8f77e343b5046255fa13d74",
+    "bytes": 650967
+  }
+}

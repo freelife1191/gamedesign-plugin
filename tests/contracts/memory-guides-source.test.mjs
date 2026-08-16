@@ -56,6 +56,7 @@ const rootH2 = [
 ];
 const changedMarkdown = [
   "README.md",
+  "guides/project-memory.md",
   "products/game-design-studio/plugin/README.md",
   "products/game-design-career/plugin/README.md",
   ...products.flatMap((product) => [
@@ -67,6 +68,15 @@ const changedMarkdown = [
     `guides/${product}/memory.md`,
     `guides/${product}/skills/README.md`,
   ]),
+];
+
+const sharedMemoryHeadings = [
+  "LLM Wiki 원리를 게임 기획에 적용한 방식",
+  "저장 계층과 원본",
+  ".env 설정",
+  "이전 기록을 다시 쓰는 순서",
+  "기록하지 않거나 적용하지 않는 내용",
+  "프로젝트 이동과 복구",
 ];
 const cutsceneGuideRequests = [
   "컷씬 brief와 beat만 작성",
@@ -169,6 +179,33 @@ test("memory guides are Korean-first, local-only, human-approved, and fail-open"
   }
 });
 
+test("shared project-memory guide explains the constrained LLM Wiki model and prior-record flow", async () => {
+  const markdown = await readFile(path.join(root, "guides/project-memory.md"), "utf8");
+  assert.deepEqual(headingNames(markdown, 2), sharedMemoryHeadings);
+  for (const pattern of [
+    /LLM Wiki/u,
+    /자유롭게 합성하는 개인 위키가 아닙니다/u,
+    /기준 기획 결과물과 근거/u,
+    /봉인된 추가 전용 Markdown 사건 기록/u,
+    /재생성 가능한 파생 색인/u,
+    /\.game-design\/memory\//u,
+    /GAME_DESIGN_MEMORY_ENABLED/u,
+    /GAME_DESIGN_MEMORY_SCOPE/u,
+    /GAME_DESIGN_MEMORY_MAX_ITEMS/u,
+    /GAME_DESIGN_MEMORY_CANDIDATE_TTL_DAYS/u,
+    /GAME_DESIGN_MEMORY_GIT_MODE/u,
+    /승인된 기록만 조회/u,
+    /출처·범위·만료·충돌/u,
+    /검토 대기 후보/u,
+    /이름이 확인된 사람/u,
+    /사용 기록/u,
+    /Obsidian/u,
+    /자동 수집/u,
+    /원격 동기화/u,
+    /suite-project-memory-lifecycle\.html/u,
+  ]) assert.match(markdown, pattern, String(pattern));
+});
+
 test("source inventories and product documentation list the frozen cutscene inventory", async () => {
   const buildSource = await readFile(path.join(root, "tooling/lib/build-product.mjs"), "utf8");
   const vendorSource = await readFile(path.join(root, "tooling/lib/vendor-components.mjs"), "utf8");
@@ -251,6 +288,9 @@ test("cutscene guide contracts reject reordered requests and unsafe generation w
 
 test("entry, install, quick-start, workflow, FAQ, and skill guides link to product memory guidance", async () => {
   const rootReadme = await readFile(path.join(root, "README.md"), "utf8");
+  assert.match(rootReadme, /LLM Wiki/u);
+  assert.match(rootReadme, /guides\/project-memory\.md/u);
+  assert.match(rootReadme, /suite-project-memory-lifecycle\.html/u);
   assert.match(rootReadme, /guides\/game-design-studio\/memory\.md/u);
   assert.match(rootReadme, /guides\/game-design-career\/memory\.md/u);
   assert.match(rootReadme, /@Game Design Studio 지난 플레이테스트 결과와 승인된 프로젝트 교훈/u);
@@ -259,6 +299,9 @@ test("entry, install, quick-start, workflow, FAQ, and skill guides link to produ
   assert.match(rootReadme, /이 교훈은 앞으로 이 프로젝트에 적용해/u);
 
   for (const product of products) {
+    const memoryGuide = await readFile(path.join(root, "guides", product, "memory.md"), "utf8");
+    assert.match(memoryGuide, /\.\.\/project-memory\.md/u, `${product}/memory.md: shared project-memory guide`);
+    assert.match(memoryGuide, /\.\.\/assets\/archify\/suite\/suite-project-memory-lifecycle\.html/u, `${product}/memory.md: Archify lifecycle`);
     for (const filename of ["README.md", "installation.md", "quick-start.md", "workflow.md", "faq.md"]) {
       const markdown = await readFile(path.join(root, "guides", product, filename), "utf8");
       const target = filename === "README.md" ? "memory.md" : "memory.md";

@@ -338,7 +338,7 @@ Studio의 사례·스킬·템플릿을 선택할 때 자주 생기는 질문입�
 @Game Design Studio 기억 후보와 승인 기록을 보여 주고, 현재 보스전 기획에 적용할 수 없는 항목은 이유와 함께 제외해.
 ```
 
-**비활성화와 관련 문서:** 완전히 끄려면 `GAME_DESIGN_MEMORY_ENABLED=false`를 설정하고, 한 번만 제외하려면 “이번 작업에서는 이전 기억을 사용하지 마.”라고 요청합니다. 자세한 관리와 복구 순서는 [Studio 프로젝트 기억](memory.md)을 따릅니다.
+**비활성화와 관련 문서:** 완전히 끄려면 `GAME_DESIGN_MEMORY_ENABLED=false`를 설정하고, 한 번만 제외하려면 “이번 작업에서는 이전 기억을 사용하지 마.”라고 요청합니다. LLM Wiki 원리와 공통 저장 구조는 [프로젝트 기억 공통 가이드](../project-memory.md), Studio 범위와 관리·복구 순서는 [Studio 프로젝트 기억](memory.md)에서 확인하세요. 전체 흐름은 [프로젝트 기억 수명주기 도식](../assets/archify/suite/suite-project-memory-lifecycle.html)에서 볼 수 있습니다.
 
 ### Q20. 컷씬 이미지는 언제 생성하고, 비용을 어떻게 통제하는가?
 

@@ -1,13 +1,13 @@
 # Curated Archify inventory
 
-이 디렉터리는 과거의 일괄 생성 Archify 가이드를 대신하는 **선별 inventory**입니다. 이전 계층은 같은 형식의 HTML을 문서 수에 맞춰 넓게 만들었지만, 이제는 관계·분기·상태·책임 handoff가 원문보다 더 잘 읽히는 경우만 후보로 남깁니다. 현재 4개 `selected` 항목은 모두 committed `spec`과 검증 기록을 가지며, 검증·시각 QA를 통과한 한국어 HTML 4개를 `published` 상태로 공개합니다.
+이 디렉터리는 과거의 일괄 생성 Archify 가이드를 대신하는 **선별 목록**입니다. 문서마다 같은 형식의 HTML을 만들지 않고, 관계·분기·상태·책임 인계를 원문보다 쉽게 파악할 수 있는 경우만 후보로 남깁니다. 현재 5개 `selected` 항목은 모두 커밋된 `spec`과 검증 기록을 가지며, 검증과 시각 QA를 통과한 한국어 HTML 5개를 `published` 상태로 공개합니다.
 
 ## 처음 보는 사용자를 위한 흐름
 
 1. `catalog.json`에서 문서별 `selected` 또는 `excluded` 결정을 찾습니다.
 2. `selected`의 `question`, `diagram_type_reason`, `composition_rationale`가 실제로 어떤 질문을 도식으로 풀지 설명합니다.
-3. 현재 4개 `selected` spec은 모두 Archify showcase 9/9, 오류·경고 0을 통과했습니다.
-4. `published`는 4개입니다. 각 공개 HTML은 한국어 뷰어와 검증 receipt를 가지며, Chromium headless에서 원본 크기와 페이지 맞춤(fit) 관점을 검토했습니다. 아래 Published 목록에서 바로 열 수 있습니다.
+3. 현재 5개 `selected` spec은 모두 Archify showcase 9/9, 오류·경고 0을 통과했습니다.
+4. `published`는 5개입니다. 각 공개 HTML은 한국어 뷰어와 검증 영수증을 가지며, Chromium headless에서 원본 크기와 페이지 맞춤(fit) 화면을 검토했습니다. 아래 공개 도식 목록에서 바로 열 수 있습니다.
 
 ## 증거와 전수 범위
 
@@ -62,11 +62,11 @@ node tooling/validate-archify-catalog.mjs --json
 - `excluded-package-surface`: products 배포 표면
 - `excluded-package-mirror`: plugins 배포 mirror
 
-catalog은 추후 spec 저작과 검수의 evidence ledger입니다. 이 inventory만으로 어떤 diagram의 존재나 사람 승인을 주장하지 않습니다.
+catalog은 이후 명세 작성과 검수에 쓰는 근거 장부입니다. 이 목록만으로 도식이 실제로 존재하거나 사람이 승인했다고 판단하지 않습니다.
 
-## Published diagrams
+## Published diagrams (공개 도식)
 
-**4개.** 아래 결과물은 모두 `published`이고 `visual_review: passed`이며, 공통 조작 UI와 사용자 가시 설명을 한국어로 제공합니다. 제품별 수량은 Studio 1개, Career 1개, Suite 2개이며, 유형별 수량은 architecture 1개, workflow 2개, dataflow 1개입니다.
+**5개.** 아래 결과물은 모두 `published`이고 `visual_review: passed`이며, 공통 조작 UI와 사용자에게 보이는 설명을 한국어로 제공합니다. 제품별 수량은 Studio 1개, Career 1개, Suite 3개이며, 유형별 수량은 architecture 1개, workflow 3개, dataflow 1개입니다.
 
 ### `suite-plugin-system-architecture`
 
@@ -100,6 +100,14 @@ catalog은 추후 spec 저작과 검수의 evidence ledger입니다. 이 invento
 - 공개물: [한국어 Studio → Career 공개 근거 handoff](../assets/archify/suite/suite-studio-career-handoff.html)
 - 명세·검증: [Suite handoff spec](specs/suite/suite-studio-career-handoff.json) · [delivery receipt](../assets/archify/suite/suite-studio-career-handoff.receipt.json) · [QA manifest](visual-qa/manifest.json)
 
+### `suite-project-memory-lifecycle`
+
+- 제품·유형·상태: `suite` · `workflow` · `published` (`visual_review: passed`)
+- 답하는 질문: `.env` 설정을 확인한 뒤 승인된 이전 기록을 어떻게 다시 쓰고, 새 후보를 사람 검토를 거쳐 다음 작업에 남기는가?
+- 원문 근거: [프로젝트 기억 공통 가이드](../project-memory.md#프로젝트-기억은-이전-작업을-어떻게-이어-주나요)
+- 공개물: [한국어 프로젝트 기억 저장·승인·재사용 흐름](../assets/archify/suite/suite-project-memory-lifecycle.html)
+- 명세·검증: [프로젝트 기억 수명주기 spec](specs/suite/suite-project-memory-lifecycle.json) · [delivery receipt](../assets/archify/suite/suite-project-memory-lifecycle.receipt.json) · [QA manifest](visual-qa/manifest.json)
+
 ## Blocked diagrams
 
-**0개 (없음).** 현재 선택된 4개 도식에는 남은 `blocked-*` 상태가 없습니다. 이후 source digest, Archify 검증 또는 시각 QA가 실패하면 공개 상태를 유지하지 않고 이 섹션에 차단 이유·증거·재시도 경계를 기록합니다.
+**0개 (없음).** 현재 선택된 5개 도식에는 남은 `blocked-*` 상태가 없습니다. 이후 원문 digest, Archify 검증 또는 시각 QA가 실패하면 공개 상태를 유지하지 않고 이 섹션에 차단 이유·근거·재시도 조건을 기록합니다.

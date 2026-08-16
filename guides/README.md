@@ -24,12 +24,13 @@
 
 ## Curated Archify 상태
 
-[Curated Archify 상태 인덱스](archify-diagrams/README.md)는 검증된 Archify HTML 공개물과 차단된 후보의 근거·재시도 경계를 분리해 기록합니다. 현재 공개된 한국어 Archify diagram은 **4개**입니다.
+[Curated Archify 상태 인덱스](archify-diagrams/README.md)는 검증된 Archify HTML 공개물과 차단된 후보의 근거·재시도 경계를 분리해 기록합니다. 현재 공개된 한국어 Archify diagram은 **5개**입니다.
 
 - [플러그인 모음 전체 시스템 구조](assets/archify/suite/suite-plugin-system-architecture.html)
 - [Studio 전체 프로젝트 워크플로](assets/archify/studio/studio-project-workflow.html)
 - [Career 증거·포트폴리오 워크플로](assets/archify/career/career-evidence-workflow.html)
 - [Studio → Career 공개 근거 handoff](assets/archify/suite/suite-studio-career-handoff.html)
+- [프로젝트 기억 저장·승인·재사용 흐름](assets/archify/suite/suite-project-memory-lifecycle.html)
 
 두 플러그인은 독립적으로 설치합니다. 게임을 설계하면서 동시에 취업 증거를 만들려면 둘 다 설치할 수 있지만, 각 작업의 기준 Artifact와 승인 상태는 섞지 마세요.
 
@@ -41,7 +42,7 @@
 | --- | --- | --- | --- |
 | 작은 규칙·루프·시스템·UX를 학습 | [Studio 활용 사례 인덱스](game-design-studio/use-cases/README.md) | 작게 검토할 가정, 규칙 또는 UX 초안 | [Studio 스킬 워크벤치](game-design-studio/use-cases/skill-workbench.md) · [Studio FAQ](game-design-studio/faq.md) |
 | 전체 GDD와 제작 검토를 연결 | [Game Design Studio 가이드](game-design-studio/README.md) | 범위·검토 게이트가 있는 Studio Artifact | [결과물 카탈로그](use-cases/output-catalog.md) |
-| 승인된 프로젝트 교훈을 재사용 | [Studio 프로젝트 기억](game-design-studio/memory.md) 또는 [Career 프로젝트 기억](game-design-career/memory.md) | 출처·범위·만료가 확인된 적용 기록과 검토 대기 후보 | [공통 활용 허브](use-cases/README.md) |
+| 승인된 프로젝트 교훈을 재사용 | [프로젝트 기억 공통 가이드](project-memory.md) | 출처·범위·만료가 확인된 적용 기록과 검토 대기 후보 | [Studio 기억](game-design-studio/memory.md) · [Career 기억](game-design-career/memory.md) |
 | 경쟁작·레퍼런스의 게임 시스템을 분석 | [Studio 레퍼런스 분석](game-design-studio/reference-analysis.md) 또는 [Career 레퍼런스 분석](game-design-career/reference-analysis.md) | 관찰 근거, 시스템 지도, 비교와 검토 대기 설계 전환 제안 | [공통 활용 허브](use-cases/README.md) |
 | 한국어·영어 기획 용어를 일관되게 관리 | [Studio 용어 사전](game-design-studio/glossary.md) 또는 [Career 용어 사전](game-design-career/glossary.md) | 문서 영향 목록, 승인 전 후보와 사람 승인 스냅샷 | [공통 활용 허브](use-cases/README.md) |
 | 컷씬의 장면(shot)·프롬프트·이미지 비용을 분리해 준비 | [컷씬 비주얼 프리프로덕션](game-design-studio/cutscene-visual-preproduction.md) | 승인 전 생성 제공자(provider) 호출 0회의 컷씬 패키지와 단계(wave)별 비용·연속성 검토 | [Studio 이미지 자산](game-design-studio/image-assets.md) |
@@ -82,8 +83,8 @@ Studio 인덱스는 설치 스킬 24개, Career 인덱스는 설치 스킬 23개
 
 | 제품 | 시작 | 전체 카탈로그 | 목적별 작업 |
 | --- | --- | --- | --- |
-| Studio | [제품 인덱스](game-design-studio/README.md) · [설치](game-design-studio/installation.md) · [5분 시작](game-design-studio/quick-start.md) | [스킬 24개](game-design-studio/skills/README.md) · [기억](game-design-studio/memory.md) · [레퍼런스 분석](game-design-studio/reference-analysis.md) · [용어 사전](game-design-studio/glossary.md) · [컷씬](game-design-studio/cutscene-visual-preproduction.md) · [템플릿 15개](game-design-studio/templates.md) | [레시피 6개](game-design-studio/README.md#목적별-레시피) |
-| Career | [제품 인덱스](game-design-career/README.md) · [설치](game-design-career/installation.md) · [5분 시작](game-design-career/quick-start.md) | [스킬 23개](game-design-career/skills/README.md) · [기억](game-design-career/memory.md) · [레퍼런스 분석](game-design-career/reference-analysis.md) · [용어 사전](game-design-career/glossary.md) · [템플릿 15개](game-design-career/templates.md) | [레시피 6개](game-design-career/README.md#목적별-레시피) |
+| Studio | [제품 인덱스](game-design-studio/README.md) · [설치](game-design-studio/installation.md) · [5분 시작](game-design-studio/quick-start.md) | [스킬 24개](game-design-studio/skills/README.md) · [공통 기억](project-memory.md) · [Studio 기억](game-design-studio/memory.md) · [레퍼런스 분석](game-design-studio/reference-analysis.md) · [용어 사전](game-design-studio/glossary.md) · [컷씬](game-design-studio/cutscene-visual-preproduction.md) · [템플릿 15개](game-design-studio/templates.md) | [레시피 6개](game-design-studio/README.md#목적별-레시피) |
+| Career | [제품 인덱스](game-design-career/README.md) · [설치](game-design-career/installation.md) · [5분 시작](game-design-career/quick-start.md) | [스킬 23개](game-design-career/skills/README.md) · [공통 기억](project-memory.md) · [Career 기억](game-design-career/memory.md) · [레퍼런스 분석](game-design-career/reference-analysis.md) · [용어 사전](game-design-career/glossary.md) · [템플릿 15개](game-design-career/templates.md) | [레시피 6개](game-design-career/README.md#목적별-레시피) |
 
 ---
 

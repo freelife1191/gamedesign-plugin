@@ -418,4 +418,4 @@ $game-design-career:retrieve-approved-design-memory project=career-project-id co
 
 **사람 검토·근거·권리·비보장:** 사람 포트폴리오 검토자가 출처, 공개 권리와 개인 기여 경계를 다시 확인합니다. `적용·제외 사유`가 있어도 기억은 공고·피드백·개인 기여 근거나 합격 가능성을 대신하거나 보장하지 않습니다.
 
-**실패·재개·관련 경로:** 기억 저장소가 없거나 출처가 달라지면 해당 항목과 이유를 **보존 → 사람 확인 → 재개**하고, 기억 없이 기존 작업을 이어 갑니다. [CA-C06](use-cases/competency-paths.md#ca-c06-창작-기획-포트폴리오), [Career 프로젝트 기억](memory.md), [포트폴리오 레시피](recipes/portfolio-build-review.md)를 따릅니다.
+**실패·재개·관련 경로:** 기억 저장소가 없거나 출처가 달라지면 해당 항목과 이유를 **보존 → 사람 확인 → 재개**하고, 기억 없이 기존 작업을 이어 갑니다. LLM Wiki 원리와 공통 저장 구조는 [프로젝트 기억 공통 가이드](../project-memory.md), 전체 흐름은 [프로젝트 기억 수명주기 도식](../assets/archify/suite/suite-project-memory-lifecycle.html)에서 확인하세요. 실제 작업은 [CA-C06](use-cases/competency-paths.md#ca-c06-창작-기획-포트폴리오), [Career 프로젝트 기억](memory.md), [포트폴리오 레시피](recipes/portfolio-build-review.md)를 따릅니다.

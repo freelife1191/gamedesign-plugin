@@ -31,7 +31,7 @@
 
 | 필요한 작업 | Studio | Career | 경계 |
 | --- | --- | --- | --- |
-| 승인된 프로젝트 교훈 재사용 | [Studio 프로젝트 기억](../game-design-studio/memory.md) | [Career 프로젝트 기억](../game-design-career/memory.md) | 승인된 기록만 적용하고 후보는 자동 승인하지 않음 |
+| 승인된 프로젝트 교훈 재사용 | [Studio 프로젝트 기억](../game-design-studio/memory.md) | [Career 프로젝트 기억](../game-design-career/memory.md) | [공통 저장·재사용 원리](../project-memory.md)를 따르고 승인된 기록만 적용하며 후보는 자동 승인하지 않음 |
 | 경쟁작·레퍼런스 시스템 분석 | [Studio 레퍼런스 분석](../game-design-studio/reference-analysis.md) | [Career 레퍼런스 분석](../game-design-career/reference-analysis.md) | 관찰·추론·설계 전환 제안을 분리하고 미확인 규칙은 `미정`으로 둠 |
 | 한국어·영어 용어 일관성 | [Studio 용어 사전](../game-design-studio/glossary.md) | [Career 용어 사전](../game-design-career/glossary.md) | 영향 목록과 후보를 먼저 만들고 사람 승인 전 원문을 자동 치환하지 않음 |
 | 컷씬 이미지 프리프로덕션 | [Studio 컷씬 비주얼 프리프로덕션](../game-design-studio/cutscene-visual-preproduction.md) | Career에는 컷씬 생성 경로 없음 | 프롬프트만 제공하거나 비용을 먼저 공개하고, 이름이 기록된 승인 뒤에만 생성 |

@@ -348,21 +348,107 @@
           "correction_evidence": "한국어 우선 사양을 Archify 9개 검사로 재검증하고, 1600px 원본과 맞춤 화면에서 자동 검증·검토 보류·수정·재검토·사람 검토·승인 경로를 확인했습니다."
         }
       ]
+    },
+    {
+      "id": "suite-project-memory-lifecycle",
+      "specification_sha256": "da41a6e3d678b4b82931999b6dfbd60ff59c0d4f7c285b8de67716fdfe397455",
+      "artifact_sha256": "8dae8969287b9498265e6187e6ff8327bed1fd27c8f77e343b5046255fa13d74",
+      "reviewer": "Codex 헤드리스 시각 QA",
+      "review_method": "headless-original-and-fit",
+      "correction_rounds": 1,
+      "verdict": "passed",
+      "renders": {
+        "read": {
+          "path": "renders/suite/suite-project-memory-lifecycle/read.png",
+          "sha256": "f88d4481c2feabdb79400cfd4a4f83495fde3b13af25bfc7d47e70cf6e246c83",
+          "width": 1600,
+          "height": 1000
+        },
+        "dark": {
+          "path": "renders/suite/suite-project-memory-lifecycle/dark.png",
+          "sha256": "54ad7cfa0bbfbf641a17ad13142383f1f2864c225aa474eacefe68d22b011040",
+          "width": 1600,
+          "height": 1000
+        },
+        "light": {
+          "path": "renders/suite/suite-project-memory-lifecycle/light.png",
+          "sha256": "f88d4481c2feabdb79400cfd4a4f83495fde3b13af25bfc7d47e70cf6e246c83",
+          "width": 1600,
+          "height": 1000
+        },
+        "guided_views": [
+          {
+            "id": "view-reuse-approved-memory",
+            "path": "renders/suite/suite-project-memory-lifecycle/view-reuse-approved-memory.png",
+            "sha256": "153f206b3b2287c794285a19fcc5d4a5d6e34636918bc90b72d9319a4839a612",
+            "width": 1600,
+            "height": 1000
+          },
+          {
+            "id": "view-capture-and-review",
+            "path": "renders/suite/suite-project-memory-lifecycle/view-capture-and-review.png",
+            "sha256": "b85e4077db034c96e1a41e8941031e6e4bed2d99f2b39d831a314d721fd24af7",
+            "width": 1600,
+            "height": 1000
+          },
+          {
+            "id": "view-store-and-rebuild",
+            "path": "renders/suite/suite-project-memory-lifecycle/view-store-and-rebuild.png",
+            "sha256": "9945f3703eb7ee06e5fe0a46b6e193984927c929871697c737933c7ec7e7e443",
+            "width": 1600,
+            "height": 1000
+          },
+          {
+            "id": "view-disabled-or-failed",
+            "path": "renders/suite/suite-project-memory-lifecycle/view-disabled-or-failed.png",
+            "sha256": "f6dd72b69a01ee0f48c6f62880da72b8e8ce2f01bfc626b2a8fea9af5c3c3037",
+            "width": 1600,
+            "height": 1000
+          }
+        ]
+      },
+      "readme_preview": null,
+      "checks": {
+        "text_clipping": "passed",
+        "glyph_distortion": "passed",
+        "blur_or_tofu": "passed",
+        "node_text_collision": "passed",
+        "edge_node_collision": "passed",
+        "edge_label_collision": "passed",
+        "ambiguous_corridor": "passed",
+        "branch_merge_retry_resume": "passed",
+        "rail_legend_footer": "passed",
+        "light_dark_contrast": "passed",
+        "guided_view_usefulness": "passed",
+        "within_product_diversity": "passed",
+        "cross_product_distinction": "passed"
+      },
+      "defects": [
+        {
+          "view": "read",
+          "subject": "데스크톱 화면 높이와 중복 단계",
+          "symptom": "초기 사양은 원본·파생 색인·다음 요청을 각각 긴 lane으로 나눠 모든 데스크톱 화면에서 세로 스크롤이 생겼습니다.",
+          "correction_outcome": "resolved",
+          "round": 1,
+          "correction_evidence": "파생 색인과 다음 요청을 원본에서 승인 기록으로 돌아가는 재사용 경로로 합치고, 1440×900부터 2048×1320까지 가로·세로 넘침이 없음을 확인했습니다."
+        }
+      ]
     }
   ],
   "contact_sheets": [
     {
       "html": "all.html",
-      "html_sha256": "73032a0300659c3eec1320c8867e784418b5717e451dec8951d2378fe2aeea7e",
+      "html_sha256": "7a75948b50db7cafa2e766ff8ba06433a93f87b2706b5d460e6652ad45ea6057",
       "png": "all.png",
-      "png_sha256": "a6fecb90a7a006a44d53e51225a832e90bab13e2f6eb8f2378f0392a9a8e8a53",
+      "png_sha256": "ad8006aa68103ae786dffadd5a4507c8c9eee0488d4e30d1799002fa9504539c",
       "width": 1800,
-      "height": 7650,
+      "height": 8848,
       "source_read_sha256": [
         "014a13165ae0df536ea56605236dd23b2d1dc43a68faf394b7d5071b30bb883b",
         "e5df98cc266b8a7cdc4ed4db9b17a48d694aa0ae48b1a47f1714e60a6d2c5c9d",
         "1cbcffa9a1021e609408cafa8a639ab9c6765108f00f27f8214e1c4c90d1b1c2",
-        "2f9076142a6021eafc604515e21154f8988cae60fa1353c8c5c8a7c3b2063066"
+        "2f9076142a6021eafc604515e21154f8988cae60fa1353c8c5c8a7c3b2063066",
+        "f88d4481c2feabdb79400cfd4a4f83495fde3b13af25bfc7d47e70cf6e246c83"
       ]
     },
     {
@@ -389,14 +475,15 @@
     },
     {
       "html": "product-suite.html",
-      "html_sha256": "4738ffe68709a2f26a6ec563e41dc8018863710e5950d56e7a39d5e5ac5a972b",
+      "html_sha256": "10254f9382800cef17434c6d9d9ca59ab25c996a503cfe33c90539b09c74ade3",
       "png": "product-suite.png",
-      "png_sha256": "c7c94e65d2fce1348767b11b60ffba187c7ee159d7fa9fa148bfdbe53c6debbb",
+      "png_sha256": "aba7ecd892ef4e82cde7b399179d817e7c791b9353e5d85459b25dd1f08afde4",
       "width": 1800,
-      "height": 2874,
+      "height": 4071,
       "source_read_sha256": [
         "014a13165ae0df536ea56605236dd23b2d1dc43a68faf394b7d5071b30bb883b",
-        "2f9076142a6021eafc604515e21154f8988cae60fa1353c8c5c8a7c3b2063066"
+        "2f9076142a6021eafc604515e21154f8988cae60fa1353c8c5c8a7c3b2063066",
+        "f88d4481c2feabdb79400cfd4a4f83495fde3b13af25bfc7d47e70cf6e246c83"
       ]
     },
     {
@@ -423,14 +510,15 @@
     },
     {
       "html": "type-workflow.html",
-      "html_sha256": "9f8eb5c7141f6abbd639cf48b17505186d1bb398489d1dae20b8073d256967a3",
+      "html_sha256": "095c771f546508430cb018c22678523c02aeda9792d719146879e6da322ac666",
       "png": "type-workflow.png",
-      "png_sha256": "742d09bbe83d8d18a97499b58a2246b0fda33ff33da2ae47130d99d7c299fd63",
+      "png_sha256": "e4085b8c123219a246460562f7846f2f1badfd81ff8174da3d757dd441f82e44",
       "width": 1800,
-      "height": 4855,
+      "height": 6052,
       "source_read_sha256": [
         "e5df98cc266b8a7cdc4ed4db9b17a48d694aa0ae48b1a47f1714e60a6d2c5c9d",
-        "1cbcffa9a1021e609408cafa8a639ab9c6765108f00f27f8214e1c4c90d1b1c2"
+        "1cbcffa9a1021e609408cafa8a639ab9c6765108f00f27f8214e1c4c90d1b1c2",
+        "f88d4481c2feabdb79400cfd4a4f83495fde3b13af25bfc7d47e70cf6e246c83"
       ]
     }
   ]

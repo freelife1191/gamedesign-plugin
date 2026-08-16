@@ -161,7 +161,17 @@ Studio에서 검토한 전투 시스템 기획을 Career 포트폴리오 사례�
 
 일반 AI 대화에서는 이전 결론이 대화 속 문장으로만 남아 출처와 승인 여부를 다시 확인하기 어렵습니다. 프로젝트 기억은 플레이테스트·검토·학습 작업에서 나온 교훈을 출처, 적용 범위, 상태와 사람 결정에 묶어 로컬에 보관합니다. 자동으로 남는 것은 검토 대기 후보뿐이며, 이름이 확인된 사람이 승인한 기록만 다음 작업에서 참고합니다. 출처가 바뀌거나 검토·만료 시점을 지나면 적용하지 않습니다.
 
-현재 프로젝트를 뜻하는 `project`가 기본 범위이고 기억 문서는 `.game-design/` 아래 로컬에만 남습니다. 플러그인은 이를 자동 커밋하거나 원격으로 보내지 않습니다. `GAME_DESIGN_MEMORY_ENABLED=false`로 완전히 끄거나 요청마다 제외할 수 있으며, 기억 저장소에 문제가 생기면 기존 기획 작업을 기억 없이 계속합니다. 기억은 기준 기획 결과물의 근거와 사람 판단을 대신하지 않으며 재미, 품질, 취업이나 성공을 보장하지 않습니다.
+이 기능은 LLM Wiki의 장기 축적 원리를 게임 기획에 맞게 제한한 형태입니다. 기준 기획 결과물과 근거는 그대로 두고, `.game-design/memory/`의 추가 전용 Markdown 사건을 기억 원본으로 사용합니다. 검색용 색인과 목록은 원본에서 다시 만들 수 있습니다. 일반적인 개인 위키처럼 채팅과 문서를 자동 수집하거나 내용을 자유롭게 합성하지 않습니다.
+
+현재 프로젝트를 뜻하는 `project`가 기본 범위이고 기억 문서는 `.game-design/` 아래 로컬에만 남습니다. 플러그인은 이를 자동 커밋하거나 원격으로 보내지 않습니다. 기억은 기준 기획 결과물의 근거와 사람 판단을 대신하지 않으며 재미, 품질, 취업이나 성공을 보장하지 않습니다.
+
+| `.env` 변수 | 기본값 | 설정 결과 |
+| --- | --- | --- |
+| `GAME_DESIGN_MEMORY_ENABLED` | `true` | `false`이면 기억 읽기·쓰기와 후보·색인·사용 기록을 모두 끔 |
+| `GAME_DESIGN_MEMORY_SCOPE` | `project` | `project`, `workspace`, `global` 중 검색 범위를 선택 |
+| `GAME_DESIGN_MEMORY_MAX_ITEMS` | `5` | 한 작업에 적용할 승인 기록 수를 1~10개로 제한 |
+| `GAME_DESIGN_MEMORY_CANDIDATE_TTL_DAYS` | `30` | 승인 전 후보의 유효 기간을 1~365일로 설정 |
+| `GAME_DESIGN_MEMORY_GIT_MODE` | `local` | `local`은 로컬 제외, `tracked`는 사용자가 Git 추적 여부를 결정 |
 
 ```text
 @Game Design Studio 지난 플레이테스트 결과와 승인된 프로젝트 교훈을 참고해서
@@ -172,7 +182,9 @@ Studio에서 검토한 전투 시스템 기획을 Career 포트폴리오 사례�
 이 교훈은 앞으로 이 프로젝트에 적용해.
 ```
 
-제품별 범위와 후보 관리 방법은 [Studio 프로젝트 기억](guides/game-design-studio/memory.md)과 [Career 프로젝트 기억](guides/game-design-career/memory.md)에서 확인하세요.
+[프로젝트 기억 공통 가이드](guides/project-memory.md)는 LLM Wiki와의 차이, 저장 계층, 설정과 이전 기록 재사용 순서를 설명합니다. 제품별 범위와 후보 관리 방법은 [Studio 프로젝트 기억](guides/game-design-studio/memory.md)과 [Career 프로젝트 기억](guides/game-design-career/memory.md)에서 확인하세요.
+
+▶ [Archify HTML에서 프로젝트 기억 수명주기 열기](guides/assets/archify/suite/suite-project-memory-lifecycle.html) — `.env` 확인부터 승인된 기록 조회, 후보 검토와 다음 작업 재사용까지의 흐름을 따라갈 수 있습니다.
 
 ### 🔗 참고 자료와 더 읽을 문서
 
@@ -2037,7 +2049,7 @@ generated snapshot: plugins/game-design-career/
 
 </details>
 
-### 상황별로 열어볼 Archify 도식 4종
+### 상황별로 열어볼 Archify 도식 5종
 
 필요한 질문에 맞는 도식만 여세요. 각 HTML은 검증을 통과한 한국어 도식이며, 선택·검토·재개 경계를 텍스트보다 빠르게 확인하는 보조 자료입니다.
 
@@ -2045,6 +2057,7 @@ generated snapshot: plugins/game-design-career/
 - [Studio 기획 프로젝트 흐름](guides/assets/archify/studio/studio-project-workflow.html): 게임 비전부터 설계, 검토와 내보내기까지의 제작 흐름을 설명합니다. 새 게임 기획 프로젝트를 시작하거나 제작 순서를 점검할 때 엽니다.
 - [Career 학습·취업 흐름](guides/assets/archify/career/career-evidence-workflow.html): 역할 탐색, 학습 과제, 포트폴리오와 면접 준비의 연결을 설명합니다. 학습 계획이나 취업 준비 결과를 다음 과제로 연결할 때 엽니다.
 - [Studio 결과를 Career로 정리하는 흐름](guides/assets/archify/suite/suite-studio-career-handoff.html): 검토한 제작 결과를 공개 가능한 포트폴리오 자료로 정리하는 순서를 설명합니다. 완성한 기획서를 포트폴리오 사례나 면접 근거로 바꿀 때 엽니다.
+- [프로젝트 기억을 저장하고 다시 쓰는 흐름](guides/assets/archify/suite/suite-project-memory-lifecycle.html): 환경 설정부터 승인된 이전 기록 조회, 후보 검토와 다음 작업 재사용까지의 흐름을 설명합니다. LLM Wiki 원리와 로컬 프로젝트 기억의 저장·승인 경계를 확인할 때 엽니다.
 
 ### Archify 검증 자료
 

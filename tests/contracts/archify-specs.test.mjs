@@ -169,6 +169,46 @@ function suitePluginSystemArchitecture(specsById) {
   return spec;
 }
 
+function suiteProjectMemoryLifecycle(specsById) {
+  const spec = specsById.get("suite-project-memory-lifecycle");
+  assert.ok(spec, "suite-project-memory-lifecycle spec is required");
+  return spec;
+}
+
+function assertProjectMemoryLifecycle(spec) {
+  const ids = new Set(semanticNodeIds(spec));
+  for (const id of [
+    "memory_config",
+    "approved_retrieval",
+    "source_validation",
+    "design_work",
+    "candidate_capture",
+    "human_review",
+    "sealed_source",
+    "memory_disabled",
+  ]) assert.ok(ids.has(id), `${id} is required`);
+  for (const [from, to] of [
+    ["memory_config", "approved_retrieval"],
+    ["approved_retrieval", "source_validation"],
+    ["source_validation", "design_work"],
+    ["design_work", "candidate_capture"],
+    ["candidate_capture", "human_review"],
+    ["human_review", "sealed_source"],
+    ["sealed_source", "approved_retrieval"],
+  ]) assertEdge(spec, from, to);
+  const visibleText = JSON.stringify(spec);
+  for (const phrase of [
+    "LLM Wiki",
+    "GAME_DESIGN_MEMORY_ENABLED",
+    ".game-design/memory/",
+    "승인 기록도",
+    "출처·범위·만료·충돌",
+    "사람 승인 전에는 다음 작업에 적용하지 않습니다",
+    "원격 전송하지 않습니다",
+    "기억 없이 계속",
+  ]) assert.match(visibleText, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "u"));
+}
+
 function assertArchitectureConnection(spec, from, to) {
   assert.ok(spec.connections.some((connection) => connection.from === from && connection.to === to), `${from} -> ${to} is required`);
 }
@@ -529,6 +569,19 @@ test("curated Archify specs expose memory, reference, glossary, and cutscene bou
   assertStudioDesignIntelligence(studioWorkflowSpec(studioSpecs));
   assertCareerDesignIntelligence(careerWorkflowSpec(careerSpecs));
   assertHandoffDesignIntelligence(suiteSpecs.get("suite-studio-career-handoff"));
+  assertProjectMemoryLifecycle(suiteProjectMemoryLifecycle(suiteSpecs));
+});
+
+test("Suite project-memory workflow publishes the constrained LLM Wiki lifecycle", async () => {
+  const { catalog, specsById } = await loadProductionSpecs(repoRoot, "suite");
+  const entry = catalog.entries.find((item) => item.id === "suite-project-memory-lifecycle");
+  const spec = suiteProjectMemoryLifecycle(specsById);
+  assert.equal(entry?.delivery_status, "published");
+  assert.equal(entry?.visual_review, "passed");
+  assert.equal(entry?.diagram_type, "workflow");
+  assert.equal(entry?.source_document, "guides/project-memory.md");
+  await assert.doesNotReject(() => validateInstalledSpec(spec, "workflow"));
+  assertProjectMemoryLifecycle(spec);
 });
 
 test("curated Archify design-intelligence semantics reject missing boundaries", async () => {

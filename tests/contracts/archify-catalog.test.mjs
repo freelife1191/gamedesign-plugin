@@ -45,7 +45,7 @@ function assertNoRepeatedGenericReasonTemplates(entries) {
 }
 
 function assertSuiteCatalogCardinality(catalog) {
-  assert.equal(catalog.entries.length, 744, "catalog must retain exactly 744 entries");
+  assert.equal(catalog.entries.length, 745, "catalog must retain exactly 745 entries");
   assert.equal(
     catalog.entries.filter((entry) => entry.source_document === "README.md").length,
     1,
@@ -57,6 +57,7 @@ const publishedSourceLabels = new Map([
   ["studio-project-workflow", "Studio 전체 워크플로 원문"],
   ["career-evidence-workflow", "Career 전체 워크플로 원문"],
   ["suite-studio-career-handoff", "Studio → Career 인계 원문"],
+  ["suite-project-memory-lifecycle", "프로젝트 기억 공통 가이드"],
 ]);
 
 function publishedDiagramSection(markdown, id) {
@@ -79,8 +80,8 @@ async function sourceTargetFromCuratedIndex(entry) {
 async function assertCuratedPublishedIndex(catalog, markdown) {
   const selected = catalog.entries.filter((entry) => entry.decision === "selected");
   const published = selected.filter((entry) => entry.delivery_status === "published");
-  assert.equal(selected.length, 4, "selected count is the published index source of truth");
-  assert.equal(published.length, 4, "published count is the published index source of truth");
+  assert.equal(selected.length, 5, "selected count is the published index source of truth");
+  assert.equal(published.length, 5, "published count is the published index source of truth");
   const productCounts = Object.fromEntries(["studio", "career", "suite"].map((product) => [
     product,
     published.filter((entry) => entry.product === product).length,
@@ -417,13 +418,13 @@ test("root README selects the Suite system architecture without changing corpus 
   });
   assert.equal(catalog.entries.some((item) => item.id === "suite-entry-navigation"), false);
   const selected = catalog.entries.filter((item) => item.decision === "selected");
-  assert.equal(selected.length, 4);
+  assert.equal(selected.length, 5);
   assert.deepEqual(
     Object.fromEntries(["studio", "career", "suite"].map((product) => [
       product,
       selected.filter((item) => item.product === product).length,
     ])),
-    { studio: 1, career: 1, suite: 2 },
+    { studio: 1, career: 1, suite: 3 },
   );
 });
 
@@ -437,8 +438,8 @@ test("curated Archify index rejects stale counts and spec links presented as sou
   const catalog = await loadArchifyCatalog({ repoRoot });
   const index = await readFile(path.join(repoRoot, "guides/archify-diagrams/README.md"), "utf8");
   const mutations = [
-    ["stale published count", index.replace("**4개.**", "**3개.**")],
-    ["stale blocked count", index.replace("현재 선택된 4개 도식", "현재 선택된 세 도식")],
+    ["stale published count", index.replace("**5개.**", "**4개.**")],
+    ["stale blocked count", index.replace("현재 선택된 5개 도식", "현재 선택된 네 도식")],
     [
       "Studio spec presented as source",
       index.replace(
@@ -457,10 +458,10 @@ test("Suite catalog cardinality rejects an appended record or duplicate README r
   const catalog = await loadArchifyCatalog({ repoRoot });
   const appended = structuredClone(catalog);
   appended.entries.push({ ...appended.entries[0], id: "unexpected-712th-record", source_document: "guides/README.md" });
-  assert.throws(() => assertSuiteCatalogCardinality(appended), /744/u);
+  assert.throws(() => assertSuiteCatalogCardinality(appended), /745/u);
   const duplicateReadme = structuredClone(catalog);
   duplicateReadme.entries.push({ ...duplicateReadme.entries[0], id: "duplicate-readme-record" });
-  assert.throws(() => assertSuiteCatalogCardinality(duplicateReadme), /744/u);
+  assert.throws(() => assertSuiteCatalogCardinality(duplicateReadme), /745/u);
   duplicateReadme.entries.pop();
   duplicateReadme.entries[1] = { ...duplicateReadme.entries[1], source_document: "README.md" };
   assert.throws(() => assertSuiteCatalogCardinality(duplicateReadme), /exactly one catalog record/u);

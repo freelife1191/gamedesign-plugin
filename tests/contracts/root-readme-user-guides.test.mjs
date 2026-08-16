@@ -138,6 +138,12 @@ const verifiedArchifyRoutes = [
     explains: "검토한 제작 결과를 공개 가능한 포트폴리오 자료로 정리하는 순서",
     when: "완성한 기획서를 포트폴리오 사례나 면접 근거로 바꿀 때",
   },
+  {
+    label: "프로젝트 기억을 저장하고 다시 쓰는 흐름",
+    target: "guides/assets/archify/suite/suite-project-memory-lifecycle.html",
+    explains: "환경 설정부터 승인된 이전 기록 조회, 후보 검토와 다음 작업 재사용까지의 흐름",
+    when: "LLM Wiki 원리와 로컬 프로젝트 기억의 저장·승인 경계를 확인할 때",
+  },
 ];
 const archifyStatusRoute = {
   label: "Archify 검증 상태·원본·QA 근거",
@@ -2549,7 +2555,7 @@ test("structured README contracts reject card, inventory, and generated-tree mut
 
 test("global and product indexes reach the cutscene guide and frozen inventories", async () => {
   const reachable = await reachableMarkdownPaths(path.join(guideRoot, "README.md"));
-  assert.equal(reachable.size, 136, "guide link graph reaches the cutscene guides with the existing guide library");
+  assert.equal(reachable.size, 137, "guide link graph reaches the cutscene guides and shared project-memory guide");
   assert.ok(reachable.has(path.join(guideRoot, "archify-diagrams/README.md")), "curated Archify status index is reachable");
   for (const relative of requiredUseCaseGuidePaths) {
     assert.ok(reachable.has(path.join(guideRoot, relative)), `new use-case guide is unreachable: ${relative}`);
