@@ -120,7 +120,7 @@ function runInjectedProbe({
               tag_name: tag,
               draft: false,
               prerelease: false,
-              html_url: component.repository + '/releases/tag/' + encodeURIComponent(tag),
+              html_url: component.repository + '/releases/tag/' + tag.split('/').map(encodeURIComponent).join('/'),
             }];
           },
         };

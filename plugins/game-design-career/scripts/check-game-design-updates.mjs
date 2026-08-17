@@ -9,6 +9,7 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 
 import {
+  canonicalReleaseUrl,
   createDisabledUpdateAdvisory,
   evaluateUpdateAdvisory,
 } from "./lib/update-advisory.mjs";
@@ -36,6 +37,14 @@ const RELEASE_ENDPOINTS = Object.freeze({
   archify: "https://api.github.com/repos/tt-a1i/archify/releases",
   "im-not-ai": "https://api.github.com/repos/epoko77-ai/im-not-ai/releases",
 });
+// This file runs from two layouts and the configuration sits at a different depth in each:
+// packaged as <plugin>/scripts with <plugin>/references/shared/updates, and in the repository as
+// shared/scripts with shared/updates one level higher. A single relative default silently
+// resolves to nothing in whichever layout it was not written for, so try both.
+const DEFAULT_PLUGIN_ROOTS = Object.freeze([
+  fileURLToPath(new URL("..", import.meta.url)),
+  fileURLToPath(new URL("../..", import.meta.url)),
+]);
 const LOCK_WAIT_MS = 25;
 const LOCK_MAX_WAIT_MS = 1000;
 const LOCK_MIN_LEASE_MS = 30_000;
@@ -732,12 +741,14 @@ async function publishCache({ cachePath, record, fsOps }) {
   }
 }
 
-async function loadJson(pluginRoot, filename, fsOps) {
-  for (const relativeDirectory of ["references/shared/updates", "shared/updates"]) {
-    try {
-      return JSON.parse(await fsOps.readFile(path.join(pluginRoot, relativeDirectory, filename), "utf8"));
-    } catch (error) {
-      if (error?.code !== "ENOENT") throw error;
+async function loadJson(pluginRoots, filename, fsOps) {
+  for (const pluginRoot of pluginRoots) {
+    for (const relativeDirectory of ["references/shared/updates", "shared/updates"]) {
+      try {
+        return JSON.parse(await fsOps.readFile(path.join(pluginRoot, relativeDirectory, filename), "utf8"));
+      } catch (error) {
+        if (error?.code !== "ENOENT") throw error;
+      }
     }
   }
   throw new Error(`missing update configuration: ${filename}`);
@@ -767,7 +778,7 @@ function trustedConfiguration(policy, installed, checkedAt) {
       tag: component.installedTag,
       draft: false,
       prerelease: false,
-      url: `${component.repository}/releases/tag/${encodeURIComponent(component.installedTag)}`,
+      url: canonicalReleaseUrl(component.repository, component.installedTag),
     }];
   }
   try {
@@ -800,7 +811,7 @@ export function resolveUpdateCachePath({ env = process.env, home = homedir(), pl
 }
 
 export async function checkGameDesignUpdates({
-  pluginRoot = fileURLToPath(new URL("../..", import.meta.url)),
+  pluginRoot = null,
   env = process.env,
   home = homedir(),
   now = Date.now(),
@@ -813,11 +824,12 @@ export async function checkGameDesignUpdates({
     return publicResult({ advisory: createDisabledUpdateAdvisory({ checkedAt }), cache: "disabled" });
   }
   const fsOps = defaultFsOps(fsOverrides);
+  const pluginRoots = pluginRoot === null ? DEFAULT_PLUGIN_ROOTS : [pluginRoot];
   let policy;
   let installed;
   try {
-    policy = await loadJson(pluginRoot, "update-policy.json", fsOps);
-    installed = installedFromManifest(await loadJson(pluginRoot, "installed-components.json", fsOps));
+    policy = await loadJson(pluginRoots, "update-policy.json", fsOps);
+    installed = installedFromManifest(await loadJson(pluginRoots, "installed-components.json", fsOps));
     if (installed === null || !trustedConfiguration(policy, installed, checkedAt)) throw new Error("untrusted update configuration");
   } catch {
     return unknownResult({ checkedAt, cache: "miss" });

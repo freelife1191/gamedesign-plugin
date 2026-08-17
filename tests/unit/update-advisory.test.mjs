@@ -30,7 +30,9 @@ const installed = [
   },
 ];
 
-const releaseUrl = (repository, tag) => `${repository}/releases/tag/${encodeURIComponent(tag)}`;
+// GitHub keeps the separator of a namespaced tag literal in html_url, so only the segments get
+// encoded. Encoding the tag whole would pin these fixtures to a URL the API never returns.
+const releaseUrl = (repository, tag) => `${repository}/releases/tag/${tag.split("/").map((segment) => encodeURIComponent(segment)).join("/")}`;
 
 const currentReleases = {
   skillstead: [{
@@ -82,7 +84,7 @@ test("selects only the latest stable svg-infographic release instead of another 
     installedTag: "svg-infographic/v0.9.0",
     latestTag: "svg-infographic/v0.9.0",
     status: "current",
-    releaseUrl: "https://github.com/kyungseo/skillstead/releases/tag/svg-infographic%2Fv0.9.0",
+    releaseUrl: "https://github.com/kyungseo/skillstead/releases/tag/svg-infographic/v0.9.0",
   });
 });
 
@@ -140,13 +142,16 @@ test("returns unknown rather than current when a matching release response is ma
     policy,
     installed: [installed[1]],
     releases: {
+      // A one- or two-segment tag is now read as a version, because upstreams keep publishing
+      // those and refusing them stranded the whole component forever. A fourth segment is still
+      // unreadable, so it must keep forcing unknown rather than being ordered on a guess.
       archify: [
         currentReleases.archify[0],
         {
-          tag: "v2.14",
+          tag: "v2.14.0.1",
           draft: false,
           prerelease: false,
-          url: releaseUrl("https://github.com/tt-a1i/archify", "v2.14"),
+          url: releaseUrl("https://github.com/tt-a1i/archify", "v2.14.0.1"),
         },
       ],
     },

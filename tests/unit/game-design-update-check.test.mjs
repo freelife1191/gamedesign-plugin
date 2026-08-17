@@ -24,12 +24,18 @@ const INSTALLED = [
   { id: "im-not-ai", repository: "https://github.com/epoko77-ai/im-not-ai", installedTag: "v2.3.0", commit: "82137e858763dadb99561f194c5c00465735017b" },
 ];
 
+// skillstead namespaces its tags, and GitHub keeps that separator literal in html_url. Encoding
+// the tag whole here would make the fixture agree with a URL the API never returns.
+function releaseHtmlUrl(repository, tag) {
+  return `${repository}/releases/tag/${tag.split("/").map((segment) => encodeURIComponent(segment)).join("/")}`;
+}
+
 function apiRelease(tag, repository, { draft = false, prerelease = false } = {}) {
   return {
     tag_name: tag,
     draft,
     prerelease,
-    html_url: `${repository}/releases/tag/${encodeURIComponent(tag)}`,
+    html_url: releaseHtmlUrl(repository, tag),
   };
 }
 
@@ -97,7 +103,7 @@ function cacheValue({ checkedAt = CHECKED_AT, lastNotifiedComponents = [], lastN
       installedTag: component.installedTag,
       latestTag: component.installedTag,
       status: "current",
-      releaseUrl: `${component.repository}/releases/tag/${encodeURIComponent(component.installedTag)}`,
+      releaseUrl: releaseHtmlUrl(component.repository, component.installedTag),
     })),
     lastNotifiedAt,
     lastNotifiedComponents,
