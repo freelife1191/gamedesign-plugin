@@ -12,7 +12,7 @@ Game Design Studio와 Game Design Career를 설치한 사용자가 처음 플러
 - 현재 `game-design-suite` 마켓플레이스는 로컬 소스다. Git 마켓플레이스처럼 원격 snapshot을 갱신할 수 없으므로, 플러그인 자체의 최신 여부는 구성된 마켓플레이스의 설치본·가용본을 비교해야 한다.
 - 번들 스킬은 설치된 플러그인 캐시 안에서 개별 업데이트하지 않는다. Archify, Skillstead SVG, humanize-korean의 새 릴리스가 확인되어도 사용자는 검증된 새 Game Design Suite 릴리스를 설치해야 한다.
 - 원격 최신 버전 검사는 실패할 수 있다. 네트워크 단절, GitHub 제한, 잘못된 응답은 기획 작업을 막지 않으며 `unknown`으로 남긴다.
-- 현재 번들 상태는 Skillstead SVG `0.9.0`, Archify `2.13.0`, humanize-korean `2.3.0`이다. 2026-08-15 검사에서는 Archify `2.14.0` 업데이트가 확인됐다.
+- 현재 번들 상태는 Skillstead SVG `0.9.0`, Archify `2.14.0`, humanize-korean `2.3.0`이다.
 
 ## 검토한 접근
 
@@ -45,6 +45,33 @@ Game Design Studio와 Game Design Career를 설치한 사용자가 처음 플러
    - Git 마켓플레이스: 먼저 `codex plugin marketplace upgrade game-design-suite --json`을 실행하고, 가용 버전을 확인한 뒤 재설치한다.
 6. 새 플러그인이 없다면 번들 스킬만 플러그인 캐시에서 직접 교체하지 않는다. 유지보수자용 업데이트 절차를 안내한다.
 7. 재설치 뒤 새 스킬과 에이전트가 확실히 로드되도록 새 스레드 사용을 안내한다.
+
+## `$gstack-upgrade`에서 채택하는 흐름
+
+Game Design Suite의 명시적 업데이트 UX는 설치된 `$gstack-upgrade`의 다음 순서를 참고한다.
+
+1. 새 버전 여부를 먼저 확인한다.
+2. 설치 형태와 현재 버전을 판별한다.
+3. 변경을 적용하기 전에 이전 버전과 대상 제품을 기록한다.
+4. 업데이트를 수행하고 결과를 다시 검증한다.
+5. 사용자에게 달라진 점을 짧게 설명한다.
+6. 업데이트를 요청하기 전에 하던 작업이 있다면 새 세션에서 이어갈 방법을 안내한다.
+
+다음 동작은 Game Design Suite에 그대로 가져오지 않는다.
+
+- 무인 자동 업데이트와 `auto_upgrade` 설정은 제공하지 않는다. 플러그인, 번들 스킬과 생성 snapshot은 하나의 검증된 릴리스 단위이므로 매번 사용자의 명시적 승인을 받는다.
+- 설치 디렉터리에서 `git reset --hard`, `rm -rf`, 직접 교체 또는 `.bak` 복원을 실행하지 않는다.
+- 설치된 플러그인 캐시나 번들 스킬을 직접 수정하지 않는다. 설치와 교체는 Codex의 `plugin marketplace upgrade`와 `plugin add`만 사용한다.
+- 저장소 checkout의 로컬 변경을 자동 stash하거나 삭제하지 않는다. dirty local marketplace는 업데이트를 중단하고 현재 상태를 보고한다.
+
+새 공통 스킬 `upgrade-game-design-suite`는 두 제품에 동일 바이트로 포함한다. Studio와 Career 중 어느 제품에서 호출해도 설치된 두 제품을 한 번에 점검하고, 사용자가 선택한 제품만 갱신한다. 스킬은 다음 사용자 선택을 제공한다.
+
+- 지금 업데이트: 검증된 계획을 적용한다.
+- 나중에: 기존 7일 advisory 상태를 유지하고 현재 작업으로 돌아간다.
+- 이 버전은 다시 알리지 않기: 해당 최신 버전 조합에 대해서만 알림을 억제한다.
+- 업데이트 알림 끄기: 기존 opt-out 계약을 안내하고 검사·캐시 쓰기를 중단한다.
+
+스킬은 업데이트 성공 뒤 이전 버전, 새 버전, 갱신된 제품, 번들 구성 요소 변화, 검증 결과를 5~7개 이하의 항목으로 요약한다. 변경 내역의 근거가 없으면 기능을 추측하지 않고 버전·검증 결과만 표시한다.
 
 ## 런타임 구성
 
@@ -108,7 +135,17 @@ GitHub 응답에서 draft와 prerelease를 제외하고, 구성 요소별 안정
 
 플러그인 자체는 임의 GitHub URL을 발명하지 않는다. 현재 배포 권위는 구성된 `game-design-suite` 마켓플레이스다.
 
-자동 SessionStart 검사는 설치 플러그인의 버전만 공개한다. 사용자가 업데이트를 요청했을 때 읽기 전용 `codex plugin list --marketplace game-design-suite --available --json`으로 가용 source 버전을 확인한다. Git 마켓플레이스일 때만 명시적 업데이트 단계에서 snapshot upgrade를 수행한다. 로컬 마켓플레이스에서는 source manifest가 새 버전일 때 재설치한다.
+자동 SessionStart 검사는 설치 플러그인의 버전만 공개한다. `--available`은 설치되지 않은 항목만 보여 주므로 설치된 같은 제품의 최신 버전 근거로 사용하지 않는다.
+
+사용자가 `upgrade-game-design-suite`를 호출하면 다음 순서로 비교한다.
+
+1. `codex plugin list --marketplace game-design-suite --json`에서 설치된 제품, 설치 버전, marketplace 종류와 현재 source 경로를 읽는다.
+2. 로컬 marketplace는 source 경로가 marketplace root 안의 정규 디렉터리인지 확인하고 `.codex-plugin/plugin.json`을 symlink 없이 UTF-8로 읽는다.
+3. Git marketplace는 사용자 승인 뒤 `codex plugin marketplace upgrade game-design-suite --json`을 먼저 실행한 다음 갱신된 local snapshot의 manifest를 같은 방식으로 읽는다.
+4. manifest의 이름이 대상 제품과 같고 안정 SemVer가 설치 버전보다 높을 때만 `codex plugin add <plugin>@game-design-suite --json` 계획을 만든다.
+5. 같은 버전, 낮은 버전, prerelease, 잘못된 UTF-8, BOM, symlink, marketplace 밖 경로, 이름 불일치는 `current` 또는 `unknown`으로 끝내며 설치 명령을 만들지 않는다.
+
+Codex CLI `0.147.0` 격리 확인에서는 같은 selector에 `plugin add`를 다시 실행해 `0.1.1`을 `0.1.2`로 교체했으며 이전 버전 캐시는 제거됐다. 이 동작을 E2E로 고정하되, 설치 캐시를 직접 조작하는 fallback은 만들지 않는다.
 
 향후 공식 원격 저장소가 정해지면 정책 파일에 신뢰된 suite release channel을 추가할 수 있다. 그 전에는 원격 suite 최신 여부를 사실처럼 표시하지 않는다.
 
@@ -136,7 +173,7 @@ GitHub 응답에서 draft와 prerelease를 제외하고, 구성 요소별 안정
 
 예시:
 
-> Archify 새 안정 버전 2.14.0을 확인했습니다. 현재 플러그인에는 검증된 2.13.0이 포함되어 있으며 자동으로 바꾸지는 않았습니다. 새 Game Design Suite 릴리스가 준비됐는지 확인하려면 “플러그인 업데이트 확인해 줘”라고 요청하세요.
+> 번들 구성 요소의 새 안정 버전을 확인했습니다. 현재 플러그인의 검증된 버전은 자동으로 바꾸지 않았습니다. 새 Game Design Suite 릴리스가 준비됐는지 확인하려면 “Game Design Suite를 업데이트해 줘”라고 요청하세요.
 
 `최신 버전이니까 즉시 설치`, `보안상 반드시 업데이트`, `자동으로 업데이트됨`처럼 근거가 없는 표현은 사용하지 않는다.
 
@@ -168,7 +205,9 @@ GitHub 응답에서 draft와 prerelease를 제외하고, 구성 요소별 안정
 - source 정책과 Studio·Career package 정책이 byte-exact다.
 - SessionStart 기존 output key와 capability 의미가 유지되고 `updates`만 폐쇄적으로 추가된다.
 - updater가 lock file, official repository, tag, commit, license, closure를 검증한다.
-- 플러그인 자체 가용 버전 확인은 `codex plugin list --available --json`의 허용 필드만 읽는다.
+- 설치 inventory는 `codex plugin list --marketplace game-design-suite --json`의 허용 필드만 읽고, `--available` 결과를 설치된 같은 제품의 최신 근거로 사용하지 않는다.
+- 설치된 플러그인의 source manifest 비교는 marketplace root containment, 정규 파일, UTF-8, BOM 부재, 이름과 안정 SemVer를 모두 검증한다.
+- `upgrade-game-design-suite`의 source와 Studio·Career package가 byte-exact이고 두 제품에서 같은 계획을 반환한다.
 
 ### E2E
 
@@ -177,12 +216,16 @@ GitHub 응답에서 draft와 prerelease를 제외하고, 구성 요소별 안정
 - offline 설치·첫 실행은 정상이며 update status만 `unknown`이다.
 - explicit update 경로는 사용자 승인 전 `marketplace upgrade`와 `plugin add`를 호출하지 않는다.
 - 승인 후 local/Git marketplace별 정확한 명령만 실행하고 새 thread 안내를 반환한다.
+- 로컬 marketplace `0.1.1 → 0.1.2` fixture에서 `plugin add`가 새 버전을 설치하고 이전 캐시를 제거한다.
+- Git marketplace는 승인 전 refresh 0회이며, 승인 뒤 refresh 1회 후 manifest를 다시 읽는다.
+- 업데이트 성공 뒤 이전·새 버전과 검증 결과를 요약하고 원래 작업의 새 세션 재개 지침을 반환한다.
 - 제거 후에도 사용자 프로젝트와 다른 플러그인 파일을 바꾸지 않는다.
 
 ## 문서 범위
 
 - 루트 README 설치 섹션에 최초·주기 검사, opt-out, 명시적 업데이트 원칙을 추가한다.
 - Studio/Career README에 동일한 사용자 흐름을 짧게 추가한다.
+- Studio/Career 스킬 카탈로그와 설치 가이드에 `$game-design-*:upgrade-game-design-suite` 직접 호출 예시를 추가한다.
 - 기술 문서에 유지보수자 명령과 release audit를 기록한다.
 - 버전별 release note에는 번들 구성 요소 버전을 표로 남긴다.
 
