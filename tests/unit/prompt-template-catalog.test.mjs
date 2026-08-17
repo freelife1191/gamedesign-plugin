@@ -11,6 +11,12 @@ import {
 } from "../../tooling/lib/prompt-template-catalog.mjs";
 import { collectProductInventory } from "../../tooling/lib/user-guides.mjs";
 
+function imagePolicyModes(markdown) {
+  return [...markdown.matchAll(/^\|\s*\**\s*`([a-z][a-z-]*)`\s*\**\s*\|/gmu)]
+    .map(([, mode]) => mode)
+    .sort();
+}
+
 const STUDIO_SKILLS = [
   "apply-document-quality-profile", "define-game-vision", "design-cutscene-visual-preproduction", "design-game-content",
   "design-game-economy-and-liveops", "design-game-systems", "design-player-experience",
@@ -881,9 +887,7 @@ test("Studio visual catalog preserves image mode routing, no-key capability boun
   const imageModes = (value) => [...new Set(leaves(value).flatMap((leaf) => (
     [...leaf.matchAll(/\bIMAGE_GEN_MODE\s*=\s*([a-z][a-z-]*)\b/giu)].map(([, mode]) => mode)
   )))].sort();
-  const policyModes = [...imagePolicy.matchAll(/^\|\s*`([a-z][a-z-]*)`\s*\|/gmu)]
-    .map(([, mode]) => mode)
-    .sort();
+  const policyModes = imagePolicyModes(imagePolicy);
   const allowedModes = ["all", "prompt-only", "required", "select"];
   const generationEntries = entries.filter(({ skill }) => skill === "generate-image-assets");
   const contract = leaves(generationEntries).join(" ");
@@ -1301,7 +1305,7 @@ test("Career visual catalog preserves closed image modes, safe provider routing,
   const imageEntries = entries.filter(({ skill }) => ["plan-image-assets", "generate-image-assets"].includes(skill));
   const contract = leaves(imageEntries).join(" ");
 
-  assert.deepEqual(imagePolicy.match(/^\|\s*`([a-z][a-z-]*)`\s*\|/gmu)?.map((row) => row.match(/`([a-z][a-z-]*)`/u)[1]).sort(), allowedModes);
+  assert.deepEqual(imagePolicyModes(imagePolicy), allowedModes, "Career image policy closed mode set");
   assert.deepEqual(imageModes(entries), allowedModes);
   assert.match(contract, /gpt-image-2/iu);
   assert.match(contract, /IMAGE_QUALITY.*low|low.*IMAGE_QUALITY/iu);
@@ -2224,4 +2228,29 @@ test("resume prompts reject credential requests after a without-credentials stat
   const result = validatePromptTemplateCatalog({ entries: [entry] });
   assert.equal(result.ok, false);
   assert.match(result.errors.join("\n"), /resume_prompt.*credentials/u);
+});
+
+test("image policy mode table survives Markdown emphasis on the mode cell", () => {
+  const plain = [
+    "| 모드 | 생성 범위 | 승인·비용 경계 |",
+    "| --- | --- | --- |",
+    "| `prompt-only` | 외부 호출 0회 | 기본값 |",
+    "| `select` | 선택 자산만 | 선택 기록 필요 |",
+    "",
+  ].join("\n");
+  const emphasized = [
+    "| 모드 | 생성 범위 | 승인·비용 경계 |",
+    "| --- | --- | --- |",
+    "| **`prompt-only`** | **외부 호출 0회.** 계획만 | **기본값입니다.** |",
+    "| `select` | 선택 자산만 | 선택 기록 필요 |",
+    "",
+  ].join("\n");
+
+  assert.deepEqual(imagePolicyModes(plain), ["prompt-only", "select"]);
+  assert.deepEqual(
+    imagePolicyModes(emphasized),
+    imagePolicyModes(plain),
+    "emphasis must not change the closed mode set",
+  );
+  assert.deepEqual(imagePolicyModes("| 모드 | 범위 |\n| --- | --- |\n| 자유 텍스트 | 무시 |\n"), []);
 });
