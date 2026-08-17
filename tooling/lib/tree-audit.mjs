@@ -8,8 +8,14 @@ const utf8 = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 const relativeReference = /(?:^|[('"`\s])((?:\.\.[/\\])+[^)'"`\s]+)/gu;
 const vendorCliPath = /(?:^|\/)(?:\.claude\/skills\/svg-infographic|\.agents\/skills\/svg-infographic|skills\/svg-infographic)\/scripts\/(?:check-svg|render)\.mjs$/u;
 // Exact package-relative path to a regex whose matches are stripped before the sibling check, for the
-// few shared files that must legitimately declare both product IDs. Each matcher stays as narrow as the
-// declaration it permits, so any other mention of the sibling in the same file still fails the gate.
+// few shared files that must legitimately declare both product IDs. Two kinds live here, and they are
+// not equally narrow. The first three are declaration-pinned: each permits one exact line, so every
+// other sibling mention in that file still fails. The last two are token-class matchers that permit the
+// quoted product identifier anywhere in one specific file — the handoff contract is projected
+// byte-identically into both packages, so it necessarily names the sibling throughout. That exemption is
+// still bounded three ways: it is keyed to those two paths and reaches no other file, it strips only the
+// quoted form so prose and unquoted mentions still fail, and tests/isolation/plugin-smoke.test.mjs pins
+// both of those edges. Widening either matcher means re-checking those pins.
 const sharedIdentityMatchers = new Map([
   [
     "references/shared/updates/update-policy.json",

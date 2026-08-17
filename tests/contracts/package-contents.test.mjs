@@ -225,6 +225,7 @@ test("generated snapshots contain the exact clean product build plus the suite m
         "references/source/authoring-map.json",
         "scripts/lib/skillstead-svg-lint.mjs",
       ]) assert.equal(packageFiles.includes(forbidden), false, `${productName}: forbidden ${forbidden}`);
+      const sibling = productName === "game-design-studio" ? "game-design-career" : "game-design-studio";
       for (const { relativePath, bytes } of entries) {
         assert.equal(
           /(?:^|\/)\.env(?:\.[^/]+)?$/u.test(relativePath) && relativePath !== ".env.example" && relativePath !== "references/shared/image-assets/.env.example",
@@ -244,14 +245,13 @@ test("generated snapshots contain the exact clean product build plus the suite m
           // The handoff contract is byte-identical in both packages, so it necessarily names the
           // sibling. It may do so only as a quoted product id; strip that form and the ordinary
           // sibling rule still judges the rest, so a prose mention here fails exactly as elsewhere.
-          const sibling = productName === "game-design-studio" ? "game-design-career" : "game-design-studio";
           assert.doesNotMatch(
             bytes.toString("utf8").replaceAll(`"${sibling}"`, ""),
             new RegExp(sibling, "u"),
             `${productName}: handoff contract may name the sibling only as a quoted product id`,
           );
         } else {
-          assert.doesNotMatch(bytes.toString("utf8"), new RegExp(productName === "game-design-studio" ? "game-design-career" : "game-design-studio", "u"), `${productName}: sibling reference ${relativePath}`);
+          assert.doesNotMatch(bytes.toString("utf8"), new RegExp(sibling, "u"), `${productName}: sibling reference ${relativePath}`);
         }
       }
 
