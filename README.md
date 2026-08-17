@@ -79,7 +79,7 @@
 
 ### ⚙️ 짧게 요청해도 체계가 작동합니다
 
-Studio에는 제품 스킬 16개와 공통 스킬 9개, 설치 스킬 25개가 들어갑니다. Career에는 제품 스킬 15개와 공통 스킬 9개, 설치 스킬 24개가 들어갑니다. 공통 스킬은 레퍼런스 분석, 용어 사전 관리와 프로젝트 기억을 담당합니다. 컷씬 장면·이미지 사전 설계는 Studio 전용 스킬입니다. Studio에는 전문 역할 12개, Career에는 전문 역할 10개가 있으며 요청에 맞는 역할만 골라 씁니다. 사용자가 스킬 이름을 일일이 나열할 필요는 없습니다. 요청이 분명하면 가장 짧은 전문 경로를 선택하고 복합 요청은 오케스트레이터가 필요한 단계만 묶습니다.
+Studio에는 제품 스킬 17개와 공통 스킬 9개, 설치 스킬 26개가 들어갑니다. Career에는 제품 스킬 16개와 공통 스킬 9개, 설치 스킬 25개가 들어갑니다. 공통 스킬은 레퍼런스 분석, 용어 사전 관리와 프로젝트 기억을 담당합니다. 컷씬 장면·이미지 사전 설계는 Studio 전용 스킬입니다. Studio에는 전문 역할 12개, Career에는 전문 역할 10개가 있으며 요청에 맞는 역할만 골라 씁니다. 사용자가 스킬 이름을 일일이 나열할 필요는 없습니다. 요청이 분명하면 가장 짧은 전문 경로를 선택하고 복합 요청은 오케스트레이터가 필요한 단계만 묶습니다.
 
 시작할 때 `SessionStart` 훅이 문서 변환기, 브라우저와 이미지 생성 기능을 확인합니다. 작업이 끝날 때는 `Stop` 훅이 표시된 기준 기획 결과물과 요청한 형식을 다시 점검합니다. 두 훅 모두 결과를 자동으로 승인하지 않습니다. 검토 담당자가 승인하거나 보류합니다. 보류 이유와 남은 작업을 기록해 다음 요청에서 보류한 지점부터 다시 시작합니다.
 
@@ -1760,7 +1760,7 @@ Studio는 제품 스킬 16개와 공통 스킬 9개로 총 25개, Career는 제�
 <details>
 <summary>Studio 설치 스킬 전체 보기</summary>
 
-### Studio 설치 스킬 25개
+### Studio 설치 스킬 26개
 
 | 스킬 이름과 ID | 사용하는 때 | 핵심 결과 | 직접 호출 | 상세 가이드 |
 | --- | --- | --- | --- | --- |
@@ -1774,6 +1774,7 @@ Studio는 제품 스킬 16개와 공통 스킬 9개로 총 25개, Career는 제�
 | 게임 시스템 설계 (`design-game-systems`) | 규칙·상태·예외를 구현 가능한 기준으로 정리할 때 | 규칙, 상태, 우선순위, 예외와 데이터 관계를 시스템 명세로 만듭니다. | `$game-design-studio:design-game-systems` | [게임 시스템 설계 상세 가이드](guides/game-design-studio/skills/design-game-systems.md) |
 | 플레이어 경험 설계 (`design-player-experience`) | 화면 흐름·입력·접근성 문제를 점검할 때 | 정보 구조, 상호작용, 온보딩과 접근성 흐름을 정리합니다. | `$game-design-studio:design-player-experience` | [플레이어 경험 설계 상세 가이드](guides/game-design-studio/skills/design-player-experience.md) |
 | 기획 문서 내보내기 준비 (`export-game-design-documents`) | 검토한 기획서를 PDF·문서·발표 자료로 준비할 때 | 검증된 기준 결과 폴더의 MD, PDF, DOCX, PPTX 준비 상태를 기록합니다. | `$game-design-studio:export-game-design-documents` | [기획 문서 내보내기 준비 상세 가이드](guides/game-design-studio/skills/export-game-design-documents.md) |
+| 대표 진입 (`game-design-studio`) | 어떤 스킬이 요청의 소유자인지 모를 때 | 요청을 소유 제품 하나와 실행 경로 하나로 정리하고 라우팅 영수증을 남깁니다. | `$game-design-studio:game-design-studio` | [대표 진입 상세 가이드](guides/game-design-studio/skills/game-design-studio.md) |
 | 이미지 자산 생성 (`generate-image-assets`) | 승인된 이미지 목록에서 필요한 항목만 만들 때 | 승인된 목록의 선택 작업만 생성하고 이미지 제공자 상태를 기록합니다. | `$game-design-studio:generate-image-assets` | [이미지 자산 생성 상세 가이드](guides/game-design-studio/skills/generate-image-assets.md) |
 | 한국어 문장 다듬기 (`humanize-korean`) | 검토한 초안의 어색한 문체만 자연스럽게 다듬을 때 | 사실과 수치, ID를 보존하며 기계적인 표현을 자연스러운 문장으로 다듬습니다. | `$game-design-studio:humanize-korean` | [한국어 문장 다듬기 상세 가이드](guides/game-design-studio/skills/humanize-korean.md) |
 | 프로젝트 기억 후보 기록 (`capture-game-design-memory`) | 검증한 작업에서 다시 쓸 교훈을 후보로 남길 때 | 출처와 적용·제외 조건이 붙은 검토 대기 후보를 기록합니다. | `$game-design-studio:capture-game-design-memory` | [Studio 프로젝트 기억](guides/game-design-studio/memory.md) |
@@ -1795,7 +1796,7 @@ Studio는 제품 스킬 16개와 공통 스킬 9개로 총 25개, Career는 제�
 <details>
 <summary>Career 설치 스킬 전체 보기</summary>
 
-### Career 설치 스킬 24개
+### Career 설치 스킬 25개
 
 | 스킬 이름과 ID | 사용하는 때 | 핵심 결과 | 직접 호출 | 상세 가이드 |
 | --- | --- | --- | --- | --- |
@@ -1804,6 +1805,7 @@ Studio는 제품 스킬 16개와 공통 스킬 9개로 총 25개, Career는 제�
 | 경력 구조 도식 만들기 (`archify`) | 경력 경로·작업 흐름을 탐색 가능한 HTML로 설명할 때 | 경력 경로와 작업 흐름을 탐색 가능한 HTML 구조 도식으로 만듭니다. | `$game-design-career:archify` | [경력 구조 도식 만들기 상세 가이드](guides/game-design-career/skills/archify.md) |
 | 기획 포트폴리오 만들기 (`build-game-design-portfolio`) | 공개 가능한 기획 결과를 포트폴리오 사례로 정리할 때 | 공개 가능한 판단, 개인 기여와 검증을 포트폴리오 사례로 만듭니다. | `$game-design-career:build-game-design-portfolio` | [기획 포트폴리오 만들기 상세 가이드](guides/game-design-career/skills/build-game-design-portfolio.md) |
 | 경력 문서 내보내기 준비 (`export-career-documents`) | 검토한 경력 문서를 제출·발표 형식으로 준비할 때 | 경력 기준 결과 폴더의 MD, PDF, DOCX, PPTX 준비 상태를 기록합니다. | `$game-design-career:export-career-documents` | [경력 문서 내보내기 준비 상세 가이드](guides/game-design-career/skills/export-career-documents.md) |
+| 경력 대표 진입 (`game-design-career`) | 어떤 스킬이 요청의 소유자인지 모를 때 | 경력 요청을 소유 제품 하나와 실행 경로 하나로 정리하고 라우팅 영수증을 남깁니다. | `$game-design-career:game-design-career` | [경력 대표 진입 상세 가이드](guides/game-design-career/skills/game-design-career.md) |
 | 경력 이미지 자산 생성 (`generate-image-assets`) | 승인된 포트폴리오 이미지 항목만 만들 때 | 승인된 이미지 목록의 선택 작업만 생성하고 이미지 제공자 상태를 기록합니다. | `$game-design-career:generate-image-assets` | [경력 이미지 자산 생성 상세 가이드](guides/game-design-career/skills/generate-image-assets.md) |
 | 경력 문장 다듬기 (`humanize-korean`) | 증거를 보존하며 포트폴리오 문체만 자연스럽게 다듬을 때 | 증거와 주장 경계를 보존하며 기계적인 표현을 자연스러운 문장으로 다듬습니다. | `$game-design-career:humanize-korean` | [경력 문장 다듬기 상세 가이드](guides/game-design-career/skills/humanize-korean.md) |
 | 프로젝트 기억 후보 기록 (`capture-game-design-memory`) | 검증한 학습·포트폴리오 작업에서 다시 쓸 교훈을 후보로 남길 때 | 출처와 적용·제외 조건이 붙은 검토 대기 후보를 기록합니다. | `$game-design-career:capture-game-design-memory` | [Career 프로젝트 기억](guides/game-design-career/memory.md) |
@@ -1938,7 +1940,7 @@ Skillstead 미리보기는 **Studio·Career의 결과 경계와 사람 승인·�
 
 ### Studio 설치 패키지 구조
 
-Studio 생성본 (snapshot)은 에이전트 12개, 설치 스킬 25개, 템플릿 15개와 최상위 실행 스크립트 32개를 포함합니다.
+Studio 생성본 (snapshot)은 에이전트 12개, 설치 스킬 26개, 템플릿 15개와 최상위 실행 스크립트 32개를 포함합니다.
 
 ```text
 plugins/game-design-studio/
@@ -1965,7 +1967,7 @@ generated snapshot: plugins/game-design-studio/
 
 ### Career 설치 패키지 구조
 
-Career 생성본 (snapshot)은 에이전트 10개, 설치 스킬 24개, 템플릿 15개와 최상위 실행 스크립트 32개를 포함합니다.
+Career 생성본 (snapshot)은 에이전트 10개, 설치 스킬 25개, 템플릿 15개와 최상위 실행 스크립트 32개를 포함합니다.
 
 ```text
 plugins/game-design-career/
@@ -2206,7 +2208,7 @@ Source tree, build·release·검증 명령과 패키지 내부 계약은 기술 
 <details>
 <summary>패키지 기술 inventory</summary>
 
-표준 빌드는 Studio에 전문 에이전트 12개와 설치 스킬 25개, Career에 전문 에이전트 10개와 설치 스킬 24개, 각 제품에 Canonical Artifact 템플릿 15개와 최상위 실행 스크립트 32개를 포함합니다. 공통 변경은 `shared/`, 제품 변경은 `products/<product>/plugin/`에서 작성합니다.
+표준 빌드는 Studio에 전문 에이전트 12개와 설치 스킬 26개, Career에 전문 에이전트 10개와 설치 스킬 25개, 각 제품에 Canonical Artifact 템플릿 15개와 최상위 실행 스크립트 32개를 포함합니다. 공통 변경은 `shared/`, 제품 변경은 `products/<product>/plugin/`에서 작성합니다.
 
 | 기술 경로 | 역할 |
 | --- | --- |

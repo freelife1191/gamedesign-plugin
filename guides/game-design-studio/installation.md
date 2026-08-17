@@ -2,7 +2,7 @@
 
 App와 CLI는 설치·확인·활성화·제거 표면이 다릅니다. 사용하는 환경의 절차만 따르세요. 공식 기준은 [OpenAI Plugins](https://learn.chatgpt.com/docs/plugins), [Codex CLI plugin](https://learn.chatgpt.com/docs/developer-commands?surface=cli#cli-codex-plugin), [Codex CLI marketplace](https://learn.chatgpt.com/docs/developer-commands?surface=cli#cli-codex-plugin-marketplace)입니다.
 
-설치되는 구성은 제품 스킬 16개와 공통 스킬 8개, 모두 24개입니다. 공통 스킬에는 레퍼런스 분석과 용어 사전 관리가 포함됩니다. 컷씬 작업은 [컷씬 장면·이미지 사전 설계](cutscene-visual-preproduction.md)에서 비용 확인, 실시간 승인과 연속성 검토를 나눕니다. 설치·업데이트·제거는 프로젝트의 로컬 기억 폴더 `.game-design/`을 만들거나 지우지 않습니다. 기억의 기본값과 완전 비활성화 방법은 [Studio 프로젝트 기억](memory.md)을 확인하세요.
+설치되는 구성은 제품 스킬 17개와 공통 스킬 9개, 모두 26개입니다. 공통 스킬에는 레퍼런스 분석과 용어 사전 관리가 포함됩니다. 컷씬 작업은 [컷씬 장면·이미지 사전 설계](cutscene-visual-preproduction.md)에서 비용 확인, 실시간 승인과 연속성 검토를 나눕니다. 설치·업데이트·제거는 프로젝트의 로컬 기억 폴더 `.game-design/`을 만들거나 지우지 않습니다. 기억의 기본값과 완전 비활성화 방법은 [Studio 프로젝트 기억](memory.md)을 확인하세요.
 
 ## Codex App 설치
 

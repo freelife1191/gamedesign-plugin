@@ -6,6 +6,7 @@
 
 | 스킬 | 직접 호출 신호 | 피할 때 | 입력 | 결과 | 다음 스킬 | 상세 가이드 |
 | --- | --- | --- | --- | --- | --- | --- |
+| `game-design-studio` | `$game-design-studio:game-design-studio` — 어떤 스킬이 소유자인지 모를 때 | 결과가 하나로 분명할 때 | 원하는 결과·가진 자료·공개 범위·결정 담당자·출력 형식 | 라우팅 영수증 | 선택된 route 하나 | [직접 호출](../skills/game-design-studio.md#직접-호출-활용-game-design-studio) |
 | `orchestrate-game-design-project` | `$game-design-studio:orchestrate-game-design-project` — 복수 도메인·gate | 한 output이 분명할 때 | 대상·경험·플랫폼·제약·owner | bounded brief·canonical route | 선택된 route 하나 | [직접 호출](../skills/orchestrate-game-design-project.md#직접-호출-활용-orchestrate-game-design-project) |
 
 ## 도메인 설계

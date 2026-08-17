@@ -38,6 +38,7 @@ const DIRECT_USE_OUTPUTS = Object.freeze({
   "design-game-systems": ["content.md", "evidence.yml", "export-manifest.yml"],
   "design-player-experience": ["content.md", "evidence.yml", "export-manifest.yml"],
   "export-game-design-documents": ["content.md", "evidence.yml", "export-manifest.yml", "not-run", "evidence는 비어 있음"],
+  "game-design-studio": ["content.md", "evidence.yml", "export-manifest.yml"],
   "generate-image-assets": ["content.md", "evidence.yml", "export-manifest.yml", "assets/image-assets.yml", "assets/receipts/image-generation-<asset-id>-<attempt-id>.json"],
   "orchestrate-game-design-project": ["content.md", "evidence.yml", "export-manifest.yml"],
   "plan-game-production": ["content.md", "evidence.yml", "export-manifest.yml"],
@@ -56,6 +57,7 @@ const DIRECT_USE_HANDOFFS = Object.freeze({
   "design-game-systems": [["rule precedence", "review-game-design"]],
   "design-player-experience": [["critical action", "review-game-design"]],
   "export-game-design-documents": [["정상적으로 검증된 preparation manifest의 요청 job이 `pending`", "downstream"], ["`unavailable` job의 capability가 `available`로 바뀌었", "export-game-design-documents"]],
+  "game-design-studio": [["선택된 route", "<selected-skill>"]],
   "generate-image-assets": [["named human approval", "review-image-assets"]],
   "orchestrate-game-design-project": [["선택된 route", "<selected-skill>"]],
   "plan-game-production": [["scope·risk", "review-game-design"]],
@@ -66,6 +68,7 @@ const DIRECT_USE_HANDOFFS = Object.freeze({
   "visualize-game-design": [["review finding", "review-game-design"], ["모든 blocker", "export-game-design-documents"]],
 });
 const WORKBENCH_LANES = Object.freeze({
+  "game-design-studio": "오케스트레이션",
   "orchestrate-game-design-project": "오케스트레이션",
   "define-game-vision": "도메인 설계",
   "design-game-systems": "도메인 설계",
@@ -276,7 +279,7 @@ function assertStudioGuideRouting(index, skillIndex) {
 
 test("Studio documents every installed skill with the common contract", async () => {
   const inventory = await collectProductInventory(root, "game-design-studio");
-  assert.equal(inventory.skillIds.length, 25);
+  assert.equal(inventory.skillIds.length, 26);
 
   for (const skillId of directSkillGuideIds(inventory)) {
     const markdown = await readFile(

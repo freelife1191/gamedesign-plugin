@@ -1,6 +1,6 @@
 # Game Design Career 스킬 레퍼런스
 
-설치된 Career 제품 스킬 15개와 공통 스킬 9개를 합친 설치 스킬 24개를 정리합니다. 공통 스킬은 Archify, humanize-korean, Skillstead, 프로젝트 기억 스킬 3개, 레퍼런스 분석·용어 사전 스킬 2개와 스위트 업데이트 스킬 1개입니다. 단계나 목표 역할이 불명확하면 오케스트레이터로 시작하고, 산출물이 명확하면 해당 스킬을 직접 호출합니다.
+설치된 Career 제품 스킬 16개와 공통 스킬 9개를 합친 설치 스킬 25개를 정리합니다. 공통 스킬은 Archify, humanize-korean, Skillstead, 프로젝트 기억 스킬 3개, 레퍼런스 분석·용어 사전 스킬 2개와 스위트 업데이트 스킬 1개입니다. 단계나 목표 역할이 불명확하면 오케스트레이터로 시작하고, 산출물이 명확하면 해당 스킬을 직접 호출합니다.
 
 ## 오케스트레이터와 직접 호출
 
@@ -19,6 +19,7 @@
 | [`capture-game-design-memory`](../memory.md#기본-작업-흐름) | 검증한 Career 교훈을 후보로 기록 | `$game-design-career:capture-game-design-memory` | 프로젝트 기억 | 출처가 연결된 결과, 적용·제외 조건 | 검토 대기 후보와 기록 결과 |
 | [`build-game-design-portfolio`](build-game-design-portfolio.md) | 결정·실험·협업 증거를 case study로 구성 | `$game-design-career:build-game-design-portfolio` | `creative-design-portfolio` | 목표 역량, claim, 기여, evidence | case study와 claim-evidence index |
 | [`export-career-documents`](export-career-documents.md) | Career 문서의 다중 형식 작업 준비 | `$game-design-career:export-career-documents` | 선택된 canonical artifact | artifact, MD/PDF/DOCX/PPTX, capability | renderer-neutral job manifest |
+| [`game-design-career`](game-design-career.md) | 대표 진입: 요청을 소유 제품·실행 경로 하나와 라우팅 영수증으로 정리 | `$game-design-career:game-design-career` | 위임된 스킬의 산출물 | 원하는 결과, 가진 자료, 공개 범위, 결정 담당자, 출력 형식 | 라우팅 영수증과 선택된 스킬 |
 | [`generate-image-assets`](generate-image-assets.md) | mode와 사용자 선택에 맞는 이미지 생성 라우팅 | `$game-design-career:generate-image-assets` | 선택된 canonical artifact | manifest, prompt, mode, selection receipt | generation 결과와 review handoff |
 | [`humanize-korean`](humanize-korean.md) | 증거·주장 경계를 보존한 한국어 문체 검토 | `$game-design-career:humanize-korean` | 선택된 canonical artifact | 원문, 독자, 보호 항목 | 자연스러운 수정안과 변경 요약 |
 | [`maintain-game-design-memory`](../memory.md#후보-확인승인거부폐기-예시) | 후보 확인과 사람 승인·거부·폐기 | `$game-design-career:maintain-game-design-memory` | 프로젝트 기억 | 기억 ID, 이름 있는 사람, 결정 이유 | 상태 변경 이력 또는 충돌 안내 |

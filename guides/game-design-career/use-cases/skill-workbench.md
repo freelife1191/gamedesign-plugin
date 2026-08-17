@@ -1,6 +1,6 @@
 # Career 스킬 워크벤치
 
-이 표는 설치된 Career 스킬 24개를 한 번씩만 분류합니다. 입력과 output 하나가 확정된 작업은 직접 스킬 호출로 시작하고, 여러 단계·역할·우선순위가 섞일 때만 오케스트레이터로 범위를 나눕니다. 생성·렌더·추천은 사람 승인이나 채용 결과를 대신하지 않습니다.
+이 표는 설치된 Career 스킬 25개를 한 번씩만 분류합니다. 입력과 output 하나가 확정된 작업은 직접 스킬 호출로 시작하고, 여러 단계·역할·우선순위가 섞일 때만 오케스트레이터로 범위를 나눕니다. 생성·렌더·추천은 사람 승인이나 채용 결과를 대신하지 않습니다.
 
 ## 역할·근거 lane
 
@@ -10,6 +10,7 @@
 | [`humanize-korean`](../skills/humanize-korean.md) | 증거와 수치를 바꾸지 않고 문체만 다듬을 때 | 수정안은 `game-design-writing-editor` 또는 작성자가 의미·주장 경계를 확인합니다. |
 | [`polish-game-design-writing`](../skills/polish-game-design-writing.md) | 긴 포트폴리오·학습 문장의 표현만 윤문할 때 | 경험·증거 ID와 공개·보류 판단은 사람이 다시 확인합니다. |
 | [`map-game-design-career`](../skills/map-game-design-career.md) | 한 역할의 current evidence와 gap만 비교할 때 | `career-strategist`가 사실·추론·제안을 구분합니다. |
+| [`game-design-career`](../skills/game-design-career.md) | 어떤 스킬이 요청의 소유자인지 모를 때 | 라우팅은 승인이 아니며 위임된 스킬의 승인 규칙이 그대로 적용됩니다. |
 | [`orchestrate-game-design-career`](../skills/orchestrate-game-design-career.md) | 여러 Career stage와 completion gate를 한 brief로 묶을 때 | route 선택은 사실·추론·제안과 named owner를 보존합니다. |
 | [`research-game-design-jobs`](../skills/research-game-design-jobs.md) | 한 role·level·region의 current posting sample만 조사할 때 | `sourceUrl`, `location`, `retrievalDate`, `region`, sample boundary, `reviewAfter`가 없으면 current claim을 만들지 않습니다. |
 | [`analyze-game-design-references`](../reference-analysis.md) | 경쟁작 관찰을 포트폴리오 분석 근거로 정리할 때 | 관찰·추론·가설을 나누고, 설계 전환 제안은 `pending-review`로 남깁니다. |

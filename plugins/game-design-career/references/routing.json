@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "skillIds": [
+    "game-design-career",
     "orchestrate-game-design-career",
     "map-game-design-career",
     "research-game-design-jobs",
@@ -69,6 +70,11 @@
           "owners": ["reverse-design-critic"]
         }
       ]
+    },
+    {
+      "skill": "game-design-career",
+      "owners": ["career-strategist"],
+      "conditionalOwners": []
     },
     {
       "skill": "generate-image-assets",
@@ -173,6 +179,7 @@
   ],
   "plannedPaths": {
     "skills": [
+      "skills/game-design-career/SKILL.md",
       "skills/orchestrate-game-design-career/SKILL.md",
       "skills/map-game-design-career/SKILL.md",
       "skills/research-game-design-jobs/SKILL.md",

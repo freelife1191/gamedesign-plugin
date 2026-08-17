@@ -50,8 +50,8 @@ test("codex exec uses the slow marketplace timeout through its runner seam", () 
 
 test("marketplace smoke expects each product's exact installed skill inventory", () => {
   assert.deepEqual(PACKAGED_SKILL_COUNTS, {
-    "game-design-career": 23,
-    "game-design-studio": 24,
+    "game-design-career": 25,
+    "game-design-studio": 26,
   });
 });
 

@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "skillIds": [
+    "game-design-studio",
     "orchestrate-game-design-project",
     "define-game-vision",
     "design-game-systems",
@@ -55,6 +56,7 @@
   "unknownIntentFallback": "orchestrate-game-design-project",
   "plannedPaths": {
     "skills": [
+      "skills/game-design-studio/SKILL.md",
       "skills/orchestrate-game-design-project/SKILL.md",
       "skills/define-game-vision/SKILL.md",
       "skills/design-game-systems/SKILL.md",

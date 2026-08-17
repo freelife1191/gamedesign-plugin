@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-career",
   "sourceDateEpoch": 0,
-  "treeSha256": "0b80b76885ed51cf23ccc27c2aa262f9ad450a79dd6519bd163f99a78f30df80",
+  "treeSha256": "b2e8bff4964c8f252d45d39741681ee6880b6e4d583e226cd079bf333d8968d4",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -21,8 +21,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "feeb2cdf91e5bee194e9455c9ab0107d0330cc3937aba151085c7576118844dc",
-      "size": 63489
+      "sha256": "763236418130aa7676939525dfaf6b3452892c8bc73ef2d1976054cb39610db7",
+      "size": 63636
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -611,13 +611,13 @@
     },
     {
       "path": "references/prompt-templates.json",
-      "sha256": "d4bdfadb2817ba24c7ef4a50ff8d0b7b44d0cbb2838227caacb308491f9ba5e9",
-      "size": 418877
+      "sha256": "77769026ca7ed0181a94f07d61b2fbe6caa62bf70273655d07a2596e722a259d",
+      "size": 434919
     },
     {
       "path": "references/routing.json",
-      "sha256": "eff9606cc137eb37f7dd28240388f4da0006290b16687ac2eadd389beb30de63",
-      "size": 52479
+      "sha256": "278b73c45f245f35934bf023c699e0ffe15eacf86abd4a9f85841524a4a5b3db",
+      "size": 52668
     },
     {
       "path": "references/shared/document-quality/game-design-writing-style.md",
@@ -2193,6 +2193,11 @@
       "path": "skills/export-career-documents/scripts/prepare-career-export.mjs",
       "sha256": "ae7b3bd5c0f385413c9bc12ff3cac874d4ed58d82e2396f8b765b686ef8702e9",
       "size": 11336
+    },
+    {
+      "path": "skills/game-design-career/SKILL.md",
+      "sha256": "d2850691ee383551a502665f37c24d7931dbe514ab4ff680da674d0473f06f25",
+      "size": 4337
     },
     {
       "path": "skills/generate-image-assets/SKILL.md",

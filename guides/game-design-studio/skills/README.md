@@ -1,6 +1,6 @@
 # Game Design Studio 스킬 레퍼런스
 
-설치된 Studio 제품 스킬 16개와 공통 스킬 9개를 합친 설치 스킬 25개를 정리합니다. 공통 스킬은 Archify, humanize-korean, Skillstead, 프로젝트 기억 스킬 3개, 레퍼런스 분석·용어 사전 스킬 2개와 스위트 업데이트 스킬 1개입니다. 복합 요청은 오케스트레이터로 시작하고, 목적이 한 영역으로 분명하면 해당 스킬을 직접 호출합니다.
+설치된 Studio 제품 스킬 17개와 공통 스킬 9개를 합친 설치 스킬 26개를 정리합니다. 공통 스킬은 Archify, humanize-korean, Skillstead, 프로젝트 기억 스킬 3개, 레퍼런스 분석·용어 사전 스킬 2개와 스위트 업데이트 스킬 1개입니다. 복합 요청은 오케스트레이터로 시작하고, 목적이 한 영역으로 분명하면 해당 스킬을 직접 호출합니다.
 
 ## 활용 경로
 
@@ -25,6 +25,7 @@
 | [`design-game-systems`](design-game-systems.md) | 규칙·상태·예외·데이터 명세 | `$game-design-studio:design-game-systems` | `system-specification` | 규칙, 상태, 권위 데이터, 실패 기대 | 구현 가능한 시스템 계약 |
 | [`design-player-experience`](design-player-experience.md) | 첫 세션·UI state·접근성 설계 | `$game-design-studio:design-player-experience` | `ui-ux-flow-state` | critical action, 플랫폼, 입력, 측정값 | 상호작용과 접근성 계약 |
 | [`export-game-design-documents`](export-game-design-documents.md) | 승인 가능한 원본의 다중 형식 작업 준비 | `$game-design-studio:export-game-design-documents` | 선택된 canonical artifact | artifact, 형식, capability, 발표 story | renderer-neutral 준비 manifest |
+| [`game-design-studio`](game-design-studio.md) | 대표 진입: 요청을 소유 제품·실행 경로 하나와 라우팅 영수증으로 정리 | `$game-design-studio:game-design-studio` | 위임된 스킬의 산출물 | 원하는 결과, 가진 자료, 공개 범위, 결정 담당자, 출력 형식 | 라우팅 영수증과 선택된 스킬 |
 | [`generate-image-assets`](generate-image-assets.md) | 선택된 stable asset ID만 provider에 라우팅 | `$game-design-studio:generate-image-assets` | 선택된 canonical artifact | image manifest, prompt, mode, 선택 receipt | generation 결과와 검토 handoff |
 | [`humanize-korean`](humanize-korean.md) | 뜻과 수치·ID를 보존한 한국어 문체 검토 | `$game-design-studio:humanize-korean` | 선택된 canonical artifact | 원문, 독자, 보호 항목 | 자연스러운 수정안과 변경 요약 |
 | [`maintain-game-design-memory`](../memory.md#후보-확인승인거부폐기-예시) | 후보 확인과 사람 승인·거부·폐기 | `$game-design-studio:maintain-game-design-memory` | 프로젝트 기억 | 기억 ID, 이름 있는 사람, 결정 이유 | 상태 변경 이력 또는 충돌 안내 |

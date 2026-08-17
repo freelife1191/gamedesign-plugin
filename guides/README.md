@@ -79,12 +79,12 @@ Studio 또는 Career 한 제품을 고른 뒤 다음 순서로 진행합니다.
 
 ## 전체 가이드 탐색
 
-Studio 인덱스는 설치 스킬 25개, Career 인덱스는 설치 스킬 24개와 각각 15개 템플릿, 6개 목적별 레시피, 설치·빠른 시작·전체 작업 흐름·품질·이미지·시각화·내보내기·문제 해결을 연결합니다.
+Studio 인덱스는 설치 스킬 26개, Career 인덱스는 설치 스킬 25개와 각각 15개 템플릿, 6개 목적별 레시피, 설치·빠른 시작·전체 작업 흐름·품질·이미지·시각화·내보내기·문제 해결을 연결합니다.
 
 | 제품 | 시작 | 전체 카탈로그 | 목적별 작업 |
 | --- | --- | --- | --- |
-| Studio | [제품 인덱스](game-design-studio/README.md) · [설치](game-design-studio/installation.md) · [5분 시작](game-design-studio/quick-start.md) | [스킬 25개](game-design-studio/skills/README.md) · [공통 기억](project-memory.md) · [Studio 기억](game-design-studio/memory.md) · [레퍼런스 분석](game-design-studio/reference-analysis.md) · [용어 사전](game-design-studio/glossary.md) · [컷씬](game-design-studio/cutscene-visual-preproduction.md) · [템플릿 15개](game-design-studio/templates.md) | [레시피 6개](game-design-studio/README.md#목적별-레시피) |
-| Career | [제품 인덱스](game-design-career/README.md) · [설치](game-design-career/installation.md) · [5분 시작](game-design-career/quick-start.md) | [스킬 24개](game-design-career/skills/README.md) · [공통 기억](project-memory.md) · [Career 기억](game-design-career/memory.md) · [레퍼런스 분석](game-design-career/reference-analysis.md) · [용어 사전](game-design-career/glossary.md) · [템플릿 15개](game-design-career/templates.md) | [레시피 6개](game-design-career/README.md#목적별-레시피) |
+| Studio | [제품 인덱스](game-design-studio/README.md) · [설치](game-design-studio/installation.md) · [5분 시작](game-design-studio/quick-start.md) | [스킬 26개](game-design-studio/skills/README.md) · [공통 기억](project-memory.md) · [Studio 기억](game-design-studio/memory.md) · [레퍼런스 분석](game-design-studio/reference-analysis.md) · [용어 사전](game-design-studio/glossary.md) · [컷씬](game-design-studio/cutscene-visual-preproduction.md) · [템플릿 15개](game-design-studio/templates.md) | [레시피 6개](game-design-studio/README.md#목적별-레시피) |
+| Career | [제품 인덱스](game-design-career/README.md) · [설치](game-design-career/installation.md) · [5분 시작](game-design-career/quick-start.md) | [스킬 25개](game-design-career/skills/README.md) · [공통 기억](project-memory.md) · [Career 기억](game-design-career/memory.md) · [레퍼런스 분석](game-design-career/reference-analysis.md) · [용어 사전](game-design-career/glossary.md) · [템플릿 15개](game-design-career/templates.md) | [레시피 6개](game-design-career/README.md#목적별-레시피) |
 
 ---
 

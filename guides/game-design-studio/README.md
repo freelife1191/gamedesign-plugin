@@ -73,7 +73,7 @@ Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스
 
 1. [설치](installation.md)에서 App 또는 CLI 중 한 환경의 절차만 따라 설치합니다.
 2. [5분 빠른 시작](quick-start.md)의 요청문 하나를 복사합니다.
-3. [템플릿 15개](templates.md)에서 목적에 맞는 템플릿을 고르고, 필요하면 [스킬 25개](skills/README.md)의 연결된 스킬을 직접 호출합니다.
+3. [템플릿 15개](templates.md)에서 목적에 맞는 템플릿을 고르고, 필요하면 [스킬 26개](skills/README.md)의 연결된 스킬을 직접 호출합니다.
 4. [목적별 레시피](#목적별-레시피) 하나를 선택합니다.
 5. [전체 워크플로](workflow.md)에서 현재 단계와 다음 사람 결정을 확인합니다.
 6. [이미지 자산](image-assets.md)에서 image slot과 사람 승인 경계를 계획합니다.
@@ -117,14 +117,14 @@ Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스
 
 전체 레퍼런스:
 
-- [스킬 25개](skills/README.md)
+- [스킬 26개](skills/README.md)
 - [템플릿 15개](templates.md)
 - [문서 품질 profile](document-quality.md)
 - [이미지 자산](image-assets.md)
 - [시각화](visualization.md)
 - [MD·PDF·DOCX·PPTX 내보내기](exports.md)
 
-각 스킬 ID는 [스킬 25개](skills/README.md)에서 해당 상세 가이드로 직접 연결됩니다. 컷씬 전용 순서는 [컷씬 장면·이미지 사전 설계](cutscene-visual-preproduction.md)에서 확인합니다. 각 템플릿의 용도와 복사 가능한 요청문은 [템플릿 15개](templates.md)에 있습니다.
+각 스킬 ID는 [스킬 26개](skills/README.md)에서 해당 상세 가이드로 직접 연결됩니다. 컷씬 전용 순서는 [컷씬 장면·이미지 사전 설계](cutscene-visual-preproduction.md)에서 확인합니다. 각 템플릿의 용도와 복사 가능한 요청문은 [템플릿 15개](templates.md)에 있습니다.
 
 ---
 

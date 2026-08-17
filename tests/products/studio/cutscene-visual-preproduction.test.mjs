@@ -27,7 +27,7 @@ test("Studio route has the closed cutscene workflow contract while Career expose
   ]);
   const route = routing.routes.find(({ id }) => id === "cutscene-visual-preproduction");
   assert.equal(routing.routes.length, 14);
-  assert.equal(routing.skillIds.length, 24);
+  assert.equal(routing.skillIds.length, 25);
   assert.deepEqual(route, {
     artifactType: "cutscene-visual-preproduction",
     completionGates: ["cutscene-continuity-current"],

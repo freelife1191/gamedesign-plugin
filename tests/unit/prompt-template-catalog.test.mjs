@@ -28,6 +28,7 @@ const STUDIO_SKILLS = [
   "export-game-design-documents", "generate-image-assets", "orchestrate-game-design-project",
   "plan-game-production", "plan-image-assets", "review-game-design", "review-image-assets",
   "svg-infographic", "visualize-game-design", "polish-game-design-writing",
+  "game-design-studio",
 ];
 const CAREER_SKILLS = [
   "apply-document-quality-profile", "build-game-design-portfolio", "export-career-documents",
@@ -35,6 +36,7 @@ const CAREER_SKILLS = [
   "plan-image-assets", "plan-junior-growth", "practice-game-design-interview",
   "research-game-design-jobs", "reverse-engineer-game-design", "review-game-design-portfolio",
   "review-image-assets", "svg-infographic", "visualize-career-roadmap", "polish-game-design-writing",
+  "game-design-career",
 ];
 
 function validEntry(index, kind = "skill-template") {
@@ -117,11 +119,11 @@ function completeFixture() {
   return [
     ...skillTemplates,
     ...Array.from({ length: 36 }, (_, index) => ({
-      ...validEntry(index + 100, "use-case"),
+      ...validEntry(index + 110, "use-case"),
       source_case_id: `SOURCE-${index + 1}`,
     })),
-    ...Array.from({ length: 12 }, (_, index) => validEntry(index + 136, "recipe")),
-    ...Array.from({ length: 8 }, (_, index) => validEntry(index + 148, "suite-case")),
+    ...Array.from({ length: 12 }, (_, index) => validEntry(index + 146, "recipe")),
+    ...Array.from({ length: 8 }, (_, index) => validEntry(index + 158, "suite-case")),
   ];
 }
 
@@ -166,13 +168,13 @@ test("complete catalog has exact kind and prompt counts", () => {
   });
   assert.equal(result.ok, true, result.errors.join("\n"));
   assert.deepEqual(result.counts, {
-    skillTemplates: 99,
+    skillTemplates: 105,
     useCases: 36,
     recipes: 12,
     suiteCases: 8,
-    total: 155,
-    appPrompts: 155,
-    cliPrompts: 155,
+    total: 161,
+    appPrompts: 161,
+    cliPrompts: 161,
   });
 });
 
@@ -1681,14 +1683,14 @@ test("loader rejects duplicate IDs and symlink shards", async (t) => {
   );
 });
 
-test("all 155 catalog cards use Korean-first titles and distinct source-bound result excerpts", async () => {
+test("all 161 catalog cards use Korean-first titles and distinct source-bound result excerpts", async () => {
   const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
   const catalogDir = path.join(repoRoot, "guides", "prompt-templates");
   const index = JSON.parse(await readFile(path.join(catalogDir, "catalog.json"), "utf8"));
   const entries = (await Promise.all(index.sources.map(async (source) => (
     JSON.parse(await readFile(path.join(catalogDir, source), "utf8"))
   )))).flat();
-  assert.equal(entries.length, 155);
+  assert.equal(entries.length, 161);
   assert.deepEqual(koreanPresentationErrors(entries), []);
 });
 
@@ -1853,7 +1855,7 @@ test("complete catalogs require every installed product skill at each level exac
     requireComplete: true,
   });
   assert.equal(result.ok, false);
-  assert.match(result.errors.join("\n"), /skill-template cardinality.*found 33/u);
+  assert.match(result.errors.join("\n"), /skill-template cardinality.*found 35/u);
   assert.match(result.errors.join("\n"), /skill-template cardinality.*found 0/u);
 });
 

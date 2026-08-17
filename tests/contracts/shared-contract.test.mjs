@@ -508,9 +508,9 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
       .sort();
     const installed = installedSkillIds(build.files);
     const sharedSkillIds = installed.filter((skillId) => !sourceSkillIds.includes(skillId));
-    assert.equal(sourceSkillIds.length, productName === "game-design-studio" ? 16 : 15);
+    assert.equal(sourceSkillIds.length, productName === "game-design-studio" ? 17 : 16);
     assert.deepEqual(sharedSkillIds, expectedSharedSkillIds);
-    assert.equal(installed.length, productName === "game-design-studio" ? 25 : 24);
+    assert.equal(installed.length, productName === "game-design-studio" ? 26 : 25);
   }
 
   const receiptSource = await readFile(path.join(repoRoot, "shared/memory/schema/memory-receipt.schema.json"));
@@ -579,6 +579,7 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
     },
   };
   const expectedCareerSkillIds = [
+    "game-design-career",
     "orchestrate-game-design-career",
     "map-game-design-career",
     "research-game-design-jobs",

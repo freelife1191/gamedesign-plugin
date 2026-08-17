@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "78bdeac0a9d7bbaaa440f9bd7b75b2d839653d40d01c847514fd730123acad45",
+  "treeSha256": "59a3b1780e6f6836e20c60539750b53005091beeeaaad53347704a2c26d52b07",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -21,8 +21,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "333ff83cff170b82101235f9b258e494d4c958578177d17fffe68570cf9c8fdc",
-      "size": 65452
+      "sha256": "2aacf1747e4df2d01ee2a3b34f48949e945eb480c31c98eefe8de806c656b5d9",
+      "size": 65599
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -616,13 +616,13 @@
     },
     {
       "path": "references/prompt-templates.json",
-      "sha256": "2bb1b9f1f680b1570ec35deaa5757adf2cc89af51732b361989b95bf0a357ff9",
-      "size": 393632
+      "sha256": "a2ef1d855d7499b4b9234583ec48a824cc9c27de0c0318f3787cd49c3585c1d9",
+      "size": 409357
     },
     {
       "path": "references/routing.json",
-      "sha256": "aab66907139f825abed759f6560e8ffd9329b182f9aab86cd4132a1737cbbaab",
-      "size": 19668
+      "sha256": "348a347d2f54d8ad92b1f1963cecf698ba7334b1f39813355159366aabb1da44",
+      "size": 19738
     },
     {
       "path": "references/shared/document-quality/game-design-writing-style.md",
@@ -2270,6 +2270,11 @@
       "size": 15475
     },
     {
+      "path": "skills/game-design-studio/SKILL.md",
+      "sha256": "e9031ff6205fde2cf939ec0751b945b236ac3bbc944bf32cbe382db8c8965072",
+      "size": 4340
+    },
+    {
       "path": "skills/generate-image-assets/SKILL.md",
       "sha256": "7d236749597536a752e197240e4873d865f6827c8796452705b0701f5ef3a52b",
       "size": 5293
@@ -2371,8 +2376,8 @@
     },
     {
       "path": "skills/orchestrate-game-design-project/SKILL.md",
-      "sha256": "7c83de9b012ffa7e460e6e7e0c80cbbf43bcad62ad7d5dec929e9b401ea6d5be",
-      "size": 4075
+      "sha256": "51ae70d0499219926a2acf570f25c89487aac4892f2a99419fc56b72503dac22",
+      "size": 4054
     },
     {
       "path": "skills/orchestrate-game-design-project/agents/openai.yaml",

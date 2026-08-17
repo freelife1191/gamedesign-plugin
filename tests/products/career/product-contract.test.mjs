@@ -11,6 +11,7 @@ const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const productRoot = path.join(repoRoot, "products/game-design-career");
 
 const skillIds = [
+  "game-design-career",
   "orchestrate-game-design-career",
   "map-game-design-career",
   "research-game-design-jobs",
@@ -35,7 +36,7 @@ const skillIds = [
   "maintain-game-design-glossary",
   "upgrade-game-design-suite",
 ];
-const directSkillIds = skillIds.slice(0, 15);
+const directSkillIds = skillIds.slice(0, 16);
 const installedSkillIds = [...directSkillIds, "analyze-game-design-references", "archify", "capture-game-design-memory", "humanize-korean", "maintain-game-design-glossary", "maintain-game-design-memory", "retrieve-approved-design-memory", "svg-infographic", "upgrade-game-design-suite"].sort();
 
 const roleIds = [
@@ -144,16 +145,16 @@ test("Career routing enumerates exactly the approved skills, roles, and stages",
   assert.deepEqual(routing.roleIds, roleIds);
   assert.deepEqual(routing.imageSpecialistIds, imageSpecialistIds);
   assert.deepEqual(routing.stages, stages);
-  assert.equal(new Set(routing.skillIds).size, 23);
+  assert.equal(new Set(routing.skillIds).size, 24);
   assert.equal(new Set(routing.roleIds).size, 8);
 });
 
-test("Career keeps the 15-direct and 23-installed skill inventory contract without the Studio cutscene route", async () => {
+test("Career keeps the 16-direct and 25-installed skill inventory contract without the Studio cutscene route", async () => {
   const inventory = await collectProductInventory(repoRoot, "game-design-career");
 
-  assert.equal(directSkillIds.length, 15, "Career has exactly 15 direct product skills");
+  assert.equal(directSkillIds.length, 16, "Career has exactly 16 direct product skills");
   assert.deepEqual(inventory.skillIds, installedSkillIds);
-  assert.equal(inventory.skillIds.length, 24, "Career installs the 15 direct skills plus nine shared skills");
+  assert.equal(inventory.skillIds.length, 25, "Career installs the 16 direct skills plus nine shared skills");
   const routing = JSON.parse(await readFile(path.join(productRoot, "plugin/references/routing.json"), "utf8"));
   assert.equal(routing.skillIds.includes("design-cutscene-visual-preproduction"), false);
   assert.equal(routing.routes.some(({ id }) => id === "cutscene-visual-preproduction"), false);

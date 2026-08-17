@@ -23,7 +23,7 @@ npm run smoke:marketplace -- --temp-parent "<temporary-parent>/게임 기획 é 
 각 플러그인을 하나씩 설치하고 다음을 확인합니다.
 
 1. `game-design-suite` 마켓플레이스와 플러그인 설치·목록·삭제 JSON 계약이 정확히 맞는지 확인합니다.
-2. 플러그인마다 스킬 24개 이상과 공식 플러그인 검증기를 확인합니다.
+2. 플러그인마다 스킬 25개 이상과 공식 플러그인 검증기를 확인합니다.
 3. 스킬명이나 사례 ID를 적지 않은 짧은 한국어 요청을 `codex exec --ephemeral`에 전달합니다. 요청에 맞는 경로는 설치된 플러그인이 스스로 선택해야 합니다.
 4. runner는 모델 실행 전에 암호학적 binding nonce와 `routeId: null`을 가진 source-bound receipt 템플릿을 만듭니다. nonce 값은 프롬프트나 명령행에 노출되지 않습니다. 모델은 schemaVersion·requestSha256·bindingNonce를 보존하고 설치된 `routing.json`에서 고른 route ID만 채워야 합니다. runner는 nonce, 요청 해시, schema를 다시 확인한 뒤 실제 `SKILL.md`의 SHA-256으로 선택 스킬을 확정합니다. receipt의 재생성은 허용하되 nonce 누락·변조, null·알 수 없는 route, 추가 필드는 거부합니다.
 5. 실행 도구는 설치본의 `assets/shared/templates/canonical-artifact`를 결과물 폴더에 먼저 복사합니다. 모델은 YAML 구조와 제목·소제목 ID를 새로 만들지 않고 `content.md`의 본문만 요청에 맞게 작성합니다. 실행 도구는 본문이 기준 템플릿과 실제로 달라졌고 요청의 핵심 표현을 담았는지 확인합니다.
@@ -72,7 +72,7 @@ npm run smoke:marketplace -- --temp-parent "<temporary-parent>/게임 기획 é 
       "pluginId": "game-design-career@game-design-suite",
       "selectedSkill": "map-game-design-career",
       "route": "entry-role-map",
-      "skills": 24,
+      "skills": 25,
       "artifact": "validated-md",
       "exec": "completed"
     },
@@ -81,7 +81,7 @@ npm run smoke:marketplace -- --temp-parent "<temporary-parent>/게임 기획 é 
       "pluginId": "game-design-studio@game-design-suite",
       "selectedSkill": "define-game-vision",
       "route": "vision",
-      "skills": 25,
+      "skills": 26,
       "artifact": "validated-md",
       "exec": "completed"
     }

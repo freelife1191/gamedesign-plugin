@@ -34,8 +34,8 @@ test("prompt guide library publishes the complete deterministic card graph", asy
   const catalog = await loadPromptTemplateCatalog({ repoRoot: root });
   const detailPages = new Set(catalog.entries.filter((entry) => entry.kind === "skill-template" || entry.kind === "suite-case").map(detailPath));
   const detailPageCounts = Object.fromEntries(["studio", "career", "suite"].map((product) => [product, [...detailPages].filter((file) => file.includes(`/${product}/`)).length]));
-  assert.deepEqual(detailPageCounts, { studio: 17, career: 16, suite: 8 });
-  assert.equal(detailPages.size, 41, "17 Studio + 16 Career + 8 suite detail pages");
+  assert.deepEqual(detailPageCounts, { studio: 18, career: 17, suite: 8 });
+  assert.equal(detailPages.size, 43, "18 Studio + 17 Career + 8 suite detail pages");
   assert.deepEqual(await filesIn("guides/prompt-templates/studio"), [...detailPages].filter((file) => file.includes("/studio/")).map((file) => path.basename(file)).sort());
   assert.deepEqual(await filesIn("guides/prompt-templates/career"), [...detailPages].filter((file) => file.includes("/career/")).map((file) => path.basename(file)).sort());
   assert.deepEqual(await filesIn("guides/prompt-templates/suite"), [...detailPages].filter((file) => file.includes("/suite/")).map((file) => path.basename(file)).sort());

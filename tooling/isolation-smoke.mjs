@@ -37,6 +37,7 @@ const EXACT_SKILL_IDS = Object.freeze({
     "analyze-game-design-references", "maintain-game-design-glossary",
     "svg-infographic", "archify", "visualize-career-roadmap",
     "upgrade-game-design-suite",
+    "game-design-career",
   ].sort()),
   "game-design-studio": Object.freeze([
     "apply-document-quality-profile", "define-game-vision", "design-game-content", "design-game-economy-and-liveops", "design-game-systems",
@@ -45,6 +46,7 @@ const EXACT_SKILL_IDS = Object.freeze({
     "capture-game-design-memory", "maintain-game-design-memory", "retrieve-approved-design-memory",
     "analyze-game-design-references", "maintain-game-design-glossary",
     "upgrade-game-design-suite",
+    "game-design-studio",
   ].sort()),
 });
 const EXPECTED_HOOKS = Object.freeze({

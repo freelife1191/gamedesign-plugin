@@ -56,7 +56,7 @@ Game Design Career는 목표 역할과 경력 단계를 진단하고, 현재 채
 - 고급: [개인 기여 포트폴리오](../prompt-templates/career/build-game-design-portfolio.md#careerbuild-game-design-portfolioadvanced)
 - 사례: [프로젝트 증거와 면접](../prompt-templates/suite/career-proof-project-interview.md#suitecareer-proof-project-interviewcase)
 
-Career에는 사례 18개, 설치 스킬 24개, FAQ 19개와 도식 33쌍이 있습니다. 도식은 사례나 직접 호출의 입력·검토·결과 흐름을 설명할 뿐, 결과의 품질·합격·채용을 보장하지 않습니다.
+Career에는 사례 18개, 설치 스킬 25개, FAQ 19개와 도식 33쌍이 있습니다. 도식은 사례나 직접 호출의 입력·검토·결과 흐름을 설명할 뿐, 결과의 품질·합격·채용을 보장하지 않습니다.
 
 ---
 
@@ -79,7 +79,7 @@ Career에는 사례 18개, 설치 스킬 24개, FAQ 19개와 도식 33쌍이 있
 
 1. [설치](installation.md)에서 App 또는 CLI 중 한 환경의 절차만 따라 설치합니다.
 2. [5분 빠른 시작](quick-start.md)의 요청문 하나를 복사합니다.
-3. [Canonical Artifact 템플릿](templates.md)에서 목적에 맞는 템플릿을 고르고, 필요하면 [설치 스킬 24개](skills/README.md)의 연결된 스킬을 직접 호출합니다.
+3. [Canonical Artifact 템플릿](templates.md)에서 목적에 맞는 템플릿을 고르고, 필요하면 [설치 스킬 25개](skills/README.md)의 연결된 스킬을 직접 호출합니다.
 4. [목적별 레시피](#목적별-레시피) 하나를 선택합니다.
 5. [전체 워크플로](workflow.md)에서 현재 경력 단계와 다음 증거 작업을 확인합니다.
 6. [이미지 자산](image-assets.md)에서 proof image slot과 사람 승인 경계를 계획합니다.
@@ -121,7 +121,7 @@ Career에는 사례 18개, 설치 스킬 24개, FAQ 19개와 도식 33쌍이 있
 
 전체 제품 레퍼런스:
 
-- [설치 스킬 24개](skills/README.md)
+- [설치 스킬 25개](skills/README.md)
 - [역량 사례](use-cases/competency-paths.md)
 - [대상 사례](use-cases/concept-scenarios.md)
 - [직접 스킬 작업대](use-cases/skill-workbench.md)

@@ -2,7 +2,7 @@
 
 Game Design Career는 게임 기획 입문, 첫 취업, 주니어 성장, 이직 준비를 검증 가능한 산출물로 바꾸는 Codex 플러그인입니다. 진로를 단정하거나 합격을 보장하지 않고, 현재 자료와 제약에서 확인할 수 있는 근거·공백·다음 실험을 분리합니다.
 
-플러그인은 제품 스킬 15개, 전문 역할 10개, 15개 Canonical Artifact 템플릿과 문서·이미지·내보내기 계약을 하나의 독립 패키지에 포함합니다. 공통 스킬 9개는 Archify, humanize-korean, Skillstead `svg-infographic` 0.9.0, 프로젝트 기억 스킬 3개, [레퍼런스 분석 스킬](../../../shared/reference-intelligence/skills/analyze-game-design-references/SKILL.md), [용어 사전 스킬](../../../shared/reference-intelligence/skills/maintain-game-design-glossary/SKILL.md), [스위트 업데이트 스킬](../../../shared/suite-update/skills/upgrade-game-design-suite/SKILL.md)입니다. 제품 스킬과 합친 설치 스킬은 24개입니다.
+플러그인은 제품 스킬 16개, 전문 역할 10개, 15개 Canonical Artifact 템플릿과 문서·이미지·내보내기 계약을 하나의 독립 패키지에 포함합니다. 공통 스킬 9개는 Archify, humanize-korean, Skillstead `svg-infographic` 0.9.0, 프로젝트 기억 스킬 3개, [레퍼런스 분석 스킬](../../../shared/reference-intelligence/skills/analyze-game-design-references/SKILL.md), [용어 사전 스킬](../../../shared/reference-intelligence/skills/maintain-game-design-glossary/SKILL.md), [스위트 업데이트 스킬](../../../shared/suite-update/skills/upgrade-game-design-suite/SKILL.md)입니다. 제품 스킬과 합친 설치 스킬은 25개입니다.
 
 ## 대표 작업 경로
 
@@ -57,7 +57,7 @@ Game Design Career는 게임 기획 입문, 첫 취업, 주니어 성장, 이직
 
 취업 준비 학생, 주니어, 직무 전환자와 멘토는 `@Game Design Career` 뒤에 현재 상황, 가진 자료와 원하는 결과를 자연어로 적으면 됩니다. 스킬 이름이나 사례 ID를 먼저 고를 필요는 없습니다. 한 산출물과 입력이 분명하면 해당 전문 스킬로 직접 보냅니다. 여러 Career 단계와 산출물이 함께 남거나 목표가 불명확하면 [`orchestrate-game-design-career`](skills/orchestrate-game-design-career/SKILL.md)가 필요한 최소 경로를 고릅니다. 작업이 끝나면 선택한 스킬과 검토 역할, 결과 파일, 남은 결정을 알려 줍니다. 이 자동 선택은 자동 승인이 아니며 합격을 보장하지 않습니다.
 
-같은 작업 경로를 재현하거나 특정 단계부터 재개할 때만 아래의 명시적 직접 요청을 사용합니다. 전체 스킬 경로는 기준 사례의 순서를 보존하며, 일상적인 한 문장 요청과 구분합니다. 18개 사례, 15개 직접 스킬, 19개 FAQ와 33개 도식 쌍은 설치된 스킬·템플릿·근거 경계를 설명하며 합격이나 채용 결과를 보장하지 않습니다.
+같은 작업 경로를 재현하거나 특정 단계부터 재개할 때만 아래의 명시적 직접 요청을 사용합니다. 전체 스킬 경로는 기준 사례의 순서를 보존하며, 일상적인 한 문장 요청과 구분합니다. 18개 사례, 16개 직접 스킬, 19개 FAQ와 33개 도식 쌍은 설치된 스킬·템플릿·근거 경계를 설명하며 합격이나 채용 결과를 보장하지 않습니다.
 
 ### 목표별 대표 결과
 
@@ -201,8 +201,8 @@ codex plugin marketplace remove game-design-suite
 ```text
 <staging>/game-design-career/
 ├── .codex-plugin/plugin.json
-├── skills/ (23개)
-│   ├── <15개 Career 제품 스킬>/
+├── skills/ (25개)
+│   ├── <16개 Career 제품 스킬>/
 │   │   └── scripts/                 # 필요한 스킬에만 있는 product helper
 │   ├── analyze-game-design-references/ # 근거를 분리해 레퍼런스를 분석
 │   ├── archify/                      # vendored Archify 2.14.0
@@ -250,7 +250,7 @@ codex plugin marketplace remove game-design-suite
 
 경로 계약을 검색하기 쉽게 요약하면 `references/shared/knowledge/core/`는 검토된 Core 지식, `references/shared/knowledge/trends/`는 Current 근거와 갱신 정책, `references/source/docs/ (49개)`는 원문 provenance입니다. 내보내기 스키마는 `references/shared/export/schema/`에 있고, 문서 품질 계약은 `references/shared/document-quality/`와 `references/document-quality/template-profile-map.json`에 있으며, Career 전용 job·fact/inference·evidence schemas는 제품 references에 있습니다.
 
-`assets/templates/ (15개)`와 `assets/product-mark.svg`는 Career source overlay에서 옵니다. 최종 `skills/ (24개)`는 제품 스킬 15개와 공통 스킬 9개입니다. 공통 스킬은 [레퍼런스 분석 스킬](../../../shared/reference-intelligence/skills/analyze-game-design-references/SKILL.md) `analyze-game-design-references`, `archify`, `humanize-korean`, `svg-infographic`, `retrieve-approved-design-memory`, `capture-game-design-memory`, `maintain-game-design-memory`, [용어 사전 스킬](../../../shared/reference-intelligence/skills/maintain-game-design-glossary/SKILL.md) `maintain-game-design-glossary`, [스위트 업데이트 스킬](../../../shared/suite-update/skills/upgrade-game-design-suite/SKILL.md) `upgrade-game-design-suite`이며, `agents/ (10개)`는 네이티브 발견 여부와 무관하게 오케스트레이터가 전달할 수 있는 전문 역할 프롬프트입니다.
+`assets/templates/ (15개)`와 `assets/product-mark.svg`는 Career source overlay에서 옵니다. 최종 `skills/ (25개)`는 제품 스킬 16개와 공통 스킬 9개입니다. 공통 스킬은 [레퍼런스 분석 스킬](../../../shared/reference-intelligence/skills/analyze-game-design-references/SKILL.md) `analyze-game-design-references`, `archify`, `humanize-korean`, `svg-infographic`, `retrieve-approved-design-memory`, `capture-game-design-memory`, `maintain-game-design-memory`, [용어 사전 스킬](../../../shared/reference-intelligence/skills/maintain-game-design-glossary/SKILL.md) `maintain-game-design-glossary`, [스위트 업데이트 스킬](../../../shared/suite-update/skills/upgrade-game-design-suite/SKILL.md) `upgrade-game-design-suite`이며, `agents/ (10개)`는 네이티브 발견 여부와 무관하게 오케스트레이터가 전달할 수 있는 전문 역할 프롬프트입니다.
 
 ## 설치된 top-level scripts
 
@@ -382,6 +382,7 @@ apply-document-quality-profile: portfolio-case-study를 recruiter 대상 MD로 �
 
 | 스킬 ID | 사용하는 때 | 핵심 결과 |
 | --- | --- | --- |
+| `game-design-career` | 어떤 스킬이 요청의 소유자인지 모를 때 | 소유 제품 하나, 실행 경로 하나, 라우팅 영수증 |
 | `orchestrate-game-design-career` | 단계 진단과 복합 작업 라우팅 | 단계·목표 브리프, 스킬 체인, 검토 envelope |
 | `apply-document-quality-profile` | 산출물 유형·대상·형식에 맞는 문서 품질 계약 적용 | 선택 기록, 요구사항 manifest, stable checklist와 상태 envelope |
 | `map-game-design-career` | 역할군 비교와 역량 공백 계획 | 복수 임시 경로, 교환조건, 증거 과제 |

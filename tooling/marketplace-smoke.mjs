@@ -17,8 +17,8 @@ const MARKETPLACE = "game-design-suite";
 export const RELEASE_PLUGIN_VERSION = "0.1.1";
 const VERSION_PREFLIGHT_ERROR = "marketplace version preflight failed";
 export const PACKAGED_SKILL_COUNTS = Object.freeze({
-  "game-design-career": 23,
-  "game-design-studio": 24,
+  "game-design-career": 25,
+  "game-design-studio": 26,
 });
 export const CODEX_EXEC_TIMEOUT_MS = 300_000;
 const PRODUCTS = Object.freeze([

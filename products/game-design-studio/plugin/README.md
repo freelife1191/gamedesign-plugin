@@ -2,7 +2,7 @@
 
 Game Design Studio는 게임 비전부터 시스템·콘텐츠·플레이어 경험·경제·LiveOps·프로덕션 설계, 전문 검토, 도식화, 문서 내보내기까지 하나의 검증 가능한 작업 흐름으로 연결하는 Codex 플러그인입니다. 그럴듯한 수치나 승인을 조작하지 않고 근거, 가정, 결정, 차단 조건을 Canonical Artifact에 남깁니다.
 
-플러그인은 제품 스킬 16개, 전문 역할 12개, Canonical Artifact 템플릿 15개와 문서·이미지·내보내기 계약을 하나의 독립 패키지에 포함합니다. 공통 스킬 9개는 Archify, humanize-korean, Skillstead `svg-infographic` 0.9.0, 프로젝트 기억 스킬 3개, [레퍼런스 분석 스킬](../../../shared/reference-intelligence/skills/analyze-game-design-references/SKILL.md), [용어 사전 스킬](../../../shared/reference-intelligence/skills/maintain-game-design-glossary/SKILL.md), [스위트 업데이트 스킬](../../../shared/suite-update/skills/upgrade-game-design-suite/SKILL.md)입니다. 제품 스킬과 합친 설치 스킬은 25개입니다.
+플러그인은 제품 스킬 17개, 전문 역할 12개, Canonical Artifact 템플릿 15개와 문서·이미지·내보내기 계약을 하나의 독립 패키지에 포함합니다. 공통 스킬 9개는 Archify, humanize-korean, Skillstead `svg-infographic` 0.9.0, 프로젝트 기억 스킬 3개, [레퍼런스 분석 스킬](../../../shared/reference-intelligence/skills/analyze-game-design-references/SKILL.md), [용어 사전 스킬](../../../shared/reference-intelligence/skills/maintain-game-design-glossary/SKILL.md), [스위트 업데이트 스킬](../../../shared/suite-update/skills/upgrade-game-design-suite/SKILL.md)입니다. 제품 스킬과 합친 설치 스킬은 26개입니다.
 
 ## 설치
 
@@ -82,8 +82,8 @@ codex plugin marketplace remove game-design-suite
 ```text
 plugins/game-design-studio/
 ├── .codex-plugin/plugin.json
-├── skills/ (24개)
-│   ├── <16개 Studio 제품 스킬>/
+├── skills/ (26개)
+│   ├── <17개 Studio 제품 스킬>/
 │   │   └── scripts/                 # 필요한 스킬에만 있는 product helper
 │   ├── analyze-game-design-references/ # 근거를 분리해 레퍼런스를 분석
 │   ├── archify/                      # vendored Archify 2.14.0
@@ -136,7 +136,7 @@ plugins/game-design-studio/
 
 제품 source overlay의 package-local Markdown 링크가 저장소 밖으로 나가지 않도록, 실제 실행 경로와 같은 `references/shared/...` 및 `assets/shared/...` 위치에 필요한 shared 계약의 byte-identical authoring mirror를 둡니다. Canonical shared 파일이 먼저 package target에 매핑되고 같은 바이트의 mirror는 build에서 중복 제거됩니다. mirror drift는 README 계약 테스트가 차단합니다.
 
-검색 가능한 경로 계약은 `references/shared/knowledge/core/`, `references/shared/knowledge/trends/`, `references/source/docs/ (49개)`, `references/shared/export/schema/`, `references/shared/document-quality/`, `references/shared/image-assets/`, `references/shared/memory/`, `references/shared/reference-intelligence/`, `references/document-quality/template-profile-map.json`, `references/profiles/`, `assets/templates/ (15개)`, `assets/product-mark.svg`입니다. 최종 `skills/ (25개)`는 제품 스킬 16개와 공통 스킬 9개입니다. 공통 스킬은 [레퍼런스 분석 스킬](../../../shared/reference-intelligence/skills/analyze-game-design-references/SKILL.md) `analyze-game-design-references`, `archify`, `humanize-korean`, `svg-infographic`, `retrieve-approved-design-memory`, `capture-game-design-memory`, `maintain-game-design-memory`, [용어 사전 스킬](../../../shared/reference-intelligence/skills/maintain-game-design-glossary/SKILL.md) `maintain-game-design-glossary`, [스위트 업데이트 스킬](../../../shared/suite-update/skills/upgrade-game-design-suite/SKILL.md) `upgrade-game-design-suite`이며 `agents/ (12개)`는 네이티브 발견 여부와 무관하게 오케스트레이터가 전달할 수 있는 전문 역할 자산입니다.
+검색 가능한 경로 계약은 `references/shared/knowledge/core/`, `references/shared/knowledge/trends/`, `references/source/docs/ (49개)`, `references/shared/export/schema/`, `references/shared/document-quality/`, `references/shared/image-assets/`, `references/shared/memory/`, `references/shared/reference-intelligence/`, `references/document-quality/template-profile-map.json`, `references/profiles/`, `assets/templates/ (15개)`, `assets/product-mark.svg`입니다. 최종 `skills/ (26개)`는 제품 스킬 17개와 공통 스킬 9개입니다. 공통 스킬은 [레퍼런스 분석 스킬](../../../shared/reference-intelligence/skills/analyze-game-design-references/SKILL.md) `analyze-game-design-references`, `archify`, `humanize-korean`, `svg-infographic`, `retrieve-approved-design-memory`, `capture-game-design-memory`, `maintain-game-design-memory`, [용어 사전 스킬](../../../shared/reference-intelligence/skills/maintain-game-design-glossary/SKILL.md) `maintain-game-design-glossary`, [스위트 업데이트 스킬](../../../shared/suite-update/skills/upgrade-game-design-suite/SKILL.md) `upgrade-game-design-suite`이며 `agents/ (12개)`는 네이티브 발견 여부와 무관하게 오케스트레이터가 전달할 수 있는 전문 역할 자산입니다.
 
 ## 설치된 top-level scripts
 
@@ -298,6 +298,7 @@ apply-document-quality-profile: game-design-brief 템플릿으로 production 대
 
 | 스킬 ID | 사용하는 때 | 핵심 결과 |
 | --- | --- | --- |
+| `game-design-studio` | 어떤 스킬이 요청의 소유자인지 모를 때 | 소유 제품 하나, 실행 경로 하나, 라우팅 영수증 |
 | `orchestrate-game-design-project` | 복합·불명확 요청과 전체 완료 조정 | 브리프, 최소 스킬 체인, 프로필, 검토 envelope, 완료 게이트 |
 | `apply-document-quality-profile` | 산출물 유형·대상·형식에 맞는 문서 품질 계약 적용 | 선택 기록, 요구사항 manifest, stable checklist와 상태 envelope |
 | `define-game-vision` | 목표 플레이어, 의도 경험, core fun과 pillars 정의 | `vision-pillars`, core/motivation loop, 측정 가능한 가설 |

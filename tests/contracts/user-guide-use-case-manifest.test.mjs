@@ -38,11 +38,15 @@ const DIRECT_USE_EXCLUDED_SKILL_IDS = new Set([
   "capture-game-design-memory", "maintain-game-design-memory", "retrieve-approved-design-memory",
   "analyze-game-design-references", "maintain-game-design-glossary",
   "upgrade-game-design-suite",
+  // 대표 진입 스킬은 자기 산출물을 만들지 않고 언제나 다른 스킬로 위임하므로 직접 사용 사례가 없다.
+  "game-design-career", "game-design-studio",
 ]);
 const ROUTE_BOUNDARY_SKILL_IDS = new Set([
   "archify", "humanize-korean", "polish-game-design-writing",
   "capture-game-design-memory", "maintain-game-design-memory", "retrieve-approved-design-memory",
   "upgrade-game-design-suite",
+  // 대표 진입 스킬은 canonical route를 갖지 않는다. 하나를 고르는 쪽이기 때문이다.
+  "game-design-career", "game-design-studio",
 ]);
 
 test("result-boundary readability rejects dense visible prose and accepts result cards", () => {
@@ -2023,8 +2027,8 @@ test("complete aggregate guide validation composes the production use-case cover
 
   assert.equal(result.ok, true, result.errors.join("\n"));
   assert.deepEqual(result.counts, {
-    guides: 158,
-    skillGuides: 49,
+    guides: 162,
+    skillGuides: 51,
     templates: 30,
     svg: 93,
     png: 93,

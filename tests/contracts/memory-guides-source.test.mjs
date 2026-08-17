@@ -21,10 +21,10 @@ const commonSkillIds = [
 ];
 const productSkillIds = Object.freeze({
   "game-design-studio": [
-    "apply-document-quality-profile", "define-game-vision", "design-cutscene-visual-preproduction", "design-game-content", "design-game-economy-and-liveops", "design-game-systems", "design-player-experience", "export-game-design-documents", "generate-image-assets", "orchestrate-game-design-project", "plan-game-production", "plan-image-assets", "polish-game-design-writing", "review-game-design", "review-image-assets", "visualize-game-design",
+    "apply-document-quality-profile", "define-game-vision", "design-cutscene-visual-preproduction", "design-game-content", "design-game-economy-and-liveops", "design-game-systems", "design-player-experience", "export-game-design-documents", "game-design-studio", "generate-image-assets", "orchestrate-game-design-project", "plan-game-production", "plan-image-assets", "polish-game-design-writing", "review-game-design", "review-image-assets", "visualize-game-design",
   ],
   "game-design-career": [
-    "apply-document-quality-profile", "build-game-design-portfolio", "export-career-documents", "generate-image-assets", "map-game-design-career", "orchestrate-game-design-career", "plan-image-assets", "plan-junior-growth", "polish-game-design-writing", "practice-game-design-interview", "research-game-design-jobs", "reverse-engineer-game-design", "review-game-design-portfolio", "review-image-assets", "visualize-career-roadmap",
+    "apply-document-quality-profile", "build-game-design-portfolio", "export-career-documents", "game-design-career", "generate-image-assets", "map-game-design-career", "orchestrate-game-design-career", "plan-image-assets", "plan-junior-growth", "polish-game-design-writing", "practice-game-design-interview", "research-game-design-jobs", "reverse-engineer-game-design", "review-game-design-portfolio", "review-image-assets", "visualize-career-roadmap",
   ],
 });
 const topLevelScripts = [
@@ -128,7 +128,7 @@ function assertExactInstallInventory({ product, actualProductSkillIds, actualCom
   assert.deepEqual(actualProductSkillIds, [...productSkillIds[product]].sort(), `${product}: source product skill IDs`);
   assert.deepEqual(actualCommonSkillIds, [...commonSkillIds].sort(), `${product}: source common skill IDs`);
   assert.deepEqual(actualScripts, [...topLevelScripts].sort(), `${product}: source top-level scripts`);
-  const expectedSkillCount = product === "game-design-studio" ? 25 : 24;
+  const expectedSkillCount = product === "game-design-studio" ? 26 : 25;
   assert.equal(expectedSkills.length, expectedSkillCount, `${product}: expected installed skills`);
   assert.equal(topLevelScripts.length, 32, `${product}: expected top-level scripts`);
   assert.deepEqual(listedSkillIds(skillGuide), expectedSkills, `${product}: skill guide lists exactly the installed skill IDs`);
@@ -234,9 +234,9 @@ test("source inventories and product documentation list the frozen cutscene inve
     const productReadme = await readFile(path.join(root, "products", product, "plugin/README.md"), "utf8");
     assertExactInstallInventory({ product, actualProductSkillIds, actualCommonSkillIds, actualScripts: scripts, skillGuide, productReadme });
     for (const markdown of [skillGuide, productReadme]) {
-      assert.match(markdown, product === "game-design-studio" ? /제품 스킬 16개/u : /제품 스킬 15개/u);
+      assert.match(markdown, product === "game-design-studio" ? /제품 스킬 17개/u : /제품 스킬 16개/u);
       assert.match(markdown, /공통 스킬 9개/u);
-      assert.match(markdown, product === "game-design-studio" ? /설치 스킬(?:은)? 25개/u : /설치 스킬(?:은)? 24개/u);
+      assert.match(markdown, product === "game-design-studio" ? /설치 스킬(?:은)? 26개/u : /설치 스킬(?:은)? 25개/u);
     }
     const visibleLinks = extractMarkdownLinks(productReadme);
     for (const [label, target] of [
@@ -279,8 +279,8 @@ test("cutscene guide keeps copyable requests and frozen Studio/Career inventorie
     };
   }
   assert.deepEqual(inventories, {
-    studio: { routing: 24, installed: 25, topLevelScripts: 32 },
-    career: { routing: 23, installed: 24, topLevelScripts: 32 },
+    studio: { routing: 25, installed: 26, topLevelScripts: 32 },
+    career: { routing: 24, installed: 25, topLevelScripts: 32 },
   });
 });
 

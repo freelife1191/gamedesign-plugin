@@ -11,7 +11,7 @@ import {
 
 export const PROMPT_LEVELS = Object.freeze(["beginner", "standard", "advanced"]);
 export const PROMPT_KIND_COUNTS = Object.freeze({
-  "skill-template": 99,
+  "skill-template": 105,
   "use-case": 36,
   recipe: 12,
   "suite-case": 8,

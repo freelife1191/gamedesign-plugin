@@ -1,6 +1,6 @@
 ---
 name: orchestrate-game-design-project
-description: Use when a game-design request spans multiple disciplines, has ambiguous scope, needs a project brief or roadmap, or requires launch-readiness coordination.
+description: Use when a game-design request spans multiple disciplines, needs a project brief or roadmap, or requires launch-readiness coordination.
 ---
 
 # Orchestrate a Game Design Project

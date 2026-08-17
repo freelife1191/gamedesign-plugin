@@ -18,6 +18,7 @@ const sourceSkillIdsByProduct = Object.freeze({
     "apply-document-quality-profile",
     "build-game-design-portfolio",
     "export-career-documents",
+    "game-design-career",
     "generate-image-assets",
     "map-game-design-career",
     "orchestrate-game-design-career",
@@ -40,6 +41,7 @@ const sourceSkillIdsByProduct = Object.freeze({
     "design-game-systems",
     "design-player-experience",
     "export-game-design-documents",
+    "game-design-studio",
     "generate-image-assets",
     "orchestrate-game-design-project",
     "plan-game-production",
@@ -819,7 +821,7 @@ test("production guide graph has the exact installed skill IDs and visible link 
 test("complete guide validation maps each product source-bound guide to its installed skills", async () => {
   await withGuideFixture({}, async (root) => {
     const result = await validateUserGuides({ repoRoot: root, requireComplete: true });
-    assert.equal(result.counts.skillGuides, 49);
+    assert.equal(result.counts.skillGuides, 51);
     assert.equal(result.errors.some((error) => error.includes("skill guide inventory mismatch")), false);
   });
 });
