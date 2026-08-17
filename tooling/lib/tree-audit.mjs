@@ -3,7 +3,8 @@ import path from "node:path";
 
 import { comparePaths, normalizeRelativePath } from "./paths.mjs";
 
-const utf8 = new TextDecoder("utf-8", { fatal: true });
+// ignoreBOM keeps a leading U+FEFF in the decoded text so the BOM gate below can see it.
+const utf8 = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 const relativeReference = /(?:^|[('"`\s])((?:\.\.[/\\])+[^)'"`\s]+)/gu;
 const vendorCliPath = /(?:^|\/)(?:\.claude\/skills\/svg-infographic|\.agents\/skills\/svg-infographic|skills\/svg-infographic)\/scripts\/(?:check-svg|render)\.mjs$/u;
 const sharedUpdateIdentityMatchers = new Map([
@@ -20,6 +21,25 @@ const sharedUpdateIdentityMatchers = new Map([
     /const PLUGINS = new Set\(\["game-design-studio", "game-design-career"\]\);/u,
   ],
 ]);
+
+export const MAX_PACKAGE_PATH_LENGTH = 150;
+
+export function assertPackagePath(relativePath, seenFoldedPaths) {
+  const normalized = relativePath.normalize("NFC");
+  if (normalized.length > MAX_PACKAGE_PATH_LENGTH) {
+    throw new Error(`${relativePath} exceeds the ${MAX_PACKAGE_PATH_LENGTH} character package path budget`);
+  }
+  // toLowerCase() alone is ECMAScript simple case mapping, which leaves fold-equivalent pairs
+  // (ſ/S, ς/Σ, ß/SS, ﬁ/fi) distinct even though NTFS and APFS collapse them. Upper-casing first
+  // reaches those mappings; the trailing NFC pass re-composes what the round trip decomposed.
+  const folded = normalized.toUpperCase().toLowerCase().normalize("NFC");
+  const previous = seenFoldedPaths.get(folded);
+  if (previous !== undefined) {
+    throw new Error(`${relativePath} collides with ${previous} after NFC and case folding`);
+  }
+  seenFoldedPaths.set(folded, relativePath);
+  return relativePath;
+}
 
 function inside(root, candidate) {
   const relative = path.relative(root, candidate);
@@ -228,6 +248,7 @@ export async function auditTree({
   let files = 0;
   let utf8Files = 0;
   const usedInactiveRelativeReferenceTuples = new Set();
+  const seenFoldedPaths = new Map();
 
   async function visit(directory, prefix = "") {
     const entries = await readdir(directory, { withFileTypes: true });
@@ -235,6 +256,7 @@ export async function auditTree({
     for (const entry of entries) {
       const rawRelativePath = prefix ? `${prefix}/${entry.name}` : entry.name;
       const relativePath = normalizeRelativePath(rawRelativePath, `package ${packageName}`);
+      assertPackagePath(relativePath, seenFoldedPaths);
       const entryPath = path.join(directory, entry.name);
       const stats = await lstat(entryPath);
       if (stats.isSymbolicLink()) throw new Error(`${relativePath} is a symlink`);
@@ -252,6 +274,8 @@ export async function auditTree({
       } catch {
         throw new Error(`${relativePath} is not valid UTF-8`);
       }
+      if (text.startsWith("\uFEFF")) throw new Error(`${relativePath} starts with a UTF-8 BOM`);
+      if (text.includes("\r")) throw new Error(`${relativePath} contains a carriage return; packaged text must use LF`);
       assertTextIsSafe({
         text,
         relativePath,

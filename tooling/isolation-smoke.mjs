@@ -307,6 +307,10 @@ async function verifyOne({ repoRoot, productName, isolationRoot, mutateCopy, act
   if (inactiveSourceRuntimeTuples.size !== 3) throw new Error("reference-intelligence inactive source tuple contract mismatch");
   await verifyReferenceIntelligencePackage(pluginRoot, repoRoot, productName);
   const sibling = PRODUCT_NAMES.find((name) => name !== productName);
+  // pluginRoot is a copy under tmpdir(), so the case-fold half of the audit's path-collision gate
+  // only fires where tmpdir() is case-sensitive. On macOS and Windows the copy above collapses a
+  // colliding pair before auditTree ever sees it, which makes the Linux CI lane the one that
+  // enforces this gate. Keep that lane green rather than trusting a local run.
   const audit = await auditTree({
     root: pluginRoot,
     packageName: productName,

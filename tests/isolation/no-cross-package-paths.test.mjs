@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { auditTree } from "../../tooling/lib/tree-audit.mjs";
+import { MAX_PACKAGE_PATH_LENGTH, assertPackagePath, auditTree } from "../../tooling/lib/tree-audit.mjs";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const productNames = ["game-design-career", "game-design-studio"];
@@ -44,6 +44,10 @@ test("each generated plugin is UTF-8, self-contained, and free of sibling or hos
 test("tree audit rejects invalid UTF-8, symlinks, escape links, sibling names, host paths, repo fallbacks, and raw vendor CLIs", async (t) => {
   const cases = [
     ["invalid UTF-8", "bad.txt", Buffer.from([0xc3, 0x28]), /UTF-8/u],
+    ["BOM in Markdown", "SKILL.md", Buffer.from("\uFEFF---\nname: demo\n---\n", "utf8"), /UTF-8 BOM/u],
+    ["BOM in JSON", "plugin.json", Buffer.from("\uFEFF{}\n", "utf8"), /UTF-8 BOM/u],
+    ["CRLF line ending", "README.md", "line one\r\nline two\n", /must use LF/u],
+    ["lone CR", "README.md", "line one\rline two\n", /must use LF/u],
     ["escape link", "README.md", "[outside](../../outside.md)\n", /escapes package root/u],
     ["sibling package", "README.md", "load game-design-career\n", /sibling package/u],
     ["repo absolute", "config.json", `${repoRoot}/shared/scripts/check.mjs\n`, /forbidden absolute path/u],
@@ -231,4 +235,77 @@ test("malformed percent text cannot mask a Windows raw vendor CLI on the same li
     String.raw`echo malformed%ZZ&&node skills\svg-infographic\scripts\render.mjs input.svg output.png` + "\n",
   );
   await assert.rejects(() => auditTree({ root, packageName: "game-design-studio" }), /raw vendor CLI|encoded shell path/i);
+});
+
+test("package paths that collide after NFC and case folding are rejected", () => {
+  const nfc = "references/한글.md".normalize("NFC");
+  const nfd = "references/한글.md".normalize("NFD");
+  assert.notEqual(nfc, nfd, "fixture must use distinct code point sequences");
+
+  const unicodeSeen = new Map();
+  assert.equal(assertPackagePath(nfc, unicodeSeen), nfc);
+  assert.throws(() => assertPackagePath(nfd, unicodeSeen), /collides with/u);
+
+  const caseSeen = new Map();
+  assert.equal(assertPackagePath("skills/demo/SKILL.md", caseSeen), "skills/demo/SKILL.md");
+  assert.throws(() => assertPackagePath("skills/demo/Skill.md", caseSeen), /collides with/u);
+
+  const distinctSeen = new Map();
+  assert.equal(assertPackagePath("a/one.md", distinctSeen), "a/one.md");
+  assert.equal(assertPackagePath("a/two.md", distinctSeen), "a/two.md");
+  assert.equal(distinctSeen.size, 2);
+});
+
+// String.prototype.toLowerCase() is ECMAScript simple case mapping, which is narrower than the
+// caseless-compare tables NTFS and APFS actually use. Each pair below was written to a real APFS
+// directory and collapsed to a single entry there, so a tree carrying both on a case-sensitive
+// checkout would silently lose one file when a macOS or Windows user installs it. Folding through
+// toUpperCase() first reaches those mappings; the final NFC pass re-composes anything the
+// round trip decomposed. Turkish dotted capital I is the control: the filesystem keeps `İ.md` and
+// `i.md` apart, so the gate must keep them apart too rather than over-rejecting.
+test("package paths that collide on real case-insensitive filesystems are rejected", () => {
+  const collidingPairs = [
+    ["long s", "references/S.md", "references/ſ.md"],
+    ["final sigma", "references/Σ.md", "references/ς.md"],
+    ["lowercase sigma", "references/σ.md", "references/ς.md"],
+    ["eszett", "references/straße.md", "references/STRASSE.md"],
+    ["fi ligature", "references/ﬁle.md", "references/file.md"],
+  ];
+  for (const [label, first, second] of collidingPairs) {
+    const seen = new Map();
+    assert.equal(assertPackagePath(first, seen), first, `${label} first path must be accepted`);
+    assert.throws(() => assertPackagePath(second, seen), /collides with/u, `${label} must be rejected`);
+  }
+
+  const dottedSeen = new Map();
+  assert.equal(assertPackagePath("references/İ.md", dottedSeen), "references/İ.md");
+  assert.equal(assertPackagePath("references/i.md", dottedSeen), "references/i.md");
+  assert.equal(dottedSeen.size, 2, "paths the filesystem keeps distinct must stay distinct");
+});
+
+test("package paths stay inside the length budget", async (t) => {
+  assert.equal(MAX_PACKAGE_PATH_LENGTH, 150);
+
+  const atBudget = `${"a".repeat(74)}/${"b".repeat(75)}`;
+  assert.equal(atBudget.length, MAX_PACKAGE_PATH_LENGTH);
+  assert.equal(assertPackagePath(atBudget, new Map()), atBudget);
+
+  const overBudget = `${"a".repeat(74)}/${"b".repeat(76)}`;
+  assert.equal(overBudget.length, MAX_PACKAGE_PATH_LENGTH + 1);
+  assert.throws(() => assertPackagePath(overBudget, new Map()), /path budget/u);
+
+  const root = await fixture(t, `${"n".repeat(80)}/${"m".repeat(80)}.md`, "over budget\n");
+  await assert.rejects(() => auditTree({ root, packageName: "game-design-studio" }), /path budget/u);
+});
+
+test("the length budget is measured against the NFC form, not the un-normalized NFD form", () => {
+  // U+AC01 "각" decomposes into 3 NFD jamo (choseong+jungseong+jongseong) per NFC syllable,
+  // so 60 repeats push the NFD form well past the budget while the NFC form stays under it.
+  // This mirrors a real packaged path in this repo (97 chars in NFC, 156 in NFD).
+  const nfc = `references/source/docs/${"각".repeat(60)}.md`;
+  const nfd = nfc.normalize("NFD");
+  assert.notEqual(nfc, nfd, "fixture must use distinct code point sequences");
+  assert.ok(nfd.length > MAX_PACKAGE_PATH_LENGTH, `NFD form (${nfd.length}) must exceed the budget`);
+  assert.ok(nfc.length <= MAX_PACKAGE_PATH_LENGTH, `NFC form (${nfc.length}) must stay within the budget`);
+  assert.equal(assertPackagePath(nfd, new Map()), nfd);
 });

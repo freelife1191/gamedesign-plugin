@@ -1,2 +1,7 @@
+# Vendored upstreams are hash-locked against working-tree bytes; the LF policy
+# below applies to them too, so a CRLF upstream must be rejected at sync time,
+# not excluded here (see tooling/sync-diagram-skills.mjs).
+* text=auto eol=lf
+
 shared/vendor/im-not-ai/** whitespace=-trailing-space
 shared/vendor/skillstead/svg-infographic/0.9.0/** whitespace=-trailing-space
