@@ -46,6 +46,8 @@ test("tree audit rejects invalid UTF-8, symlinks, escape links, sibling names, h
     ["invalid UTF-8", "bad.txt", Buffer.from([0xc3, 0x28]), /UTF-8/u],
     ["BOM in Markdown", "SKILL.md", Buffer.from("\uFEFF---\nname: demo\n---\n", "utf8"), /UTF-8 BOM/u],
     ["BOM in JSON", "plugin.json", Buffer.from("\uFEFF{}\n", "utf8"), /UTF-8 BOM/u],
+    ["CRLF line ending", "README.md", "line one\r\nline two\n", /must use LF/u],
+    ["lone CR", "README.md", "line one\rline two\n", /must use LF/u],
     ["escape link", "README.md", "[outside](../../outside.md)\n", /escapes package root/u],
     ["sibling package", "README.md", "load game-design-career\n", /sibling package/u],
     ["repo absolute", "config.json", `${repoRoot}/shared/scripts/check.mjs\n`, /forbidden absolute path/u],

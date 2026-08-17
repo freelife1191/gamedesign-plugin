@@ -253,6 +253,7 @@ export async function auditTree({
         throw new Error(`${relativePath} is not valid UTF-8`);
       }
       if (text.startsWith("\uFEFF")) throw new Error(`${relativePath} starts with a UTF-8 BOM`);
+      if (text.includes("\r")) throw new Error(`${relativePath} contains a carriage return; packaged text must use LF`);
       assertTextIsSafe({
         text,
         relativePath,
