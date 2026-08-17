@@ -12,6 +12,7 @@ const sourceBoundMemorySkillIds = new Set(SOURCE_BOUND_MEMORY_SKILL_IDS);
 const sourceBoundReferenceSkillPaths = new Map([
   ["analyze-game-design-references", "../reference-analysis.md"],
   ["maintain-game-design-glossary", "../glossary.md"],
+  ["upgrade-game-design-suite", "../installation.md"],
 ]);
 const directSkillGuideIds = (inventory) => inventory.skillIds.filter((skillId) => !sourceBoundMemorySkillIds.has(skillId) && !sourceBoundReferenceSkillPaths.has(skillId));
 const workbenchLink = (skillId) => `[\`${skillId}\`](${sourceBoundMemorySkillIds.has(skillId) ? "../memory.md" : (sourceBoundReferenceSkillPaths.get(skillId) ?? `../skills/${skillId}.md`)})`;
@@ -494,7 +495,7 @@ function assertSkillContract(markdown, skillId) {
 
 test("Career documents every installed skill with the common contract", async () => {
   const inventory = await collectProductInventory(root, "game-design-career");
-  assert.equal(inventory.skillIds.length, 23);
+  assert.equal(inventory.skillIds.length, 24);
 
   for (const skillId of directSkillGuideIds(inventory)) {
     const markdown = await readFile(
@@ -707,6 +708,7 @@ test("Career skill workbench inventories every installed skill once by lane", as
     "이미지·시각화 lane": ["plan-image-assets", "generate-image-assets", "review-image-assets", "svg-infographic", "archify", "visualize-career-roadmap"],
     "export lane": ["export-career-documents"],
     "프로젝트 기억 lane": [...SOURCE_BOUND_MEMORY_SKILL_IDS],
+    "설치·업데이트 lane": ["upgrade-game-design-suite"],
   };
   const observed = [];
   for (const [heading, skills] of Object.entries(expectedGroups)) {

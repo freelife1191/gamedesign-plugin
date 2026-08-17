@@ -38,9 +38,10 @@ const skillIds = [
   "maintain-game-design-memory",
   "analyze-game-design-references",
   "maintain-game-design-glossary",
+  "upgrade-game-design-suite",
 ];
 const directSkillIds = skillIds.slice(0, 16);
-const installedSkillIds = [...directSkillIds, "analyze-game-design-references", "archify", "capture-game-design-memory", "humanize-korean", "maintain-game-design-glossary", "maintain-game-design-memory", "retrieve-approved-design-memory", "svg-infographic"].sort();
+const installedSkillIds = [...directSkillIds, "analyze-game-design-references", "archify", "capture-game-design-memory", "humanize-korean", "maintain-game-design-glossary", "maintain-game-design-memory", "retrieve-approved-design-memory", "svg-infographic", "upgrade-game-design-suite"].sort();
 
 const roleIds = [
   "lead-game-designer",
@@ -215,7 +216,7 @@ test("Studio product selects the complete shared contract and 49-document corpus
     name: "game-design-studio",
     displayName: "Game Design Studio",
     description: "Professional game design, review, visualization, and export workflows.",
-    sharedModules: ["knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets", "memory", "reference-intelligence", "updates"],
+    sharedModules: ["knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets", "memory", "reference-intelligence", "updates", "suite-update-skill"],
     sharedRuntime: true,
     sourceRoots: ["plugin"],
     sourceDocumentCategories: ["career", "fun-intent", "systems", "content", "feedback"],
@@ -234,7 +235,7 @@ test("Studio routing enumerates the planned skills, roles, and composable profil
   const routing = await readJson("references/routing.json");
 
   assert.deepEqual(routing.skillIds, skillIds);
-  assert.equal(new Set(routing.skillIds).size, 23);
+  assert.equal(new Set(routing.skillIds).size, 24);
   assert.deepEqual(routing.roleIds, roleIds);
   assert.deepEqual(routing.imageSpecialistIds, imageSpecialistIds);
   assert.equal(new Set(routing.roleIds).size, 10);
@@ -249,7 +250,7 @@ test("Studio keeps the 16-direct and 24-installed skill inventory contract", asy
 
   assert.equal(directSkillIds.length, 16, "Studio has exactly 16 direct product skills");
   assert.deepEqual(inventory.skillIds, installedSkillIds);
-  assert.equal(inventory.skillIds.length, 24, "Studio installs the 16 direct skills plus eight shared skills");
+  assert.equal(inventory.skillIds.length, 25, "Studio installs the 16 direct skills plus nine shared skills");
 });
 
 test("Studio orchestrator accepts ordinary natural-language requests without explicit skill names", async () => {

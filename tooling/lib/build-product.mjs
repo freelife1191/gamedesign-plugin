@@ -119,6 +119,11 @@ const packageLinkProjections = Object.freeze({
       source: "../../../shared/reference-intelligence/skills/maintain-game-design-glossary/SKILL.md",
       package: "skills/maintain-game-design-glossary/SKILL.md",
     }),
+    Object.freeze({
+      path: /^README\.md$/u,
+      source: "../../../shared/suite-update/skills/upgrade-game-design-suite/SKILL.md",
+      package: "skills/upgrade-game-design-suite/SKILL.md",
+    }),
   ]),
   "game-design-studio": Object.freeze([
     Object.freeze({
@@ -130,6 +135,11 @@ const packageLinkProjections = Object.freeze({
       path: /^README\.md$/u,
       source: "../../../shared/reference-intelligence/skills/maintain-game-design-glossary/SKILL.md",
       package: "skills/maintain-game-design-glossary/SKILL.md",
+    }),
+    Object.freeze({
+      path: /^README\.md$/u,
+      source: "../../../shared/suite-update/skills/upgrade-game-design-suite/SKILL.md",
+      package: "skills/upgrade-game-design-suite/SKILL.md",
     }),
     Object.freeze({
       path: /^skills\/[^/]+\/SKILL\.md$/u,

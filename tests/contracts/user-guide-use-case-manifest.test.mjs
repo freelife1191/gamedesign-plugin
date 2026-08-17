@@ -37,10 +37,12 @@ const DIRECT_USE_EXCLUDED_SKILL_IDS = new Set([
   "archify", "humanize-korean", "polish-game-design-writing",
   "capture-game-design-memory", "maintain-game-design-memory", "retrieve-approved-design-memory",
   "analyze-game-design-references", "maintain-game-design-glossary",
+  "upgrade-game-design-suite",
 ]);
 const ROUTE_BOUNDARY_SKILL_IDS = new Set([
   "archify", "humanize-korean", "polish-game-design-writing",
   "capture-game-design-memory", "maintain-game-design-memory", "retrieve-approved-design-memory",
+  "upgrade-game-design-suite",
 ]);
 
 test("result-boundary readability rejects dense visible prose and accepts result cards", () => {
@@ -2022,7 +2024,7 @@ test("complete aggregate guide validation composes the production use-case cover
   assert.equal(result.ok, true, result.errors.join("\n"));
   assert.deepEqual(result.counts, {
     guides: 158,
-    skillGuides: 47,
+    skillGuides: 49,
     templates: 30,
     svg: 93,
     png: 93,

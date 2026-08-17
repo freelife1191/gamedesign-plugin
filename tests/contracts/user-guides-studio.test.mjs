@@ -90,12 +90,14 @@ const WORKBENCH_LANES = Object.freeze({
   "maintain-game-design-memory": "프로젝트 기억",
   "analyze-game-design-references": "레퍼런스 분석·용어 사전",
   "maintain-game-design-glossary": "레퍼런스 분석·용어 사전",
+  "upgrade-game-design-suite": "설치·업데이트",
 });
 
 const sourceBoundMemorySkillIds = new Set(SOURCE_BOUND_MEMORY_SKILL_IDS);
 const sourceBoundReferenceSkillPaths = new Map([
   ["analyze-game-design-references", "../reference-analysis.md"],
   ["maintain-game-design-glossary", "../glossary.md"],
+  ["upgrade-game-design-suite", "../installation.md"],
 ]);
 const directSkillGuideIds = (inventory) => inventory.skillIds.filter((skillId) => !sourceBoundMemorySkillIds.has(skillId) && !sourceBoundReferenceSkillPaths.has(skillId));
 
@@ -274,7 +276,7 @@ function assertStudioGuideRouting(index, skillIndex) {
 
 test("Studio documents every installed skill with the common contract", async () => {
   const inventory = await collectProductInventory(root, "game-design-studio");
-  assert.equal(inventory.skillIds.length, 24);
+  assert.equal(inventory.skillIds.length, 25);
 
   for (const skillId of directSkillGuideIds(inventory)) {
     const markdown = await readFile(

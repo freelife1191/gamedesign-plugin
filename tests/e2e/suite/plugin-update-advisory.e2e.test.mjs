@@ -12,8 +12,8 @@ const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const marketplace = "game-design-suite";
 const products = ["game-design-studio", "game-design-career"];
 const expectedInventory = {
-  "game-design-studio": { skills: 24, agents: 12 },
-  "game-design-career": { skills: 23, agents: 10 },
+  "game-design-studio": { skills: 25, agents: 12 },
+  "game-design-career": { skills: 24, agents: 10 },
 };
 const checkedAt = Date.parse("2026-08-15T00:00:00.000Z");
 
@@ -73,7 +73,7 @@ async function assertInstalledPackage(pluginRoot, product) {
   assert.equal(manifest.version, "0.1.1", `${product}: installed manifest uses the update-channel version`);
   assert.deepEqual(
     components.components.map(({ id, installedTag }) => [id, installedTag]),
-    [["skillstead", "svg-infographic/v0.9.0"], ["archify", "v2.14.0"], ["im-not-ai", "v2.3.0"]],
+    [["skillstead", "svg-infographic/v0.9.0"], ["archify", "v2.14.0"], ["im-not-ai", "v2.3.0"], ["game-design-suite", "v0.1.1"]],
     `${product}: installed bundles stay pinned`,
   );
   const [skills, agents] = await Promise.all([
@@ -92,6 +92,7 @@ function runInstalledSessionStart({ pluginRoot, workspace, env, now = checkedAt,
       { id: "skillstead", repository: "https://github.com/kyungseo/skillstead", installedTag: "svg-infographic/v0.9.0" },
       { id: "archify", repository: "https://github.com/tt-a1i/archify", installedTag: "v2.14.0" },
       { id: "im-not-ai", repository: "https://github.com/epoko77-ai/im-not-ai", installedTag: "v2.3.0" },
+      { id: "game-design-suite", repository: "https://github.com/freelife1191/gamedesign-plugin", installedTag: "v0.1.1" },
     ])};
     const requests = [];
     globalThis.fetch = async (url) => {
@@ -154,7 +155,7 @@ test("fresh local products advise without implicit updates and preserve the comp
   const first = runInstalledSessionStart({ pluginRoot: studioCache, workspace, env });
   assert.deepEqual(first.result.updates.notification, { kind: "update-available", prompt: "플러그인 업데이트를 확인해 줘", componentIds: ["archify"] });
   assert.equal(first.result.updates.cache, "miss");
-  assert.equal(first.requests.length, 3, "first SessionStart uses only three injected release fixtures");
+  assert.equal(first.requests.length, 4, "first SessionStart uses only four injected release fixtures");
   assert.deepEqual(await snapshotProjectTree(workspace), before, "first advisory does not touch project files");
   assert.deepEqual(await snapshotProjectTree(studioCache), cacheBeforeSession, "first advisory never edits an installed cache");
 

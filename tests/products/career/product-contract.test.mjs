@@ -33,9 +33,10 @@ const skillIds = [
   "maintain-game-design-memory",
   "analyze-game-design-references",
   "maintain-game-design-glossary",
+  "upgrade-game-design-suite",
 ];
 const directSkillIds = skillIds.slice(0, 15);
-const installedSkillIds = [...directSkillIds, "analyze-game-design-references", "archify", "capture-game-design-memory", "humanize-korean", "maintain-game-design-glossary", "maintain-game-design-memory", "retrieve-approved-design-memory", "svg-infographic"].sort();
+const installedSkillIds = [...directSkillIds, "analyze-game-design-references", "archify", "capture-game-design-memory", "humanize-korean", "maintain-game-design-glossary", "maintain-game-design-memory", "retrieve-approved-design-memory", "svg-infographic", "upgrade-game-design-suite"].sort();
 
 const roleIds = [
   "career-strategist",
@@ -130,7 +131,7 @@ test("Career product selects the complete shared contract and source corpus", as
   const product = await loadProductContract({ repoRoot, productName: "game-design-career" });
 
   assert.equal(product.name, "game-design-career");
-  assert.deepEqual(product.sharedModules, ["knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets", "memory", "reference-intelligence", "updates"]);
+  assert.deepEqual(product.sharedModules, ["knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets", "memory", "reference-intelligence", "updates", "suite-update-skill"]);
   assert.equal(product.sharedRuntime, true);
   assert.deepEqual(product.sourceRoots, ["plugin"]);
   assert.deepEqual(product.sourceDocumentCategories, ["career", "fun-intent", "systems", "content", "feedback"]);
@@ -143,7 +144,7 @@ test("Career routing enumerates exactly the approved skills, roles, and stages",
   assert.deepEqual(routing.roleIds, roleIds);
   assert.deepEqual(routing.imageSpecialistIds, imageSpecialistIds);
   assert.deepEqual(routing.stages, stages);
-  assert.equal(new Set(routing.skillIds).size, 22);
+  assert.equal(new Set(routing.skillIds).size, 23);
   assert.equal(new Set(routing.roleIds).size, 8);
 });
 
@@ -152,7 +153,7 @@ test("Career keeps the 15-direct and 23-installed skill inventory contract witho
 
   assert.equal(directSkillIds.length, 15, "Career has exactly 15 direct product skills");
   assert.deepEqual(inventory.skillIds, installedSkillIds);
-  assert.equal(inventory.skillIds.length, 23, "Career installs the 15 direct skills plus eight shared skills");
+  assert.equal(inventory.skillIds.length, 24, "Career installs the 15 direct skills plus nine shared skills");
   const routing = JSON.parse(await readFile(path.join(productRoot, "plugin/references/routing.json"), "utf8"));
   assert.equal(routing.skillIds.includes("design-cutscene-visual-preproduction"), false);
   assert.equal(routing.routes.some(({ id }) => id === "cutscene-visual-preproduction"), false);

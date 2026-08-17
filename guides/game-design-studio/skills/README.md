@@ -1,6 +1,6 @@
 # Game Design Studio 스킬 레퍼런스
 
-설치된 Studio 제품 스킬 16개와 공통 스킬 8개를 합친 설치 스킬 24개를 정리합니다. 공통 스킬은 Archify, humanize-korean, Skillstead, 프로젝트 기억 스킬 3개와 레퍼런스 분석·용어 사전 스킬 2개입니다. 복합 요청은 오케스트레이터로 시작하고, 목적이 한 영역으로 분명하면 해당 스킬을 직접 호출합니다.
+설치된 Studio 제품 스킬 16개와 공통 스킬 9개를 합친 설치 스킬 25개를 정리합니다. 공통 스킬은 Archify, humanize-korean, Skillstead, 프로젝트 기억 스킬 3개, 레퍼런스 분석·용어 사전 스킬 2개와 스위트 업데이트 스킬 1개입니다. 복합 요청은 오케스트레이터로 시작하고, 목적이 한 영역으로 분명하면 해당 스킬을 직접 호출합니다.
 
 ## 활용 경로
 
@@ -37,6 +37,7 @@
 | [`review-image-assets`](review-image-assets.md) | 이미지의 사람 승인 경계 기록 | `$game-design-studio:review-image-assets` | 선택된 canonical artifact | asset ID, 실제 사용자 결정, 권리 근거 | 승인 transition 또는 blocker |
 | [`retrieve-approved-design-memory`](../memory.md#어떤-기록을-기억하는가) | 현재 작업과 관련된 승인 기록 조회 | `$game-design-studio:retrieve-approved-design-memory` | 프로젝트 기억 | 프로젝트 ID, Studio 요청 맥락 | 적용 가능한 기록과 제외 이유 |
 | [`svg-infographic`](svg-infographic.md) | 고급 구조형 SVG authoring과 2× 렌더 | `$game-design-studio:svg-infographic` | 선택된 canonical artifact | 구조, 청중, 비율, 언어 | editable SVG와 검증된 PNG 또는 제한 |
+| [`upgrade-game-design-suite`](../installation.md#upgrade-game-design-suite-스킬로-처리하기) | 설치된 스위트 버전과 공개된 릴리스 비교·처리 | `$game-design-studio:upgrade-game-design-suite` | 설치 자체 | 설치 위치, marketplace 종류, 사람의 선택 | 버전 비교, 검증한 재설치 계획, 선택 기록 |
 | [`visualize-game-design`](visualize-game-design.md) | source-backed 게임 기획 구조 도식화 | `$game-design-studio:visualize-game-design` | 선택된 canonical artifact | stable source ID, 관계, acceptance | source-mapped SVG·PNG evidence |
 
 ## 선택 원칙

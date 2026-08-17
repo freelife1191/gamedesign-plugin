@@ -17,6 +17,7 @@ const commonSkillIds = [
   "maintain-game-design-memory",
   "retrieve-approved-design-memory",
   "svg-infographic",
+  "upgrade-game-design-suite",
 ];
 const productSkillIds = Object.freeze({
   "game-design-studio": [
@@ -127,7 +128,7 @@ function assertExactInstallInventory({ product, actualProductSkillIds, actualCom
   assert.deepEqual(actualProductSkillIds, [...productSkillIds[product]].sort(), `${product}: source product skill IDs`);
   assert.deepEqual(actualCommonSkillIds, [...commonSkillIds].sort(), `${product}: source common skill IDs`);
   assert.deepEqual(actualScripts, [...topLevelScripts].sort(), `${product}: source top-level scripts`);
-  const expectedSkillCount = product === "game-design-studio" ? 24 : 23;
+  const expectedSkillCount = product === "game-design-studio" ? 25 : 24;
   assert.equal(expectedSkills.length, expectedSkillCount, `${product}: expected installed skills`);
   assert.equal(topLevelScripts.length, 32, `${product}: expected top-level scripts`);
   assert.deepEqual(listedSkillIds(skillGuide), expectedSkills, `${product}: skill guide lists exactly the installed skill IDs`);
@@ -214,9 +215,11 @@ test("source inventories and product documentation list the frozen cutscene inve
   }
   assert.match(buildSource, /\["shared\/memory\/skills", "skills"\]/u);
   assert.match(buildSource, /\["shared\/reference-intelligence\/skills", "skills"\]/u);
+  assert.match(buildSource, /\["shared\/suite-update\/skills", "skills"\]/u);
 
   const memoryIds = await directoryIds("shared/memory/skills");
-  const actualCommonSkillIds = ["analyze-game-design-references", "archify", ...memoryIds, "humanize-korean", "maintain-game-design-glossary", "svg-infographic"].sort();
+  const suiteUpdateIds = await directoryIds("shared/suite-update/skills");
+  const actualCommonSkillIds = ["analyze-game-design-references", "archify", ...memoryIds, ...suiteUpdateIds, "humanize-korean", "maintain-game-design-glossary", "svg-infographic"].sort();
 
   const scripts = (await readdir(path.join(root, "shared/scripts"), { withFileTypes: true }))
     .filter((entry) => entry.isFile() && entry.name.endsWith(".mjs"))
@@ -232,8 +235,8 @@ test("source inventories and product documentation list the frozen cutscene inve
     assertExactInstallInventory({ product, actualProductSkillIds, actualCommonSkillIds, actualScripts: scripts, skillGuide, productReadme });
     for (const markdown of [skillGuide, productReadme]) {
       assert.match(markdown, product === "game-design-studio" ? /제품 스킬 16개/u : /제품 스킬 15개/u);
-      assert.match(markdown, /공통 스킬 8개/u);
-      assert.match(markdown, product === "game-design-studio" ? /설치 스킬(?:은)? 24개/u : /설치 스킬(?:은)? 23개/u);
+      assert.match(markdown, /공통 스킬 9개/u);
+      assert.match(markdown, product === "game-design-studio" ? /설치 스킬(?:은)? 25개/u : /설치 스킬(?:은)? 24개/u);
     }
     const visibleLinks = extractMarkdownLinks(productReadme);
     for (const [label, target] of [
@@ -276,8 +279,8 @@ test("cutscene guide keeps copyable requests and frozen Studio/Career inventorie
     };
   }
   assert.deepEqual(inventories, {
-    studio: { routing: 23, installed: 24, topLevelScripts: 32 },
-    career: { routing: 22, installed: 23, topLevelScripts: 32 },
+    studio: { routing: 24, installed: 25, topLevelScripts: 32 },
+    career: { routing: 23, installed: 24, topLevelScripts: 32 },
   });
 });
 

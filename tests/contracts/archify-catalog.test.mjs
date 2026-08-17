@@ -45,7 +45,7 @@ function assertNoRepeatedGenericReasonTemplates(entries) {
 }
 
 function assertSuiteCatalogCardinality(catalog) {
-  assert.equal(catalog.entries.length, 745, "catalog must retain exactly 745 entries");
+  assert.equal(catalog.entries.length, 749, "catalog must retain exactly 749 entries");
   assert.equal(
     catalog.entries.filter((entry) => entry.source_document === "README.md").length,
     1,
@@ -261,7 +261,7 @@ test("production exclusions retain exact package classes and source-specific evi
 test("production shared package mirrors retain structured build origins", async () => {
   const catalog = await loadArchifyCatalog({ repoRoot });
   const origins = catalog.entries.filter((entry) => Object.hasOwn(entry, "origin_source"));
-  assert.equal(origins.length, 89, "shared and product-source package mirrors declare an origin_source");
+  assert.equal(origins.length, 93, "shared and product-source package mirrors declare an origin_source");
 
   const mappings = new Map([
     ["document-quality", ["shared/document-quality", "references/shared/document-quality"]],
@@ -270,6 +270,7 @@ test("production shared package mirrors retain structured build origins", async 
     ["reference-intelligence", ["shared/reference-intelligence", "references/shared/reference-intelligence"]],
     ["image-assets", ["shared/image-assets", "references/shared/image-assets"]],
     ["studio-cutscene-skill", ["products/game-design-studio/plugin/skills/design-cutscene-visual-preproduction", "skills/design-cutscene-visual-preproduction"]],
+    ["suite-update-skill", ["shared/suite-update/skills/upgrade-game-design-suite", "skills/upgrade-game-design-suite"]],
   ]);
   for (const entry of origins) {
     assert.equal(entry.exclusion_code, "excluded-package-mirror", entry.id);
@@ -458,10 +459,10 @@ test("Suite catalog cardinality rejects an appended record or duplicate README r
   const catalog = await loadArchifyCatalog({ repoRoot });
   const appended = structuredClone(catalog);
   appended.entries.push({ ...appended.entries[0], id: "unexpected-712th-record", source_document: "guides/README.md" });
-  assert.throws(() => assertSuiteCatalogCardinality(appended), /745/u);
+  assert.throws(() => assertSuiteCatalogCardinality(appended), /749/u);
   const duplicateReadme = structuredClone(catalog);
   duplicateReadme.entries.push({ ...duplicateReadme.entries[0], id: "duplicate-readme-record" });
-  assert.throws(() => assertSuiteCatalogCardinality(duplicateReadme), /745/u);
+  assert.throws(() => assertSuiteCatalogCardinality(duplicateReadme), /749/u);
   duplicateReadme.entries.pop();
   duplicateReadme.entries[1] = { ...duplicateReadme.entries[1], source_document: "README.md" };
   assert.throws(() => assertSuiteCatalogCardinality(duplicateReadme), /exactly one catalog record/u);

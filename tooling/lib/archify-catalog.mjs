@@ -101,6 +101,12 @@ const SHARED_PACKAGE_MIRROR_MAPPINGS = Object.freeze([
     destinationRoot: "skills/maintain-game-design-glossary",
   }),
   Object.freeze({
+    id: "suite-update-skill",
+    module: "suite-update-skill",
+    sourceRoot: "shared/suite-update/skills/upgrade-game-design-suite",
+    destinationRoot: "skills/upgrade-game-design-suite",
+  }),
+  Object.freeze({
     id: "studio-cutscene-skill",
     module: null,
     product: "studio",

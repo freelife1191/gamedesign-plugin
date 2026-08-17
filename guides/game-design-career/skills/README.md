@@ -1,6 +1,6 @@
 # Game Design Career 스킬 레퍼런스
 
-설치된 Career 제품 스킬 15개와 공통 스킬 8개를 합친 설치 스킬 23개를 정리합니다. 공통 스킬은 Archify, humanize-korean, Skillstead, 프로젝트 기억 스킬 3개와 레퍼런스 분석·용어 사전 스킬 2개입니다. 단계나 목표 역할이 불명확하면 오케스트레이터로 시작하고, 산출물이 명확하면 해당 스킬을 직접 호출합니다.
+설치된 Career 제품 스킬 15개와 공통 스킬 9개를 합친 설치 스킬 24개를 정리합니다. 공통 스킬은 Archify, humanize-korean, Skillstead, 프로젝트 기억 스킬 3개, 레퍼런스 분석·용어 사전 스킬 2개와 스위트 업데이트 스킬 1개입니다. 단계나 목표 역할이 불명확하면 오케스트레이터로 시작하고, 산출물이 명확하면 해당 스킬을 직접 호출합니다.
 
 ## 오케스트레이터와 직접 호출
 
@@ -35,6 +35,7 @@
 | [`review-image-assets`](review-image-assets.md) | 이미지 권리·가독성·placement 사람 승인 | `$game-design-career:review-image-assets` | 선택된 canonical artifact | asset ID, evidence, named reviewer | lifecycle transition 또는 blocker |
 | [`retrieve-approved-design-memory`](../memory.md#어떤-기록을-기억하는가) | 현재 작업과 관련된 승인 기록 조회 | `$game-design-career:retrieve-approved-design-memory` | 프로젝트 기억 | 프로젝트 ID, Career 요청 맥락 | 적용 가능한 기록과 제외 이유 |
 | [`svg-infographic`](svg-infographic.md) | Career 구조용 editable SVG와 정확한 2× PNG | `$game-design-career:svg-infographic` | 선택된 canonical artifact | 구조, audience, ratio, language | editable SVG와 검증 evidence |
+| [`upgrade-game-design-suite`](../installation.md#upgrade-game-design-suite-스킬로-처리하기) | 설치된 스위트 버전과 공개된 릴리스 비교·처리 | `$game-design-career:upgrade-game-design-suite` | 설치 자체 | 설치 위치, marketplace 종류, 사람의 선택 | 버전 비교, 검증한 재설치 계획, 선택 기록 |
 | [`visualize-career-roadmap`](visualize-career-roadmap.md) | 역할·역량·학습 dependency 도식화 | `$game-design-career:visualize-career-roadmap` | 선택된 canonical artifact | stable source IDs, 관계, audience | source-mapped SVG/PNG state |
 
 ## 선택 원칙

@@ -216,6 +216,13 @@
       "conditionalOwners": []
     },
     {
+      "skill": "upgrade-game-design-suite",
+      "owners": [
+        "named-human-reviewer"
+      ],
+      "conditionalOwners": []
+    },
+    {
       "skill": "visualize-career-roadmap",
       "owners": [
         "game-design-mentor"

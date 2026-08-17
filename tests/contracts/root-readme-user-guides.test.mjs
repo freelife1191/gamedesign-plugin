@@ -88,8 +88,8 @@ const smartRequestGroupContracts = [
   },
 ];
 const expectedPluginTreeCounts = {
-  "game-design-studio": { agents: 12, skills: 24, templates: 15, scripts: 32 },
-  "game-design-career": { agents: 10, skills: 23, templates: 15, scripts: 32 },
+  "game-design-studio": { agents: 12, skills: 25, templates: 15, scripts: 32 },
+  "game-design-career": { agents: 10, skills: 24, templates: 15, scripts: 32 },
 };
 const sharedInstalledSkillIds = [
   "analyze-game-design-references",
@@ -100,6 +100,7 @@ const sharedInstalledSkillIds = [
   "maintain-game-design-memory",
   "retrieve-approved-design-memory",
   "svg-infographic",
+  "upgrade-game-design-suite",
 ];
 const resultExampleIds = [
   "game-design-brief", "system-specification", "ui-ux-flow-state", "reverse-design-document",
@@ -408,6 +409,7 @@ const readableSkillMetadata = new Map([
     ["review-image-assets", ["이미지 자산 검토", "시각 품질, 접근성, 권리와 배치를 검토해 사람의 결정을 요청합니다."]],
     ["retrieve-approved-design-memory", ["승인된 프로젝트 기억 조회", "출처·범위·만료를 확인한 승인 기록과 제외 이유를 돌려줍니다."]],
     ["svg-infographic", ["기획 도식 만들기", "Skillstead 0.9.0에서 번들된 스킬로 편집 가능한 SVG와 검증용 PNG를 만듭니다."]],
+    ["upgrade-game-design-suite", ["스위트 업데이트", "설치된 버전과 공개된 릴리스를 비교하고 사람이 고른 처리만 적용합니다."]],
     ["visualize-game-design", ["게임 기획 시각화", "루프, 상태, 흐름과 의존성을 접근 가능한 SVG와 PNG 도식으로 만듭니다."]],
   ])],
   ["game-design-career", new Map([
@@ -433,6 +435,7 @@ const readableSkillMetadata = new Map([
     ["review-image-assets", ["경력 이미지 자산 검토", "시각 품질, 접근성, 권리와 배치를 검토해 사람의 결정을 요청합니다."]],
     ["retrieve-approved-design-memory", ["승인된 프로젝트 기억 조회", "출처·범위·만료를 확인한 승인 기록과 제외 이유를 돌려줍니다."]],
     ["svg-infographic", ["경력 도식 만들기", "Skillstead 0.9.0에서 번들된 스킬로 편집 가능한 SVG와 검증용 PNG를 만듭니다."]],
+    ["upgrade-game-design-suite", ["스위트 업데이트", "설치된 버전과 공개된 릴리스를 비교하고 사람이 고른 처리만 적용합니다."]],
     ["visualize-career-roadmap", ["경력 성장 경로 시각화", "역할, 역량, 학습 의존성과 성장 경로를 SVG와 PNG 도식으로 만듭니다."]],
   ])],
 ]);
@@ -461,6 +464,7 @@ const readableSkillUsage = new Map([
     ["review-image-assets", "이미지의 읽기 쉬움·권리·배치를 승인 전에 확인할 때"],
     ["retrieve-approved-design-memory", "이전 설계 교훈을 현재 작업의 참고 자료로 쓸 때"],
     ["svg-infographic", "표나 설명만으로 관계를 이해하기 어려울 때"],
+    ["upgrade-game-design-suite", "설치한 스위트에 새 릴리스가 있는지 확인하고 처리 방법을 고를 때"],
     ["visualize-game-design", "루프·상태·의존성을 기획 문서에 도식으로 넣을 때"],
   ])],
   ["game-design-career", new Map([
@@ -486,6 +490,7 @@ const readableSkillUsage = new Map([
     ["review-image-assets", "공개 전 이미지의 읽기 쉬움·권리·배치를 확인할 때"],
     ["retrieve-approved-design-memory", "이전 학습·포트폴리오 교훈을 현재 작업의 참고 자료로 쓸 때"],
     ["svg-infographic", "학습 경로나 포트폴리오 구조를 그림으로 설명할 때"],
+    ["upgrade-game-design-suite", "설치한 스위트에 새 릴리스가 있는지 확인하고 처리 방법을 고를 때"],
     ["visualize-career-roadmap", "역할·역량·학습 순서를 한눈에 보여 줄 때"],
   ])],
 ]);
@@ -911,7 +916,7 @@ function readableMetadata(metadataByProduct, product, id, kind) {
 
 async function assertSkillInventoryTable(markdown, product) {
   const sourceProduct = sourceProductId(product);
-  const heading = `${sourceProduct === "studio" ? "Studio 설치 스킬 24개" : "Career 설치 스킬 23개"}`;
+  const heading = `${sourceProduct === "studio" ? "Studio 설치 스킬 25개" : "Career 설치 스킬 24개"}`;
   const rows = assertTableShape(markdown, heading, ["스킬 이름과 ID", "사용하는 때", "핵심 결과", "직접 호출", "상세 가이드"], `${product} skills`);
   const inventory = await collectProductInventory(root, product);
   const sourceSkills = (await readdir(path.join(root, "products", product, "plugin", "skills"), { withFileTypes: true }))
@@ -920,7 +925,7 @@ async function assertSkillInventoryTable(markdown, product) {
     .sort();
   assert.equal(sourceSkills.length, product === "game-design-studio" ? 16 : 15, `${product}: source product owns the frozen direct skill count`);
   assert.ok(!sourceSkills.includes("svg-infographic"), `${product}: svg-infographic is not a product source skill`);
-  assert.deepEqual(inventory.skillIds.length, product === "game-design-studio" ? 24 : 23, `${product}: production inventory includes the frozen product and shared skill counts`);
+  assert.deepEqual(inventory.skillIds.length, product === "game-design-studio" ? 25 : 24, `${product}: production inventory includes the frozen product and shared skill counts`);
   assert.deepEqual(sourceSkills, inventory.skillIds.filter((id) => !sharedInstalledSkillIds.includes(id)), `${product}: production inventory derives product skills from source`);
   const expected = inventory.skillIds;
   const actual = [];
@@ -960,6 +965,8 @@ async function assertSkillInventoryTable(markdown, product) {
         ? `guides/${product}/reference-analysis.md`
         : id === "maintain-game-design-glossary"
           ? `guides/${product}/glossary.md`
+        : id === "upgrade-game-design-suite"
+          ? `guides/${product}/installation.md`
           : id === "design-cutscene-visual-preproduction"
             ? `guides/${product}/skills/design-cutscene-visual-preproduction.md`
             : `guides/${product}/skills/${id}.md`;
@@ -1287,8 +1294,8 @@ async function assertPluginIntroduction(markdown) {
     "SessionStart", "Stop", "기준 기획 결과물", "보류한 지점부터 다시 시작",
     "gpt-image-2", "마스터 이미지", "파생 이미지", "프롬프트 계보", "권리와 사용 범위",
   ]) assert.ok(introduction.includes(phrase), "introduction explains the system advantage: " + phrase);
-  assert.match(introduction, /Studio[^\n]{0,80}스킬 24개/u, "introduction states the Studio installed skill count");
-  assert.match(introduction, /Career[^\n]{0,80}스킬 23개/u, "introduction states the Career installed skill count");
+  assert.match(introduction, /Studio[^\n]{0,80}스킬 25개/u, "introduction states the Studio installed skill count");
+  assert.match(introduction, /Career[^\n]{0,80}스킬 24개/u, "introduction states the Career installed skill count");
   assert.match(introduction, /Studio[^\n]{0,60}전문 역할 12개/u, "introduction states the Studio specialist-role count");
   assert.match(introduction, /Career[^\n]{0,60}전문 역할 10개/u, "introduction states the Career specialist-role count");
   assert.match(introduction, /전문 기획자[^\n]{0,100}(?:대신|대체)[^\n]{0,40}않/u, "introduction does not claim to replace a professional designer");
@@ -1492,6 +1499,8 @@ async function buildValidStructuredReadmeFixture() {
           ? `guides/${product}/reference-analysis.md`
         : id === "maintain-game-design-glossary"
           ? `guides/${product}/glossary.md`
+        : id === "upgrade-game-design-suite"
+          ? `guides/${product}/installation.md`
           : id === "design-cutscene-visual-preproduction"
             ? `guides/${product}/skills/design-cutscene-visual-preproduction.md`
             : `guides/${product}/skills/${id}.md`;
@@ -1964,8 +1973,8 @@ function assertRootContentContract(markdown) {
   assert.match(quickStart, /\$game-design-career:orchestrate-game-design-career/);
   assert.doesNotMatch(quickStart, /새 App 채팅 또는 새 CLI 세션에 복사/);
 
-  assert.match(markdown, /Studio[^\n]{0,80}제품 스킬 16개[^\n]{0,80}공통 스킬 8개[^\n]{0,80}24개/s);
-  assert.match(markdown, /Career[^\n]{0,80}제품 스킬 15개[^\n]{0,80}공통 스킬 8개[^\n]{0,80}23개/s);
+  assert.match(markdown, /Studio[^\n]{0,80}제품 스킬 16개[^\n]{0,80}공통 스킬 9개[^\n]{0,80}24개/s);
+  assert.match(markdown, /Career[^\n]{0,80}제품 스킬 15개[^\n]{0,80}공통 스킬 9개[^\n]{0,80}23개/s);
   assert.match(markdown, /Studio 템플릿 15개/);
   assert.match(markdown, /Career 템플릿 15개/);
   for (const mode of ["prompt-only", "select", "required", "all"]) assert.match(images, new RegExp(mode));
@@ -2649,7 +2658,7 @@ test("global and product indexes reach the cutscene guide and frozen inventories
   let recipeCount = 0;
   for (const product of products) {
     const inventory = await collectProductInventory(root, product);
-    assert.equal(inventory.skillIds.length, product === "game-design-studio" ? 24 : 23);
+    assert.equal(inventory.skillIds.length, product === "game-design-studio" ? 25 : 24);
     assert.equal(inventory.templateIds.length, 15);
     const productRoot = path.join(guideRoot, product);
     const expected = [
@@ -2671,6 +2680,8 @@ test("global and product indexes reach the cutscene guide and frozen inventories
           ? "reference-analysis.md"
         : id === "maintain-game-design-glossary"
           ? "glossary.md"
+        : id === "upgrade-game-design-suite"
+          ? "installation.md"
           : id === "design-cutscene-visual-preproduction"
             ? "skills/design-cutscene-visual-preproduction.md"
             : `skills/${id}.md`),

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-career",
   "sourceDateEpoch": 0,
-  "treeSha256": "cce040ecd65a363ef979cbdcd6ed5299090ea17c9c904ba9da3cd8d040b37d03",
+  "treeSha256": "8ea070723b3b91bc5bc52777d9d43a23207baa1a3296fe9cd99820c2190eb0ed",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -21,8 +21,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "7c9b2dba8a95be7610e0e972eabe1d318636f4e0c3c0df5daffa244c47dfdc27",
-      "size": 63309
+      "sha256": "feeb2cdf91e5bee194e9455c9ab0107d0330cc3937aba151085c7576118844dc",
+      "size": 63489
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -616,8 +616,8 @@
     },
     {
       "path": "references/routing.json",
-      "sha256": "ae4f21bd67e74e0b0b4d62788273dbe5296a5b900c8330d7ae2291011ec46942",
-      "size": 61192
+      "sha256": "e2ef54ab20d497ac3344ef0a81e44b6428e86133542df6bea6bb9598a5c3902b",
+      "size": 61337
     },
     {
       "path": "references/shared/document-quality/game-design-writing-style.md",
