@@ -17,8 +17,8 @@ report, not errors to retry.
 
 The products command answers which suite products this host has installed. It reports
 `"status":"known"` with the installed product ids, and `"status":"unknown"` with an empty list when
-the host listing cannot be read at all. Unknown is a result to report as "확인 불가", not an error to
-retry.
+the host listing cannot be read or cannot be trusted (a malformed response counts the same as a
+missing one). Unknown is a result to report as "확인 불가", not an error to retry.
 
 The suppress command records the "do not tell me about this version again" answer. It writes only
 the suppression list in the advisory cache and changes no installation. With no component named it

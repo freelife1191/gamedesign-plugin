@@ -5978,7 +5978,7 @@
       "product": "career",
       "source_document": "plugins/game-design-career/skills/upgrade-game-design-suite/references/codex-commands.md",
       "source_section": "Codex Host Commands",
-      "source_digest": "f6bd2cb81cad699c689a31d1ebfb913c3f83a83a2f2f0afbdbde8c328be0f2f0",
+      "source_digest": "2a0ef1c40e70d8ce1b774703239d1b5d946845b58986d4159e482a57015a1ad7",
       "origin_source": {
         "source_document": "shared/suite-update/skills/upgrade-game-design-suite/references/codex-commands.md",
         "build_mapping": "suite-update-skill"
@@ -9558,7 +9558,7 @@
       "product": "studio",
       "source_document": "plugins/game-design-studio/skills/upgrade-game-design-suite/references/codex-commands.md",
       "source_section": "Codex Host Commands",
-      "source_digest": "f6bd2cb81cad699c689a31d1ebfb913c3f83a83a2f2f0afbdbde8c328be0f2f0",
+      "source_digest": "2a0ef1c40e70d8ce1b774703239d1b5d946845b58986d4159e482a57015a1ad7",
       "origin_source": {
         "source_document": "shared/suite-update/skills/upgrade-game-design-suite/references/codex-commands.md",
         "build_mapping": "suite-update-skill"
@@ -12535,7 +12535,7 @@
       "product": "studio",
       "source_document": "plugins/game-design-studio/skills/game-design-studio/references/handoff.md",
       "source_section": "Suite Handoff Contract",
-      "source_digest": "2d4d4498f98905c1611dfd03c5acb3f621a9e3bf357df9079342d2ba068df69d",
+      "source_digest": "8132639b621dbc9e52a6d18b6d09a219cce630308420fa50a2bb94c771f78609",
       "origin_source": {
         "source_document": "shared/suite-handoff/references/handoff.md",
         "build_mapping": "suite-handoff"
@@ -12555,7 +12555,7 @@
       "product": "career",
       "source_document": "plugins/game-design-career/skills/game-design-career/references/handoff.md",
       "source_section": "Suite Handoff Contract",
-      "source_digest": "2d4d4498f98905c1611dfd03c5acb3f621a9e3bf357df9079342d2ba068df69d",
+      "source_digest": "8132639b621dbc9e52a6d18b6d09a219cce630308420fa50a2bb94c771f78609",
       "origin_source": {
         "source_document": "shared/suite-handoff/references/handoff.md",
         "build_mapping": "suite-handoff"
