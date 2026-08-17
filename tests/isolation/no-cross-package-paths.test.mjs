@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { assertPackagePath, auditTree } from "../../tooling/lib/tree-audit.mjs";
+import { MAX_PACKAGE_PATH_LENGTH, assertPackagePath, auditTree } from "../../tooling/lib/tree-audit.mjs";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const productNames = ["game-design-career", "game-design-studio"];
@@ -254,4 +254,19 @@ test("package paths that collide after NFC and case folding are rejected", () =>
   assert.equal(assertPackagePath("a/one.md", distinctSeen), "a/one.md");
   assert.equal(assertPackagePath("a/two.md", distinctSeen), "a/two.md");
   assert.equal(distinctSeen.size, 2);
+});
+
+test("package paths stay inside the length budget", async (t) => {
+  assert.equal(MAX_PACKAGE_PATH_LENGTH, 150);
+
+  const atBudget = `${"a".repeat(74)}/${"b".repeat(75)}`;
+  assert.equal(atBudget.length, MAX_PACKAGE_PATH_LENGTH);
+  assert.equal(assertPackagePath(atBudget, new Map()), atBudget);
+
+  const overBudget = `${"a".repeat(74)}/${"b".repeat(76)}`;
+  assert.equal(overBudget.length, MAX_PACKAGE_PATH_LENGTH + 1);
+  assert.throws(() => assertPackagePath(overBudget, new Map()), /path budget/u);
+
+  const root = await fixture(t, `${"n".repeat(80)}/${"m".repeat(80)}.md`, "over budget\n");
+  await assert.rejects(() => auditTree({ root, packageName: "game-design-studio" }), /path budget/u);
 });
