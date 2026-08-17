@@ -21,7 +21,7 @@ Report what is installed, what is available, and what changing it would cost. Ne
 
 - Update now. Apply the verified plan.
 - Later. Leave the seven-day advisory state untouched.
-- Do not tell me about this version again. Suppress only this exact installed and latest version pair.
+- Do not tell me about this version again. Record the answer with the suppress command in the reference file, which covers only this exact installed and latest version pair. Never hand-edit the advisory cache instead.
 - Turn update checks off. Explain the `GAME_DESIGN_UPDATE_CHECKS=false` contract, then stop checking and stop writing the cache.
 
 ## Operating Rules

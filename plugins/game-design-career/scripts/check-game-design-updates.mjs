@@ -828,6 +828,78 @@ export function resolveUpdateCachePath({ env = process.env, home = homedir(), pl
   return joinForPlatform(base, CACHE_DIRECTORY, CACHE_FILE);
 }
 
+function suppressionResult(status, suppressed = []) {
+  return Object.freeze({
+    schemaVersion: 1,
+    status,
+    suppressed: Object.freeze(suppressed.map((component) => Object.freeze({ ...component }))),
+  });
+}
+
+// The skill offers "do not tell me about this version again", so there has to be a way to record
+// that answer. This writes only the suppression list: the advisory, the seven-day interval, and the
+// notification claim all stay exactly as the last check left them. Suppression hides a prompt; it
+// never changes an installation, so it stays on the read-only side of the approval gate.
+export async function suppressUpdateNotification({
+  componentIds = null,
+  pluginRoot = null,
+  env = process.env,
+  home = homedir(),
+  now = Date.now(),
+  fsOps: fsOverrides = {},
+  platform = process.platform,
+} = {}) {
+  if (env.GAME_DESIGN_UPDATE_CHECKS === "false") return suppressionResult("unavailable");
+  if (componentIds !== null && (!Array.isArray(componentIds) || !componentIds.every((id) => typeof id === "string"))) {
+    return suppressionResult("unavailable");
+  }
+  const fsOps = defaultFsOps(fsOverrides);
+  const pluginRoots = pluginRoot === null ? DEFAULT_PLUGIN_ROOTS : [pluginRoot];
+  let policy;
+  let installed;
+  try {
+    policy = await loadJson(pluginRoots, "update-policy.json", fsOps);
+    installed = installedFromManifest(await loadJson(pluginRoots, "installed-components.json", fsOps));
+    if (installed === null || !trustedConfiguration(policy, installed, iso(now))) throw new Error("untrusted update configuration");
+  } catch {
+    return suppressionResult("unavailable");
+  }
+  const intervalMs = policy.checkIntervalDays * 24 * 60 * 60 * 1000;
+  const lockLeaseMs = Math.max(LOCK_MIN_LEASE_MS, policy.totalTimeoutMs + LOCK_MAX_WAIT_MS + 1000);
+  let cachePath;
+  try {
+    cachePath = resolveUpdateCachePath({ env, home, platform });
+  } catch {
+    return suppressionResult("unavailable");
+  }
+  const lockPath = `${cachePath}.lock`;
+  let locked;
+  try {
+    locked = await acquireLock(lockPath, fsOps, lockLeaseMs);
+  } catch {
+    return suppressionResult("unavailable");
+  }
+  // Without the lock a concurrent check would overwrite the answer with its own record.
+  if (!locked) return suppressionResult("unavailable");
+  try {
+    // There is nothing to suppress until a check has produced an advisory, and inventing one here
+    // would guess at versions the user never saw.
+    const cached = await readCache({ cachePath, fsOps, policy, installed, now, intervalMs });
+    if (cached.state !== "valid") return suppressionResult("unavailable");
+    const chosen = notificationIdentityFor(cached.advisory)
+      .filter((component) => componentIds === null || componentIds.includes(component.id));
+    const previous = cached.record.suppressedComponents;
+    const added = chosen.filter((component) => !suppresses(previous, component));
+    if (added.length === 0) return suppressionResult("unchanged", previous);
+    const suppressed = [...previous, ...added].map((component) => ({ ...component }));
+    const record = { ...cached.record, suppressedComponents: suppressed };
+    if (!(await publishCache({ cachePath, record, fsOps }))) return suppressionResult("unavailable");
+    return suppressionResult("suppressed", suppressed);
+  } finally {
+    await releaseLock(locked, fsOps);
+  }
+}
+
 export async function checkGameDesignUpdates({
   pluginRoot = null,
   env = process.env,
@@ -926,7 +998,19 @@ async function isDirectInvocation() {
   }
 }
 
+// `--suppress` with no id answers for every component the last advisory reported as outdated,
+// which is exactly the set the notification named. Ids narrow it to part of that set.
+export function suppressionRequest(argv) {
+  const index = argv.indexOf("--suppress");
+  if (index === -1) return null;
+  const ids = argv.slice(index + 1).filter((value) => !value.startsWith("-"));
+  return { componentIds: ids.length === 0 ? null : ids };
+}
+
 if (await isDirectInvocation()) {
-  const result = await checkGameDesignUpdates();
+  const request = suppressionRequest(process.argv.slice(2));
+  const result = request === null
+    ? await checkGameDesignUpdates()
+    : await suppressUpdateNotification(request);
   process.stdout.write(`${JSON.stringify(result)}\n`);
 }

@@ -7,8 +7,14 @@ This file is the only place that names host-specific commands. Replace this file
 - Advisory: `node scripts/check-game-design-updates.mjs`
 - Installation inspection: `node scripts/inspect-game-design-plugin-updates.mjs --inspect`
 - Reinstall plan for one plugin: `node scripts/inspect-game-design-plugin-updates.mjs --plan <plugin>`
+- Silence one version pair: `node scripts/check-game-design-updates.mjs --suppress [<component> ...]`
 
 The plan command prints an ordered argv list. It executes nothing.
+
+The suppress command records the "do not tell me about this version again" answer. It writes only
+the suppression list in the advisory cache and changes no installation. With no component named it
+answers for every component the last advisory reported as outdated. It reports `unavailable` when
+no advisory has been cached yet, so run the advisory first.
 
 ## Applied only after an explicit approval
 

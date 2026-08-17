@@ -359,3 +359,34 @@ test("a repository outside the four entry allowlist is refused", () => {
   assert.equal(advisory.status, "unknown");
   assert.deepEqual(advisory.components, []);
 });
+
+// The version bump lands before the release is published, so every build made from that commit
+// runs ahead of the newest release until it goes out. Calling that unknown would turn the whole
+// advisory unknown and silence the bundled upstream notices for the entire window.
+test("a suite build that runs ahead of its own newest release is current, not unknown", () => {
+  const advisory = evaluateUpdateAdvisory({
+    policy,
+    installed: [{ id: "game-design-suite", installedTag: "v0.1.2", repository: SUITE_REPOSITORY }],
+    releases: { "game-design-suite": [releaseFor(SUITE_REPOSITORY, "v0.1.1")] },
+    checkedAt,
+  });
+
+  assert.equal(advisory.status, "current");
+  assert.equal(advisory.components[0].status, "current");
+  assert.equal(advisory.components[0].latestTag, "v0.1.1");
+});
+
+test("a bundled upstream that claims a tag nobody published stays unknown", () => {
+  const repository = "https://github.com/tt-a1i/archify";
+  const advisory = evaluateUpdateAdvisory({
+    policy,
+    installed: [{ id: "archify", installedTag: "v2.13.0", repository }],
+    releases: { archify: [releaseFor(repository, "v2.12.0")] },
+    checkedAt,
+  });
+
+  // Only the suite ships ahead of its own release on purpose. For a vendored upstream the same
+  // state means the lock file disagrees with the upstream, which is not something to guess about.
+  assert.equal(advisory.status, "unknown");
+  assert.equal(advisory.components[0].latestTag, null);
+});

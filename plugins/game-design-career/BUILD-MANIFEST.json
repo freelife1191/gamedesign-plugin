@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-career",
   "sourceDateEpoch": 0,
-  "treeSha256": "8ea070723b3b91bc5bc52777d9d43a23207baa1a3296fe9cd99820c2190eb0ed",
+  "treeSha256": "0697cba7ae9d4b827ebaa17d6291fe48aaf34289bd7dd1deecb958d64c752228",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -616,8 +616,8 @@
     },
     {
       "path": "references/routing.json",
-      "sha256": "e2ef54ab20d497ac3344ef0a81e44b6428e86133542df6bea6bb9598a5c3902b",
-      "size": 61337
+      "sha256": "eff9606cc137eb37f7dd28240388f4da0006290b16687ac2eadd389beb30de63",
+      "size": 52479
     },
     {
       "path": "references/shared/document-quality/game-design-writing-style.md",
@@ -1586,8 +1586,8 @@
     },
     {
       "path": "scripts/check-game-design-updates.mjs",
-      "sha256": "5d6fc63cea034b65603fecbf562c61fbe8738ef46fed062f4395855e4f60c77b",
-      "size": 40655
+      "sha256": "f7bd4e1a46ae75176657b5bd0c5e701570054d53e8d9498d21f48569af932e1c",
+      "size": 44573
     },
     {
       "path": "scripts/compile-image-prompts.mjs",
@@ -1721,8 +1721,8 @@
     },
     {
       "path": "scripts/lib/update-advisory.mjs",
-      "sha256": "f1cc700f833bb555ed2a856455b838a1985c885ea56b7066f23bbd9b3d9802e8",
-      "size": 10482
+      "sha256": "a1a9714082643e6a934ae5fdaca0a8e64015e0473e0ac1565703460708b020ec",
+      "size": 11571
     },
     {
       "path": "scripts/load-memory-config.mjs",
@@ -2691,13 +2691,13 @@
     },
     {
       "path": "skills/upgrade-game-design-suite/SKILL.md",
-      "sha256": "cd5acc659fa65607954fa30f9efdca3726881eb8cb5c7e155bb29b09016cc7ce",
-      "size": 3028
+      "sha256": "8e4e8a1f6db2662c969e6329d627203cfbee8fd630c52eecae03634d4993d6e7",
+      "size": 3143
     },
     {
       "path": "skills/upgrade-game-design-suite/references/codex-commands.md",
-      "sha256": "2c6ae9bd9b8ef04d599c77b86cea416aa04624c9d3ea072fa77476715ae30c06",
-      "size": 1078
+      "sha256": "0c3d4c2db3ea6ca09eec2b73dd4696ed6c254ff7c3c56adf4b3fb45e41e73819",
+      "size": 1536
     },
     {
       "path": "skills/visualize-career-roadmap/SKILL.md",

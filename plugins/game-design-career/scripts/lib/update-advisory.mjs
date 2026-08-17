@@ -3,8 +3,12 @@ const COMPONENTS = Object.freeze({
   archify: Object.freeze({ prefix: "v", repository: "https://github.com/tt-a1i/archify" }),
   "im-not-ai": Object.freeze({ prefix: "v", repository: "https://github.com/epoko77-ai/im-not-ai" }),
   // The suite compares against its own releases, so the advisory can report that the plugin the
-  // user installed is behind, not only that a bundled upstream is.
-  "game-design-suite": Object.freeze({ prefix: "v", repository: "https://github.com/freelife1191/gamedesign-plugin" }),
+  // user installed is behind, not only that a bundled upstream is. It is also the only component
+  // whose installed version can legitimately run ahead of the newest published release: the version
+  // bump lands before the release is published, so every build from that commit is ahead until it
+  // is. A vendored upstream claiming a tag nobody published stays unknown, because there the same
+  // state means the lock file disagrees with reality.
+  "game-design-suite": Object.freeze({ prefix: "v", repository: "https://github.com/freelife1191/gamedesign-plugin", aheadOfLatestIsCurrent: true }),
 });
 
 const POLICY_KEYS = Object.freeze([
@@ -219,9 +223,24 @@ export function evaluateUpdateAdvisory({ policy, installed, releases, checkedAt 
   const components = [];
   for (const component of installed) {
     const inspected = inspectReleases(component, releases[component.id]);
-    const installedVersion = stableVersionFor(COMPONENTS[component.id], component.installedTag);
-    if (!inspected.valid || inspected.latest === null || compareVersions(installedVersion, inspected.latest.version) > 0) {
+    const rule = COMPONENTS[component.id];
+    const installedVersion = stableVersionFor(rule, component.installedTag);
+    const ahead = inspected.latest !== null && compareVersions(installedVersion, inspected.latest.version) > 0;
+    // One unknown component turns the whole advisory unknown, which silences the notice for every
+    // other component too. Letting a build that runs ahead of its own release report current keeps
+    // the bundled upstream notices alive during the window between the version bump and the release.
+    if (!inspected.valid || inspected.latest === null || (ahead && rule.aheadOfLatestIsCurrent !== true)) {
       components.push(unknownComponent(component));
+      continue;
+    }
+    if (ahead) {
+      components.push({
+        id: component.id,
+        installedTag: component.installedTag,
+        latestTag: inspected.latest.tag,
+        status: "current",
+        releaseUrl: inspected.latest.url,
+      });
       continue;
     }
     const comparison = compareVersions(installedVersion, inspected.latest.version);

@@ -8,6 +8,8 @@ import test from "node:test";
 import {
   checkGameDesignUpdates,
   resolveUpdateCachePath,
+  suppressionRequest,
+  suppressUpdateNotification,
 } from "../../shared/scripts/check-game-design-updates.mjs";
 
 const CHECKED_AT = "2026-08-15T00:00:00.000Z";
@@ -1323,4 +1325,99 @@ test("suppression does not carry over to a different latest version", async (t) 
 
   assert.equal(result.status, "outdated");
   assert.deepEqual(result.notification?.componentIds, ["archify"], "a newer version is a new decision");
+});
+
+// The skill offers "do not tell me about this version again" as one of four choices. Without a way
+// to record the answer that choice is prose, so these cases pin the write path end to end.
+async function readCacheValue(home) {
+  return JSON.parse(await readFile(resolveUpdateCachePath({ env: {}, home, platform: process.platform }), "utf8"));
+}
+
+test("suppressing an announced version writes the answer and silences the next check", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  await writeCache({ home, value: outdatedCacheValue({ lastNotifiedAt: CHECKED_AT, lastNotifiedComponents: notificationIdentity() }) });
+
+  const suppression = await suppressUpdateNotification({ pluginRoot, home, now: Date.parse(CHECKED_AT), env: {} });
+
+  assert.equal(suppression.status, "suppressed");
+  assert.deepEqual([...suppression.suppressed], notificationIdentity());
+  assert.deepEqual((await readCacheValue(home)).suppressedComponents, notificationIdentity());
+
+  const calls = [];
+  const result = await checkGameDesignUpdates({
+    pluginRoot,
+    home,
+    now: Date.parse(CHECKED_AT),
+    fetchFn: checkingFetch(calls),
+    env: {},
+  });
+
+  assert.equal(calls.length, 0);
+  assert.equal(result.status, "outdated", "suppression hides the prompt, not the fact");
+  assert.equal(result.notification, null);
+});
+
+test("suppression leaves the advisory and the seven-day claim exactly as the last check left them", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  const before = outdatedCacheValue({ lastNotifiedAt: CHECKED_AT, lastNotifiedComponents: notificationIdentity() });
+  await writeCache({ home, value: before });
+
+  await suppressUpdateNotification({ pluginRoot, home, now: SIX_DAYS_LATER, env: {} });
+
+  const after = await readCacheValue(home);
+  assert.deepEqual({ ...after, suppressedComponents: [] }, before, "only the suppression list may change");
+});
+
+test("suppressing a component the advisory never reported as outdated changes nothing", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  await writeCache({ home, value: outdatedCacheValue() });
+
+  const suppression = await suppressUpdateNotification({
+    pluginRoot,
+    home,
+    now: Date.parse(CHECKED_AT),
+    env: {},
+    componentIds: ["game-design-suite"],
+  });
+
+  assert.equal(suppression.status, "unchanged");
+  assert.deepEqual((await readCacheValue(home)).suppressedComponents, []);
+});
+
+test("suppression refuses to invent an advisory when no check has cached one", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+
+  const suppression = await suppressUpdateNotification({ pluginRoot, home, now: Date.parse(CHECKED_AT), env: {} });
+
+  assert.equal(suppression.status, "unavailable");
+  assert.deepEqual([...suppression.suppressed], []);
+});
+
+test("suppression writes nothing while update checks are turned off", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  await writeCache({ home, value: outdatedCacheValue() });
+
+  const suppression = await suppressUpdateNotification({
+    pluginRoot,
+    home,
+    now: Date.parse(CHECKED_AT),
+    env: { GAME_DESIGN_UPDATE_CHECKS: "false" },
+  });
+
+  assert.equal(suppression.status, "unavailable");
+  assert.deepEqual((await readCacheValue(home)).suppressedComponents, []);
+});
+
+test("the suppress flag is off by default and never swallows a following flag as a component", () => {
+  const cases = [
+    [[], null],
+    [["--json"], null],
+    [["--suppress"], { componentIds: null }],
+    [["--suppress", "game-design-suite"], { componentIds: ["game-design-suite"] }],
+    [["--suppress", "archify", "game-design-suite"], { componentIds: ["archify", "game-design-suite"] }],
+    [["--suppress", "--json"], { componentIds: null }],
+  ];
+  for (const [argv, expected] of cases) {
+    assert.deepEqual(suppressionRequest(argv), expected, `argv: ${JSON.stringify(argv)}`);
+  }
 });

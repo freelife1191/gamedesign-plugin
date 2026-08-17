@@ -148,6 +148,15 @@ test("the skill offers exactly the four approved choices", () => {
   assert.match(skill, /GAME_DESIGN_UPDATE_CHECKS=false/u);
 });
 
+// A choice with no command behind it is prose that reads like a feature. The reference file has to
+// carry a way to record the answer, and the body has to send the reader there rather than to the
+// cache file, because a hand-written record fails validation and silently loses the answer.
+test("the version suppression choice has a recorded command behind it", () => {
+  assert.match(commands, /--suppress/u, "the reference file has to name the suppress command");
+  assert.match(skill, /suppress command in the reference file/u);
+  assert.match(skill, /Never hand-edit the advisory cache/u);
+});
+
 test("the skill stops for an answer before it applies anything", () => {
   const workflow = skill.slice(skill.indexOf("## Workflow"), skill.indexOf("## Choices"));
   const stopIndex = workflow.indexOf("stop and wait for an answer");

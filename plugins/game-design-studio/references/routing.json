@@ -38,15 +38,8 @@
     "document-quality-editor",
     "game-design-writing-editor"
   ],
-  "imageSpecialistIds": [
-    "art-brief-director",
-    "visual-asset-reviewer"
-  ],
-  "profileIds": [
-    "live-service-rpg",
-    "mobile",
-    "pc-console"
-  ],
+  "imageSpecialistIds": ["art-brief-director", "visual-asset-reviewer"],
+  "profileIds": ["live-service-rpg", "mobile", "pc-console"],
   "rolePriority": [
     "lead-game-designer",
     "system-economy-designer",
@@ -99,10 +92,7 @@
       "agents/document-quality-editor.md",
       "agents/game-design-writing-editor.md"
     ],
-    "imageSpecialists": [
-      "agents/art-brief-director.md",
-      "agents/visual-asset-reviewer.md"
-    ],
+    "imageSpecialists": ["agents/art-brief-director.md", "agents/visual-asset-reviewer.md"],
     "profiles": [
       "references/profiles/universal-core.json",
       "references/profiles/live-service-rpg.json",
@@ -132,37 +122,27 @@
   "directUseReviewOwners": [
     {
       "skill": "retrieve-approved-design-memory",
-      "owners": [
-        "lead-game-designer"
-      ],
+      "owners": ["lead-game-designer"],
       "conditionalOwners": []
     },
     {
       "skill": "capture-game-design-memory",
-      "owners": [
-        "lead-game-designer"
-      ],
+      "owners": ["lead-game-designer"],
       "conditionalOwners": []
     },
     {
       "skill": "maintain-game-design-memory",
-      "owners": [
-        "document-quality-editor"
-      ],
+      "owners": ["document-quality-editor"],
       "conditionalOwners": []
     },
     {
       "skill": "analyze-game-design-references",
-      "owners": [
-        "lead-game-designer"
-      ],
+      "owners": ["lead-game-designer"],
       "conditionalOwners": []
     },
     {
       "skill": "maintain-game-design-glossary",
-      "owners": [
-        "document-quality-editor"
-      ],
+      "owners": ["document-quality-editor"],
       "conditionalOwners": []
     }
   ],
@@ -181,30 +161,13 @@
     "analysisSkill": "analyze-game-design-references",
     "glossarySkill": "maintain-game-design-glossary",
     "transferState": "pending-review",
-    "outputs": [
-      "reference-system-analysis",
-      "reference-comparison",
-      "design-transfer-decision"
-    ],
-    "profileIds": [
-      "reference-system-analysis",
-      "reference-comparison",
-      "design-transfer-decision"
-    ]
+    "outputs": ["reference-system-analysis", "reference-comparison", "design-transfer-decision"],
+    "profileIds": ["reference-system-analysis", "reference-comparison", "design-transfer-decision"]
   },
   "cutsceneWorkflow": {
     "schemaVersion": 1,
-    "waves": [
-      "style-master",
-      "reference-masters",
-      "keyframes",
-      "storyboard"
-    ],
-    "downstream": [
-      "plan-image-assets",
-      "generate-image-assets",
-      "review-image-assets"
-    ],
+    "waves": ["style-master", "reference-masters", "keyframes", "storyboard"],
+    "downstream": ["plan-image-assets", "generate-image-assets", "review-image-assets"],
     "approval": "stage-by-stage-live-host-user"
   },
   "qualityWorkflow": {
@@ -234,9 +197,7 @@
       "vision-one-pager"
     ]
   },
-  "writingSpecialistIds": [
-    "game-design-writing-editor"
-  ],
+  "writingSpecialistIds": ["game-design-writing-editor"],
   "writingWorkflow": {
     "skill": "polish-game-design-writing",
     "role": "game-design-writing-editor",
@@ -247,33 +208,11 @@
   "routes": [
     {
       "id": "project-orchestration",
-      "triggerIntents": [
-        "multi-discipline project",
-        "game design brief",
-        "scope planning",
-        "project roadmap",
-        "milestone planning",
-        "ambiguous design request"
-      ],
-      "requiredInputs": [
-        "target player",
-        "target experience",
-        "platform",
-        "genre",
-        "development stage",
-        "constraints",
-        "completion criteria"
-      ],
+      "triggerIntents": ["multi-discipline project", "game design brief", "scope planning", "project roadmap", "milestone planning", "ambiguous design request"],
+      "requiredInputs": ["target player", "target experience", "platform", "genre", "development stage", "constraints", "completion criteria"],
       "skill": "orchestrate-game-design-project",
-      "eligibleProfiles": [
-        "live-service-rpg",
-        "mobile",
-        "pc-console"
-      ],
-      "defaultReviewers": [
-        "lead-game-designer",
-        "production-feasibility-critic"
-      ],
+      "eligibleProfiles": ["live-service-rpg", "mobile", "pc-console"],
+      "defaultReviewers": ["lead-game-designer", "production-feasibility-critic"],
       "maxReviewers": 3,
       "references": [
         "skills/orchestrate-game-design-project/references/intake.md",
@@ -281,548 +220,181 @@
         "skills/orchestrate-game-design-project/references/completion-gates.md"
       ],
       "artifactType": "game-design-brief",
-      "completionGates": [
-        "intent-and-scope-defined",
-        "selected-routes-complete",
-        "canonical-artifact-valid"
-      ]
+      "completionGates": ["intent-and-scope-defined", "selected-routes-complete", "canonical-artifact-valid"]
     },
     {
       "id": "vision",
-      "triggerIntents": [
-        "game vision",
-        "design pillars",
-        "core fun",
-        "motivation loop"
-      ],
-      "requiredInputs": [
-        "target player",
-        "desired emotion",
-        "experience intent",
-        "constraints"
-      ],
+      "triggerIntents": ["game vision", "design pillars", "core fun", "motivation loop"],
+      "requiredInputs": ["target player", "desired emotion", "experience intent", "constraints"],
       "skill": "define-game-vision",
-      "eligibleProfiles": [
-        "live-service-rpg",
-        "mobile",
-        "pc-console"
-      ],
-      "defaultReviewers": [
-        "lead-game-designer",
-        "content-narrative-designer"
-      ],
+      "eligibleProfiles": ["live-service-rpg", "mobile", "pc-console"],
+      "defaultReviewers": ["lead-game-designer", "content-narrative-designer"],
       "maxReviewers": 3,
-      "references": [
-        "references/methods/vision.md"
-      ],
+      "references": ["references/methods/vision.md"],
       "artifactType": "vision-pillars",
-      "completionGates": [
-        "target-player-defined",
-        "pillars-testable",
-        "assumptions-and-non-goals-visible"
-      ]
+      "completionGates": ["target-player-defined", "pillars-testable", "assumptions-and-non-goals-visible"]
     },
     {
       "id": "systems",
-      "triggerIntents": [
-        "game system",
-        "rules",
-        "state transitions",
-        "data schema"
-      ],
-      "requiredInputs": [
-        "system purpose",
-        "inputs",
-        "constraints",
-        "failure expectations"
-      ],
+      "triggerIntents": ["game system", "rules", "state transitions", "data schema"],
+      "requiredInputs": ["system purpose", "inputs", "constraints", "failure expectations"],
       "skill": "design-game-systems",
-      "eligibleProfiles": [
-        "live-service-rpg",
-        "mobile",
-        "pc-console"
-      ],
-      "defaultReviewers": [
-        "system-economy-designer",
-        "ux-accessibility-reviewer"
-      ],
+      "eligibleProfiles": ["live-service-rpg", "mobile", "pc-console"],
+      "defaultReviewers": ["system-economy-designer", "ux-accessibility-reviewer"],
       "maxReviewers": 3,
-      "references": [
-        "references/methods/system-specification.md"
-      ],
+      "references": ["references/methods/system-specification.md"],
       "artifactType": "system-specification",
-      "completionGates": [
-        "rule-precedence-defined",
-        "failure-and-recovery-defined",
-        "data-runtime-mapping-complete"
-      ]
+      "completionGates": ["rule-precedence-defined", "failure-and-recovery-defined", "data-runtime-mapping-complete"]
     },
     {
       "id": "content",
-      "triggerIntents": [
-        "quest",
-        "level content",
-        "narrative",
-        "character",
-        "enemy",
-        "combat",
-        "boss",
-        "encounter",
-        "puzzle",
-        "level design",
-        "soft lock",
-        "secret route",
-        "reset",
-        "retry"
-      ],
-      "requiredInputs": [
-        "content purpose",
-        "supporting systems",
-        "production budget",
-        "repeatability target"
-      ],
+      "triggerIntents": ["quest", "level content", "narrative", "character", "enemy", "combat", "boss", "encounter", "puzzle", "level design", "soft lock", "secret route", "reset", "retry"],
+      "requiredInputs": ["content purpose", "supporting systems", "production budget", "repeatability target"],
       "skill": "design-game-content",
-      "eligibleProfiles": [
-        "live-service-rpg",
-        "mobile",
-        "pc-console"
-      ],
-      "defaultReviewers": [
-        "content-narrative-designer",
-        "lead-game-designer"
-      ],
+      "eligibleProfiles": ["live-service-rpg", "mobile", "pc-console"],
+      "defaultReviewers": ["content-narrative-designer", "lead-game-designer"],
       "conditionalReviewers": [
         {
           "role": "combat-encounter-reviewer",
-          "triggerIntents": [
-            "combat",
-            "boss",
-            "encounter"
-          ],
-          "reviewers": [
-            "combat-encounter-reviewer"
-          ]
+          "triggerIntents": ["combat", "boss", "encounter"],
+          "reviewers": ["combat-encounter-reviewer"]
         },
         {
           "role": "level-puzzle-reviewer",
-          "triggerIntents": [
-            "puzzle",
-            "level design",
-            "secret route",
-            "soft lock",
-            "reset",
-            "retry"
-          ],
-          "reviewers": [
-            "level-puzzle-reviewer"
-          ]
+          "triggerIntents": ["puzzle", "level design", "secret route", "soft lock", "reset", "retry"],
+          "reviewers": ["level-puzzle-reviewer"]
         }
       ],
       "maxReviewers": 3,
-      "references": [
-        "references/methods/content-specification.md"
-      ],
+      "references": ["references/methods/content-specification.md"],
       "artifactType": "narrative-quest-npc",
-      "completionGates": [
-        "system-inputs-linked",
-        "player-strategy-supported",
-        "production-cost-accounted"
-      ]
+      "completionGates": ["system-inputs-linked", "player-strategy-supported", "production-cost-accounted"]
     },
     {
       "id": "cutscene-visual-preproduction",
-      "triggerIntents": [
-        "컷씬 기획",
-        "스토리보드",
-        "시네마틱 이미지",
-        "마스터 이미지",
-        "컷씬 프롬프트",
-        "컷씬 승인 후 생성"
-      ],
-      "requiredInputs": [
-        "cutscene brief",
-        "game-state return"
-      ],
+      "triggerIntents": ["컷씬 기획", "스토리보드", "시네마틱 이미지", "마스터 이미지", "컷씬 프롬프트", "컷씬 승인 후 생성"],
+      "requiredInputs": ["cutscene brief", "game-state return"],
       "skill": "design-cutscene-visual-preproduction",
-      "eligibleProfiles": [
-        "live-service-rpg",
-        "mobile",
-        "pc-console"
-      ],
-      "defaultReviewers": [
-        "content-narrative-designer",
-        "lead-game-designer"
-      ],
+      "eligibleProfiles": ["live-service-rpg", "mobile", "pc-console"],
+      "defaultReviewers": ["content-narrative-designer", "lead-game-designer"],
       "maxReviewers": 3,
-      "references": [
-        "references/methods/content-specification.md"
-      ],
+      "references": ["references/methods/content-specification.md"],
       "artifactType": "cutscene-visual-preproduction",
-      "completionGates": [
-        "cutscene-continuity-current"
-      ],
-      "outputArtifacts": [
-        "cutscene-brief",
-        "cutscene-shot-package",
-        "cutscene-prompt-package",
-        "cutscene-cost-estimate",
-        "cutscene-continuity-review"
-      ],
-      "outputTypes": [
-        "cutscene-visual-preproduction"
-      ]
+      "completionGates": ["cutscene-continuity-current"],
+      "outputArtifacts": ["cutscene-brief", "cutscene-shot-package", "cutscene-prompt-package", "cutscene-cost-estimate", "cutscene-continuity-review"],
+      "outputTypes": ["cutscene-visual-preproduction"]
     },
     {
       "id": "player-experience",
-      "triggerIntents": [
-        "player experience",
-        "UX flow",
-        "tutorial",
-        "accessibility",
-        "input"
-      ],
-      "requiredInputs": [
-        "critical actions",
-        "platform",
-        "input methods",
-        "first-session goal"
-      ],
+      "triggerIntents": ["player experience", "UX flow", "tutorial", "accessibility", "input"],
+      "requiredInputs": ["critical actions", "platform", "input methods", "first-session goal"],
       "skill": "design-player-experience",
-      "eligibleProfiles": [
-        "live-service-rpg",
-        "mobile",
-        "pc-console"
-      ],
-      "defaultReviewers": [
-        "ux-accessibility-reviewer",
-        "lead-game-designer"
-      ],
+      "eligibleProfiles": ["live-service-rpg", "mobile", "pc-console"],
+      "defaultReviewers": ["ux-accessibility-reviewer", "lead-game-designer"],
       "maxReviewers": 3,
-      "references": [
-        "references/methods/player-experience.md"
-      ],
+      "references": ["references/methods/player-experience.md"],
       "artifactType": "ui-ux-flow-state",
-      "completionGates": [
-        "critical-actions-accessible",
-        "all-interaction-states-defined",
-        "tutorial-skip-and-revisit-defined"
-      ]
+      "completionGates": ["critical-actions-accessible", "all-interaction-states-defined", "tutorial-skip-and-revisit-defined"]
     },
     {
       "id": "economy",
-      "triggerIntents": [
-        "game economy",
-        "monetization",
-        "currency balance",
-        "shop balance"
-      ],
-      "requiredInputs": [
-        "business model",
-        "currencies",
-        "progression target",
-        "target inventory",
-        "real-price policy"
-      ],
+      "triggerIntents": ["game economy", "monetization", "currency balance", "shop balance"],
+      "requiredInputs": ["business model", "currencies", "progression target", "target inventory", "real-price policy"],
       "skill": "design-game-economy-and-liveops",
-      "eligibleProfiles": [
-        "live-service-rpg",
-        "mobile",
-        "pc-console"
-      ],
-      "defaultReviewers": [
-        "system-economy-designer",
-        "ux-accessibility-reviewer"
-      ],
+      "eligibleProfiles": ["live-service-rpg", "mobile", "pc-console"],
+      "defaultReviewers": ["system-economy-designer", "ux-accessibility-reviewer"],
       "maxReviewers": 3,
-      "references": [
-        "references/methods/economy-liveops.md"
-      ],
+      "references": ["references/methods/economy-liveops.md"],
       "artifactType": "economy-balance",
-      "completionGates": [
-        "sources-sinks-and-inflation-defined",
-        "price-probability-and-pity-transparent",
-        "target-inventory-and-progression-time-defined"
-      ]
+      "completionGates": ["sources-sinks-and-inflation-defined", "price-probability-and-pity-transparent", "target-inventory-and-progression-time-defined"]
     },
     {
       "id": "liveops",
-      "triggerIntents": [
-        "LiveOps",
-        "event plan",
-        "experiment",
-        "segment rollout"
-      ],
-      "requiredInputs": [
-        "event goal",
-        "experiment hypothesis",
-        "control",
-        "sample and duration",
-        "protection metrics"
-      ],
+      "triggerIntents": ["LiveOps", "event plan", "experiment", "segment rollout"],
+      "requiredInputs": ["event goal", "experiment hypothesis", "control", "sample and duration", "protection metrics"],
       "skill": "design-game-economy-and-liveops",
-      "eligibleProfiles": [
-        "live-service-rpg",
-        "mobile",
-        "pc-console"
-      ],
-      "defaultReviewers": [
-        "liveops-data-designer",
-        "system-economy-designer",
-        "ux-accessibility-reviewer"
-      ],
+      "eligibleProfiles": ["live-service-rpg", "mobile", "pc-console"],
+      "defaultReviewers": ["liveops-data-designer", "system-economy-designer", "ux-accessibility-reviewer"],
       "maxReviewers": 3,
-      "references": [
-        "references/methods/economy-liveops.md"
-      ],
+      "references": ["references/methods/economy-liveops.md"],
       "artifactType": "liveops-experiment-event",
-      "completionGates": [
-        "hypothesis-control-and-single-variable-defined",
-        "success-and-protection-metrics-defined",
-        "stop-and-rollback-defined"
-      ]
+      "completionGates": ["hypothesis-control-and-single-variable-defined", "success-and-protection-metrics-defined", "stop-and-rollback-defined"]
     },
     {
       "id": "production",
-      "triggerIntents": [
-        "production plan",
-        "scope",
-        "milestone",
-        "prototype",
-        "risk"
-      ],
-      "requiredInputs": [
-        "target experience",
-        "team",
-        "schedule",
-        "technology",
-        "dependencies"
-      ],
+      "triggerIntents": ["production plan", "scope", "milestone", "prototype", "risk"],
+      "requiredInputs": ["target experience", "team", "schedule", "technology", "dependencies"],
       "skill": "plan-game-production",
-      "eligibleProfiles": [
-        "live-service-rpg",
-        "mobile",
-        "pc-console"
-      ],
-      "defaultReviewers": [
-        "production-feasibility-critic",
-        "lead-game-designer"
-      ],
+      "eligibleProfiles": ["live-service-rpg", "mobile", "pc-console"],
+      "defaultReviewers": ["production-feasibility-critic", "lead-game-designer"],
       "maxReviewers": 3,
-      "references": [
-        "references/methods/production.md"
-      ],
+      "references": ["references/methods/production.md"],
       "artifactType": "production-scope-risk",
-      "completionGates": [
-        "core-loop-contribution-visible",
-        "owners-and-done-defined",
-        "prototype-and-kill-criteria-defined"
-      ]
+      "completionGates": ["core-loop-contribution-visible", "owners-and-done-defined", "prototype-and-kill-criteria-defined"]
     },
     {
       "id": "review",
-      "triggerIntents": [
-        "design review",
-        "critique",
-        "launch readiness",
-        "risk review"
-      ],
-      "requiredInputs": [
-        "canonical artifact",
-        "review questions",
-        "decision owner"
-      ],
+      "triggerIntents": ["design review", "critique", "launch readiness", "risk review"],
+      "requiredInputs": ["canonical artifact", "review questions", "decision owner"],
       "skill": "review-game-design",
-      "eligibleProfiles": [
-        "live-service-rpg",
-        "mobile",
-        "pc-console"
-      ],
-      "defaultReviewers": [
-        "lead-game-designer",
-        "production-feasibility-critic",
-        "ux-accessibility-reviewer"
-      ],
+      "eligibleProfiles": ["live-service-rpg", "mobile", "pc-console"],
+      "defaultReviewers": ["lead-game-designer", "production-feasibility-critic", "ux-accessibility-reviewer"],
       "maxReviewers": 3,
-      "references": [
-        "assets/templates/game-design-review/content.md"
-      ],
+      "references": ["assets/templates/game-design-review/content.md"],
       "artifactType": "game-design-review",
-      "completionGates": [
-        "findings-have-evidence-and-impact",
-        "minimal-fixes-recorded",
-        "blockers-resolved-or-visible"
-      ]
+      "completionGates": ["findings-have-evidence-and-impact", "minimal-fixes-recorded", "blockers-resolved-or-visible"]
     },
     {
       "id": "visualization",
-      "triggerIntents": [
-        "diagram",
-        "visualize",
-        "flow chart",
-        "economy map",
-        "roadmap diagram"
-      ],
-      "requiredInputs": [
-        "valid canonical artifact",
-        "relationship to clarify",
-        "target audience"
-      ],
+      "triggerIntents": ["diagram", "visualize", "flow chart", "economy map", "roadmap diagram"],
+      "requiredInputs": ["valid canonical artifact", "relationship to clarify", "target audience"],
       "skill": "visualize-game-design",
-      "eligibleProfiles": [
-        "live-service-rpg",
-        "mobile",
-        "pc-console"
-      ],
-      "defaultReviewers": [
-        "lead-game-designer"
-      ],
+      "eligibleProfiles": ["live-service-rpg", "mobile", "pc-console"],
+      "defaultReviewers": ["lead-game-designer"],
       "maxReviewers": 3,
-      "references": [
-        "references/visualization-presets.json"
-      ],
+      "references": ["references/visualization-presets.json"],
       "artifactType": "canonical-artifact",
-      "outputArtifacts": [
-        "svg-assets",
-        "png-2x-assets",
-        "diagram-index"
-      ],
-      "completionGates": [
-        "visualization-materially-improves-understanding",
-        "svg-and-2x-png-assets-indexed",
-        "alt-text-present",
-        "canonical-artifact-preserved-on-failure"
-      ]
+      "outputArtifacts": ["svg-assets", "png-2x-assets", "diagram-index"],
+      "completionGates": ["visualization-materially-improves-understanding", "svg-and-2x-png-assets-indexed", "alt-text-present", "canonical-artifact-preserved-on-failure"]
     },
     {
       "id": "export",
-      "triggerIntents": [
-        "export",
-        "PDF",
-        "DOCX",
-        "presentation",
-        "PPTX"
-      ],
-      "requiredInputs": [
-        "valid canonical artifact",
-        "requested formats",
-        "audience",
-        "purpose"
-      ],
+      "triggerIntents": ["export", "PDF", "DOCX", "presentation", "PPTX"],
+      "requiredInputs": ["valid canonical artifact", "requested formats", "audience", "purpose"],
       "skill": "export-game-design-documents",
-      "eligibleProfiles": [
-        "live-service-rpg",
-        "mobile",
-        "pc-console"
-      ],
-      "defaultReviewers": [
-        "production-feasibility-critic"
-      ],
+      "eligibleProfiles": ["live-service-rpg", "mobile", "pc-console"],
+      "defaultReviewers": ["production-feasibility-critic"],
       "maxReviewers": 3,
-      "references": [
-        "references/export-recipes.md"
-      ],
+      "references": ["references/export-recipes.md"],
       "artifactType": "canonical-artifact",
-      "outputArtifacts": [
-        "requested-md",
-        "requested-pdf",
-        "requested-docx",
-        "requested-pptx",
-        "qa-manifest"
-      ],
-      "completionGates": [
-        "canonical-artifact-valid",
-        "format-preflight-complete",
-        "requested-formats-recorded-in-qa-manifest",
-        "canonical-artifact-preserved-on-failure"
-      ]
+      "outputArtifacts": ["requested-md", "requested-pdf", "requested-docx", "requested-pptx", "qa-manifest"],
+      "completionGates": ["canonical-artifact-valid", "format-preflight-complete", "requested-formats-recorded-in-qa-manifest", "canonical-artifact-preserved-on-failure"]
     },
     {
       "id": "reference-game-analysis",
-      "triggerIntents": [
-        "reference game analysis",
-        "game comparison",
-        "design transfer decision",
-        "경쟁작 분석",
-        "레퍼런스 게임 분석",
-        "장르 시스템 인벤토리",
-        "게임 시스템 비교",
-        "증거와 추정 분리"
-      ],
-      "requiredInputs": [
-        "reference brief",
-        "reference set",
-        "evidence scope",
-        "project constraints"
-      ],
+      "triggerIntents": ["reference game analysis", "game comparison", "design transfer decision", "경쟁작 분석", "레퍼런스 게임 분석", "장르 시스템 인벤토리", "게임 시스템 비교", "증거와 추정 분리"],
+      "requiredInputs": ["reference brief", "reference set", "evidence scope", "project constraints"],
       "skill": "analyze-game-design-references",
-      "eligibleProfiles": [
-        "live-service-rpg",
-        "mobile",
-        "pc-console"
-      ],
-      "defaultReviewers": [
-        "lead-game-designer"
-      ],
+      "eligibleProfiles": ["live-service-rpg", "mobile", "pc-console"],
+      "defaultReviewers": ["lead-game-designer"],
       "maxReviewers": 3,
-      "references": [
-        "references/shared/reference-intelligence/references/evidence-policy.md",
-        "references/shared/reference-intelligence/references/reference-analysis-flow.md",
-        "references/shared/reference-intelligence/schema/reference-analysis.schema.json"
-      ],
+      "references": ["references/shared/reference-intelligence/references/evidence-policy.md", "references/shared/reference-intelligence/references/reference-analysis-flow.md", "references/shared/reference-intelligence/schema/reference-analysis.schema.json"],
       "artifactType": "reference-system-analysis",
-      "outputTypes": [
-        "reference-system-analysis",
-        "reference-comparison",
-        "design-transfer-decision"
-      ],
-      "completionGates": [
-        "inventory-before-evaluation",
-        "evidence-and-claim-bindings-preserved",
-        "transfer-pending-review"
-      ]
+      "outputTypes": ["reference-system-analysis", "reference-comparison", "design-transfer-decision"],
+      "completionGates": ["inventory-before-evaluation", "evidence-and-claim-bindings-preserved", "transfer-pending-review"]
     },
     {
       "id": "project-glossary-maintenance",
-      "triggerIntents": [
-        "game design glossary",
-        "terminology maintenance",
-        "terminology findings",
-        "게임 기획 용어 사전",
-        "용어 후보",
-        "용어 승인",
-        "한국어 영어 용어 일관성"
-      ],
-      "requiredInputs": [
-        "glossary candidates",
-        "glossary snapshot",
-        "human decision owner"
-      ],
+      "triggerIntents": ["game design glossary", "terminology maintenance", "terminology findings", "게임 기획 용어 사전", "용어 후보", "용어 승인", "한국어 영어 용어 일관성"],
+      "requiredInputs": ["glossary candidates", "glossary snapshot", "human decision owner"],
       "skill": "maintain-game-design-glossary",
-      "eligibleProfiles": [
-        "live-service-rpg",
-        "mobile",
-        "pc-console"
-      ],
-      "defaultReviewers": [
-        "document-quality-editor"
-      ],
+      "eligibleProfiles": ["live-service-rpg", "mobile", "pc-console"],
+      "defaultReviewers": ["document-quality-editor"],
       "maxReviewers": 3,
-      "references": [
-        "references/shared/reference-intelligence/references/evidence-policy.md",
-        "references/shared/reference-intelligence/schema/game-design-glossary.schema.json",
-        "references/shared/reference-intelligence/schema/glossary-receipt.schema.json"
-      ],
+      "references": ["references/shared/reference-intelligence/references/evidence-policy.md", "references/shared/reference-intelligence/schema/game-design-glossary.schema.json", "references/shared/reference-intelligence/schema/glossary-receipt.schema.json"],
       "artifactType": "game-design-glossary",
-      "outputTypes": [
-        "game-design-glossary",
-        "terminology-findings",
-        "glossary-receipt"
-      ],
-      "completionGates": [
-        "candidate-findings-emitted",
-        "host-human-capability-required",
-        "source-text-preserved"
-      ]
+      "outputTypes": ["game-design-glossary", "terminology-findings", "glossary-receipt"],
+      "completionGates": ["candidate-findings-emitted", "host-human-capability-required", "source-text-preserved"]
     }
   ]
 }
