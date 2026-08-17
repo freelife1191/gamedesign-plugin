@@ -48,15 +48,32 @@ function compareVersions(left, right) {
   return 0;
 }
 
+// Upstreams that predate their own tagging convention keep publishing short tags forever
+// (im-not-ai still lists v1.2 and v1.3). Padding those to three segments makes them orderable,
+// so one old tag cannot force the whole component to unknown. Anything wider than a bare one- or
+// two-segment number is left alone and still fails to parse, which keeps the refuse-to-guess rule.
+const SHORT_NUMERIC_VERSION = /^(?:0|[1-9]\d*)(?:\.(?:0|[1-9]\d*))?$/u;
+
+function paddedVersion(version) {
+  if (!SHORT_NUMERIC_VERSION.test(version)) return version;
+  const parts = version.split(".");
+  while (parts.length < 3) parts.push("0");
+  return parts.join(".");
+}
+
 function stableVersionFor(rule, tag) {
   if (typeof tag !== "string" || !tag.startsWith(rule.prefix)) return null;
-  const version = tag.slice(rule.prefix.length);
+  const version = paddedVersion(tag.slice(rule.prefix.length));
   const parsed = version.match(SEMVER)?.groups;
   return parsed && parsed.prerelease === undefined ? version : null;
 }
 
-function canonicalReleaseUrl(repository, tag) {
-  return `${repository}/releases/tag/${encodeURIComponent(tag)}`;
+export function canonicalReleaseUrl(repository, tag) {
+  // GitHub leaves the separators of a namespaced tag literal in html_url, so encoding the tag
+  // whole turns svg-infographic/v0.10.0 into svg-infographic%2Fv0.10.0 and no skillstead release
+  // ever matches. Encode each segment and rejoin to keep the anchor exact.
+  const encodedTag = tag.split("/").map((segment) => encodeURIComponent(segment)).join("/");
+  return `${repository}/releases/tag/${encodedTag}`;
 }
 
 function componentRule(component) {

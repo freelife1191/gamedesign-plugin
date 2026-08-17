@@ -100,7 +100,7 @@ function runInstalledSessionStart({ pluginRoot, workspace, env, now = checkedAt,
       const component = installed.find(({ repository }) => url === repository.replace("github.com", "api.github.com/repos") + "/releases");
       if (!component) throw new Error("unexpected endpoint: " + url);
       const tag = component.id === "archify" ? "v2.15.0" : component.installedTag;
-      return { ok: true, status: 200, url, async json() { return [{ tag_name: tag, draft: false, prerelease: false, html_url: component.repository + "/releases/tag/" + encodeURIComponent(tag) }]; } };
+      return { ok: true, status: 200, url, async json() { return [{ tag_name: tag, draft: false, prerelease: false, html_url: component.repository + "/releases/tag/" + tag.split("/").map(encodeURIComponent).join("/") }]; } };
     };
     const result = await runCapabilityProbe({ updateOptions: {
       pluginRoot: ${JSON.stringify(pluginRoot)}, home: ${JSON.stringify(env.HOME)}, now: ${JSON.stringify(now)},
