@@ -3,8 +3,30 @@
   "name": "game-design-studio",
   "displayName": "Game Design Studio",
   "description": "Professional game design, review, visualization, and export workflows.",
-  "sharedModules": ["knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets", "memory", "reference-intelligence", "updates"],
+  "sharedModules": [
+    "knowledge",
+    "templates",
+    "responsible-design",
+    "export",
+    "vendor",
+    "archify",
+    "im-not-ai",
+    "document-quality",
+    "image-assets",
+    "memory",
+    "reference-intelligence",
+    "updates",
+    "suite-update-skill"
+  ],
   "sharedRuntime": true,
-  "sourceRoots": ["plugin"],
-  "sourceDocumentCategories": ["career", "fun-intent", "systems", "content", "feedback"]
+  "sourceRoots": [
+    "plugin"
+  ],
+  "sourceDocumentCategories": [
+    "career",
+    "fun-intent",
+    "systems",
+    "content",
+    "feedback"
+  ]
 }

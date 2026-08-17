@@ -17,6 +17,11 @@ export const SOURCE_BOUND_REFERENCE_INTELLIGENCE_SKILL_IDS = Object.freeze([
   "analyze-game-design-references",
   "maintain-game-design-glossary",
 ]);
+// The upgrade skill is documented where a reader already goes to install and update, rather than
+// in a standalone skill guide of its own.
+export const SOURCE_BOUND_SUITE_UPDATE_SKILL_IDS = Object.freeze([
+  "upgrade-game-design-suite",
+]);
 
 const REQUIRED_CONFIGURATION_VALUES = [
   "prompt-only",
@@ -66,6 +71,7 @@ export async function collectProductInventory(repoRoot, productId) {
     ["humanize-korean", path.join(repoRoot, vendors.get("im-not-ai").sourceRoot, "SKILL.md")],
     ...SOURCE_BOUND_MEMORY_SKILL_IDS.map((id) => [id, path.join(repoRoot, "shared/memory/skills", id, "SKILL.md")]),
     ...SOURCE_BOUND_REFERENCE_INTELLIGENCE_SKILL_IDS.map((id) => [id, path.join(repoRoot, "shared/reference-intelligence/skills", id, "SKILL.md")]),
+    ...SOURCE_BOUND_SUITE_UPDATE_SKILL_IDS.map((id) => [id, path.join(repoRoot, "shared/suite-update/skills", id, "SKILL.md")]),
   ];
   for (const [, skillPath] of sharedSkills) await assertRegularFile(skillPath);
   const templateIds = await directoryIds(path.join(productRoot, "assets/templates"), "content.md");
@@ -1492,6 +1498,12 @@ export async function validateUserGuides({ repoRoot, requireComplete }) {
       }
       if (relative.length === 2 && PRODUCT_IDS.includes(relative[0]) && relative[1] === "memory.md") {
         for (const skillId of SOURCE_BOUND_MEMORY_SKILL_IDS) {
+          documentedSkillIds.get(relative[0]).add(skillId);
+          counts.skillGuides += 1;
+        }
+      }
+      if (relative.length === 2 && PRODUCT_IDS.includes(relative[0]) && relative[1] === "installation.md") {
+        for (const skillId of SOURCE_BOUND_SUITE_UPDATE_SKILL_IDS) {
           documentedSkillIds.get(relative[0]).add(skillId);
           counts.skillGuides += 1;
         }

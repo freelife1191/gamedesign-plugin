@@ -145,7 +145,7 @@ async function validateDiscoveredProducts({ sourceRoot, stagingRoot, referenceIn
   for (const productName of productNames) {
     if (!productLanes.has(productName)) throw new Error(`Unexpected product contract: products/${productName}/product.json`);
     const product = await loadProductContract({ repoRoot: sourceRoot, productName });
-    assert.deepEqual(product.sharedModules, ["knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets", "memory", "reference-intelligence", "updates"]);
+    assert.deepEqual(product.sharedModules, ["knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets", "memory", "reference-intelligence", "updates", "suite-update-skill"]);
     assert.equal(product.sharedRuntime, true);
     assert.deepEqual(product.sourceRoots, ["plugin"]);
     assert.deepEqual(product.sourceDocumentCategories, sourceDocumentCategories);
@@ -411,7 +411,7 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
   const selectableFixture = {
     ...fixtureProduct,
     name: "game-design-studio",
-    sharedModules: [...fixtureProduct.sharedModules, "archify", "im-not-ai", "document-quality", "image-assets", "memory", "reference-intelligence", "updates"],
+    sharedModules: [...fixtureProduct.sharedModules, "archify", "im-not-ai", "document-quality", "image-assets", "memory", "reference-intelligence", "updates", "suite-update-skill"],
     sourceDocumentCategories,
   };
   delete selectableFixture.sourceDocuments;
@@ -499,6 +499,7 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
     "maintain-game-design-memory",
     "retrieve-approved-design-memory",
     "svg-infographic",
+    "upgrade-game-design-suite",
   ];
   for (const [productName, build] of [["game-design-studio", studioBuild], ["game-design-career", careerBuild]]) {
     const sourceSkillIds = (await readdir(path.join(repoRoot, "products", productName, "plugin", "skills"), { withFileTypes: true }))
@@ -509,7 +510,7 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
     const sharedSkillIds = installed.filter((skillId) => !sourceSkillIds.includes(skillId));
     assert.equal(sourceSkillIds.length, productName === "game-design-studio" ? 16 : 15);
     assert.deepEqual(sharedSkillIds, expectedSharedSkillIds);
-    assert.equal(installed.length, productName === "game-design-studio" ? 24 : 23);
+    assert.equal(installed.length, productName === "game-design-studio" ? 25 : 24);
   }
 
   const receiptSource = await readFile(path.join(repoRoot, "shared/memory/schema/memory-receipt.schema.json"));
@@ -600,6 +601,7 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
     "maintain-game-design-memory",
     "analyze-game-design-references",
     "maintain-game-design-glossary",
+    "upgrade-game-design-suite",
   ];
   for (const [productName, owners] of Object.entries(routingOwners)) {
     const routing = await readJson(`products/${productName}/plugin/references/routing.json`);

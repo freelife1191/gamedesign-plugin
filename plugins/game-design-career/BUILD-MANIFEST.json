@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-career",
   "sourceDateEpoch": 0,
-  "treeSha256": "c0bd9251dde70a26112f6bad2e5fc62e5a6add98891a5f41cb829e92fd4a8ca6",
+  "treeSha256": "cce040ecd65a363ef979cbdcd6ed5299090ea17c9c904ba9da3cd8d040b37d03",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -616,8 +616,8 @@
     },
     {
       "path": "references/routing.json",
-      "sha256": "1e362238a2bffa9e79fc7b04cf8285a0d884f3f8e032ae645b8a9dd27698312f",
-      "size": 52266
+      "sha256": "ae4f21bd67e74e0b0b4d62788273dbe5296a5b900c8330d7ae2291011ec46942",
+      "size": 61192
     },
     {
       "path": "references/shared/document-quality/game-design-writing-style.md",
@@ -2688,6 +2688,16 @@
       "path": "skills/svg-infographic/scripts/render.test.mjs",
       "sha256": "40f3150dd8902527e6e7945366ad717e70b2bc7fb84e39b11f7a63fbe7b3fcb1",
       "size": 17368
+    },
+    {
+      "path": "skills/upgrade-game-design-suite/SKILL.md",
+      "sha256": "cd5acc659fa65607954fa30f9efdca3726881eb8cb5c7e155bb29b09016cc7ce",
+      "size": 3028
+    },
+    {
+      "path": "skills/upgrade-game-design-suite/references/codex-commands.md",
+      "sha256": "2c6ae9bd9b8ef04d599c77b86cea416aa04624c9d3ea072fa77476715ae30c06",
+      "size": 1078
     },
     {
       "path": "skills/visualize-career-roadmap/SKILL.md",

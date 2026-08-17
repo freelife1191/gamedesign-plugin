@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "d4f9ad0fa6dffd1358626b7dfccf4c7c73fa32a41c5d86279b63d1ee0a84f35f",
+  "treeSha256": "e1b9f009a2d3cd031d442856f3e5a30e56011311282ae254ed62b4ac3d2a9bfd",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -621,8 +621,8 @@
     },
     {
       "path": "references/routing.json",
-      "sha256": "d53c115af37714ec6821045daf917b016274f1ef1c8daa70db38dc09926c5d50",
-      "size": 19584
+      "sha256": "eefe9eba40314247ea0bfd272cad36c18b71de2cc314b97eb51e890756a351ba",
+      "size": 23076
     },
     {
       "path": "references/shared/document-quality/game-design-writing-style.md",
@@ -2748,6 +2748,16 @@
       "path": "skills/svg-infographic/scripts/render.test.mjs",
       "sha256": "40f3150dd8902527e6e7945366ad717e70b2bc7fb84e39b11f7a63fbe7b3fcb1",
       "size": 17368
+    },
+    {
+      "path": "skills/upgrade-game-design-suite/SKILL.md",
+      "sha256": "cd5acc659fa65607954fa30f9efdca3726881eb8cb5c7e155bb29b09016cc7ce",
+      "size": 3028
+    },
+    {
+      "path": "skills/upgrade-game-design-suite/references/codex-commands.md",
+      "sha256": "2c6ae9bd9b8ef04d599c77b86cea416aa04624c9d3ea072fa77476715ae30c06",
+      "size": 1078
     },
     {
       "path": "skills/visualize-game-design/SKILL.md",

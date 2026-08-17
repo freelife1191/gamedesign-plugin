@@ -29,7 +29,16 @@ const staticSharedMappings = {
     ["shared/reference-intelligence/templates", "references/shared/reference-intelligence/templates"],
   ],
   updates: [["shared/updates", "references/shared/updates"]],
+  // The upgrade skill lives outside shared/updates on purpose. That directory is copied whole into
+  // references/shared/updates, so a skills subdirectory there would also ship as a duplicate tree.
+  "suite-update-skill": [["shared/suite-update/skills", "skills"]],
 };
+const sharedSuiteUpdateInventory = Object.freeze({
+  "shared/suite-update/skills": Object.freeze([
+    "upgrade-game-design-suite/SKILL.md",
+    "upgrade-game-design-suite/references/codex-commands.md",
+  ]),
+});
 const sharedMemoryInventory = Object.freeze({
   "shared/memory/skills": Object.freeze([
     "capture-game-design-memory/SKILL.md",
@@ -415,6 +424,15 @@ function assertExactSharedMemoryInventory(sourceRelative, entries) {
   }
 }
 
+function assertExactSharedSuiteUpdateInventory(sourceRelative, entries) {
+  const expected = sharedSuiteUpdateInventory[sourceRelative];
+  if (!expected) throw new Error(`Unknown shared suite-update package root: ${sourceRelative}`);
+  const actual = entries.map(({ relativePath }) => relativePath).sort(comparePaths);
+  if (actual.length !== expected.length || actual.some((relativePath, index) => relativePath !== expected[index])) {
+    throw new Error(`Unexpected shared suite-update package file in ${sourceRelative}`);
+  }
+}
+
 function assertExactSharedReferenceIntelligenceInventory(sourceRelative, entries) {
   const expected = sharedReferenceIntelligenceInventory[sourceRelative];
   if (!expected) throw new Error(`Unknown shared reference-intelligence package root: ${sourceRelative}`);
@@ -483,6 +501,7 @@ export async function buildProduct({ repoRoot, productName, stagingRoot, staging
       assertNoRealEnvironmentFiles(entries, sourceRelative);
       if (moduleName === "memory") assertExactSharedMemoryInventory(sourceRelative, entries);
       if (moduleName === "reference-intelligence") assertExactSharedReferenceIntelligenceInventory(sourceRelative, entries);
+      if (moduleName === "suite-update-skill") assertExactSharedSuiteUpdateInventory(sourceRelative, entries);
       moduleEntries.push(...entries);
       for (const entry of entries) addEntry(targets, entry, destinationPrefix, `shared:${moduleName}`);
     }

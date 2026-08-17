@@ -1,7 +1,7 @@
 import { readFile, realpath } from "node:fs/promises";
 
 import { loadUseCaseManifest } from "./use-case-guides.mjs";
-import { collectProductInventory, SOURCE_BOUND_MEMORY_SKILL_IDS, SOURCE_BOUND_REFERENCE_INTELLIGENCE_SKILL_IDS } from "./user-guides.mjs";
+import { collectProductInventory, SOURCE_BOUND_MEMORY_SKILL_IDS, SOURCE_BOUND_REFERENCE_INTELLIGENCE_SKILL_IDS, SOURCE_BOUND_SUITE_UPDATE_SKILL_IDS } from "./user-guides.mjs";
 import {
   assertNoSymlinkPath,
   assertUniqueNormalizedPaths,
@@ -35,6 +35,9 @@ const BUNDLED_DEPENDENCY_SKILL_IDS = new Set([
   "humanize-korean",
   ...SOURCE_BOUND_MEMORY_SKILL_IDS,
   ...SOURCE_BOUND_REFERENCE_INTELLIGENCE_SKILL_IDS,
+  // The upgrade skill changes an installation rather than producing a design artifact, so it has
+  // no beginner, standard, or advanced prompt to template.
+  ...SOURCE_BOUND_SUITE_UPDATE_SKILL_IDS,
 ]);
 const ENTRY_KEYS = new Set([
   "id", "kind", "product", "title", "display_title", "sample_result_excerpt", "purpose", "audiences", "intents", "level",

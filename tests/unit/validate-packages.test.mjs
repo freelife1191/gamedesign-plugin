@@ -11,18 +11,18 @@ const expectedSkillIdsByProduct = Object.freeze({
     "capture-game-design-memory", "generate-image-assets", "humanize-korean", "maintain-game-design-glossary", "maintain-game-design-memory", "map-game-design-career", "orchestrate-game-design-career",
     "plan-image-assets", "plan-junior-growth", "polish-game-design-writing", "practice-game-design-interview",
     "research-game-design-jobs", "retrieve-approved-design-memory", "reverse-engineer-game-design", "review-game-design-portfolio", "review-image-assets",
-    "svg-infographic", "visualize-career-roadmap",
+    "svg-infographic", "upgrade-game-design-suite", "visualize-career-roadmap",
   ],
   "game-design-studio": [
     "analyze-game-design-references", "apply-document-quality-profile", "archify", "define-game-vision", "design-game-content",
     "design-cutscene-visual-preproduction", "design-game-economy-and-liveops", "design-game-systems", "design-player-experience", "export-game-design-documents",
     "capture-game-design-memory", "generate-image-assets", "humanize-korean", "maintain-game-design-glossary", "maintain-game-design-memory", "orchestrate-game-design-project", "plan-game-production",
     "plan-image-assets", "polish-game-design-writing", "retrieve-approved-design-memory", "review-game-design", "review-image-assets",
-    "svg-infographic", "visualize-game-design",
+    "svg-infographic", "upgrade-game-design-suite", "visualize-game-design",
   ],
 });
 
-test("package validator discovers the exact two-plugin, 47-skill snapshot", async () => {
+test("package validator discovers the exact two-plugin, 49-skill snapshot", async () => {
   const plugins = await discoverPackagedTargets(repoRoot, "plugins");
   const skills = await discoverPackagedTargets(repoRoot, "skills");
 
@@ -38,7 +38,7 @@ test("package validator discovers the exact two-plugin, 47-skill snapshot", asyn
   );
   assert.deepEqual(
     Object.fromEntries(Object.entries(expectedSkillIdsByProduct).map(([productId, skillIds]) => [productId, skillIds.length])),
-    { "game-design-career": 23, "game-design-studio": 24 },
+    { "game-design-career": 24, "game-design-studio": 25 },
   );
-  assert.equal(Object.values(expectedSkillIdsByProduct).flat().length, 47);
+  assert.equal(Object.values(expectedSkillIdsByProduct).flat().length, 49);
 });
