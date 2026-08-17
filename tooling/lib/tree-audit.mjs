@@ -24,10 +24,11 @@ const sharedUpdateIdentityMatchers = new Map([
 export const MAX_PACKAGE_PATH_LENGTH = 150;
 
 export function assertPackagePath(relativePath, seenFoldedPaths) {
-  if (relativePath.length > MAX_PACKAGE_PATH_LENGTH) {
+  const normalized = relativePath.normalize("NFC");
+  if (normalized.length > MAX_PACKAGE_PATH_LENGTH) {
     throw new Error(`${relativePath} exceeds the ${MAX_PACKAGE_PATH_LENGTH} character package path budget`);
   }
-  const folded = relativePath.normalize("NFC").toLowerCase();
+  const folded = normalized.toLowerCase();
   const previous = seenFoldedPaths.get(folded);
   if (previous !== undefined) {
     throw new Error(`${relativePath} collides with ${previous} after NFC and case folding`);

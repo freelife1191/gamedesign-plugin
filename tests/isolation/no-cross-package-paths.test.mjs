@@ -270,3 +270,15 @@ test("package paths stay inside the length budget", async (t) => {
   const root = await fixture(t, `${"n".repeat(80)}/${"m".repeat(80)}.md`, "over budget\n");
   await assert.rejects(() => auditTree({ root, packageName: "game-design-studio" }), /path budget/u);
 });
+
+test("the length budget is measured against the NFC form, not the un-normalized NFD form", () => {
+  // U+AC01 "각" decomposes into 3 NFD jamo (choseong+jungseong+jongseong) per NFC syllable,
+  // so 60 repeats push the NFD form well past the budget while the NFC form stays under it.
+  // This mirrors a real packaged path in this repo (97 chars in NFC, 156 in NFD).
+  const nfc = `references/source/docs/${"각".repeat(60)}.md`;
+  const nfd = nfc.normalize("NFD");
+  assert.notEqual(nfc, nfd, "fixture must use distinct code point sequences");
+  assert.ok(nfd.length > MAX_PACKAGE_PATH_LENGTH, `NFD form (${nfd.length}) must exceed the budget`);
+  assert.ok(nfc.length <= MAX_PACKAGE_PATH_LENGTH, `NFC form (${nfc.length}) must stay within the budget`);
+  assert.equal(assertPackagePath(nfd, new Map()), nfd);
+});
