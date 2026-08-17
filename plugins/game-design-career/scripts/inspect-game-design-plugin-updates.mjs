@@ -158,6 +158,22 @@ export function inspectPluginUpdates({ codexPath = "codex", marketplaceName = MA
   return parseInspection(receipt.stdout, readText);
 }
 
+// 인계는 상대 제품이 실제로 설치돼 있을 때만 성립한다. 업데이트 검사와 같은 목록을 읽지만 결과가
+// 다르다. 업데이트는 못 읽으면 실패지만, 인계는 못 읽어도 자기 제품 몫을 끝내야 하므로 여기서는
+// 던지지 않고 unknown으로 닫는다. 미설치와 확인 불가는 사용자에게 다른 문장을 만든다.
+export function inspectInstalledSuiteProducts(options = {}) {
+  try {
+    const inspection = inspectPluginUpdates(options);
+    const products = inspection.installed
+      .map(({ plugin }) => plugin)
+      .filter((plugin) => PLUGINS.has(plugin))
+      .sort();
+    return Object.freeze({ status: "known", products: Object.freeze(products) });
+  } catch {
+    return Object.freeze({ status: "unknown", products: Object.freeze([]) });
+  }
+}
+
 function compareNumeric(left, right) {
   if (left.length !== right.length) return left.length > right.length ? 1 : -1;
   return left === right ? 0 : left > right ? 1 : -1;
@@ -208,10 +224,15 @@ function currentPlan(plugin, installedVersion) {
 
 function cli() {
   const args = process.argv.slice(2);
-  if (!(args.length === 1 && args[0] === "--inspect")
+  if (!(args.length === 1 && (args[0] === "--inspect" || args[0] === "--products"))
     && !(args.length === 2 && args[0] === "--plan" && PLUGINS.has(args[1]))) {
     process.stdout.write('{"error":"invalid arguments"}\n');
     process.exitCode = 1;
+    return;
+  }
+  if (args[0] === "--products") {
+    const lookup = inspectInstalledSuiteProducts({ codexPath: process.env.CODEX_PATH ?? "codex" });
+    process.stdout.write(`${JSON.stringify(lookup)}\n`);
     return;
   }
   try {

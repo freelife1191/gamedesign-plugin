@@ -7,12 +7,18 @@ This file is the only place that names host-specific commands. Replace this file
 - Advisory: `node scripts/check-game-design-updates.mjs`
 - Installation inspection: `node scripts/inspect-game-design-plugin-updates.mjs --inspect`
 - Reinstall plan for one plugin: `node scripts/inspect-game-design-plugin-updates.mjs --plan <plugin>`
+- Installed suite products: `node scripts/inspect-game-design-plugin-updates.mjs --products`
 - Silence one version pair: `node scripts/check-game-design-updates.mjs --suppress [<component> ...]`
 
 The plan command prints an ordered argv list. It executes nothing. It prints `"status":"current"`
 instead when the marketplace snapshot is not newer than the installed version, and
 `"status":"not-comparable"` when the snapshot version cannot be read at all. Both are results to
 report, not errors to retry.
+
+The products command answers which suite products this host has installed. It reports
+`"status":"known"` with the installed product ids, and `"status":"unknown"` with an empty list when
+the host listing cannot be read at all. Unknown is a result to report as "확인 불가", not an error to
+retry.
 
 The suppress command records the "do not tell me about this version again" answer. It writes only
 the suppression list in the advisory cache and changes no installation. With no component named it

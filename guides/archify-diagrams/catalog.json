@@ -5978,7 +5978,7 @@
       "product": "career",
       "source_document": "plugins/game-design-career/skills/upgrade-game-design-suite/references/codex-commands.md",
       "source_section": "Codex Host Commands",
-      "source_digest": "d7776a91a85f5cc21afa1df576fd7a664da17597b491f29783d1b28d5ce84363",
+      "source_digest": "f6bd2cb81cad699c689a31d1ebfb913c3f83a83a2f2f0afbdbde8c328be0f2f0",
       "origin_source": {
         "source_document": "shared/suite-update/skills/upgrade-game-design-suite/references/codex-commands.md",
         "build_mapping": "suite-update-skill"
@@ -9558,7 +9558,7 @@
       "product": "studio",
       "source_document": "plugins/game-design-studio/skills/upgrade-game-design-suite/references/codex-commands.md",
       "source_section": "Codex Host Commands",
-      "source_digest": "d7776a91a85f5cc21afa1df576fd7a664da17597b491f29783d1b28d5ce84363",
+      "source_digest": "f6bd2cb81cad699c689a31d1ebfb913c3f83a83a2f2f0afbdbde8c328be0f2f0",
       "origin_source": {
         "source_document": "shared/suite-update/skills/upgrade-game-design-suite/references/codex-commands.md",
         "build_mapping": "suite-update-skill"

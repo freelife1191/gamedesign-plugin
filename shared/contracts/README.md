@@ -93,3 +93,7 @@ Built SessionStart CLI의 top-level output은 `hookSpecificOutput`, `capabilitie
 `path`는 workspace 내부의 symlink 없는 정규화 상대 디렉터리이고 `formats`는 중복 없는 `md`, `pdf`, `docx`, `pptx` 값이다. Stop hook은 production `validateArtifact`로 canonical artifact를 검증하고, 첫 실패에만 `corrective-pass-requested`로 block한다. 재진입의 공식 marker는 `stop_hook_active: true`이며 `GAME_DESIGN_REVIEW_ATTEMPT=1`은 호환 fallback이다. 재진입 실패는 `invalid-after-corrective-pass`와 `continue: true`를 반환해 반복하지 않는다.
 
 Export는 먼저 유효한 canonical artifact를 보존한 뒤 `export-manifest.yml`의 요청 format을 capability probe 결과에 따라 처리한다. 선택 renderer가 없거나 export가 실패해도 canonical artifact를 삭제·변형하지 않고 structured warning과 pending/unavailable 상태로 handoff한다.
+
+## Suite handoff 계약
+
+두 제품 사이의 교차 요청은 `shared/suite-handoff/references/handoff.md`에 정의되어 있고, 두 product 패키지에 동일 bytes로 투영된다. 봉투는 요청(`suite-handoff-request-v1`)과 반환(`suite-handoff-return-v1`) 두 종류이며 최종 산출물을 내는 제품만 owner이고 공급 제품은 요청받은 증거만 반환한다. `requestedOutputs`는 계약이 선언한 값으로 닫힌 enum이고, 한 요청에 인계는 정확히 한 번(`maxHandoffsPerRequest: 1`)이며 공급 제품은 다시 인계를 시작할 수 없다. 상대 제품 확인은 `node scripts/inspect-game-design-plugin-updates.mjs --products`로 교차가 실제로 필요해진 시점에만 한 번 수행하며, 상대 미설치와 확인 불가는 같은 degrade 경로를 타되 사용자에게는 서로 다른 사실로 구분해 보고한다. `tooling/lib/suite-handoff-contract.mjs`가 이 계약을 파싱하고 강제한다.
