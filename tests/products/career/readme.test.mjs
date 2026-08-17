@@ -15,6 +15,7 @@ const readmePath = path.join(pluginRoot, "README.md");
 const sourceReferenceSkillLinks = new Set([
   "../../../shared/reference-intelligence/skills/analyze-game-design-references/SKILL.md",
   "../../../shared/reference-intelligence/skills/maintain-game-design-glossary/SKILL.md",
+  "../../../shared/suite-update/skills/upgrade-game-design-suite/SKILL.md",
 ]);
 
 const skillIds = [
@@ -463,7 +464,7 @@ test("release documentation ships the plugin license and third-party notices", a
 test("README exposes every shipped skill, role asset, stage, and canonical template", async () => {
   const readme = await readFile(readmePath, "utf8");
   assert.match(readme, /제품 스킬 15개/u, "README states the direct product-skill count");
-  assert.match(readme, /설치 스킬(?:은|이) 23개/u, "README states the complete installed-skill count");
+  assert.match(readme, /설치 스킬(?:은|이) 24개/u, "README states the complete installed-skill count");
   assert.doesNotMatch(readme, /Skillstead `svg-infographic` 0\.8\.3/u, "README does not advertise the superseded Skillstead release");
   assert.deepEqual(tableIds(readme, "스킬 카탈로그"), skillIds);
   assert.deepEqual(tableIds(readme, "전문 역할 프롬프트"), roleIds);
