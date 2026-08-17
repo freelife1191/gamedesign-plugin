@@ -4,7 +4,10 @@ const CONTRACT_KEYS = Object.freeze([
 ]);
 const START = "<!-- suite-handoff-contract:start -->";
 const END = "<!-- suite-handoff-contract:end -->";
-const RETURN_LISTS = Object.freeze(["facts", "inferences", "recommendations", "unknowns"]);
+// 모든 봉투 종류가 공유하는 스칼라 필드. returnKeys에서 이 네 개를 뺀 나머지가 리스트형
+// 필드다 — 계약 문서가 필드 이름을 바꾸면(예: inferences → readings) 이 뺄셈도 따라간다.
+// 별도의 리스트형 필드 이름 사본을 두면 Ruling 8이 막으려던 바로 그 이원화가 재발한다.
+const SHARED_SCALAR_KEYS = Object.freeze(["schemaVersion", "kind", "ownerProduct", "supplierProduct"]);
 
 function isObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -40,13 +43,18 @@ export function parseSuiteHandoffContract(markdown) {
   }
   if (!hasExactKeys(contract, CONTRACT_KEYS)
     || contract.schemaVersion !== 1
+    || typeof contract.requestKind !== "string" || contract.requestKind.trim().length === 0
+    || typeof contract.returnKind !== "string" || contract.returnKind.trim().length === 0
     || !stringList(contract.products)
     || !stringList(contract.requestedOutputs)
     || !stringList(contract.requestKeys)
     || !stringList(contract.returnKeys)
     || !isObject(contract.entrySkills)
     || contract.maxHandoffsPerRequest !== 1
-    || contract.products.some((product) => typeof contract.entrySkills[product] !== "string")) {
+    || !hasExactKeys(contract.entrySkills, contract.products)
+    || contract.products.some((product) => (
+      typeof contract.entrySkills[product] !== "string" || contract.entrySkills[product].trim().length === 0
+    ))) {
     throw new Error("handoff contract is not well formed");
   }
   return Object.freeze({
@@ -91,7 +99,8 @@ export function validateHandoffRequest(value, contract) {
 export function validateHandoffReturn(value, contract) {
   const errors = sharedEnvelopeErrors(value, contract, contract.returnKeys, contract.returnKind);
   if (errors.length === 0) {
-    for (const key of RETURN_LISTS) {
+    const listKeys = contract.returnKeys.filter((key) => !SHARED_SCALAR_KEYS.includes(key));
+    for (const key of listKeys) {
       const list = value[key];
       if (!Array.isArray(list) || list.some((item) => typeof item !== "string" || item.trim().length === 0)) {
         errors.push(`${key} must be a list of non-empty strings`);
@@ -103,6 +112,11 @@ export function validateHandoffReturn(value, contract) {
 
 // 재귀 인계는 봉투 하나만 봐서는 잡히지 않는다. 공급 제품이 답례로 요청을 시작하면 두 제품이
 // 서로의 결론을 근거로 삼게 되고, 그때부터는 어느 쪽도 사실을 소유하지 않는다.
+//
+// 봉투 하나만 봐서는 owner가 누구인지도 알 수 없다 — 최종 산출물을 내는 쪽이 owner라는 사실은
+// 사슬을 연 요청이 정하고, 반환은 그 요청에 동의해야만 유효하다(Ruling 9). 그래서 사슬은 요청
+// 하나로 시작해야 하고, 모든 반환은 그 요청의 ownerProduct·supplierProduct와 일치해야 한다.
+// 이 이상의 순서 규칙은 스펙에 없으므로 만들지 않는다.
 export function validateHandoffChain(envelopes, contract) {
   const errors = [];
   if (!Array.isArray(envelopes) || envelopes.length === 0) {
@@ -112,11 +126,20 @@ export function validateHandoffChain(envelopes, contract) {
   if (requests.length > contract.maxHandoffsPerRequest) {
     errors.push("a request carries one handoff at most");
   }
+  const openingRequest = isObject(envelopes[0]) && envelopes[0].kind === contract.requestKind
+    ? envelopes[0]
+    : undefined;
+  if (!openingRequest) {
+    errors.push("a handoff chain must start with a request");
+  }
   for (const envelope of envelopes) {
-    const result = isObject(envelope) && envelope.kind === contract.returnKind
-      ? validateHandoffReturn(envelope, contract)
-      : validateHandoffRequest(envelope, contract);
+    const isReturn = isObject(envelope) && envelope.kind === contract.returnKind;
+    const result = isReturn ? validateHandoffReturn(envelope, contract) : validateHandoffRequest(envelope, contract);
     errors.push(...result.errors);
+    if (isReturn && openingRequest
+      && (envelope.ownerProduct !== openingRequest.ownerProduct || envelope.supplierProduct !== openingRequest.supplierProduct)) {
+      errors.push("a return must agree with its request on ownerProduct and supplierProduct");
+    }
   }
   return { ok: errors.length === 0, errors };
 }

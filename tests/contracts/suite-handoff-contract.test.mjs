@@ -72,26 +72,36 @@ test("a well-formed request and return are accepted", () => {
   assert.deepEqual(validateHandoffReturn(envelopeReturn(), contract), { ok: true, errors: [] });
 });
 
-// 스펙 C절 테스트 전략이 나열한 여섯 거부 사유다. 하나라도 통과하면 인계가 증거를 지어낼 수 있다.
+// 스펙 C절 테스트 전략이 나열한 여섯 거부 사유 중 다섯은 여기서 검증한다. 여섯 번째
+// ("owner와 supplier 뒤바뀜")은 봉투 하나만으로는 뜻이 없다 — 아래 "mirrors (swaps)" 테스트를 보라
+// (Ruling 10). 각 사례는 정확한 오류 메시지까지 확인한다: `errors.length > 0`만 보면 엉뚱한 규칙이
+// 우연히 먼저 걸려도 통과해 버린다 — 이름이 가리키는 규칙이 아니라 다른 규칙 때문에 거부됐다는
+// 뜻이므로, 그 사례는 자기가 지키려는 것을 지키지 못하는 채로 계속 통과한다.
 test("the contract refuses every malformed envelope the spec names", () => {
   const cases = [
-    ["owner and supplier swapped", () => validateHandoffRequest(
-      request({ ownerProduct: "game-design-studio", returnToSkill: "game-design-career" }), contract)],
     ["returnToSkill does not match the owner", () => validateHandoffRequest(
-      request({ returnToSkill: "game-design-studio" }), contract)],
+      request({ returnToSkill: "game-design-studio" }), contract),
+      "returnToSkill must be the owner product's entry skill"],
     ["unknown product id", () => validateHandoffRequest(
-      request({ supplierProduct: "game-design-suite" }), contract)],
+      request({ supplierProduct: "game-design-suite" }), contract),
+      "supplierProduct is not a suite product"],
     ["requestedOutputs outside the enum", () => validateHandoffRequest(
-      request({ requestedOutputs: ["salary-benchmark"] }), contract)],
+      request({ requestedOutputs: ["salary-benchmark"] }), contract),
+      "requestedOutputs holds a value outside the contract enum"],
     ["owner equals supplier", () => validateHandoffRequest(
-      request({ supplierProduct: "game-design-career" }), contract)],
-    ["return envelope missing a field", () => validateHandoffReturn(
-      { ...envelopeReturn(), unknowns: undefined }, contract)],
+      request({ supplierProduct: "game-design-career" }), contract),
+      "ownerProduct and supplierProduct must differ"],
+    // unknowns를 undefined로 두면(스프레드가 키를 그대로 남긴다) 리스트-타입 검사만 걸린다.
+    // 이 사례가 이름대로 폐쇄 키 검사를 시험하려면 키 자체를 지워야 한다.
+    ["return envelope missing a field", () => {
+      const { unknowns, ...withoutUnknowns } = envelopeReturn();
+      return validateHandoffReturn(withoutUnknowns, contract);
+    }, "envelope keys do not match the contract"],
   ];
-  for (const [name, run] of cases) {
+  for (const [name, run, expectedMessage] of cases) {
     const result = run();
     assert.equal(result.ok, false, name);
-    assert.ok(result.errors.length > 0, name);
+    assert.ok(result.errors.includes(expectedMessage), `${name}: ${result.errors.join("\n")}`);
   }
 });
 
@@ -104,6 +114,43 @@ test("a supplier cannot start a second handoff for the same request", () => {
   assert.ok(chained.errors.some((message) => /one handoff/u.test(message)), chained.errors.join("\n"));
 });
 
+// Ruling 9: 봉투 하나만 봐서는 owner가 누구인지 알 수 없다 — 최종 산출물을 내는 쪽이 owner라는
+// 사실은 사슬을 연 요청이 정하고, 반환은 그 요청에 동의해야만 유효하다. 그래서 사슬은 요청
+// 하나로 시작해야 하고, 모든 반환은 그 요청의 ownerProduct·supplierProduct와 일치해야 한다.
+test("validateHandoffChain relates every return to the request it answers", () => {
+  const first = request();
+  const cases = [
+    ["a return with no preceding request is refused",
+      [envelopeReturn()], /must start with a request/u],
+    ["a chain of only returns is refused",
+      [envelopeReturn(), envelopeReturn(), envelopeReturn()], /must start with a request/u],
+    ["a return naming a different owner than its request is refused",
+      [first, envelopeReturn({ ownerProduct: "game-design-studio" })], /must agree with its request/u],
+  ];
+  for (const [name, envelopes, pattern] of cases) {
+    const result = validateHandoffChain(envelopes, contract);
+    assert.equal(result.ok, false, name);
+    assert.ok(result.errors.some((message) => pattern.test(message)), `${name}: ${result.errors.join("\n")}`);
+  }
+});
+
+// Ruling 10: 봉투 하나만 보면 owner·supplier를 일관되게 뒤바꾼 요청은 합법적인 반대 방향 인계와
+// 구분할 수 없다 — 어느 제품이 최종 산출물을 내는지는 봉투 자체에 적혀 있지 않기 때문이다. 그래서
+// 예전의 "owner and supplier swapped" 단일-봉투 사례는 지웠다: supplierProduct를 기본값에 남겨둔
+// 채 ownerProduct만 studio로 바꾸면 owner===supplier가 되어 "owner equals supplier"와 완전히
+// 같은 경로로 거부되고, 그 규칙을 지워도 이 테스트는 계속 통과했다(byte-identical duplicate).
+// "뒤바뀜"이 뜻을 가지려면 맥락이 있어야 한다: 반환이 자신을 낳은 요청의 owner·supplier와
+// 반대라면, 그것은 공급 제품이 관계 자체를 다시 쓴 것이다 — 위 validateHandoffChain 테스트가
+// 그 메커니즘을 제공한다. 이 사례를 되돌려 지우지 말 것.
+test("a return that mirrors (swaps) its request's owner and supplier is refused", () => {
+  const swapped = validateHandoffChain(
+    [request(), envelopeReturn({ ownerProduct: "game-design-studio", supplierProduct: "game-design-career" })],
+    contract,
+  );
+  assert.equal(swapped.ok, false);
+  assert.ok(swapped.errors.some((message) => /must agree with its request/u.test(message)), swapped.errors.join("\n"));
+});
+
 test("an empty or duplicated requestedOutputs list is refused", () => {
   assert.equal(validateHandoffRequest(request({ requestedOutputs: [] }), contract).ok, false);
   assert.equal(validateHandoffRequest(
@@ -113,4 +160,98 @@ test("an empty or duplicated requestedOutputs list is refused", () => {
 test("an unknown key in either envelope is refused", () => {
   assert.equal(validateHandoffRequest({ ...request(), priority: "high" }, contract).ok, false);
   assert.equal(validateHandoffReturn({ ...envelopeReturn(), approved: true }, contract).ok, false);
+});
+
+// Ruling 11: 리스트형 필드 이름을 모듈 안에 따로 하드코딩해 두면 계약이 이름을 바꿔도 검증기가
+// 옛 이름을 계속 찾는다 — Ruling 8이 막으려던 "두 벌의 키 셋"이 형태만 바꿔 재발하는 셈이다.
+// inferences를 readings로 바꾼 계약을 직접 만들어, 검증기가 새 이름을 따라가는지 확인한다.
+test("validateHandoffReturn derives its list-typed fields from the contract, not a hardcoded copy", () => {
+  const renamedContract = Object.freeze({
+    ...contract,
+    returnKeys: Object.freeze(contract.returnKeys.map((key) => (key === "inferences" ? "readings" : key))),
+  });
+  const { inferences, ...withoutInferences } = envelopeReturn();
+  const envelope = { ...withoutInferences, readings: [123, ""] };
+  const result = validateHandoffReturn(envelope, renamedContract);
+  assert.equal(result.ok, false);
+  assert.ok(
+    result.errors.some((message) => message === "readings must be a list of non-empty strings"),
+    result.errors.join("\n"),
+  );
+});
+
+// Ruling 12: 계약은 사람이 손으로 고치는 마크다운 안에 산다. 파서가 이 사슬의 신뢰 원점이므로,
+// 파서가 이미 거부하는 모양들을 테스트로 고정해 두지 않으면 나중에 누군가 정규식이나 조건 하나를
+// 무심코 느슨하게 고쳐도 아무 테스트도 실패하지 않는다.
+function baseContractObject() {
+  return {
+    schemaVersion: 1,
+    requestKind: "suite-handoff-request-v1",
+    returnKind: "suite-handoff-return-v1",
+    products: ["game-design-career", "game-design-studio"],
+    entrySkills: { "game-design-career": "game-design-career", "game-design-studio": "game-design-studio" },
+    requestedOutputs: ["system-evidence-summary"],
+    requestKeys: [
+      "schemaVersion", "kind", "ownerProduct", "supplierProduct",
+      "requestedOutputs", "sourceArtifactIds", "returnToSkill",
+    ],
+    returnKeys: [
+      "schemaVersion", "kind", "ownerProduct", "supplierProduct",
+      "facts", "inferences", "recommendations", "unknowns",
+    ],
+    maxHandoffsPerRequest: 1,
+  };
+}
+
+function wrapContract(jsonBody) {
+  return `# doc\n\n<!-- suite-handoff-contract:start -->\n\`\`\`json\n${jsonBody}\n\`\`\`\n<!-- suite-handoff-contract:end -->\n`;
+}
+
+test("parseSuiteHandoffContract rejects every malformed document shape it claims to reject", () => {
+  const good = JSON.stringify(baseContractObject());
+  const cases = [
+    ["non-string input", () => parseSuiteHandoffContract(42)],
+    ["two sentinel pairs", () => parseSuiteHandoffContract(wrapContract(good) + wrapContract(good))],
+    ["zero sentinels", () => parseSuiteHandoffContract(`\`\`\`json\n${good}\n\`\`\``)],
+    ["start sentinel with no end", () => parseSuiteHandoffContract(
+      `<!-- suite-handoff-contract:start -->\n\`\`\`json\n${good}\n\`\`\`\n`)],
+    ["end sentinel with no start", () => parseSuiteHandoffContract(
+      `\`\`\`json\n${good}\n\`\`\`\n<!-- suite-handoff-contract:end -->\n`)],
+    ["end sentinel before start", () => parseSuiteHandoffContract(
+      `<!-- suite-handoff-contract:end -->\n\`\`\`json\n${good}\n\`\`\`\n<!-- suite-handoff-contract:start -->\n`)],
+    ["two JSON blocks between sentinels", () => parseSuiteHandoffContract(
+      wrapContract(`${good}\n\`\`\`\n\`\`\`json\n${good}`))],
+    ["malformed JSON", () => parseSuiteHandoffContract(wrapContract("{not json"))],
+    ["maxHandoffsPerRequest is not 1", () => parseSuiteHandoffContract(
+      wrapContract(JSON.stringify({ ...baseContractObject(), maxHandoffsPerRequest: 2 })))],
+    ["entrySkills omits a declared product", () => parseSuiteHandoffContract(
+      wrapContract(JSON.stringify({
+        ...baseContractObject(), entrySkills: { "game-design-career": "game-design-career" },
+      })))],
+    // 아래 세 사례는 이전에는 조용히 통과했다(Ruling 12) — 계약 파일이 손상되어야만 닿는
+    // 자리이지만, 파서가 신뢰 원점이라는 이 모듈의 역할상 닫아 두는 값어치가 있다.
+    ["entrySkills has an extra product beyond products", () => parseSuiteHandoffContract(
+      wrapContract(JSON.stringify({
+        ...baseContractObject(),
+        entrySkills: { ...baseContractObject().entrySkills, "game-design-suite": "game-design-suite" },
+      })))],
+    ["entrySkills value is an empty string", () => parseSuiteHandoffContract(
+      wrapContract(JSON.stringify({
+        ...baseContractObject(),
+        entrySkills: { ...baseContractObject().entrySkills, "game-design-career": "" },
+      })))],
+    ["requestKind is not a string", () => parseSuiteHandoffContract(
+      wrapContract(JSON.stringify({ ...baseContractObject(), requestKind: 7 })))],
+    ["returnKind is not a string", () => parseSuiteHandoffContract(
+      wrapContract(JSON.stringify({ ...baseContractObject(), returnKind: 7 })))],
+  ];
+  for (const [name, run] of cases) {
+    assert.throws(run, undefined, name);
+  }
+});
+
+test("parseSuiteHandoffContract accepts a well-formed document built from the same shape", () => {
+  const parsed = parseSuiteHandoffContract(wrapContract(JSON.stringify(baseContractObject())));
+  assert.deepEqual(parsed.products, baseContractObject().products);
+  assert.ok(Object.isFrozen(parsed));
 });
