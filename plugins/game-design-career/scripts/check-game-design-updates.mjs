@@ -12,6 +12,7 @@ import {
   canonicalReleaseUrl,
   createDisabledUpdateAdvisory,
   evaluateUpdateAdvisory,
+  tagIsPrerelease,
 } from "./lib/update-advisory.mjs";
 
 const CACHE_FILE = "update-advisory-v1.json";
@@ -38,6 +39,17 @@ const RELEASE_ENDPOINTS = Object.freeze({
   archify: "https://api.github.com/repos/tt-a1i/archify/releases",
   "im-not-ai": "https://api.github.com/repos/epoko77-ai/im-not-ai/releases",
   "game-design-suite": "https://api.github.com/repos/freelife1191/gamedesign-plugin/releases",
+});
+// Every repository this suite tracks versions with git tags, and three of the four have never
+// published a GitHub Release. Reading only /releases makes latest null for those, one null turns the
+// whole advisory unknown, and the notice can never fire for any component. So when a component's
+// release list is empty, ask the same host for that component's tags instead. Same origin, same
+// read-only method, and an empty release list is the only thing that reaches for it.
+const TAG_ENDPOINTS = Object.freeze({
+  skillstead: "https://api.github.com/repos/kyungseo/skillstead/tags",
+  archify: "https://api.github.com/repos/tt-a1i/archify/tags",
+  "im-not-ai": "https://api.github.com/repos/epoko77-ai/im-not-ai/tags",
+  "game-design-suite": "https://api.github.com/repos/freelife1191/gamedesign-plugin/tags",
 });
 // This file runs from two layouts and the configuration sits at a different depth in each:
 // packaged as <plugin>/scripts with <plugin>/references/shared/updates, and in the repository as
@@ -700,40 +712,74 @@ function trustedEndpointFor(component) {
   return RELEASE_ENDPOINTS[component.id] ?? null;
 }
 
+function trustedTagEndpointFor(component) {
+  return TAG_ENDPOINTS[component.id] ?? null;
+}
+
+async function fetchJsonArray({ endpoint, fetchFn, signal, timeout }) {
+  const response = await Promise.race([
+    Promise.resolve(fetchFn(endpoint, {
+      method: "GET",
+      redirect: "error",
+      signal,
+      headers: { Accept: "application/vnd.github+json" },
+    })),
+    timeout,
+  ]);
+  if (response === null || typeof response !== "object" || response.ok !== true || response.status !== 200 || response.url !== endpoint || typeof response.json !== "function") {
+    throw new Error("untrusted response");
+  }
+  const body = await Promise.race([Promise.resolve(response.json()), timeout]);
+  if (!Array.isArray(body)) throw new Error("malformed release response");
+  return body;
+}
+
+function projectReleases(body) {
+  return body.map((release) => {
+    if (release === null || typeof release !== "object" || Array.isArray(release)
+      || typeof release.tag_name !== "string"
+      || typeof release.draft !== "boolean"
+      || typeof release.prerelease !== "boolean"
+      || typeof release.html_url !== "string") throw new Error("malformed release evidence");
+    return {
+      tag: release.tag_name,
+      draft: release.draft,
+      prerelease: release.prerelease,
+      url: release.html_url,
+    };
+  });
+}
+
+// A tag response carries a name and nothing the advisory reads, so the two release-only facts are
+// derived rather than guessed: a tag is never a draft, and it is a prerelease exactly when its
+// version says so. The url is the canonical anchor for that tag, which is what a release response
+// would have carried, so the same evidence check applies to both shapes.
+function projectTags(component, body) {
+  return body.map((tag) => {
+    if (tag === null || typeof tag !== "object" || Array.isArray(tag)
+      || typeof tag.name !== "string"
+      || tag.name.length === 0) throw new Error("malformed tag evidence");
+    return {
+      tag: tag.name,
+      draft: false,
+      prerelease: tagIsPrerelease(component.id, tag.name),
+      url: canonicalReleaseUrl(component.repository, tag.name),
+    };
+  });
+}
+
 async function fetchReleases({ installed, fetchFn, signal, timeout }) {
   const releases = {};
   for (const component of installed) {
     const endpoint = trustedEndpointFor(component);
-    if (endpoint === null) throw new Error("untrusted component");
-    const response = await Promise.race([
-      Promise.resolve(fetchFn(endpoint, {
-        method: "GET",
-        redirect: "error",
-        signal,
-        headers: { Accept: "application/vnd.github+json" },
-      })),
-      timeout,
-    ]);
-    if (response === null || typeof response !== "object" || response.ok !== true || response.status !== 200 || response.url !== endpoint || typeof response.json !== "function") {
-      throw new Error("untrusted response");
-    }
-    const body = await Promise.race([Promise.resolve(response.json()), timeout]);
-    if (!Array.isArray(body)) throw new Error("malformed release response");
-    const projected = [];
-    for (const release of body) {
-      if (release === null || typeof release !== "object" || Array.isArray(release)
-        || typeof release.tag_name !== "string"
-        || typeof release.draft !== "boolean"
-        || typeof release.prerelease !== "boolean"
-        || typeof release.html_url !== "string") throw new Error("malformed release evidence");
-      projected.push({
-        tag: release.tag_name,
-        draft: release.draft,
-        prerelease: release.prerelease,
-        url: release.html_url,
-      });
-    }
-    releases[component.id] = projected;
+    const tagEndpoint = trustedTagEndpointFor(component);
+    if (endpoint === null || tagEndpoint === null) throw new Error("untrusted component");
+    const projected = projectReleases(await fetchJsonArray({ endpoint, fetchFn, signal, timeout }));
+    // An empty release list means this repository publishes tags instead, not that it has no
+    // versions. Asking for releases first keeps a repository that does publish them authoritative.
+    releases[component.id] = projected.length > 0
+      ? projected
+      : projectTags(component, await fetchJsonArray({ endpoint: tagEndpoint, fetchFn, signal, timeout }));
   }
   return releases;
 }
@@ -862,6 +908,13 @@ export async function suppressUpdateNotification({
     installed = installedFromManifest(await loadJson(pluginRoots, "installed-components.json", fsOps));
     if (installed === null || !trustedConfiguration(policy, installed, iso(now))) throw new Error("untrusted update configuration");
   } catch {
+    return suppressionResult("unavailable");
+  }
+  // An id that names no tracked component is a mistake, not a request that happens to match nothing.
+  // Reporting `unchanged` for it reads as "recorded, nothing new to add", so the caller believes an
+  // answer was stored that never existed. The easy way to make this mistake is to pass the name of
+  // the installed product, because the components are the bundles that product ships.
+  if (componentIds !== null && !componentIds.every((id) => installed.some((component) => component.id === id))) {
     return suppressionResult("unavailable");
   }
   const intervalMs = policy.checkIntervalDays * 24 * 60 * 60 * 1000;

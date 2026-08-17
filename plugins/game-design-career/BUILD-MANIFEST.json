@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-career",
   "sourceDateEpoch": 0,
-  "treeSha256": "0697cba7ae9d4b827ebaa17d6291fe48aaf34289bd7dd1deecb958d64c752228",
+  "treeSha256": "0b80b76885ed51cf23ccc27c2aa262f9ad450a79dd6519bd163f99a78f30df80",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -1586,8 +1586,8 @@
     },
     {
       "path": "scripts/check-game-design-updates.mjs",
-      "sha256": "f7bd4e1a46ae75176657b5bd0c5e701570054d53e8d9498d21f48569af932e1c",
-      "size": 44573
+      "sha256": "397d331d61b740a47079a61352a2a75da25bafcdb8cb2f6839d80959267ddd5a",
+      "size": 47421
     },
     {
       "path": "scripts/compile-image-prompts.mjs",
@@ -1611,8 +1611,8 @@
     },
     {
       "path": "scripts/inspect-game-design-plugin-updates.mjs",
-      "sha256": "4757957651122de76c38b239cf11798c594c60a0da44820b681df84306856162",
-      "size": 8168
+      "sha256": "cb5afa116c3fa07d10f31510c010f27cacc01bf651efc78059d3765fa795cf28",
+      "size": 10418
     },
     {
       "path": "scripts/lib/complete-png-validation.mjs",
@@ -1721,8 +1721,8 @@
     },
     {
       "path": "scripts/lib/update-advisory.mjs",
-      "sha256": "a1a9714082643e6a934ae5fdaca0a8e64015e0473e0ac1565703460708b020ec",
-      "size": 11571
+      "sha256": "7e4ca27ee95ded97158b15b02ec369ebc97f0bffef3f4fe1117aa04ca1cbbbb0",
+      "size": 12315
     },
     {
       "path": "scripts/load-memory-config.mjs",
@@ -2696,8 +2696,8 @@
     },
     {
       "path": "skills/upgrade-game-design-suite/references/codex-commands.md",
-      "sha256": "0c3d4c2db3ea6ca09eec2b73dd4696ed6c254ff7c3c56adf4b3fb45e41e73819",
-      "size": 1536
+      "sha256": "d7776a91a85f5cc21afa1df576fd7a664da17597b491f29783d1b28d5ce84363",
+      "size": 2113
     },
     {
       "path": "skills/visualize-career-roadmap/SKILL.md",

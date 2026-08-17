@@ -9,12 +9,20 @@ This file is the only place that names host-specific commands. Replace this file
 - Reinstall plan for one plugin: `node scripts/inspect-game-design-plugin-updates.mjs --plan <plugin>`
 - Silence one version pair: `node scripts/check-game-design-updates.mjs --suppress [<component> ...]`
 
-The plan command prints an ordered argv list. It executes nothing.
+The plan command prints an ordered argv list. It executes nothing. It prints `"status":"current"`
+instead when the marketplace snapshot is not newer than the installed version, and
+`"status":"not-comparable"` when the snapshot version cannot be read at all. Both are results to
+report, not errors to retry.
 
 The suppress command records the "do not tell me about this version again" answer. It writes only
 the suppression list in the advisory cache and changes no installation. With no component named it
 answers for every component the last advisory reported as outdated. It reports `unavailable` when
 no advisory has been cached yet, so run the advisory first.
+
+A component is one of `skillstead`, `archify`, `im-not-ai`, `game-design-suite`. These are the ids
+the advisory reports, and they are the only accepted arguments. The name of an installed product is
+not a component and the command refuses it. Prefer naming no component at all, which answers for
+exactly the set the notification named.
 
 ## Applied only after an explicit approval
 

@@ -216,12 +216,16 @@ test("explicit plugin update inspection and planning leave isolated Codex state 
       return spawnSync(commandPath, args, { ...options, cwd: workspace, env });
     },
   });
+  // The host never lists an installed plugin as available, so its own list can only ever say
+  // not-comparable for the plugin the user has, and the approved update was unreachable. The
+  // comparison version therefore comes from the marketplace snapshot manifest the host named, which
+  // is what the bump above changed. `available` still mirrors the host exactly.
   assert.deepEqual(inspected, {
     marketplace: { name: marketplace, sourceType: "local" },
     installed: [{ plugin: "game-design-studio", version: "0.1.1" }],
     available: [{ plugin: "game-design-career", version: "0.1.1" }],
-    comparisons: [{ plugin: "game-design-studio", installedVersion: "0.1.1", availableVersion: null, status: "not-comparable" }],
-  }, "real local Codex does not treat an installed source manifest change as authoritative available update evidence");
+    comparisons: [{ plugin: "game-design-studio", installedVersion: "0.1.1", availableVersion: "0.1.2", status: "comparable" }],
+  }, "the marketplace snapshot manifest is the available-version evidence for an installed plugin");
   assert.equal(inspected.available.some((entry) => entry.plugin === "game-design-studio"), false, "--available remains unrelated uninstalled inventory for the installed Studio plugin");
   assert.equal(JSON.stringify(inspected).includes(path.resolve(env.CODEX_HOME)), false, "inspection does not expose the isolated cache path");
   await assertIsolatedTreesPreserved(before, { workspace, home: env.HOME, codexHome: env.CODEX_HOME, cacheRoot }, "API inspection preserves all isolated state");
@@ -245,9 +249,17 @@ test("explicit plugin update inspection and planning leave isolated Codex state 
     shell: false,
     timeout: 30_000,
   });
-  assert.equal(planRun.status, 1, "--plan refuses to infer a same-plugin update from uninstalled inventory");
-  assert.deepEqual(JSON.parse(planRun.stdout), { status: "not-comparable", plugin: "game-design-studio", reason: "same-plugin available version is absent" }, "--plan returns a closed non-comparable result instead of argv");
+  assert.equal(planRun.status, 0, planRun.stderr);
+  // A local marketplace cannot be upgraded from a published release, so the plan is the install step
+  // alone. It is argv only: running it stays the human's decision.
+  assert.deepEqual(JSON.parse(planRun.stdout), [["plugin", "add", `game-design-studio@${marketplace}`, "--json"]], "--plan prints the install argv for a newer snapshot");
   await assertIsolatedTreesPreserved(before, { workspace, home: env.HOME, codexHome: env.CODEX_HOME, cacheRoot }, "--plan preserves all isolated state");
+
+  // Producing a plan must never be the same thing as applying one: the installed version is still
+  // 0.1.1 and the cache still holds only that version after both read-only commands.
+  const stillInstalled = spawnSync(codex, ["plugin", "list", "--marketplace", marketplace, "--json"], { cwd: workspace, env, encoding: "utf8", shell: false, timeout: 30_000 });
+  assert.equal(stillInstalled.status, 0, stillInstalled.stderr);
+  assert.deepEqual(JSON.parse(stillInstalled.stdout).installed.map(({ name, version }) => ({ name, version })), [{ name: "game-design-studio", version: "0.1.1" }], "the plan did not install anything");
   assert.equal(evidence.every((entry) => entry.args.every((argument) => argument !== "upgrade")), true, "test setup never upgrades the marketplace");
 });
 

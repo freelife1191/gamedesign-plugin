@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import process from "node:process";
 import { pathToFileURL } from "node:url";
 
@@ -39,6 +41,31 @@ function validateMarketplace(value) {
   return value.sourceType;
 }
 
+const SNAPSHOT_MANIFEST = [".codex-plugin", "plugin.json"];
+
+function defaultReadText(filePath) {
+  return readFileSync(filePath, "utf8");
+}
+
+// The host lists a plugin under `available` only while it is not installed, so the version an
+// installed plugin could move to never appears there and every comparison came out
+// not-comparable — no plan, no way to reach the approved update at all. The marketplace snapshot
+// directory for that plugin is named in the host's own output, and its manifest carries the version
+// the snapshot holds. Reading it is the only way to compare like with like. This reads one file and
+// writes nothing, so it stays on the safe side of the approval gate; anything unreadable, mislabeled
+// or not a stable version yields null and the comparison stays not-comparable exactly as before.
+function snapshotVersion({ plugin, sourcePath, readText }) {
+  if (typeof sourcePath !== "string" || !path.isAbsolute(sourcePath)) return null;
+  let manifest;
+  try {
+    manifest = JSON.parse(readText(path.join(sourcePath, ...SNAPSHOT_MANIFEST)));
+  } catch {
+    return null;
+  }
+  if (!plainObject(manifest) || manifest.name !== plugin || !validVersion(manifest.version)) return null;
+  return manifest.version;
+}
+
 function validatePlugin(value, installed) {
   if (!exactKeys(value, PLUGIN_KEYS)
     || typeof value.pluginId !== "string"
@@ -58,14 +85,16 @@ function validatePlugin(value, installed) {
   return {
     plugin: value.name,
     version: value.version,
+    sourcePath: value.source.path,
     sourceType: validateMarketplace(value.marketplaceSource),
   };
 }
 
-function comparisonFor(installed, available) {
+function comparisonFor(installed, available, readText) {
   const availableByPlugin = new Map(available.map((entry) => [entry.plugin, entry.version]));
-  return installed.map(({ plugin, version }) => {
-    const availableVersion = availableByPlugin.get(plugin) ?? null;
+  return installed.map(({ plugin, version, sourcePath }) => {
+    const availableVersion = availableByPlugin.get(plugin)
+      ?? snapshotVersion({ plugin, sourcePath, readText });
     return {
       plugin,
       installedVersion: version,
@@ -75,12 +104,12 @@ function comparisonFor(installed, available) {
   });
 }
 
-function freezeInspection({ sourceType, installed, available }) {
+function freezeInspection({ sourceType, installed, available, readText }) {
   const result = {
     marketplace: { name: MARKETPLACE_NAME, sourceType },
     installed: installed.map(({ plugin, version }) => ({ plugin, version })),
     available: available.map(({ plugin, version }) => ({ plugin, version })),
-    comparisons: comparisonFor(installed, available),
+    comparisons: comparisonFor(installed, available, readText),
   };
   return Object.freeze({
     marketplace: Object.freeze(result.marketplace),
@@ -90,7 +119,7 @@ function freezeInspection({ sourceType, installed, available }) {
   });
 }
 
-function parseInspection(stdout) {
+function parseInspection(stdout, readText) {
   let parsed;
   try {
     parsed = JSON.parse(stdout);
@@ -106,15 +135,15 @@ function parseInspection(stdout) {
   if (entries.length === 0 || new Set(entries.map(({ sourceType }) => sourceType)).size !== 1) fail("marketplace inspection");
   if (new Set(installed.map(({ plugin }) => plugin)).size !== installed.length
     || new Set(available.map(({ plugin }) => plugin)).size !== available.length) fail("marketplace inspection");
-  return freezeInspection({ sourceType: entries[0].sourceType, installed, available });
+  return freezeInspection({ sourceType: entries[0].sourceType, installed, available, readText });
 }
 
 function defaultRunCommand(command, args, options) {
   return spawnSync(command, args, options);
 }
 
-export function inspectPluginUpdates({ codexPath = "codex", marketplaceName = MARKETPLACE_NAME, runCommand = defaultRunCommand } = {}) {
-  if (marketplaceName !== MARKETPLACE_NAME || typeof codexPath !== "string" || codexPath.length === 0 || typeof runCommand !== "function") fail("marketplace inspection");
+export function inspectPluginUpdates({ codexPath = "codex", marketplaceName = MARKETPLACE_NAME, runCommand = defaultRunCommand, readText = defaultReadText } = {}) {
+  if (marketplaceName !== MARKETPLACE_NAME || typeof codexPath !== "string" || codexPath.length === 0 || typeof runCommand !== "function" || typeof readText !== "function") fail("marketplace inspection");
   let receipt;
   try {
     receipt = runCommand(codexPath, ["plugin", "list", "--marketplace", MARKETPLACE_NAME, "--available", "--json"], {
@@ -126,7 +155,7 @@ export function inspectPluginUpdates({ codexPath = "codex", marketplaceName = MA
     fail("marketplace inspection");
   }
   if (!receipt || receipt.error !== undefined || receipt.signal !== null || receipt.status !== 0 || typeof receipt.stdout !== "string") fail("marketplace inspection");
-  return parseInspection(receipt.stdout);
+  return parseInspection(receipt.stdout, readText);
 }
 
 function compareNumeric(left, right) {
@@ -169,6 +198,14 @@ function notComparablePlan(plugin) {
   return { status: "not-comparable", plugin, reason: "same-plugin available version is absent" };
 }
 
+// Now that a snapshot version is always available for an installed plugin, "already newest" is a
+// reachable outcome rather than an impossible one, and it is a result the skill reports, not a
+// failure. Saying so plainly keeps it out of the generic error path, which would have claimed the
+// inspection broke.
+function currentPlan(plugin, installedVersion) {
+  return { status: "current", plugin, installedVersion, reason: "the marketplace snapshot is not newer than the installed version" };
+}
+
 function cli() {
   const args = process.argv.slice(2);
   if (!(args.length === 1 && args[0] === "--inspect")
@@ -187,6 +224,10 @@ function cli() {
     if (comparison.status === "not-comparable") {
       process.stdout.write(`${JSON.stringify(notComparablePlan(args[1]))}\n`);
       process.exitCode = 1;
+      return;
+    }
+    if (compareStableVersions(comparison.availableVersion, comparison.installedVersion) <= 0) {
+      process.stdout.write(`${JSON.stringify(currentPlan(args[1], comparison.installedVersion))}\n`);
       return;
     }
     const result = planApprovedPluginUpdate({

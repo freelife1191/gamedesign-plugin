@@ -83,6 +83,17 @@ export function canonicalReleaseUrl(repository, tag) {
   return `${repository}/releases/tag/${encodedTag}`;
 }
 
+// A git tag carries no draft or prerelease flag, so evidence taken from tags has to derive the one
+// fact the advisory reads: whether the tag names a prerelease. Without this a tag like v1.0.0-rc.1
+// would arrive flagged stable, and inspectReleases would refuse the whole component rather than
+// skip that one tag. Tags the component's own prefix rule does not cover stay false, because
+// inspectReleases already ignores a tag it cannot own.
+export function tagIsPrerelease(componentId, tag) {
+  const rule = COMPONENTS[componentId];
+  if (rule === undefined || typeof tag !== "string" || !tag.startsWith(rule.prefix)) return false;
+  return paddedVersion(tag.slice(rule.prefix.length)).match(SEMVER)?.groups?.prerelease !== undefined;
+}
+
 function componentRule(component) {
   const id = typeof component === "string" ? component : component?.id;
   const rule = COMPONENTS[id];

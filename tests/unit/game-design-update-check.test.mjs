@@ -1421,3 +1421,123 @@ test("the suppress flag is off by default and never swallows a following flag as
     assert.deepEqual(suppressionRequest(argv), expected, `argv: ${JSON.stringify(argv)}`);
   }
 });
+
+const TAG_ENDPOINTS = ENDPOINTS.map((url) => url.replace(/\/releases$/u, "/tags"));
+
+// A tag response carries none of the fields a release response does. Keeping the extra keys GitHub
+// really sends here proves the projection reads only `name` and does not demand a release shape.
+function apiTag(tag) {
+  return {
+    name: tag,
+    zipball_url: "https://api.github.com/zip",
+    tarball_url: "https://api.github.com/tar",
+    commit: { sha: "0".repeat(40), url: "https://api.github.com/commit" },
+    node_id: "MDM6UmVm",
+  };
+}
+
+function emptyReleasesThenTags(calls, tagsById = {}) {
+  return checkingFetch(calls, (url) => {
+    if (ENDPOINTS.includes(url)) return response(url, []);
+    const index = TAG_ENDPOINTS.indexOf(url);
+    if (index === -1) throw new Error(`unexpected endpoint: ${url}`);
+    const component = INSTALLED[index];
+    return response(url, (tagsById[component.id] ?? [component.installedTag]).map(apiTag));
+  });
+}
+
+// Three of the four tracked repositories have never published a GitHub Release; they ship tags. With
+// releases as the only source every component came back unknown, one unknown turned the whole
+// advisory unknown, and no notice could ever fire for anything.
+test("a component that publishes no releases is compared against its tags instead", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  const calls = [];
+
+  const result = await checkGameDesignUpdates({
+    pluginRoot,
+    home,
+    now: Date.parse(CHECKED_AT),
+    fetchFn: emptyReleasesThenTags(calls, { archify: ["v2.14.0", "v2.13.0"] }),
+  });
+
+  assert.equal(result.status, "outdated");
+  assert.deepEqual(result.components.find(({ id }) => id === "archify"), {
+    id: "archify",
+    installedTag: "v2.13.0",
+    latestTag: "v2.14.0",
+    status: "outdated",
+    releaseUrl: releaseHtmlUrl("https://github.com/tt-a1i/archify", "v2.14.0"),
+  });
+  assert.deepEqual(result.notification.componentIds, ["archify"]);
+  assert.deepEqual(calls.map(({ url }) => url), [
+    ENDPOINTS[0], TAG_ENDPOINTS[0],
+    ENDPOINTS[1], TAG_ENDPOINTS[1],
+    ENDPOINTS[2], TAG_ENDPOINTS[2],
+    ENDPOINTS[3], TAG_ENDPOINTS[3],
+  ]);
+});
+
+// A repository that does publish releases stays authoritative: the release list is the answer, and
+// the tag endpoint is never touched.
+test("a component with published releases is never asked for its tags", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  const calls = [];
+
+  const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+
+  assert.equal(result.status, "current");
+  assert.deepEqual(calls.map(({ url }) => url), ENDPOINTS);
+});
+
+// A tag has no prerelease flag, so the projection derives it from the version. Without that the
+// advisory would treat v2.15.0-rc.1 as a stable release it could not parse and refuse the whole
+// component, which is the same silence the tag fallback exists to remove.
+test("a prerelease tag is skipped instead of turning its component unknown", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  const calls = [];
+
+  const result = await checkGameDesignUpdates({
+    pluginRoot,
+    home,
+    now: Date.parse(CHECKED_AT),
+    fetchFn: emptyReleasesThenTags(calls, { archify: ["v2.15.0-rc.1", "v2.14.0", "v2.13.0"] }),
+  });
+
+  assert.equal(result.status, "outdated");
+  assert.equal(result.components.find(({ id }) => id === "archify").latestTag, "v2.14.0");
+});
+
+test("tag evidence without a name leaves the advisory unknown", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  const calls = [];
+
+  const result = await checkGameDesignUpdates({
+    pluginRoot,
+    home,
+    now: Date.parse(CHECKED_AT),
+    fetchFn: checkingFetch(calls, (url) => ENDPOINTS.includes(url)
+      ? response(url, [])
+      : response(url, [{ zipball_url: "https://api.github.com/zip" }])),
+  });
+
+  assert.equal(result.status, "unknown");
+  assert.equal(result.notification, null);
+});
+
+// A real Codex session offered `--suppress game-design-studio`, naming a product rather than one of
+// the bundles the advisory tracks. Answering `unchanged` there claimed an answer was recorded when
+// nothing was, so an unknown id has to fail closed and write nothing.
+test("an id that names no tracked component is refused instead of reported as unchanged", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  await writeCache({ home, value: outdatedCacheValue({ lastNotifiedAt: CHECKED_AT, lastNotifiedComponents: notificationIdentity() }) });
+
+  for (const componentIds of [["game-design-studio"], ["game-design-career"], ["archify", "game-design-studio"], [""]]) {
+    const suppression = await suppressUpdateNotification({ pluginRoot, home, now: Date.parse(CHECKED_AT), componentIds });
+    assert.equal(suppression.status, "unavailable", JSON.stringify(componentIds));
+    assert.deepEqual(suppression.suppressed, []);
+    assert.deepEqual((await readCacheValue(home)).suppressedComponents, [], JSON.stringify(componentIds));
+  }
+
+  const accepted = await suppressUpdateNotification({ pluginRoot, home, now: Date.parse(CHECKED_AT), componentIds: ["archify"] });
+  assert.equal(accepted.status, "suppressed");
+});

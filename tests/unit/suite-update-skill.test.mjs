@@ -164,3 +164,106 @@ test("the skill stops for an answer before it applies anything", () => {
   assert.ok(stopIndex > 0, "the workflow has to say it stops");
   assert.ok(applyIndex > stopIndex, "applying comes after the stop, not before it");
 });
+
+// The host lists a plugin under `available` only while it is not installed, so for the plugin the
+// user actually has there is no available version in that output and every comparison came back
+// not-comparable: no plan, and the approved update was unreachable. The snapshot directory named in
+// the host's own output carries the version the marketplace holds.
+function hostOutput({ installedVersion = "0.1.1" } = {}) {
+  return JSON.stringify({
+    installed: [pluginEntry({ plugin: "game-design-studio", version: installedVersion, installed: true })],
+    available: [pluginEntry({ plugin: "game-design-career", version: installedVersion, installed: false })],
+  });
+}
+
+function inspectWith({ output = hostOutput(), readText }) {
+  return inspectPluginUpdates({
+    marketplaceName: MARKETPLACE,
+    readText,
+    runCommand: () => ({ status: 0, signal: null, error: undefined, stderr: "", stdout: output }),
+  });
+}
+
+test("an installed plugin is compared against the marketplace snapshot it was installed from", () => {
+  const read = [];
+  const inspection = inspectWith({
+    readText(filePath) {
+      read.push(filePath);
+      return JSON.stringify({ name: "game-design-studio", version: "0.1.2" });
+    },
+  });
+
+  assert.deepEqual(inspection.comparisons, [{
+    plugin: "game-design-studio",
+    installedVersion: "0.1.1",
+    availableVersion: "0.1.2",
+    status: "comparable",
+  }]);
+  assert.deepEqual(read, ["/private/tmp/marketplace/plugins/game-design-studio/.codex-plugin/plugin.json"]);
+  assert.deepEqual(planApprovedPluginUpdate({
+    marketplace: inspection.marketplace,
+    plugin: "game-design-studio",
+    installedVersion: "0.1.1",
+    availableVersion: inspection.comparisons[0].availableVersion,
+  }), [["plugin", "add", `game-design-studio@${MARKETPLACE}`, "--json"]]);
+});
+
+// Reading the snapshot is a best-effort improvement on an impossible comparison, so every way it can
+// go wrong has to land back on the old not-comparable answer rather than on a guessed version.
+test("unreadable or mislabeled snapshot evidence leaves the comparison not-comparable", () => {
+  const cases = [
+    ["missing file", () => { throw Object.assign(new Error("nope"), { code: "ENOENT" }); }],
+    ["not JSON", () => "not json at all"],
+    ["a JSON array", () => "[]"],
+    ["another plugin's manifest", () => JSON.stringify({ name: "game-design-career", version: "0.1.2" })],
+    ["a prerelease version", () => JSON.stringify({ name: "game-design-studio", version: "0.1.2-rc.1" })],
+    ["a two-segment version", () => JSON.stringify({ name: "game-design-studio", version: "0.2" })],
+    ["no version at all", () => JSON.stringify({ name: "game-design-studio" })],
+  ];
+  for (const [name, readText] of cases) {
+    const inspection = inspectWith({ readText });
+    assert.deepEqual(inspection.comparisons, [{
+      plugin: "game-design-studio",
+      installedVersion: "0.1.1",
+      availableVersion: null,
+      status: "not-comparable",
+    }], name);
+  }
+});
+
+// An installed version at or above the snapshot is a result the skill reports, not a plan it can
+// build, and reading the snapshot is what makes that outcome reachable at all.
+test("a snapshot no newer than the installed version produces no plan", () => {
+  for (const version of ["0.1.1", "0.1.0"]) {
+    const inspection = inspectWith({
+      readText: () => JSON.stringify({ name: "game-design-studio", version }),
+    });
+    assert.equal(inspection.comparisons[0].availableVersion, version);
+    assert.throws(() => planApprovedPluginUpdate({
+      marketplace: inspection.marketplace,
+      plugin: "game-design-studio",
+      installedVersion: "0.1.1",
+      availableVersion: version,
+    }), `${version} must not produce an install plan`);
+  }
+});
+
+test("the inspection never reads a snapshot manifest from a relative path", () => {
+  const relative = JSON.parse(hostOutput());
+  relative.installed[0].source.path = "plugins/game-design-studio";
+  const inspection = inspectWith({
+    output: JSON.stringify(relative),
+    readText() { throw new Error("a relative source path must never be read"); },
+  });
+
+  assert.equal(inspection.comparisons[0].status, "not-comparable");
+});
+
+// The reference file described the suppress argument as `<component>` without saying what one is, and
+// a real session filled that gap with a product name. Naming the four ids is what closes it.
+test("the reference file names the components the suppress command accepts", () => {
+  for (const component of ["skillstead", "archify", "im-not-ai", "game-design-suite"]) {
+    assert.match(commands, new RegExp(`\`${component}\``, "u"), `missing component id: ${component}`);
+  }
+  assert.match(commands, /The name of an installed product is\nnot a component and the command refuses it/u);
+});

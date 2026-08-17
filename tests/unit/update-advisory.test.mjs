@@ -5,6 +5,7 @@ import test from "node:test";
 import {
   evaluateUpdateAdvisory,
   selectLatestStableRelease,
+  tagIsPrerelease,
 } from "../../shared/scripts/lib/update-advisory.mjs";
 
 const policy = JSON.parse(
@@ -389,4 +390,25 @@ test("a bundled upstream that claims a tag nobody published stays unknown", () =
   // state means the lock file disagrees with the upstream, which is not something to guess about.
   assert.equal(advisory.status, "unknown");
   assert.equal(advisory.components[0].latestTag, null);
+});
+
+// Tag evidence has to answer the one release-only question the advisory asks. A tag whose version
+// carries a prerelease identifier is a prerelease; a tag under a prefix this component does not own
+// is not its business at all, and claiming otherwise would hide a real release behind a foreign tag.
+test("a tag is called a prerelease only when its own version says so", () => {
+  const cases = [
+    ["archify", "v2.15.0-rc.1", true],
+    ["archify", "v2.15.0", false],
+    ["archify", "v2.15", false],
+    ["archify", "2.15.0-rc.1", false],
+    ["im-not-ai", "v1.6.1-beta.2", true],
+    ["skillstead", "svg-infographic/v0.10.0-rc.1", true],
+    ["skillstead", "svg-infographic/v0.10.0", false],
+    ["skillstead", "writing-quality-editor/v0.11.0-rc.1", false],
+    ["game-design-suite", "v0.1.2-rc.1", true],
+    ["not-a-component", "v1.0.0-rc.1", false],
+  ];
+  for (const [component, tag, expected] of cases) {
+    assert.equal(tagIsPrerelease(component, tag), expected, `${component} ${tag}`);
+  }
 });
