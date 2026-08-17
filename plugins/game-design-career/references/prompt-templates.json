@@ -1553,7 +1553,7 @@
         "id": "ca-s06",
         "svg": "guides/assets/game-design-career/skills/orchestrate-game-design-career.svg",
         "png": "guides/assets/game-design-career/skills/orchestrate-game-design-career.png",
-        "alt": "게임 기획 커리어 대표 진입 라우팅 흐름"
+        "alt": "게임 기획 커리어 오케스트레이터 흐름도 — 대표 진입은 이 흐름의 앞단"
       },
       "related_use_cases": [],
       "related_recipes": [],
@@ -1651,7 +1651,7 @@
         "id": "ca-s06",
         "svg": "guides/assets/game-design-career/skills/orchestrate-game-design-career.svg",
         "png": "guides/assets/game-design-career/skills/orchestrate-game-design-career.png",
-        "alt": "여러 도메인이 섞인 커리어 요청의 대표 진입 라우팅 흐름"
+        "alt": "게임 기획 커리어 오케스트레이터 흐름도 — 여러 도메인이 섞인 요청도 이 앞단에서 좁힌다"
       },
       "related_use_cases": [],
       "related_recipes": [],
@@ -1750,7 +1750,7 @@
         "id": "ca-s06",
         "svg": "guides/assets/game-design-career/skills/orchestrate-game-design-career.svg",
         "png": "guides/assets/game-design-career/skills/orchestrate-game-design-career.png",
-        "alt": "사례 지정과 교차 제품 인계를 포함한 커리어 대표 진입 라우팅 흐름"
+        "alt": "게임 기획 커리어 오케스트레이터 흐름도 — 사례 지정과 교차 제품 인계도 이 앞단에서 정리한다"
       },
       "related_use_cases": [],
       "related_recipes": [],

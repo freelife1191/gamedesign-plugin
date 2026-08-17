@@ -1755,7 +1755,7 @@ $game-design-studio:export-game-design-documents \
 | 검토·품질 | 게임 기획 검토 (`review-game-design`)·문서 품질 기준 적용 (`apply-document-quality-profile`): 결과물 또는 출력 목적이 있을 때 호출 → 검토 보고서·품질 기준 기록 | 포트폴리오 검토 (`review-game-design-portfolio`)·경력 문서 품질 기준 적용 (`apply-document-quality-profile`): 근거 묶음 또는 출력 목적이 있을 때 호출 → 포트폴리오 검토·품질 기준 기록 |
 | 이미지·도식·출력 | 이미지 자산 계획 (`plan-image-assets`) → 이미지 자산 생성 (`generate-image-assets`) → 이미지 자산 검토 (`review-image-assets`), 게임 기획 시각화 (`visualize-game-design`)·문서 내보내기 준비 (`export-game-design-documents`): 승인된 기준 문서가 있을 때 호출 → SVG·PNG·내보내기 준비 목록 | 경력 이미지 자산 계획 (`plan-image-assets`) → 경력 이미지 자산 생성 (`generate-image-assets`) → 경력 이미지 자산 검토 (`review-image-assets`), 경력 성장 경로 시각화 (`visualize-career-roadmap`)·경력 문서 내보내기 준비 (`export-career-documents`): 승인된 기준 문서가 있을 때 호출 → SVG·PNG·내보내기 준비 목록 |
 
-Studio는 제품 스킬 16개와 공통 스킬 9개로 총 25개, Career는 제품 스킬 15개와 공통 스킬 9개로 총 24개를 설치합니다. 공통 스킬은 `analyze-game-design-references`, `maintain-game-design-glossary`, `archify`, `humanize-korean`, `svg-infographic`, `upgrade-game-design-suite`와 프로젝트 기억 조회·후보 기록·관리 스킬 3개입니다. `polish-game-design-writing`은 제품 스킬에 포함됩니다. 공통 스킬은 제품 원본 디렉터리가 아니라 표준 빌드가 번들합니다.
+Studio는 제품 스킬 17개와 공통 스킬 9개로 총 26개, Career는 제품 스킬 16개와 공통 스킬 9개로 총 25개를 설치합니다. 공통 스킬은 `analyze-game-design-references`, `maintain-game-design-glossary`, `archify`, `humanize-korean`, `svg-infographic`, `upgrade-game-design-suite`와 프로젝트 기억 조회·후보 기록·관리 스킬 3개입니다. `polish-game-design-writing`은 제품 스킬에 포함됩니다. 공통 스킬은 제품 원본 디렉터리가 아니라 표준 빌드가 번들합니다.
 
 <details>
 <summary>Studio 설치 스킬 전체 보기</summary>
@@ -1946,7 +1946,7 @@ Studio 생성본 (snapshot)은 에이전트 12개, 설치 스킬 26개, 템플�
 plugins/game-design-studio/
 ├── .codex-plugin/plugin.json   # 플러그인 manifest
 ├── agents/                     # 전문 에이전트 12개
-├── skills/                     # 제품 스킬 16개 + 공통 스킬 9개
+├── skills/                     # 제품 스킬 17개 + 공통 스킬 9개
 ├── assets/
 │   ├── templates/              # Canonical Artifact 템플릿 15개
 │   └── shared/                 # 공통 템플릿·지원 자산
@@ -1973,7 +1973,7 @@ Career 생성본 (snapshot)은 에이전트 10개, 설치 스킬 25개, 템플�
 plugins/game-design-career/
 ├── .codex-plugin/plugin.json   # 플러그인 manifest
 ├── agents/                     # 전문 에이전트 10개
-├── skills/                     # 제품 스킬 15개 + 공통 스킬 9개
+├── skills/                     # 제품 스킬 16개 + 공통 스킬 9개
 ├── assets/
 │   ├── templates/              # Canonical Artifact 템플릿 15개
 │   └── shared/                 # 공통 템플릿·지원 자산

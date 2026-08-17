@@ -931,6 +931,14 @@ async function assertSkillInventoryTable(markdown, product) {
   assert.ok(!sourceSkills.includes("svg-infographic"), `${product}: svg-infographic is not a product source skill`);
   assert.deepEqual(inventory.skillIds.length, product === "game-design-studio" ? 26 : 25, `${product}: production inventory includes the frozen product and shared skill counts`);
   assert.deepEqual(sourceSkills, inventory.skillIds.filter((id) => !sharedInstalledSkillIds.includes(id)), `${product}: production inventory derives product skills from source`);
+  // The prose sentence that introduces both skill tables restates the same split. It drifted
+  // out of sync with the table headings once already, so it is asserted from the live counts.
+  const sharedCount = inventory.skillIds.length - sourceSkills.length;
+  assert.match(
+    markdown,
+    new RegExp(`${sourceProduct === "studio" ? "Studio" : "Career"}는 제품 스킬 ${sourceSkills.length}개와 공통 스킬 ${sharedCount}개로 총 ${inventory.skillIds.length}개`, "u"),
+    `${product}: the sentence introducing the skill tables restates the installed split`,
+  );
   const expected = inventory.skillIds;
   const actual = [];
   const names = new Set();
@@ -1075,6 +1083,15 @@ async function assertPluginTreeContract(markdown, product) {
   const sharedScripts = (await readdir(path.join(root, "shared", "scripts"), { withFileTypes: true }))
     .filter((entry) => entry.isFile() && entry.name.endsWith(".mjs"));
   assert.equal(sharedScripts.length, expected.scripts, `${product}: source runtime inventory matches documented build target`);
+  // The tree's skills/ comment splits the same total into product and shared skills. It is
+  // derived from the live inventory so a new skill cannot leave the comment behind.
+  const sourceSkillCount = (await readdir(path.join(root, "products", product, "plugin", "skills"), { withFileTypes: true }))
+    .filter((entry) => entry.isDirectory()).length;
+  assert.match(
+    tree,
+    new RegExp(`skills/\\s+# 제품 스킬 ${sourceSkillCount}개 \\+ 공통 스킬 ${expected.skills - sourceSkillCount}개`, "u"),
+    `${product}: tree skills comment splits the documented build target`,
+  );
   assert.match(tree, new RegExp(`products/${escapeRegExp(product)}/plugin/`, "u"), `${product}: tree identifies authoring source`);
   assert.match(tree, new RegExp(`plugins/${escapeRegExp(product)}/`, "u"), `${product}: tree identifies generated snapshot`);
   assert.doesNotMatch(markdown, /BUILD-MANIFEST\.json[^\n]*(?:직접\s*(?:편집|수정)|edit directly)|(?:직접\s*(?:편집|수정)|edit directly)[^\n]*BUILD-MANIFEST\.json/iu, `${product}: README must not instruct readers to edit BUILD-MANIFEST directly`);
@@ -1514,7 +1531,11 @@ async function buildValidStructuredReadmeFixture() {
       const [name, description] = readableMetadata(readableAgentMetadata, product, id, "agent");
       return `| ${name} (\`${id}\`) | ${description} | 검토 초점 | 오케스트레이터가 전문가에게 위임 | [역할 문서](plugins/${product}/agents/${id}.md) |`;
     });
+    const sourceSkillCount = (await readdir(path.join(root, "products", product, "plugin", "skills"), { withFileTypes: true }))
+      .filter((entry) => entry.isDirectory()).length;
     inventoryTables.push(
+      `${productLabel}는 제품 스킬 ${sourceSkillCount}개와 공통 스킬 ${inventory.skillIds.length - sourceSkillCount}개로 총 ${inventory.skillIds.length}개를 설치합니다.`,
+      "",
       `### ${productLabel} 설치 스킬 ${inventory.skillIds.length}개`,
       "| 스킬 이름과 ID | 사용하는 때 | 핵심 결과 | 직접 호출 | 상세 가이드 |",
       "| --- | --- | --- | --- | --- |",
@@ -1527,12 +1548,16 @@ async function buildValidStructuredReadmeFixture() {
       "",
     );
   }
-  const trees = products.flatMap((product) => [
+  const trees = (await Promise.all(products.map(async (product) => {
+    const sourceSkillCount = (await readdir(path.join(root, "products", product, "plugin", "skills"), { withFileTypes: true }))
+      .filter((entry) => entry.isDirectory()).length;
+    const installedSkillCount = (await collectProductInventory(root, product)).skillIds.length;
+    return [
     "```text",
     `plugins/${product}/`,
     "├── .codex-plugin/plugin.json",
     "├── agents/",
-    "├── skills/",
+    `├── skills/                     # 제품 스킬 ${sourceSkillCount}개 + 공통 스킬 ${installedSkillCount - sourceSkillCount}개`,
     "├── assets/templates/",
     "├── assets/shared/",
     "├── references/",
@@ -1545,7 +1570,8 @@ async function buildValidStructuredReadmeFixture() {
     `generated snapshot: plugins/${product}/`,
     "```",
     "",
-  ]);
+    ];
+  }))).flat();
   const expectedToc = requiredRootHeadings.slice(1).map((heading, index) => `${index + 1}. [${heading}](#${visibleMarkdownHeadings(`## ${heading}`)[0].anchor})`);
   return [
     "# Structured README fixture",

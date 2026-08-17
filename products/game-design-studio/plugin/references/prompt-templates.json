@@ -4681,7 +4681,7 @@
         "id": "st-s09",
         "svg": "guides/assets/game-design-studio/skills/orchestrate-game-design-project.svg",
         "png": "guides/assets/game-design-studio/skills/orchestrate-game-design-project.png",
-        "alt": "게임 기획 대표 진입 라우팅 흐름"
+        "alt": "게임 기획 오케스트레이터 흐름도 — 대표 진입은 이 흐름의 앞단"
       },
       "related_use_cases": [],
       "related_recipes": [],
@@ -4779,7 +4779,7 @@
         "id": "st-s09",
         "svg": "guides/assets/game-design-studio/skills/orchestrate-game-design-project.svg",
         "png": "guides/assets/game-design-studio/skills/orchestrate-game-design-project.png",
-        "alt": "여러 도메인이 섞인 요청의 대표 진입 라우팅 흐름"
+        "alt": "게임 기획 오케스트레이터 흐름도 — 여러 도메인이 섞인 요청도 이 앞단에서 좁힌다"
       },
       "related_use_cases": [],
       "related_recipes": [],
@@ -4878,7 +4878,7 @@
         "id": "st-s09",
         "svg": "guides/assets/game-design-studio/skills/orchestrate-game-design-project.svg",
         "png": "guides/assets/game-design-studio/skills/orchestrate-game-design-project.png",
-        "alt": "사례 지정과 교차 제품 인계를 포함한 대표 진입 라우팅 흐름"
+        "alt": "게임 기획 오케스트레이터 흐름도 — 사례 지정과 교차 제품 인계도 이 앞단에서 정리한다"
       },
       "related_use_cases": [],
       "related_recipes": [],

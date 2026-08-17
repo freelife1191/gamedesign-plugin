@@ -12,7 +12,7 @@
 
 ### 직접 호출 활용 — game-design-studio
 
-[![게임 기획 대표 진입 라우팅 흐름](../../assets/game-design-studio/skills/orchestrate-game-design-project.png)](../../assets/game-design-studio/skills/orchestrate-game-design-project.svg)
+[![게임 기획 오케스트레이터 흐름도 — 대표 진입은 이 흐름의 앞단](../../assets/game-design-studio/skills/orchestrate-game-design-project.png)](../../assets/game-design-studio/skills/orchestrate-game-design-project.svg)
 
 #### 직접 호출 조건
 

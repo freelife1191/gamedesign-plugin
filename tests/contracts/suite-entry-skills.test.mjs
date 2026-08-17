@@ -37,6 +37,14 @@ const REQUIRED_HEADINGS = Object.freeze([
   "## Completion report",
 ]);
 
+// 백틱으로 감싼 하이픈 소문자 토큰은 스킬 ID 모양이다. 이 모양을 쓰면서 스킬이 아닌 낱말은
+// 여기에 등록해야 하고, 그 밖에는 전부 자기 제품 레지스트리에 있어야 한다.
+const SKILL_ID_SHAPE = /^[a-z]+(?:-[a-z0-9]+)+$/u;
+const NON_SKILL_TOKENS = new Set([
+  // 워크스페이스가 들고 있는 영수증 파일 이름이지 호출할 스킬이 아니다.
+  "route-receipt",
+]);
+
 async function entrySkill(product) {
   return readFile(path.join(repoRoot, "products", product, "plugin/skills", product, "SKILL.md"), "utf8");
 }
@@ -81,11 +89,27 @@ test("every skill the entry skill names is in its own routing registry", async (
       path.join(repoRoot, "products", product, "plugin/references/routing.json"),
       "utf8",
     ));
-    const named = [...skill.matchAll(/`([a-z][a-z0-9-]{3,})`/gu)].map((match) => match[1]);
-    const skillLike = named.filter((id) => routing.skillIds.includes(id) || id.startsWith("orchestrate-"));
+    const named = [...skill.matchAll(/`([^`\n]+)`/gu)].map((match) => match[1]);
+    const skillLike = named.filter((token) => SKILL_ID_SHAPE.test(token) && !NON_SKILL_TOKENS.has(token));
+    assert.ok(skillLike.length > 0, `${product}: body names no skill at all, so this contract proves nothing`);
     for (const id of skillLike) {
       assert.ok(routing.skillIds.includes(id), `${product}: ${id} is not in routing.skillIds`);
     }
+  }
+});
+
+// 소스 트리에는 references/handoff.md가 없다. 그 파일은 패키지로만 투영되므로 Markdown 링크로
+// 적으면 소스 쪽에서 영원히 끊긴 링크가 된다. Studio 패키지에만 전 트리 링크 검사가 있어 Career는
+// 무방비이므로, 두 제품을 여기서 함께 고정한다.
+test("both entry skills name the handoff contract as a path, never as a Markdown link", async () => {
+  for (const { product } of ENTRY_SKILLS) {
+    const skill = await entrySkill(product);
+    assert.ok(skill.includes("`references/handoff.md`"), `${product}: must name the handoff contract as a backticked path`);
+    assert.doesNotMatch(
+      skill,
+      /\[[^\]]*\]\((?:\.\/)?references\/handoff\.md\)/u,
+      `${product}: references/handoff.md exists only in the built package, so a Markdown link cannot resolve`,
+    );
   }
 });
 
@@ -101,6 +125,11 @@ test("the ambiguous-scope trigger moved to the Studio entry skill and left the o
   assert.match(description, /spans multiple disciplines/u);
   assert.match(description, /launch-readiness coordination/u);
 
+  // 본문 아무 데나 있으면 통과하는 검사로는 이동을 증명하지 못한다. 특히 ## Non-triggers에
+  // 나타나면 뜻이 정반대다. 트리거가 실제로 사는 두 자리, frontmatter description과
+  // ## Triggers 목록에 고정한다.
   const entry = await entrySkill("game-design-studio");
-  assert.match(entry, /ambiguous/u);
+  assert.match(/^description: (.+)$/mu.exec(entry)[1], /ambiguous/u, "the entry description must carry the moved trigger");
+  const triggers = /\n## Triggers\n([\s\S]*?)\n## /u.exec(entry)[1];
+  assert.match(triggers, /ambiguous/u, "the entry Triggers list must carry the moved trigger");
 });

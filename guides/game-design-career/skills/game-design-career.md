@@ -12,7 +12,7 @@
 
 ### 직접 호출 활용 — game-design-career
 
-[![게임 기획 커리어 대표 진입 라우팅 흐름](../../assets/game-design-career/skills/orchestrate-game-design-career.png)](../../assets/game-design-career/skills/orchestrate-game-design-career.svg)
+[![게임 기획 커리어 오케스트레이터 흐름도 — 대표 진입은 이 흐름의 앞단](../../assets/game-design-career/skills/orchestrate-game-design-career.png)](../../assets/game-design-career/skills/orchestrate-game-design-career.svg)
 
 #### 직접 호출 조건
 

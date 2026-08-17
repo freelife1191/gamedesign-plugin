@@ -99,7 +99,7 @@ $game-design-studio:game-design-studio [원하는 최종 결과]와 [이미 가�
 - ID: st-s09
 - SVG: guides/assets/game-design-studio/skills/orchestrate-game-design-project.svg
 - PNG: guides/assets/game-design-studio/skills/orchestrate-game-design-project.png
-- 대체 텍스트: 게임 기획 대표 진입 라우팅 흐름
+- 대체 텍스트: 게임 기획 오케스트레이터 흐름도 — 대표 진입은 이 흐름의 앞단
 
 ### 사람 검토
 #### 승인 경계
@@ -217,7 +217,7 @@ $game-design-studio:game-design-studio [요청에 섞인 도메인 목록]을 [�
 - ID: st-s09
 - SVG: guides/assets/game-design-studio/skills/orchestrate-game-design-project.svg
 - PNG: guides/assets/game-design-studio/skills/orchestrate-game-design-project.png
-- 대체 텍스트: 여러 도메인이 섞인 요청의 대표 진입 라우팅 흐름
+- 대체 텍스트: 게임 기획 오케스트레이터 흐름도 — 여러 도메인이 섞인 요청도 이 앞단에서 좁힌다
 
 ### 사람 검토
 #### 승인 경계
@@ -335,7 +335,7 @@ $game-design-studio:game-design-studio [사례 ID]를 실행 경로로 바꾸고
 - ID: st-s09
 - SVG: guides/assets/game-design-studio/skills/orchestrate-game-design-project.svg
 - PNG: guides/assets/game-design-studio/skills/orchestrate-game-design-project.png
-- 대체 텍스트: 사례 지정과 교차 제품 인계를 포함한 대표 진입 라우팅 흐름
+- 대체 텍스트: 게임 기획 오케스트레이터 흐름도 — 사례 지정과 교차 제품 인계도 이 앞단에서 정리한다
 
 ### 사람 검토
 #### 승인 경계
