@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { comparePaths, normalizeRelativePath } from "./paths.mjs";
 
-const utf8 = new TextDecoder("utf-8", { fatal: true });
+const utf8 = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 const relativeReference = /(?:^|[('"`\s])((?:\.\.[/\\])+[^)'"`\s]+)/gu;
 const vendorCliPath = /(?:^|\/)(?:\.claude\/skills\/svg-infographic|\.agents\/skills\/svg-infographic|skills\/svg-infographic)\/scripts\/(?:check-svg|render)\.mjs$/u;
 const sharedUpdateIdentityMatchers = new Map([
@@ -252,6 +252,7 @@ export async function auditTree({
       } catch {
         throw new Error(`${relativePath} is not valid UTF-8`);
       }
+      if (text.startsWith("\uFEFF")) throw new Error(`${relativePath} starts with a UTF-8 BOM`);
       assertTextIsSafe({
         text,
         relativePath,
