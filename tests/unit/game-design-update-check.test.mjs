@@ -17,11 +17,13 @@ const ENDPOINTS = [
   "https://api.github.com/repos/kyungseo/skillstead/releases",
   "https://api.github.com/repos/tt-a1i/archify/releases",
   "https://api.github.com/repos/epoko77-ai/im-not-ai/releases",
+  "https://api.github.com/repos/freelife1191/gamedesign-plugin/releases",
 ];
 const INSTALLED = [
   { id: "skillstead", repository: "https://github.com/kyungseo/skillstead", installedTag: "svg-infographic/v0.9.0", commit: "6e5b850f66716af9eb3c6a79f60e4f8ff5716dee" },
   { id: "archify", repository: "https://github.com/tt-a1i/archify", installedTag: "v2.13.0", commit: "2c1f8ac2ca28a26d0b68043ec80c9554e20ff0e3" },
   { id: "im-not-ai", repository: "https://github.com/epoko77-ai/im-not-ai", installedTag: "v2.3.0", commit: "82137e858763dadb99561f194c5c00465735017b" },
+  { id: "game-design-suite", repository: "https://github.com/freelife1191/gamedesign-plugin", installedTag: "v0.1.1", commit: "973f9a93013471a4fb882dcaea0435e9bd44c130" },
 ];
 
 // skillstead namespaces its tags, and GitHub keeps that separator literal in html_url. Encoding
@@ -200,12 +202,12 @@ test("relative Windows LOCALAPPDATA falls back to absolute home cache without wr
   }
 
   assert.equal(result.status, "current");
-  assert.equal(calls.length, 3);
+  assert.equal(calls.length, ENDPOINTS.length);
   assert.deepEqual(await readdir(cwd), before);
   assert.equal((await lstat(path.join(home, "AppData", "Local", "game-design-suite", "update-advisory-v1.json"))).isFile(), true);
 });
 
-test("checks only the three literal official release endpoints on a cache miss", async (t) => {
+test("checks only the four literal official release endpoints on a cache miss", async (t) => {
   const { pluginRoot, home } = await fixture(t);
   const calls = [];
   const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
@@ -277,7 +279,7 @@ test("a previously notified outdated version stays suppressed after a shared-cac
 
   assert.equal(result.status, "outdated");
   assert.equal(result.notification, null);
-  assert.equal(calls.length, 3);
+  assert.equal(calls.length, ENDPOINTS.length);
   const persisted = JSON.parse(await readFile(cachePath, "utf8"));
   assert.deepEqual(persisted.lastNotifiedComponents, notificationIdentity());
   assert.equal(persisted.lastNotifiedAt, CHECKED_AT);
@@ -305,7 +307,7 @@ test("a newer tag for the same component is claimed once across concurrent share
   releaseFirst();
   const results = await Promise.all([first, second]);
 
-  assert.equal(calls.length, 3);
+  assert.equal(calls.length, ENDPOINTS.length);
   assert.equal(results.filter(({ notification }) => notification !== null).length, 1);
   assert.ok(results.every(({ components }) => components.find(({ id }) => id === "archify")?.latestTag === "v2.15.0"));
   const persisted = JSON.parse(await readFile(cachePath, "utf8"));
@@ -322,7 +324,7 @@ test("treats exactly seven days as stale and refreshes the cache", async (t) => 
 
   assert.equal(result.cache, "miss");
   assert.equal(result.checkedAt, "2026-08-22T00:00:00.000Z");
-  assert.equal(calls.length, 3);
+  assert.equal(calls.length, ENDPOINTS.length);
 });
 
 test("refreshes cache entries older than seven days", async (t) => {
@@ -332,7 +334,7 @@ test("refreshes cache entries older than seven days", async (t) => {
 
   await checkGameDesignUpdates({ pluginRoot, home, now: SEVEN_DAYS_LATER, fetchFn: checkingFetch(calls) });
 
-  assert.equal(calls.length, 3);
+  assert.equal(calls.length, ENDPOINTS.length);
 });
 
 test("concurrent Studio and Career checks share one network operation and cache", async (t) => {
@@ -351,7 +353,7 @@ test("concurrent Studio and Career checks share one network operation and cache"
   releaseFirst();
   const [studioResult, careerResult] = await Promise.all([studio, career]);
 
-  assert.equal(calls.length, 3);
+  assert.equal(calls.length, ENDPOINTS.length);
   assert.deepEqual([studioResult.cache, careerResult.cache].sort(), ["hit", "miss"]);
   assert.deepEqual(studioResult.components, careerResult.components);
 });
@@ -386,7 +388,7 @@ test("rejects future, truncated JSON, and unknown-key cache evidence before refr
     const calls = [];
     const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
     assert.equal(result.cache, "miss");
-    assert.equal(calls.length, 3);
+    assert.equal(calls.length, ENDPOINTS.length);
   }
 });
 
@@ -407,7 +409,7 @@ test("rejects legacy, partial, future, and non-closed notification state before 
     const result = await checkGameDesignUpdates({ pluginRoot, home, now: SIX_DAYS_LATER, fetchFn: checkingFetch(calls) });
 
     assert.equal(result.cache, "miss");
-    assert.equal(calls.length, 3);
+    assert.equal(calls.length, ENDPOINTS.length);
   }
 });
 
@@ -452,7 +454,7 @@ test("reclaims a provably stale file lock and completes the check", async (t) =>
   const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
 
   assert.equal(result.status, "current");
-  assert.equal(calls.length, 3);
+  assert.equal(calls.length, ENDPOINTS.length);
   await assert.rejects(lstat(lockPath), { code: "ENOENT" });
 });
 
@@ -580,7 +582,7 @@ test("reclaims an interrupted hard-link publication only after stale owner death
 
   // Catches a mutation that never accepts a stale nlink=2 task-owned publication.
   assert.equal(result.status, "current");
-  assert.equal(calls.length, 3);
+  assert.equal(calls.length, ENDPOINTS.length);
   await assert.rejects(lstat(lockPath), { code: "ENOENT" });
   assert.equal((await lstat(stagingPath)).nlink, 2);
   assert.equal((await readdir(path.dirname(cachePath))).some((name) => name.endsWith(".retired")), true);
@@ -645,7 +647,7 @@ test("a contender never normalizes a live winner between link publication and cl
   const results = await Promise.all([winner, contender]);
 
   // Catches normalizeLinkedStagingLock before a live owner is proved stale and dead.
-  assert.equal(calls.length, 3);
+  assert.equal(calls.length, ENDPOINTS.length);
   assert.deepEqual(results.map(({ status }) => status), ["current", "current"]);
   assert.deepEqual(results.map(({ cache }) => cache).sort(), ["hit", "miss"]);
   await assert.rejects(lstat(lockPath), { code: "ENOENT" });
@@ -691,7 +693,7 @@ test("preserves ambiguous linked residue and external siblings without network a
       assert.equal((await lstat(lockPath)).isFile(), true, name);
     } else {
       assert.equal(result.status, "current", name);
-      assert.equal(calls.length, 3, name);
+      assert.equal(calls.length, ENDPOINTS.length, name);
     }
     if (external !== null) assert.equal(await readFile(path.join(external.externalPath, "sentinel.txt"), "utf8"), external.before, name);
   }
@@ -768,7 +770,7 @@ test("concurrent contenders recover one stale lock with one network winner", asy
   const second = checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn });
   const results = await Promise.all([first, second]);
 
-  assert.equal(calls.length, 3);
+  assert.equal(calls.length, ENDPOINTS.length);
   assert.deepEqual(results.map(({ status }) => status), ["current", "current"]);
   assert.deepEqual(results.map(({ cache }) => cache).sort(), ["hit", "miss"]);
 });
@@ -809,7 +811,7 @@ test("a stale recovery contender cannot move a fresh publisher into its release 
   // Catches removeOwnedLock's check-then-rename ABA: a delayed stale contender
   // must have no operation that can move a newer canonical publisher.
   assert.equal(result.status, "current");
-  assert.equal(calls.length, 3);
+  assert.equal(calls.length, ENDPOINTS.length);
   if (legacyReleaseAttempted) {
     assert.equal(await readFile(lockPath, "utf8"), freshLock);
     assert.equal((await lstat(lockPath)).isFile(), true);
@@ -856,7 +858,7 @@ test("resumes from a retired hard-link by unlinking only the old canonical", asy
 
   assert.equal((await lstat(paths.claim(2))).isFile(), true);
   assert.equal(result.status, "current");
-  assert.equal(calls.length, 3);
+  assert.equal(calls.length, ENDPOINTS.length);
   await assert.rejects(lstat(lockPath), { code: "ENOENT" });
   assert.equal((await lstat(paths.retired)).nlink, 1);
 });
@@ -870,7 +872,7 @@ test("ignores unrelated recovery-prefixed entries while reclaiming the exact sta
   const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
 
   assert.equal(result.status, "current");
-  assert.equal(calls.length, 3);
+  assert.equal(calls.length, ENDPOINTS.length);
 });
 
 test("keeps a published claim authoritative when claim staging cleanup fails", async (t) => {
@@ -894,7 +896,7 @@ test("keeps a published claim authoritative when claim staging cleanup fails", a
   });
 
   assert.equal(result.status, "current");
-  assert.equal(calls.length, 3);
+  assert.equal(calls.length, ENDPOINTS.length);
   assert.equal((await lstat(paths.claim(1))).nlink, 2);
 });
 
@@ -919,7 +921,7 @@ test("normal owner-anchor cleanup failure still removes the canonical lock on re
 
   assert.equal(result.status, "current");
   await assert.rejects(lstat(lockPath), { code: "ENOENT" });
-  assert.equal(calls.length, 3);
+  assert.equal(calls.length, ENDPOINTS.length);
 });
 
 test("a same-PID retry appends an abort after EIO and wins a next-sequence claim", async (t) => {
@@ -939,7 +941,7 @@ test("a same-PID retry appends an abort after EIO and wins a next-sequence claim
   assert.deepEqual(first, expectedUnknownResult());
   assert.equal(firstCalls.length, 0);
   assert.equal(second.status, "current");
-  assert.equal(secondCalls.length, 3);
+  assert.equal(secondCalls.length, ENDPOINTS.length);
 });
 
 test("rechecks the canonical generation immediately before unlinking a retired stale lock", async (t) => {
@@ -1038,7 +1040,7 @@ test("a completed retired recovery remains inert when a later publisher creates 
   const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
 
   assert.equal(result.status, "current");
-  assert.equal(calls.length, 3);
+  assert.equal(calls.length, ENDPOINTS.length);
   assert.equal((await lstat(paths.retired)).nlink, 1);
 });
 
@@ -1057,7 +1059,7 @@ test("resumes a real-FS canonical plus owner-anchor plus retired nlink=3 crash",
 
   assert.equal((await lstat(paths.claim(2))).isFile(), true);
   assert.equal(result.status, "current");
-  assert.equal(calls.length, 3);
+  assert.equal(calls.length, ENDPOINTS.length);
   await assert.rejects(lstat(lockPath), { code: "ENOENT" });
   assert.equal((await lstat(ownerAnchor)).nlink, 2);
   assert.equal((await lstat(paths.retired)).nlink, 2);
@@ -1073,7 +1075,7 @@ test("ignores a different-inode historical staging orphan while selecting the ex
   const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
 
   assert.equal(result.status, "current");
-  assert.equal(calls.length, 3);
+  assert.equal(calls.length, ENDPOINTS.length);
 });
 
 test("does not take over a fresh dead latest claim before its lease expires", async (t) => {
@@ -1103,7 +1105,7 @@ test("takes over an expired dead latest claim and appends the next numeric seque
   const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
 
   assert.equal(result.status, "current");
-  assert.equal(calls.length, 3);
+  assert.equal(calls.length, ENDPOINTS.length);
   assert.equal((await lstat(paths.claim(2))).isFile(), true);
 });
 
@@ -1124,7 +1126,7 @@ test("canonical release EIO preserves the complete normal lock pair until recove
   const followUp = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(followUpCalls) });
 
   assert.equal(first.status, "current");
-  assert.equal(calls.length, 3);
+  assert.equal(calls.length, ENDPOINTS.length);
   assert.equal((await lstat(lockPath)).nlink, 2);
   assert.equal((await lstat(path.join(path.dirname(lockPath), ownerAnchor))).nlink, 2);
   assert.equal(followUp.status, "current");
@@ -1255,5 +1257,5 @@ test("publishes cache atomically and leaves prior evidence intact when publicati
 
   assert.equal(result.status, "unknown");
   assert.equal(await readFile(cachePath, "utf8"), before);
-  assert.equal(calls.length, 3);
+  assert.equal(calls.length, ENDPOINTS.length);
 });

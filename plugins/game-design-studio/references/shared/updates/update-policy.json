@@ -19,6 +19,10 @@
     {
       "id": "im-not-ai",
       "repository": "https://github.com/epoko77-ai/im-not-ai"
+    },
+    {
+      "id": "game-design-suite",
+      "repository": "https://github.com/freelife1191/gamedesign-plugin"
     }
   ],
   "stableReleasesOnly": true

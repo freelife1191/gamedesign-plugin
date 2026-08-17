@@ -297,3 +297,65 @@ test("produces a deeply frozen deterministic advisory", () => {
   assert.ok(got.components.every((component) => Object.isFrozen(component)));
   assert.throws(() => { got.components[0].status = "outdated"; }, TypeError);
 });
+
+const SUITE_REPOSITORY = "https://github.com/freelife1191/gamedesign-plugin";
+const releaseFor = (repository, tag) => ({
+  tag,
+  draft: false,
+  prerelease: false,
+  url: releaseUrl(repository, tag),
+});
+
+test("the suite itself is a comparable component with a closed release rule", () => {
+  const advisory = evaluateUpdateAdvisory({
+    policy,
+    installed: [{ id: "game-design-suite", installedTag: "v0.1.1", repository: SUITE_REPOSITORY }],
+    releases: {
+      "game-design-suite": [
+        releaseFor(SUITE_REPOSITORY, "v0.2.0"),
+        releaseFor(SUITE_REPOSITORY, "v0.1.1"),
+      ],
+    },
+    checkedAt,
+  });
+
+  assert.equal(advisory.status, "outdated");
+  assert.equal(advisory.components[0].latestTag, "v0.2.0");
+  assert.equal(advisory.components[0].releaseUrl, `${SUITE_REPOSITORY}/releases/tag/v0.2.0`);
+});
+
+test("a suite draft or prerelease never becomes the latest release", () => {
+  const advisory = evaluateUpdateAdvisory({
+    policy,
+    installed: [{ id: "game-design-suite", installedTag: "v0.1.1", repository: SUITE_REPOSITORY }],
+    releases: {
+      "game-design-suite": [
+        { ...releaseFor(SUITE_REPOSITORY, "v0.3.0"), draft: true },
+        { ...releaseFor(SUITE_REPOSITORY, "v0.2.0"), prerelease: true },
+        releaseFor(SUITE_REPOSITORY, "v0.1.1"),
+      ],
+    },
+    checkedAt,
+  });
+
+  assert.equal(advisory.status, "current");
+  assert.equal(advisory.components[0].latestTag, "v0.1.1");
+});
+
+test("a repository outside the four entry allowlist is refused", () => {
+  const advisory = evaluateUpdateAdvisory({
+    policy,
+    installed: [{
+      id: "game-design-suite",
+      installedTag: "v0.1.1",
+      repository: "https://github.com/attacker/gamedesign-plugin",
+    }],
+    releases: { "game-design-suite": [] },
+    checkedAt,
+  });
+
+  // A repository the rule table does not know is not merely uncomparable. It is refused before it
+  // reaches the component list, so there is nothing to report a version against.
+  assert.equal(advisory.status, "unknown");
+  assert.deepEqual(advisory.components, []);
+});

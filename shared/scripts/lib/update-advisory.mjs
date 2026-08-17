@@ -2,6 +2,9 @@ const COMPONENTS = Object.freeze({
   skillstead: Object.freeze({ prefix: "svg-infographic/v", repository: "https://github.com/kyungseo/skillstead" }),
   archify: Object.freeze({ prefix: "v", repository: "https://github.com/tt-a1i/archify" }),
   "im-not-ai": Object.freeze({ prefix: "v", repository: "https://github.com/epoko77-ai/im-not-ai" }),
+  // The suite compares against its own releases, so the advisory can report that the plugin the
+  // user installed is behind, not only that a bundled upstream is.
+  "game-design-suite": Object.freeze({ prefix: "v", repository: "https://github.com/freelife1191/gamedesign-plugin" }),
 });
 
 const POLICY_KEYS = Object.freeze([

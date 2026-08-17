@@ -36,6 +36,7 @@ const RELEASE_ENDPOINTS = Object.freeze({
   skillstead: "https://api.github.com/repos/kyungseo/skillstead/releases",
   archify: "https://api.github.com/repos/tt-a1i/archify/releases",
   "im-not-ai": "https://api.github.com/repos/epoko77-ai/im-not-ai/releases",
+  "game-design-suite": "https://api.github.com/repos/freelife1191/gamedesign-plugin/releases",
 });
 // This file runs from two layouts and the configuration sits at a different depth in each:
 // packaged as <plugin>/scripts with <plugin>/references/shared/updates, and in the repository as

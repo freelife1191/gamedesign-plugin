@@ -22,6 +22,7 @@ const UPDATE_COMPONENTS = [
   { id: 'skillstead', repository: 'https://github.com/kyungseo/skillstead', installedTag: 'svg-infographic/v0.9.0' },
   { id: 'archify', repository: 'https://github.com/tt-a1i/archify', installedTag: 'v2.14.0' },
   { id: 'im-not-ai', repository: 'https://github.com/epoko77-ai/im-not-ai', installedTag: 'v2.3.0' },
+  { id: 'game-design-suite', repository: 'https://github.com/freelife1191/gamedesign-plugin', installedTag: 'v0.1.1' },
 ];
 
 afterEach(async () => {
@@ -97,6 +98,7 @@ function runInjectedProbe({
       skillstead: 'https://api.github.com/repos/kyungseo/skillstead/releases',
       archify: 'https://api.github.com/repos/tt-a1i/archify/releases',
       'im-not-ai': 'https://api.github.com/repos/epoko77-ai/im-not-ai/releases',
+      'game-design-suite': 'https://api.github.com/repos/freelife1191/gamedesign-plugin/releases',
     };
     process.stdin.push(null);
     globalThis.fetch = () => { throw new Error('live network is forbidden in this test'); };

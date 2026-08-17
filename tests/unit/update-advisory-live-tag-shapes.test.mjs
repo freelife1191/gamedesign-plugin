@@ -125,8 +125,8 @@ test("the default plugin root finds the update configuration in the repository l
     fetchFn: failingFetch,
   });
 
-  assert.equal(result.components.length, 3);
-  assert.deepEqual(result.components.map(({ id }) => id).sort(), ["archify", "im-not-ai", "skillstead"]);
+  assert.equal(result.components.length, 4);
+  assert.deepEqual(result.components.map(({ id }) => id).sort(), ["archify", "game-design-suite", "im-not-ai", "skillstead"]);
 });
 
 test("the default plugin root finds the update configuration in the packaged layout", async (t) => {
@@ -146,6 +146,6 @@ test("the default plugin root finds the update configuration in the packaged lay
     fetchFn: failingFetch,
   });
 
-  assert.equal(result.components.length, 3);
-  assert.deepEqual(result.components.map(({ id }) => id).sort(), ["archify", "im-not-ai", "skillstead"]);
+  assert.equal(result.components.length, 4);
+  assert.deepEqual(result.components.map(({ id }) => id).sort(), ["archify", "game-design-suite", "im-not-ai", "skillstead"]);
 });

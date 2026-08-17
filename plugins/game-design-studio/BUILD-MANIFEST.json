@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "28ac291335f085c42236f997dd1c7a55901c951074dcb36577b228d45cf423ec",
+  "treeSha256": "bc10a8dfd8f02b2c671954dbc43a96f801ba7130c48b6655eb7c8edb399a7751",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -1291,8 +1291,13 @@
     },
     {
       "path": "references/shared/updates/installed-components.json",
-      "sha256": "496814407ed93cc1680bbc1be21f6ed79e206d970d233da4c658bddc44d4bdfa",
-      "size": 632
+      "sha256": "afa5e4d1923ed870a7fe695fb3b06e6c220ccc532a7c316dafb87a6d449b720c",
+      "size": 842
+    },
+    {
+      "path": "references/shared/updates/suite-release.lock.json",
+      "sha256": "7c7471065c9d874b0a87a792fc085ef4342a191a16dc8d5ba0c68500577d9c5b",
+      "size": 207
     },
     {
       "path": "references/shared/updates/update-advisory.schema.json",
@@ -1301,8 +1306,8 @@
     },
     {
       "path": "references/shared/updates/update-policy.json",
-      "sha256": "22b1a0bbf33c00d0619f10da1db8091c5b8424a89c06e5b02076afdce46101f6",
-      "size": 537
+      "sha256": "1f1eb3fd4671c34f96a9df8b3be6f7f12cd86447b7d1e01e71982cb6b6ed4251",
+      "size": 655
     },
     {
       "path": "references/shared/vendor/archify/vendor.lock.json",
@@ -1596,8 +1601,8 @@
     },
     {
       "path": "scripts/check-game-design-updates.mjs",
-      "sha256": "64e863e7c30b69f598da0bd9c1638ee1c5d1f42cca90ed491d010551011dfc07",
-      "size": 39310
+      "sha256": "fae84b5a47f759e39180ee9d22c0308a41b9d1cd630a88d4f5fb9683b369a2f0",
+      "size": 39405
     },
     {
       "path": "scripts/compile-image-prompts.mjs",
@@ -1731,8 +1736,8 @@
     },
     {
       "path": "scripts/lib/update-advisory.mjs",
-      "sha256": "e9f60942c7e3726d87ec6b462fd0a4392a3b5d83adfb43e126e90106e0210b38",
-      "size": 10197
+      "sha256": "f1cc700f833bb555ed2a856455b838a1985c885ea56b7066f23bbd9b3d9802e8",
+      "size": 10482
     },
     {
       "path": "scripts/load-memory-config.mjs",
