@@ -126,6 +126,10 @@ test("validateHandoffChain relates every return to the request it answers", () =
       [envelopeReturn(), envelopeReturn(), envelopeReturn()], /must start with a request/u],
     ["a return naming a different owner than its request is refused",
       [first, envelopeReturn({ ownerProduct: "game-design-studio" })], /must agree with its request/u],
+    // ownerProduct는 요청과 그대로 맞춘 채 supplierProduct만 바꾼다 — owner 절반만 시험하는 위
+    // 사례와 달리 이 사례는 agreement 검사의 supplierProduct 절반이 실제로 켜지는지를 시험한다.
+    ["a return agreeing on the owner but naming a different supplier than its request is refused",
+      [first, envelopeReturn({ supplierProduct: "game-design-suite" })], /must agree with its request/u],
   ];
   for (const [name, envelopes, pattern] of cases) {
     const result = validateHandoffChain(envelopes, contract);
