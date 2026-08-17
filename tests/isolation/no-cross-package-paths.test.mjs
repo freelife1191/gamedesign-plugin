@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { auditTree } from "../../tooling/lib/tree-audit.mjs";
+import { assertPackagePath, auditTree } from "../../tooling/lib/tree-audit.mjs";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const productNames = ["game-design-career", "game-design-studio"];
@@ -235,4 +235,23 @@ test("malformed percent text cannot mask a Windows raw vendor CLI on the same li
     String.raw`echo malformed%ZZ&&node skills\svg-infographic\scripts\render.mjs input.svg output.png` + "\n",
   );
   await assert.rejects(() => auditTree({ root, packageName: "game-design-studio" }), /raw vendor CLI|encoded shell path/i);
+});
+
+test("package paths that collide after NFC and case folding are rejected", () => {
+  const nfc = "references/한글.md".normalize("NFC");
+  const nfd = "references/한글.md".normalize("NFD");
+  assert.notEqual(nfc, nfd, "fixture must use distinct code point sequences");
+
+  const unicodeSeen = new Map();
+  assert.equal(assertPackagePath(nfc, unicodeSeen), nfc);
+  assert.throws(() => assertPackagePath(nfd, unicodeSeen), /collides with/u);
+
+  const caseSeen = new Map();
+  assert.equal(assertPackagePath("skills/demo/SKILL.md", caseSeen), "skills/demo/SKILL.md");
+  assert.throws(() => assertPackagePath("skills/demo/Skill.md", caseSeen), /collides with/u);
+
+  const distinctSeen = new Map();
+  assert.equal(assertPackagePath("a/one.md", distinctSeen), "a/one.md");
+  assert.equal(assertPackagePath("a/two.md", distinctSeen), "a/two.md");
+  assert.equal(distinctSeen.size, 2);
 });

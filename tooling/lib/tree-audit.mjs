@@ -21,6 +21,16 @@ const sharedUpdateIdentityMatchers = new Map([
   ],
 ]);
 
+export function assertPackagePath(relativePath, seenFoldedPaths) {
+  const folded = relativePath.normalize("NFC").toLowerCase();
+  const previous = seenFoldedPaths.get(folded);
+  if (previous !== undefined) {
+    throw new Error(`${relativePath} collides with ${previous} after NFC and case folding`);
+  }
+  seenFoldedPaths.set(folded, relativePath);
+  return relativePath;
+}
+
 function inside(root, candidate) {
   const relative = path.relative(root, candidate);
   return relative === "" || (!relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative));
@@ -228,6 +238,7 @@ export async function auditTree({
   let files = 0;
   let utf8Files = 0;
   const usedInactiveRelativeReferenceTuples = new Set();
+  const seenFoldedPaths = new Map();
 
   async function visit(directory, prefix = "") {
     const entries = await readdir(directory, { withFileTypes: true });
@@ -235,6 +246,7 @@ export async function auditTree({
     for (const entry of entries) {
       const rawRelativePath = prefix ? `${prefix}/${entry.name}` : entry.name;
       const relativePath = normalizeRelativePath(rawRelativePath, `package ${packageName}`);
+      assertPackagePath(relativePath, seenFoldedPaths);
       const entryPath = path.join(directory, entry.name);
       const stats = await lstat(entryPath);
       if (stats.isSymbolicLink()) throw new Error(`${relativePath} is a symlink`);
