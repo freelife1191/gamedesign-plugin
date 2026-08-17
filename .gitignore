@@ -1,4 +1,5 @@
 .omx/
+.claude/
 .superpowers/
 .worktrees/
 .build/
