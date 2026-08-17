@@ -18,6 +18,13 @@ const memorySkills = [
   "maintain-game-design-memory",
   "retrieve-approved-design-memory",
 ];
+// One source for the packaged skill inventory. This used to be the same ternary written at five call
+// sites, which is how it went stale when each product gained an entry skill. Accepts either a bare
+// product name or a stage label that contains one.
+const packagedSkillCounts = Object.freeze({ "game-design-career": 25, "game-design-studio": 26 });
+function packagedSkillCount(product) {
+  return product.includes("studio") ? packagedSkillCounts["game-design-studio"] : packagedSkillCounts["game-design-career"];
+}
 const referenceSkills = ["analyze-game-design-references", "maintain-game-design-glossary"];
 const referenceFiles = [
   "references/shared/reference-intelligence/schema/game-design-glossary.schema.json",
@@ -117,7 +124,7 @@ function runLocalPluginCommand({ codex, cwd, args, env, evidence, stage }) {
   return json;
 }
 
-async function assertMemoryPackage(pluginRoot, product, { expectedSkillCount = product.includes("studio") ? 25 : 24, requireReferenceIntelligence = false } = {}) {
+async function assertMemoryPackage(pluginRoot, product, { expectedSkillCount = packagedSkillCount(product), requireReferenceIntelligence = false } = {}) {
   for (const skill of memorySkills) await lstat(path.join(pluginRoot, "skills", skill, "SKILL.md"));
   for (const required of [
     "references/shared/memory/schema/memory-config.schema.json",
@@ -388,15 +395,15 @@ test("fresh production builds install, replace, and remove without touching loca
 
       try {
         const firstBuild = await buildProduct({ repoRoot, productName: product, stagingRoot: firstStagingRoot, sourceDateEpoch: 0 });
-        await assertMemoryPackage(firstBuild.outputDir, `${product} first production build`, { expectedSkillCount: product === "game-design-studio" ? 25 : 24, requireReferenceIntelligence: true });
+        await assertMemoryPackage(firstBuild.outputDir, `${product} first production build`, { expectedSkillCount: packagedSkillCount(product), requireReferenceIntelligence: true });
         const installed = await installBuiltPlugin({ buildDir: firstBuild.outputDir, codexHome, product });
-        await assertMemoryPackage(installed, `${product} installed production build`, { expectedSkillCount: product === "game-design-studio" ? 25 : 24, requireReferenceIntelligence: true });
+        await assertMemoryPackage(installed, `${product} installed production build`, { expectedSkillCount: packagedSkillCount(product), requireReferenceIntelligence: true });
         await assertPreserved("install");
 
         const replacementBuild = await buildProduct({ repoRoot, productName: product, stagingRoot: replacementStagingRoot, sourceDateEpoch: 0 });
-        await assertMemoryPackage(replacementBuild.outputDir, `${product} replacement production build`, { expectedSkillCount: product === "game-design-studio" ? 25 : 24, requireReferenceIntelligence: true });
+        await assertMemoryPackage(replacementBuild.outputDir, `${product} replacement production build`, { expectedSkillCount: packagedSkillCount(product), requireReferenceIntelligence: true });
         const replaced = await replaceBuiltPlugin({ buildDir: replacementBuild.outputDir, codexHome, product });
-        await assertMemoryPackage(replaced, `${product} replacement install`, { expectedSkillCount: product === "game-design-studio" ? 25 : 24, requireReferenceIntelligence: true });
+        await assertMemoryPackage(replaced, `${product} replacement install`, { expectedSkillCount: packagedSkillCount(product), requireReferenceIntelligence: true });
         await assertPreserved("replace");
 
         await removeInstalledPlugin({ codexHome, product });

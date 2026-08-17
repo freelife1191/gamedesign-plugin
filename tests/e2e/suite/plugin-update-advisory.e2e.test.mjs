@@ -12,8 +12,8 @@ const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const marketplace = "game-design-suite";
 const products = ["game-design-studio", "game-design-career"];
 const expectedInventory = {
-  "game-design-studio": { skills: 25, agents: 12 },
-  "game-design-career": { skills: 24, agents: 10 },
+  "game-design-studio": { skills: 26, agents: 12 },
+  "game-design-career": { skills: 25, agents: 10 },
 };
 const checkedAt = Date.parse("2026-08-15T00:00:00.000Z");
 
