@@ -256,6 +256,33 @@ test("package paths that collide after NFC and case folding are rejected", () =>
   assert.equal(distinctSeen.size, 2);
 });
 
+// String.prototype.toLowerCase() is ECMAScript simple case mapping, which is narrower than the
+// caseless-compare tables NTFS and APFS actually use. Each pair below was written to a real APFS
+// directory and collapsed to a single entry there, so a tree carrying both on a case-sensitive
+// checkout would silently lose one file when a macOS or Windows user installs it. Folding through
+// toUpperCase() first reaches those mappings; the final NFC pass re-composes anything the
+// round trip decomposed. Turkish dotted capital I is the control: the filesystem keeps `İ.md` and
+// `i.md` apart, so the gate must keep them apart too rather than over-rejecting.
+test("package paths that collide on real case-insensitive filesystems are rejected", () => {
+  const collidingPairs = [
+    ["long s", "references/S.md", "references/ſ.md"],
+    ["final sigma", "references/Σ.md", "references/ς.md"],
+    ["lowercase sigma", "references/σ.md", "references/ς.md"],
+    ["eszett", "references/straße.md", "references/STRASSE.md"],
+    ["fi ligature", "references/ﬁle.md", "references/file.md"],
+  ];
+  for (const [label, first, second] of collidingPairs) {
+    const seen = new Map();
+    assert.equal(assertPackagePath(first, seen), first, `${label} first path must be accepted`);
+    assert.throws(() => assertPackagePath(second, seen), /collides with/u, `${label} must be rejected`);
+  }
+
+  const dottedSeen = new Map();
+  assert.equal(assertPackagePath("references/İ.md", dottedSeen), "references/İ.md");
+  assert.equal(assertPackagePath("references/i.md", dottedSeen), "references/i.md");
+  assert.equal(dottedSeen.size, 2, "paths the filesystem keeps distinct must stay distinct");
+});
+
 test("package paths stay inside the length budget", async (t) => {
   assert.equal(MAX_PACKAGE_PATH_LENGTH, 150);
 

@@ -29,7 +29,10 @@ export function assertPackagePath(relativePath, seenFoldedPaths) {
   if (normalized.length > MAX_PACKAGE_PATH_LENGTH) {
     throw new Error(`${relativePath} exceeds the ${MAX_PACKAGE_PATH_LENGTH} character package path budget`);
   }
-  const folded = normalized.toLowerCase();
+  // toLowerCase() alone is ECMAScript simple case mapping, which leaves fold-equivalent pairs
+  // (ſ/S, ς/Σ, ß/SS, ﬁ/fi) distinct even though NTFS and APFS collapse them. Upper-casing first
+  // reaches those mappings; the trailing NFC pass re-composes what the round trip decomposed.
+  const folded = normalized.toUpperCase().toLowerCase().normalize("NFC");
   const previous = seenFoldedPaths.get(folded);
   if (previous !== undefined) {
     throw new Error(`${relativePath} collides with ${previous} after NFC and case folding`);
