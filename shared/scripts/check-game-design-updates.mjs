@@ -23,6 +23,7 @@ const CACHE_KEYS = Object.freeze([
   "components",
   "lastNotifiedAt",
   "lastNotifiedComponents",
+  "suppressedComponents",
 ]);
 const CACHE_COMPONENT_KEYS = Object.freeze(["id", "installedTag", "latestTag", "status", "releaseUrl"]);
 const NOTIFICATION_IDENTITY_KEYS = Object.freeze(["id", "installedTag", "latestTag"]);
@@ -103,24 +104,34 @@ function sameNotificationIdentity(left, right) {
   return Array.isArray(left) && Array.isArray(right) && recordsMatch(left, right);
 }
 
-function notificationFor(advisory, previousIdentity = []) {
+function suppresses(suppressed, component) {
+  return suppressed.some((entry) => entry.id === component.id
+    && entry.installedTag === component.installedTag
+    && entry.latestTag === component.latestTag);
+}
+
+function notificationFor(advisory, previousIdentity = [], suppressed = []) {
   const identity = notificationIdentityFor(advisory);
   if (identity.length === 0 || sameNotificationIdentity(identity, previousIdentity)) return null;
+  // Suppression is scoped to one exact installed and latest pair. A newer release is a new
+  // decision, so it surfaces again rather than inheriting the earlier answer.
+  const announceable = identity.filter((component) => !suppresses(suppressed, component));
+  if (announceable.length === 0) return null;
   return Object.freeze({
     kind: "update-available",
     prompt: "플러그인 업데이트를 확인해 줘",
-    componentIds: Object.freeze(identity.map(({ id }) => id)),
+    componentIds: Object.freeze(announceable.map(({ id }) => id)),
   });
 }
 
-function cacheRecord({ advisory, notification, now, previous }) {
+function cacheRecord({ advisory, notification, now, previous, suppressed = [] }) {
   const identity = notificationIdentityFor(advisory);
   const preserveClaim = notification === null
     && identity.length > 0
     && sameNotificationIdentity(identity, previous?.lastNotifiedComponents)
     && typeof previous?.lastNotifiedAt === "string";
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     checkedAt: advisory.checkedAt,
     status: advisory.status,
     components: advisory.components.map((component) => ({ ...component })),
@@ -128,6 +139,7 @@ function cacheRecord({ advisory, notification, now, previous }) {
     lastNotifiedComponents: notification === null
       ? (preserveClaim ? previous.lastNotifiedComponents.map((component) => ({ ...component })) : [])
       : identity,
+    suppressedComponents: suppressed.map((component) => ({ ...component })),
   };
 }
 
@@ -137,12 +149,17 @@ function recordsMatch(left, right) {
 
 function cacheAdvisory(record, policy, installed, now) {
   if (!hasExactKeys(record, CACHE_KEYS)
-    || record.schemaVersion !== 1
+    || record.schemaVersion !== 2
     || typeof record.checkedAt !== "string"
     || !["current", "outdated"].includes(record.status)
     || !Array.isArray(record.components)
     || !(record.lastNotifiedAt === null || typeof record.lastNotifiedAt === "string")
     || !Array.isArray(record.lastNotifiedComponents)
+    || !Array.isArray(record.suppressedComponents)
+    || !record.suppressedComponents.every((component) => hasExactKeys(component, NOTIFICATION_IDENTITY_KEYS)
+      && typeof component.id === "string"
+      && typeof component.installedTag === "string"
+      && typeof component.latestTag === "string")
     || !record.lastNotifiedComponents.every((component) => hasExactKeys(component, NOTIFICATION_IDENTITY_KEYS)
       && typeof component.id === "string"
       && typeof component.installedTag === "string"
@@ -669,9 +686,9 @@ async function claimFreshNotification({ cachePath, fsOps, policy, installed, now
   try {
     const cached = await readCache({ cachePath, fsOps, policy, installed, now, intervalMs });
     if (!cached.fresh) return null;
-    const notification = notificationFor(cached.advisory, cached.record.lastNotifiedComponents);
+    const notification = notificationFor(cached.advisory, cached.record.lastNotifiedComponents, cached.record.suppressedComponents);
     if (notification === null) return { advisory: cached.advisory, notification: null };
-    const record = cacheRecord({ advisory: cached.advisory, notification, now: iso(now), previous: cached.record });
+    const record = cacheRecord({ advisory: cached.advisory, notification, now: iso(now), previous: cached.record, suppressed: cached.record.suppressedComponents });
     if (!(await publishCache({ cachePath, record, fsOps }))) return null;
     return { advisory: cached.advisory, notification };
   } finally {
@@ -845,7 +862,7 @@ export async function checkGameDesignUpdates({
   }
   const initial = await readCache({ cachePath, fsOps, policy, installed, now, intervalMs });
   if (initial.fresh) {
-    const notification = notificationFor(initial.advisory, initial.record.lastNotifiedComponents);
+    const notification = notificationFor(initial.advisory, initial.record.lastNotifiedComponents, initial.record.suppressedComponents);
     if (notification === null) return publicResult({ advisory: initial.advisory, cache: "hit" });
     const claimed = await claimFreshNotification({ cachePath, fsOps, policy, installed, now, intervalMs, lockLeaseMs });
     return claimed === null
@@ -866,12 +883,12 @@ export async function checkGameDesignUpdates({
     const winner = await waitForCache({ cachePath, fsOps, policy, installed, now, intervalMs });
     return winner === null
       ? unknownResult({ checkedAt, cache: "miss", installed })
-      : publicResult({ advisory: winner.advisory, cache: "hit", notification: notificationFor(winner.advisory, winner.record.lastNotifiedComponents) });
+      : publicResult({ advisory: winner.advisory, cache: "hit", notification: notificationFor(winner.advisory, winner.record.lastNotifiedComponents, winner.record.suppressedComponents) });
   }
 
   try {
     const cached = await readCache({ cachePath, fsOps, policy, installed, now, intervalMs });
-    if (cached.fresh) return publicResult({ advisory: cached.advisory, cache: "hit", notification: notificationFor(cached.advisory, cached.record.lastNotifiedComponents) });
+    if (cached.fresh) return publicResult({ advisory: cached.advisory, cache: "hit", notification: notificationFor(cached.advisory, cached.record.lastNotifiedComponents, cached.record.suppressedComponents) });
     if (cached.state === "unsafe") return unknownResult({ checkedAt, cache: "miss", installed });
     const controller = new AbortController();
     let timeoutId;
@@ -885,8 +902,9 @@ export async function checkGameDesignUpdates({
       const releases = await fetchReleases({ installed, fetchFn, signal: controller.signal, timeout });
       const advisory = evaluateUpdateAdvisory({ policy, installed, releases, checkedAt });
       if (advisory.status === "unknown") return unknownResult({ checkedAt, cache: "miss", installed });
-      const notification = notificationFor(advisory, cached.record?.lastNotifiedComponents ?? []);
-      const record = cacheRecord({ advisory, notification, now: checkedAt, previous: cached.record });
+      const suppressed = cached.record?.suppressedComponents ?? [];
+      const notification = notificationFor(advisory, cached.record?.lastNotifiedComponents ?? [], suppressed);
+      const record = cacheRecord({ advisory, notification, now: checkedAt, previous: cached.record, suppressed });
       if (!(await publishCache({ cachePath, record, fsOps }))) return unknownResult({ checkedAt, cache: "miss", installed });
       return publicResult({ advisory, cache: "miss", notification });
     } catch {

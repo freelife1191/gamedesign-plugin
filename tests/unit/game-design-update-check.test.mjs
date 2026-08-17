@@ -95,9 +95,9 @@ function notificationIdentity({ latestTag = "v2.14.0" } = {}) {
   return [{ id: "archify", installedTag: "v2.13.0", latestTag }];
 }
 
-function cacheValue({ checkedAt = CHECKED_AT, lastNotifiedComponents = [], lastNotifiedAt = null } = {}) {
+function cacheValue({ checkedAt = CHECKED_AT, lastNotifiedComponents = [], lastNotifiedAt = null, suppressedComponents = [] } = {}) {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     checkedAt,
     status: "current",
     components: INSTALLED.map((component) => ({
@@ -109,6 +109,7 @@ function cacheValue({ checkedAt = CHECKED_AT, lastNotifiedComponents = [], lastN
     })),
     lastNotifiedAt,
     lastNotifiedComponents,
+    suppressedComponents,
   };
 }
 
@@ -1258,4 +1259,68 @@ test("publishes cache atomically and leaves prior evidence intact when publicati
   assert.equal(result.status, "unknown");
   assert.equal(await readFile(cachePath, "utf8"), before);
   assert.equal(calls.length, ENDPOINTS.length);
+});
+
+test("a schemaVersion 1 cache is treated as a first run instead of being trusted", async (t) => {
+  // The cache holds regenerable data, so a version bump does not migrate. It rechecks.
+  const { pluginRoot, home } = await fixture(t);
+  await writeCache({ home, value: { ...cacheValue(), schemaVersion: 1 } });
+  const calls = [];
+
+  const result = await checkGameDesignUpdates({
+    pluginRoot,
+    home,
+    now: Date.parse(CHECKED_AT),
+    fetchFn: checkingFetch(calls),
+  });
+
+  assert.equal(calls.length, ENDPOINTS.length, "a version 1 cache must not suppress the network check");
+  assert.equal(result.cache, "miss");
+});
+
+test("a suppressed version combination hides the prompt without hiding the fact", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  await writeCache({
+    home,
+    value: {
+      ...outdatedCacheValue(),
+      suppressedComponents: notificationIdentity(),
+    },
+  });
+  const calls = [];
+
+  const result = await checkGameDesignUpdates({
+    pluginRoot,
+    home,
+    now: Date.parse(CHECKED_AT),
+    fetchFn: checkingFetch(calls),
+  });
+
+  assert.equal(calls.length, 0, "a fresh cache still answers without the network");
+  assert.equal(result.status, "outdated");
+  assert.equal(result.notification, null);
+});
+
+test("suppression does not carry over to a different latest version", async (t) => {
+  const { pluginRoot, home } = await fixture(t);
+  await writeCache({
+    home,
+    value: {
+      ...outdatedCacheValue(),
+      suppressedComponents: notificationIdentity({ latestTag: "v2.14.0" }),
+    },
+  });
+  const calls = [];
+
+  const result = await checkGameDesignUpdates({
+    pluginRoot,
+    home,
+    now: SEVEN_DAYS_LATER,
+    fetchFn: checkingFetch(calls, (url) => url === ENDPOINTS[1]
+      ? response(url, [apiRelease("v2.15.0", "https://github.com/tt-a1i/archify")])
+      : currentResponse(url)),
+  });
+
+  assert.equal(result.status, "outdated");
+  assert.deepEqual(result.notification?.componentIds, ["archify"], "a newer version is a new decision");
 });
