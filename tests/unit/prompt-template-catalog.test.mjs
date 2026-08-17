@@ -11,6 +11,11 @@ import {
 } from "../../tooling/lib/prompt-template-catalog.mjs";
 import { collectProductInventory } from "../../tooling/lib/user-guides.mjs";
 
+// The regex tolerates `**` emphasis around the backticked mode name because bolding the
+// default mode row previously hid it from this extractor and broke the closed-mode-set
+// contract. It also scans the whole document rather than only the mode table, so a future
+// table whose first cell is a backticked lowercase identifier would silently join the
+// closed mode set.
 function imagePolicyModes(markdown) {
   return [...markdown.matchAll(/^\|\s*\**\s*`([a-z][a-z-]*)`\s*\**\s*\|/gmu)]
     .map(([, mode]) => mode)

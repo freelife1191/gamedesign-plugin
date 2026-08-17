@@ -7,6 +7,7 @@ const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 
 function git(args) {
   const result = spawnSync("git", args, { cwd: repoRoot, encoding: "utf8" });
+  if (result.error) throw result.error;
   assert.equal(result.status, 0, result.stderr);
   return result.stdout;
 }

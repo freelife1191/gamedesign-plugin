@@ -3,6 +3,7 @@ import path from "node:path";
 
 import { comparePaths, normalizeRelativePath } from "./paths.mjs";
 
+// ignoreBOM keeps a leading U+FEFF in the decoded text so the BOM gate below can see it.
 const utf8 = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 const relativeReference = /(?:^|[('"`\s])((?:\.\.[/\\])+[^)'"`\s]+)/gu;
 const vendorCliPath = /(?:^|\/)(?:\.claude\/skills\/svg-infographic|\.agents\/skills\/svg-infographic|skills\/svg-infographic)\/scripts\/(?:check-svg|render)\.mjs$/u;
