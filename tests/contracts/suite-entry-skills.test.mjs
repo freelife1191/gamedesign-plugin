@@ -133,3 +133,58 @@ test("the ambiguous-scope trigger moved to the Studio entry skill and left the o
   const triggers = /\n## Triggers\n([\s\S]*?)\n## /u.exec(entry)[1];
   assert.match(triggers, /ambiguous/u, "the entry Triggers list must carry the moved trigger");
 });
+
+// 영수증은 새 포맷을 만들지 않는다. 기계 검증은 이미 있는 route-receipt.json이 담당하고, 나머지
+// 여섯 항목은 사람이 읽는 블록으로 같은 메시지에 실린다. 항목이 하나라도 사라지면 사용자는 어떤
+// 스킬이 무엇을 근거로 골랐는지 확인할 방법을 잃는다.
+const RECEIPT_ITEMS = Object.freeze([
+  "the owning product",
+  "the actual skill or orchestrator ID that was selected",
+  "whether a cross-product handoff is required",
+  "the artifact paths that will be created or updated",
+  "current facts, assumptions, and blockers",
+  "the next step that needs a human decision",
+]);
+
+test("the routing receipt names every item the user needs before work starts", async () => {
+  for (const { product } of ENTRY_SKILLS) {
+    const skill = await entrySkill(product);
+    const section = skill.slice(skill.indexOf("## Routing receipt"), skill.indexOf("## Cross-product handoff"));
+    for (const item of RECEIPT_ITEMS) {
+      assert.ok(section.includes(item), `${product}: receipt is missing "${item}"`);
+    }
+  }
+});
+
+test("the entry skill preserves the three fields the route receipt already owns", async () => {
+  for (const { product } of ENTRY_SKILLS) {
+    const skill = await entrySkill(product);
+    for (const field of ["schemaVersion", "requestSha256", "bindingNonce"]) {
+      assert.match(skill, new RegExp(`\`${field}\``, "u"), `${product}: must preserve ${field}`);
+    }
+    assert.match(skill, /fill `routeId` with the id of a route that exists/u, product);
+  }
+});
+
+// 사례 ID를 스킬 ID처럼 넘기는 것이 이 진입점의 가장 쉬운 실수다. 존재하지 않는 ID를 이웃 사례로
+// 추측하는 것이 두 번째다. 둘 다 본문에 금지로 남아 있어야 한다.
+test("a case ID is resolved through the catalog and never guessed", async () => {
+  const examples = { "game-design-studio": "ST-G04", "game-design-career": "CA-C07" };
+  for (const { product } of ENTRY_SKILLS) {
+    const skill = await entrySkill(product);
+    const section = skill.slice(skill.indexOf("## Case ID resolution"), skill.indexOf("## Routing receipt"));
+    assert.ok(section.includes(examples[product]), `${product}: must show a real case ID`);
+    assert.match(section, /is not a runtime skill ID/u, product);
+    assert.match(section, /do not guess/iu, product);
+    assert.match(section, /ask once|fall back to normal natural-language routing/u, product);
+  }
+});
+
+test("automatic routing is never described as automatic approval", async () => {
+  for (const { product } of ENTRY_SKILLS) {
+    const skill = await entrySkill(product);
+    assert.match(skill, /Automatic routing is not automatic approval/u, product);
+    assert.doesNotMatch(skill, /auto[- ]?approve/iu, product);
+    assert.match(skill, /Never relax a specialist skill's approval, evidence, or safety rule/u, product);
+  }
+});
