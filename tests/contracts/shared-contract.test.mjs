@@ -145,7 +145,7 @@ async function validateDiscoveredProducts({ sourceRoot, stagingRoot, referenceIn
   for (const productName of productNames) {
     if (!productLanes.has(productName)) throw new Error(`Unexpected product contract: products/${productName}/product.json`);
     const product = await loadProductContract({ repoRoot: sourceRoot, productName });
-    assert.deepEqual(product.sharedModules, ["knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets", "memory", "reference-intelligence", "updates", "suite-update-skill"]);
+    assert.deepEqual(product.sharedModules, ["knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets", "memory", "reference-intelligence", "updates", "suite-update-skill", "suite-handoff"]);
     assert.equal(product.sharedRuntime, true);
     assert.deepEqual(product.sourceRoots, ["plugin"]);
     assert.deepEqual(product.sourceDocumentCategories, sourceDocumentCategories);
@@ -411,7 +411,7 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
   const selectableFixture = {
     ...fixtureProduct,
     name: "game-design-studio",
-    sharedModules: [...fixtureProduct.sharedModules, "archify", "im-not-ai", "document-quality", "image-assets", "memory", "reference-intelligence", "updates", "suite-update-skill"],
+    sharedModules: [...fixtureProduct.sharedModules, "archify", "im-not-ai", "document-quality", "image-assets", "memory", "reference-intelligence", "updates", "suite-update-skill", "suite-handoff"],
     sourceDocumentCategories,
   };
   delete selectableFixture.sourceDocuments;

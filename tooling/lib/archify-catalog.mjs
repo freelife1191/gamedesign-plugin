@@ -106,6 +106,20 @@ const SHARED_PACKAGE_MIRROR_MAPPINGS = Object.freeze([
     sourceRoot: "shared/suite-update/skills/upgrade-game-design-suite",
     destinationRoot: "skills/upgrade-game-design-suite",
   }),
+  // One shared source, one destination per product: the entry skill ID equals the product name, so
+  // the two destinations stay disjoint and the prefix match below picks exactly one of them.
+  Object.freeze({
+    id: "suite-handoff",
+    module: "suite-handoff",
+    sourceRoot: "shared/suite-handoff/references",
+    destinationRoot: "skills/game-design-studio/references",
+  }),
+  Object.freeze({
+    id: "suite-handoff",
+    module: "suite-handoff",
+    sourceRoot: "shared/suite-handoff/references",
+    destinationRoot: "skills/game-design-career/references",
+  }),
   Object.freeze({
     id: "studio-cutscene-skill",
     module: null,

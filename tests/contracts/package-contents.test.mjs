@@ -240,6 +240,16 @@ test("generated snapshots contain the exact clean product build plus the suite m
         } else if (relativePath === "scripts/lib/update-advisory.mjs") {
           const source = bytes.toString("utf8");
           assert.ok(source.includes('policy.productIds[0] !== "game-design-studio"') && source.includes('policy.productIds[1] !== "game-design-career"'), `${productName}: update advisory validates the exact suite products`);
+        } else if (relativePath === `skills/${productName}/references/handoff.md`) {
+          // The handoff contract is byte-identical in both packages, so it necessarily names the
+          // sibling. It may do so only as a quoted product id; strip that form and the ordinary
+          // sibling rule still judges the rest, so a prose mention here fails exactly as elsewhere.
+          const sibling = productName === "game-design-studio" ? "game-design-career" : "game-design-studio";
+          assert.doesNotMatch(
+            bytes.toString("utf8").replaceAll(`"${sibling}"`, ""),
+            new RegExp(sibling, "u"),
+            `${productName}: handoff contract may name the sibling only as a quoted product id`,
+          );
         } else {
           assert.doesNotMatch(bytes.toString("utf8"), new RegExp(productName === "game-design-studio" ? "game-design-career" : "game-design-studio", "u"), `${productName}: sibling reference ${relativePath}`);
         }

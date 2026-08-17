@@ -33,6 +33,14 @@ const staticSharedMappings = {
   // references/shared/updates, so a skills subdirectory there would also ship as a duplicate tree.
   "suite-update-skill": [["shared/suite-update/skills", "skills"]],
 };
+// 인계 계약은 두 제품에서 동일 바이트여야 하지만 목적지는 제품마다 다르다. 대표 스킬 ID가 제품
+// 이름과 같으므로 목적지를 이름에서 계산할 수 있고, 그래서 소스를 하나만 둔다.
+function suiteHandoffMappings(productName) {
+  return { "suite-handoff": [["shared/suite-handoff/references", `skills/${productName}/references`]] };
+}
+const sharedSuiteHandoffInventory = Object.freeze({
+  "shared/suite-handoff/references": Object.freeze(["handoff.md"]),
+});
 const sharedSuiteUpdateInventory = Object.freeze({
   "shared/suite-update/skills": Object.freeze([
     "upgrade-game-design-suite/SKILL.md",
@@ -443,6 +451,15 @@ function assertExactSharedSuiteUpdateInventory(sourceRelative, entries) {
   }
 }
 
+function assertExactSharedSuiteHandoffInventory(sourceRelative, entries) {
+  const expected = sharedSuiteHandoffInventory[sourceRelative];
+  if (!expected) throw new Error(`Unknown shared suite-handoff package root: ${sourceRelative}`);
+  const actual = entries.map(({ relativePath }) => relativePath).sort(comparePaths);
+  if (actual.length !== expected.length || actual.some((relativePath, index) => relativePath !== expected[index])) {
+    throw new Error(`Unexpected shared suite-handoff package file in ${sourceRelative}`);
+  }
+}
+
 function assertExactSharedReferenceIntelligenceInventory(sourceRelative, entries) {
   const expected = sharedReferenceIntelligenceInventory[sourceRelative];
   if (!expected) throw new Error(`Unknown shared reference-intelligence package root: ${sourceRelative}`);
@@ -500,7 +517,11 @@ export async function buildProduct({ repoRoot, productName, stagingRoot, staging
   });
   const product = await loadProductContract({ repoRoot: absoluteRepoRoot, productName });
   const productRoot = path.join(absoluteRepoRoot, "products", productName);
-  const sharedMappings = { ...staticSharedMappings, ...vendorMappings({ repoRoot: absoluteRepoRoot }) };
+  const sharedMappings = {
+    ...staticSharedMappings,
+    ...vendorMappings({ repoRoot: absoluteRepoRoot }),
+    ...suiteHandoffMappings(productName),
+  };
   const targets = new Map();
 
   for (const moduleName of product.sharedModules) {
@@ -512,6 +533,7 @@ export async function buildProduct({ repoRoot, productName, stagingRoot, staging
       if (moduleName === "memory") assertExactSharedMemoryInventory(sourceRelative, entries);
       if (moduleName === "reference-intelligence") assertExactSharedReferenceIntelligenceInventory(sourceRelative, entries);
       if (moduleName === "suite-update-skill") assertExactSharedSuiteUpdateInventory(sourceRelative, entries);
+      if (moduleName === "suite-handoff") assertExactSharedSuiteHandoffInventory(sourceRelative, entries);
       moduleEntries.push(...entries);
       for (const entry of entries) addEntry(targets, entry, destinationPrefix, `shared:${moduleName}`);
     }

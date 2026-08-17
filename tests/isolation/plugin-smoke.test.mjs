@@ -17,7 +17,7 @@ test("each generated plugin passes a standalone byte- and process-verified smoke
   const report = await runIsolationSmoke({ repoRoot });
   assert.deepEqual(report.map(({ name }) => name), products);
   for (const result of report) {
-    assert.equal(result.skillCount, result.name === "game-design-studio" ? 25 : 24);
+    assert.equal(result.skillCount, result.name === "game-design-studio" ? 26 : 25);
     assert.deepEqual(result.vendorFiles, [
       { name: "skillstead", files: 55 },
       { name: "archify", files: 62 },
@@ -55,6 +55,18 @@ for (const [label, mutate, expected] of [
   ["sibling package string", async ({ pluginRoot, productName }) => {
     const sibling = products.find((name) => name !== productName);
     await writeFile(path.join(pluginRoot, "SIBLING.txt"), `${sibling}\n`);
+  }, /references sibling package/u],
+  // The identity matcher lets the handoff contract name the sibling as a quoted product id. These two
+  // rows pin that exemption to the quoted form and to the contract's own path, so widening it later
+  // cannot go unnoticed.
+  ["unquoted sibling id inside the handoff contract", async ({ pluginRoot, productName }) => {
+    const sibling = products.find((name) => name !== productName);
+    const target = path.join(pluginRoot, `skills/${productName}/references/handoff.md`);
+    await writeFile(target, `${await readFile(target, "utf8")}\n${sibling} 제품에 직접 넘긴다.\n`);
+  }, /references sibling package/u],
+  ["quoted sibling id outside the handoff contract", async ({ pluginRoot, productName }) => {
+    const sibling = products.find((name) => name !== productName);
+    await writeFile(path.join(pluginRoot, "QUOTED-SIBLING.txt"), `"${sibling}"\n`);
   }, /references sibling package/u],
   ["vendored byte", async ({ pluginRoot }) => {
     const target = path.join(pluginRoot, "skills/svg-infographic/SKILL.md");

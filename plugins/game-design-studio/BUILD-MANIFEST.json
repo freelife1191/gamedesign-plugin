@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "2013bcfb30a63f89c9237a01f479245bcb0c9e1322fec43da639b017198e89da",
+  "treeSha256": "0854abd6a66afc8cf20cbb768bd4fa1f68ba017c5d27fd2197881d1420a3ded8",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -2273,6 +2273,11 @@
       "path": "skills/game-design-studio/SKILL.md",
       "sha256": "63f8052fc746ec08666cf8f64d1f56d4e06a7157aa43c0e811ad29b8296a4063",
       "size": 4316
+    },
+    {
+      "path": "skills/game-design-studio/references/handoff.md",
+      "sha256": "2d4d4498f98905c1611dfd03c5acb3f621a9e3bf357df9079342d2ba068df69d",
+      "size": 3053
     },
     {
       "path": "skills/generate-image-assets/SKILL.md",

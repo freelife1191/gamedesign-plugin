@@ -12531,6 +12531,46 @@
       "visual_review": "not-applicable"
     },
     {
+      "id": "excluded-3f6a1c84d20e",
+      "product": "studio",
+      "source_document": "plugins/game-design-studio/skills/game-design-studio/references/handoff.md",
+      "source_section": "Suite Handoff Contract",
+      "source_digest": "2d4d4498f98905c1611dfd03c5acb3f621a9e3bf357df9079342d2ba068df69d",
+      "origin_source": {
+        "source_document": "shared/suite-handoff/references/handoff.md",
+        "build_mapping": "suite-handoff"
+      },
+      "decision": "excluded",
+      "exclusion_code": "excluded-package-mirror",
+      "decision_reason": "“Suite Handoff Contract”는 요청·반환 봉투 키와 인계 규칙을 담은 공유 build mapping reference mirror다. 봉투 키 목록과 소유·공급 구분은 원문을 그대로 읽어야 한다.",
+      "diagnostics": [],
+      "spec": null,
+      "html": null,
+      "receipt": null,
+      "delivery_status": "not-applicable",
+      "visual_review": "not-applicable"
+    },
+    {
+      "id": "excluded-b52d97e1a4c3",
+      "product": "career",
+      "source_document": "plugins/game-design-career/skills/game-design-career/references/handoff.md",
+      "source_section": "Suite Handoff Contract",
+      "source_digest": "2d4d4498f98905c1611dfd03c5acb3f621a9e3bf357df9079342d2ba068df69d",
+      "origin_source": {
+        "source_document": "shared/suite-handoff/references/handoff.md",
+        "build_mapping": "suite-handoff"
+      },
+      "decision": "excluded",
+      "exclusion_code": "excluded-package-mirror",
+      "decision_reason": "“Suite Handoff Contract”는 요청·반환 봉투 키와 인계 규칙을 담은 공유 build mapping reference mirror다. 봉투 키 목록과 소유·공급 구분은 원문을 그대로 읽어야 한다.",
+      "diagnostics": [],
+      "spec": null,
+      "html": null,
+      "receipt": null,
+      "delivery_status": "not-applicable",
+      "visual_review": "not-applicable"
+    },
+    {
       "id": "excluded-6fcf6e4fafb9",
       "product": "career",
       "source_document": "plugins/game-design-career/skills/game-design-career/SKILL.md",

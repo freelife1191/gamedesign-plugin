@@ -45,7 +45,7 @@ function assertNoRepeatedGenericReasonTemplates(entries) {
 }
 
 function assertSuiteCatalogCardinality(catalog) {
-  assert.equal(catalog.entries.length, 757, "catalog must retain exactly 757 entries");
+  assert.equal(catalog.entries.length, 759, "catalog must retain exactly 759 entries");
   assert.equal(
     catalog.entries.filter((entry) => entry.source_document === "README.md").length,
     1,
@@ -261,7 +261,7 @@ test("production exclusions retain exact package classes and source-specific evi
 test("production shared package mirrors retain structured build origins", async () => {
   const catalog = await loadArchifyCatalog({ repoRoot });
   const origins = catalog.entries.filter((entry) => Object.hasOwn(entry, "origin_source"));
-  assert.equal(origins.length, 93, "shared and product-source package mirrors declare an origin_source");
+  assert.equal(origins.length, 95, "shared and product-source package mirrors declare an origin_source");
 
   const mappings = new Map([
     ["document-quality", ["shared/document-quality", "references/shared/document-quality"]],
@@ -279,6 +279,8 @@ test("production shared package mirrors retain structured build origins", async 
       ? (entry.source_document.includes("/references/shared/memory/")
         ? ["shared/memory", "references/shared/memory"]
         : ["shared/memory/skills", "skills"])
+      : entry.origin_source.build_mapping === "suite-handoff"
+        ? ["shared/suite-handoff/references", `skills/game-design-${entry.product}/references`]
       : (entry.origin_source.build_mapping === "reference-intelligence" && entry.source_document.includes("/skills/"))
         ? ["shared/reference-intelligence/skills", "skills"]
       : (mappings.get(entry.origin_source.build_mapping) ?? []);
@@ -459,10 +461,10 @@ test("Suite catalog cardinality rejects an appended record or duplicate README r
   const catalog = await loadArchifyCatalog({ repoRoot });
   const appended = structuredClone(catalog);
   appended.entries.push({ ...appended.entries[0], id: "unexpected-758th-record", source_document: "guides/README.md" });
-  assert.throws(() => assertSuiteCatalogCardinality(appended), /757/u);
+  assert.throws(() => assertSuiteCatalogCardinality(appended), /759/u);
   const duplicateReadme = structuredClone(catalog);
   duplicateReadme.entries.push({ ...duplicateReadme.entries[0], id: "duplicate-readme-record" });
-  assert.throws(() => assertSuiteCatalogCardinality(duplicateReadme), /757/u);
+  assert.throws(() => assertSuiteCatalogCardinality(duplicateReadme), /759/u);
   duplicateReadme.entries.pop();
   duplicateReadme.entries[1] = { ...duplicateReadme.entries[1], source_document: "README.md" };
   assert.throws(() => assertSuiteCatalogCardinality(duplicateReadme), /exactly one catalog record/u);

@@ -16,7 +16,8 @@
     "memory",
     "reference-intelligence",
     "updates",
-    "suite-update-skill"
+    "suite-update-skill",
+    "suite-handoff"
   ],
   "sharedRuntime": true,
   "sourceRoots": [

@@ -7,7 +7,10 @@ import { comparePaths, normalizeRelativePath } from "./paths.mjs";
 const utf8 = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 const relativeReference = /(?:^|[('"`\s])((?:\.\.[/\\])+[^)'"`\s]+)/gu;
 const vendorCliPath = /(?:^|\/)(?:\.claude\/skills\/svg-infographic|\.agents\/skills\/svg-infographic|skills\/svg-infographic)\/scripts\/(?:check-svg|render)\.mjs$/u;
-const sharedUpdateIdentityMatchers = new Map([
+// Exact package-relative path to a regex whose matches are stripped before the sibling check, for the
+// few shared files that must legitimately declare both product IDs. Each matcher stays as narrow as the
+// declaration it permits, so any other mention of the sibling in the same file still fails the gate.
+const sharedIdentityMatchers = new Map([
   [
     "references/shared/updates/update-policy.json",
     /"productIds":\s*\[\s*"game-design-studio",\s*"game-design-career"\s*\]/u,
@@ -20,6 +23,8 @@ const sharedUpdateIdentityMatchers = new Map([
     "scripts/inspect-game-design-plugin-updates.mjs",
     /const PLUGINS = new Set\(\["game-design-studio", "game-design-career"\]\);/u,
   ],
+  ["skills/game-design-studio/references/handoff.md", /"game-design-(?:studio|career)"/gu],
+  ["skills/game-design-career/references/handoff.md", /"game-design-(?:studio|career)"/gu],
 ]);
 
 export const MAX_PACKAGE_PATH_LENGTH = 150;
@@ -194,7 +199,7 @@ function containsRawVendorCli(text) {
 }
 
 function assertTextIsSafe({ text, relativePath, packageRoot, siblingNames, forbiddenAbsolutePaths, inactiveRelativeReferenceTuples, usedInactiveRelativeReferenceTuples }) {
-  const identityMatcher = sharedUpdateIdentityMatchers.get(relativePath);
+  const identityMatcher = sharedIdentityMatchers.get(relativePath);
   const siblingCheckedText = identityMatcher ? text.replace(identityMatcher, "") : text;
   for (const sibling of siblingNames) {
     if (relativePath.includes(sibling) || siblingCheckedText.includes(sibling)) {

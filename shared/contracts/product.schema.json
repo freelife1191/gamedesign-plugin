@@ -25,7 +25,7 @@
       "type": "array",
       "uniqueItems": true,
       "items": {
-        "enum": ["knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets", "memory", "reference-intelligence", "updates", "suite-update-skill"]
+        "enum": ["knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets", "memory", "reference-intelligence", "updates", "suite-update-skill", "suite-handoff"]
       }
     },
     "sharedRuntime": { "const": true },
