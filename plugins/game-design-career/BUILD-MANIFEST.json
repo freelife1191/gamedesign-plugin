@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-career",
   "sourceDateEpoch": 0,
-  "treeSha256": "b2e8bff4964c8f252d45d39741681ee6880b6e4d583e226cd079bf333d8968d4",
+  "treeSha256": "8fff479761b0470c1583c9dfe3b1917e6555ab118d1cd0a10973d534f5e50277",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -2196,8 +2196,8 @@
     },
     {
       "path": "skills/game-design-career/SKILL.md",
-      "sha256": "d2850691ee383551a502665f37c24d7931dbe514ab4ff680da674d0473f06f25",
-      "size": 4337
+      "sha256": "922f158399f5f495f0b20002396afa8cb7d64587b4bc720be273b69ac3acf859",
+      "size": 4313
     },
     {
       "path": "skills/generate-image-assets/SKILL.md",

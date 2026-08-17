@@ -39,7 +39,7 @@ Record five fields before routing: the desired final result, the materials the u
 
 - One clear result: route straight to the specialist skill that owns it.
 - Mixed, broad, or ambiguous: delegate to `orchestrate-game-design-career`.
-- Needs Studio evidence: this product stays the owner when it produces the final artifact, which is the usual case for career work. Read [handoff.md](references/handoff.md) before starting either direction.
+- Needs Studio evidence: this product stays the owner when it produces the final artifact, which is the usual case for career work. Read `references/handoff.md` before starting either direction.
 
 Route only to a skill listed in [routing.json](../../references/routing.json) `skillIds`. A skill that is not in that list is not installed.
 
@@ -62,7 +62,7 @@ When the workspace carries a `route-receipt.json`, keep its `schemaVersion`, `re
 
 ## Cross-product handoff
 
-One request carries at most one handoff, and only the owner starts it. The supplier returns the requested evidence and nothing else: it does not conclude, approve, or start a handoff of its own. Re-check returned evidence against this product's own rules before using it. Read [handoff.md](references/handoff.md) for the request and return envelopes and for what to do when the other product is not installed.
+One request carries at most one handoff, and only the owner starts it. The supplier returns the requested evidence and nothing else: it does not conclude, approve, or start a handoff of its own. Re-check returned evidence against this product's own rules before using it. Read `references/handoff.md` for the request and return envelopes and for what to do when the other product is not installed.
 
 ## Operating rules
 
