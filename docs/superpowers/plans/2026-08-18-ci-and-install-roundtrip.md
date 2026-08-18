@@ -808,6 +808,18 @@ Expected: `EXIT=0`, `Suite release readiness: COMPLETE`
 
 ---
 
+## 실제 결말
+
+Step 5의 기대는 4레인이었으나 3레인으로 끝났습니다. 계획이 틀렸다기보다, 계획이 알 수 없던 것을 CI가 알려준 결과입니다.
+
+다섯 라운드 동안 CI는 macOS에서 단 하나도 보이지 않던 결함 열한 개를 드러냈습니다. Windows spawn 실패 둘(`npm.cmd`, `codex.cmd`), Linux 고유 동작 둘(inode 재사용, Node 버전에 따라 갈리는 이벤트 루프 종료), 호스트 의존 공백 셋(Archify 호스트 CLI, PNG 래스터, isolation smoke의 내장 검증기), 진단 가능성 결함 하나(과도한 redaction), 행 가시성 결함 하나(파일당 천장 부재), 그리고 그 천장을 너무 낮게 잡아 정상적으로 느린 파일을 잘라낸 후속 결함 하나입니다.
+
+Windows 오프라인 레인은 만들어 돌린 뒤 의도적으로 뺐습니다. 실패 272건 중 77건이 출하 코드 결함(`load-workspace-env`의 `O_NOFOLLOW` 거부, `safe-memory-store`의 디렉터리 fsync)이고, 이는 하드닝 원시 함수 재설계라는 별도 작업입니다. 근거는 `.github/workflows/ci.yml`의 해당 레인 위, `architecture/plugin-suite.md`의 부류별 표, 그리고 레인별 매트릭스를 각각 읽는 `tests/unit/ci-workflow.test.mjs` 세 곳에 남겼습니다. 스펙 D절이 요구하는 Windows 계약 — Windows checkout과 설치가 다른 플랫폼과 같은 바이트를 만든다 — 은 설치 게이트가 Windows에서 매 실행마다 증명합니다.
+
+최종 상태는 `offline-gate (ubuntu-latest)`, `install-gate (ubuntu-latest)`, `install-gate (windows-latest)` 세 레인 성공입니다.
+
+---
+
 ## Self-Review
 
 **스펙 커버리지**
