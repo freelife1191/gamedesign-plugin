@@ -31,45 +31,60 @@
 - 루트 README의 스킬 표 3종(직접 스킬 빠른 참조, Studio 설치 스킬 26개, Career 설치 스킬 25개)에는 대표 진입 스킬 2개와 `upgrade-game-design-suite`가 이미 들어 있다. README 표 갱신은 남은 일이 아니다.
 - `products/*/plugin/references/routing.json`의 `skillIds`와 `plannedPaths.skills`에도 세 스킬이 모두 들어 있다. routing 갱신은 남은 일이 아니다.
 - `guides/prompt-templates/catalog/studio-entry.json`과 `career-entry.json`에 대표 진입 스킬 요청문 3단계(beginner·standard·advanced)가 이미 있다.
+- 루트 README `## 5분 안에 첫 결과 만들기`는 이미 `@Game Design Studio`·`@Game Design Career` 대표 진입으로 시작한다. 스펙 "첫 요청" 항목은 충족돼 있다. 남은 것은 설치 절과 업데이트 절이다.
+- 두 제품 `troubleshooting.md`는 이미 App 표면과 CLI 표면을 열로 구분하고 `$<product>:<skill>` 요청문을 싣는다. 스펙의 "문제 해결 가이드에서 App·CLI 구분"은 충족돼 있다. BOM 진단 행만 없다.
 - `guides/game-design-studio/skills/game-design-studio.md`와 `guides/game-design-career/skills/game-design-career.md`가 이미 있고, 각각 `### 직접 호출 활용 — <skill-id>` 절을 가진다. 다만 그 절의 도식이 오케스트레이터 도식을 빌려 쓰고 있고("대표 진입은 이 흐름의 앞단"), 요청문이 CLI `$` 한 표면만 보여 준다.
-- `guides/assets/diagram-manifest.json`에 shared 도식 8개가 있고 그중 `app-cli-install-flow`가 설치 도식이다. 인계 도식과 업데이트 승인 도식은 없다.
+- 두 대표 진입 스킬 가이드는 "이 스킬이 만드는 파일은 없습니다"라고 적는다(`game-design-studio.md:79`, `game-design-career.md:79`). 위임된 스킬의 Artifact를 읽고 `route-receipt.json`의 `routeId`만 채운다.
+- `tests/contracts/user-guide-use-case-manifest.test.mjs:41-42`의 `DIRECT_USE_EXCLUDED_SKILL_IDS`는 `game-design-studio`, `game-design-career`, `upgrade-game-design-suite`를 직접 사용 사례에서 제외하며 그 근거를 주석으로 남긴다. 같은 파일 2683줄은 skill case 목록이 `routing.json`의 `skillIds` 순서와 정확히 같아야 한다고 요구한다.
+- 스킬 도식의 출력 경로는 `guides/use-cases/use-case-manifest.json`의 `skill_cases`에서만 나온다(`tooling/build-use-case-diagrams.mjs:127`). 이 매니페스트에 항목이 없으면 빌더가 `expected exactly one explicit manifest output` 오류로 멈춘다.
+- `guides/assets/diagram-manifest.json`은 어떤 빌더도 쓰지 않는다. 손으로 편집하고 `tooling/lib/user-guides.mjs:1342`와 `tooling/lib/use-case-guides.mjs:323`이 검증만 한다.
+- 도식 개수는 다섯 곳에 상수로 박혀 있다. `tooling/lib/use-case-guides.mjs:21-30`의 `DIAGRAM_EXPECTED_SCOPE_COUNTS`(`shared: 8`), `tooling/lib/user-guides.mjs:1363`의 `20 + registered`, `tests/contracts/user-guide-shared-diagrams.test.mjs:10-19`의 `expectedSharedIds`와 같은 파일 39줄의 테스트 이름("eight"), `tests/contracts/user-guide-career-diagrams.test.mjs:539`의 `93`, `tests/contracts/user-guide-use-case-manifest.test.mjs:2033-2034`의 `svg: 93`·`png: 93`과 2058줄의 `shared: 8`이다.
 - 스킬 도식은 Studio 16개(`st-s01`~`st-s16`), Career 15개(`ca-s01`~`ca-s15`)이며 대표 진입 스킬 2개의 도식은 없다.
-- `tooling/lib/studio-diagram-production-contract.mjs`와 `career-diagram-production-contract.mjs`는 ID 집합을 `assertExactIds`로 닫아 둔다. 도식을 추가하려면 contract 표를 함께 늘려야 한다.
+- `guides/assets/diagram-manifest.json`에 shared 도식 8개가 있고 그중 `app-cli-install-flow`가 설치 도식이다. 인계 도식과 업데이트 승인 도식은 없다.
 - 루트 README의 사례 카드 18개는 `guides/prompt-templates/catalog/*.json`의 `app_prompt.template`·`cli_prompt.template`에 문자열 단위로 묶여 있다(`tests/contracts/root-readme-user-guides.test.mjs`의 `assertPromptCard`).
-- 버전 문자열이 손으로 박혀 있는 곳은 `products/*/plugin/.codex-plugin/plugin.json` 2곳, `tooling/marketplace-smoke.mjs`의 `RELEASE_PLUGIN_VERSION`, `tooling/isolation-smoke.mjs`의 매니페스트 비교, `shared/updates/suite-release.lock.json`, 그리고 이 값들을 고정한 유닛 테스트다.
-- `shared/updates/installed-components.json`의 `commit` 필드는 40자 hex 형식만 검사받는다. 최신 판정은 `installedTag`로만 한다.
+- 사례 그룹 도입부 계약(`assertReadableCaseGroupIntroductions`)은 `startsWith`로 검사한다. 기존 두 문장을 그대로 두고 그 뒤에 문단을 더하는 것은 허용된다.
+- 연계 사례의 실제 카탈로그 ID는 `suite:studio-to-career-handoff:case` 형태다. `SUITE-01` 같은 짧은 ID는 없다. Studio·Career 사례는 `ST-C01`·`CA-C01` 형태다.
+- 대표 진입 스킬은 사례 ID를 실제로 해석한다. `products/*/plugin/skills/<entry>/SKILL.md`가 "case ID such as `ST-G04` is not a runtime skill ID … Look the ID up in the prompt template catalog"로 규정한다.
+- 버전 문자열이 손으로 박혀 있는 곳은 `products/*/plugin/.codex-plugin/plugin.json` 2곳, `tooling/marketplace-smoke.mjs`의 `RELEASE_PLUGIN_VERSION`, `tooling/isolation-smoke.mjs`의 매니페스트 비교, `shared/updates/suite-release.lock.json`, 그리고 이 값들을 고정한 유닛·e2e 테스트다. `0.1.1`은 테스트 11개 파일에 나오지만 그중 상당수는 임의 fixture 값이라 옮길 필요가 없다. Task 6 Step 1의 grep이 실제 대상을 가른다.
+- `shared/updates/installed-components.json`의 `commit` 필드는 40자 hex 형식만 검사받는다(`shared/scripts/check-game-design-updates.mjs:829`). 최신 판정은 `installedTag`로만 한다.
 
 ## 판단 기록
 
 착수 전에 정한 것이다. 구현 중에 다시 논의하지 않는다.
 
-- **`upgrade-game-design-suite`에는 스킬 도식도 prompt-template 카탈로그 엔트리도 만들지 않는다.** 이 스킬은 설계 산출물을 만들지 않고 설치 상태를 바꾼다. 같은 성격의 번들 스킬(`archify`, `humanize-korean`, 기억 스킬 3종, `maintain-game-design-glossary`)도 둘 다 갖고 있지 않다. 이 스킬의 흐름은 Task 5가 만드는 설치·업데이트 도식이 대신 담는다. 이 문단이 그 근거이며, 스펙의 "신규 스킬마다" 목록에서 이 두 항목만 의도적으로 비운다.
+- **대표 진입 스킬 도식은 shared scope 손그림 도식 한 장으로 만든다. `skill_cases`에는 넣지 않는다.** 스킬 도식 경로를 쓰려면 `use-case-manifest.json`의 `skill_cases`에 항목을 넣어야 하는데, 그 목록은 `DIRECT_USE_EXCLUDED_SKILL_IDS`가 대표 진입 스킬을 "자기 산출물을 만들지 않고 언제나 다른 스킬로 위임하므로 직접 사용 사례가 없다"는 이유로 이미 닫아 뒀다. 두 가이드 본문도 "이 스킬이 만드는 파일은 없습니다"라고 적는다. 스킬 도식 경로를 억지로 열면 `outputs`에 없는 산출물을 선언하게 되고, `skillIds` 순서 계약과 frozen 계약 배열 두 개를 함께 흔들어야 한다. 대신 두 제품이 함께 쓰는 `suite-entry-routing-flow` 한 장을 shared로 만들어 두 가이드에 싣는다. 스펙이 요구하는 "전용 도식"은 충족되고 직접 사용 사례 계약은 그대로 닫혀 있다.
+- **`upgrade-game-design-suite`에는 스킬 도식도 prompt-template 카탈로그 엔트리도 만들지 않는다.** 이 스킬은 설계 산출물을 만들지 않고 설치 상태를 바꾼다. `DIRECT_USE_EXCLUDED_SKILL_IDS`가 같은 근거로 이미 제외했고, 같은 성격의 번들 스킬(`archify`, `humanize-korean`, 기억 스킬 3종, `maintain-game-design-glossary`)도 둘 다 갖고 있지 않다. 이 스킬의 흐름은 Task 4가 만드는 업데이트 승인 도식이 대신 담는다. 스펙의 "신규 스킬마다" 목록에서 이 두 항목만 의도적으로 비운다.
 - **사례 카드 18개의 요청문 fence는 건드리지 않는다.** 스펙이 요구하는 "대표 진입 스킬이 catalog를 해석한다는 설명과 실제 CLI 호출"은 사례 그룹 도입부 3곳에 둔다. 같은 두 줄을 18번 복제하면 읽는 사람이 얻는 정보는 늘지 않고 계약 표면만 18배가 된다. 카드 fence는 `cli_prompt.template`에 문자열로 묶여 있어 한 줄만 넣어도 카탈로그 161개 엔트리와 생성 가이드가 함께 흔들린다.
-- **`suite-release.lock.json`의 `commit`은 릴리스 내용이 확정된 마지막 커밋을 가리킨다.** 파일이 제 커밋 해시를 담을 수는 없다. `installedTag`만 최신 판정에 쓰이고 `commit`은 형식 검사만 받으므로, 태그가 붙을 커밋의 부모(= 이 계획의 내용 작업이 끝난 커밋)를 기록하고 그 뜻을 파일 옆 문서에 남긴다.
+- **`suite-release.lock.json`의 `commit`은 릴리스 내용이 확정된 마지막 커밋을 가리킨다.** 파일이 제 커밋 해시를 담을 수는 없다. `installedTag`만 최신 판정에 쓰이고 `commit`은 형식 검사만 받으므로, 태그가 붙을 커밋의 부모(= 이 계획의 내용 작업이 끝난 커밋)를 기록한다. 같은 파일의 다른 구성 요소는 `commit`이 태그가 가리키는 실제 커밋이므로 열의 뜻이 갈린다. 그 차이를 `architecture/plugin-suite.md`에 적는다.
 
 ## File Structure
 
 | 파일 | 책임 | 상태 |
 | --- | --- | --- |
 | `README.md` | 설치·업데이트 진입 경로를 Git 마켓플레이스와 업그레이드 스킬 기준으로 안내. 사례 그룹 도입부에서 대표 진입 스킬의 사례 ID 해석을 설명 | 수정 |
-| `guides/game-design-studio/installation.md`, `guides/game-design-career/installation.md` | Git 마켓플레이스를 1순위 설치·업데이트 경로로 제시 | 수정 |
+| `guides/game-design-studio/installation.md`, `guides/game-design-career/installation.md` | Git 마켓플레이스를 1순위 설치·업데이트 경로로 제시, UTF-8 preflight, 업데이트 도식 삽입 | 수정 |
 | `products/game-design-studio/plugin/README.md`, `products/game-design-career/plugin/README.md` | 설치 패키지 안에서 읽는 설치·업데이트 절을 같은 순서로 정렬 | 수정 |
-| `guides/game-design-studio/skills/game-design-studio.md`, `guides/game-design-career/skills/game-design-career.md` | App `@`/CLI `$` 요청문 쌍, 전용 도식 삽입 | 수정 |
-| `guides/assets/use-case-diagram-sources.json` | 대표 진입 스킬 도식 원본 2개 추가 (`st-s17`, `ca-s16`) | 수정 |
-| `tooling/lib/studio-diagram-production-contract.mjs`, `tooling/lib/career-diagram-production-contract.mjs` | 새 도식 2개의 의미 계약 | 수정 |
-| `guides/assets/game-design-studio/skills/game-design-studio.svg`/`.png`, `guides/assets/game-design-career/skills/game-design-career.svg`/`.png` | 대표 진입 스킬 도식 산출물 | 생성 (빌더 출력) |
+| `guides/game-design-studio/skills/game-design-studio.md`, `guides/game-design-career/skills/game-design-career.md` | App `@`/CLI `$` 요청문 쌍, 대표 진입 도식으로 교체 | 수정 |
+| `guides/assets/shared/suite-entry-routing-flow.svg`/`.png` | 대표 진입 라우팅 도식 | 생성 |
 | `guides/assets/shared/suite-handoff-ownership-flow.svg`/`.png` | Studio ↔ Career 단방향 인계 도식 | 생성 |
-| `guides/assets/shared/app-cli-install-flow.svg`/`.png` | 설치 도식에 UTF-8 preflight와 마켓플레이스 종류 추가 | 수정 |
 | `guides/assets/shared/suite-update-approval-flow.svg`/`.png` | 업데이트 승인·재설치·검증·새 세션 도식 | 생성 |
-| `guides/assets/diagram-manifest.json` | 새 shared 도식 2개 등록, 변경분 `usedBy` 갱신 | 수정 |
+| `guides/assets/shared/app-cli-install-flow.svg`/`.png` | 설치 도식에 UTF-8 preflight와 마켓플레이스 종류 추가 | 수정 |
+| `guides/assets/diagram-manifest.json` | 새 shared 도식 3개 등록, `app-cli-install-flow`의 `alt` 갱신. 손으로 편집한다 | 수정 |
+| `tooling/lib/use-case-guides.mjs` | `DIAGRAM_EXPECTED_SCOPE_COUNTS.shared` 8 → 11 | 수정 |
+| `tooling/lib/user-guides.mjs` | `expectedDiagramTotal`의 고정 항 20 → 23 | 수정 |
+| `tests/contracts/user-guide-shared-diagrams.test.mjs` | `expectedSharedIds` 3개 추가, 테스트 이름 갱신, 새 도식 3개의 의미 계약 | 수정 |
+| `tests/contracts/user-guide-career-diagrams.test.mjs` | 전체 도식 수 93 → 96 | 수정 |
+| `tests/contracts/user-guide-use-case-manifest.test.mjs` | `svg`·`png` 93 → 96, `shared` 8 → 11 | 수정 |
 | `guides/assets/VISUAL-QA.md` | 새·변경 도식의 렌더 검수 기록 | 수정 |
+| `shared/suite-handoff/references/` 인계 계약 문서 | 인계 도식 삽입 | 수정 |
 | `products/*/plugin/.codex-plugin/plugin.json` | 버전 `0.2.0` | 수정 |
 | `shared/updates/suite-release.lock.json` | `installedTag` `v0.2.0`, `commit` 갱신 | 수정 |
 | `shared/updates/installed-components.json`, `plugins/**` | 생성물. 빌더로만 갱신 | 재생성 |
 | `tooling/marketplace-smoke.mjs`, `tooling/isolation-smoke.mjs` | 릴리스 버전 상수 | 수정 |
 | `tests/contracts/root-readme-user-guides.test.mjs` | 사례 그룹 도입부 계약 | 수정 |
-| `tests/unit/marketplace-smoke.test.mjs`, `tests/unit/installed-suite-products.test.mjs`, `tests/unit/capability-probe.test.mjs`, `tests/unit/game-design-update-check.test.mjs`, `tests/unit/generate-update-manifest.test.mjs` | 버전 고정값 | 수정 |
-| `architecture/plugin-suite.md` | 릴리스 절차와 도식 목록 | 수정 |
+| 버전 고정값을 가진 유닛·e2e 테스트 | Task 6 Step 1의 grep이 실제 대상을 가른다 | 수정 |
+| `guides/archify-diagrams/catalog.json` | 새 소스가 필요하면 | 수정 |
+| `architecture/plugin-suite.md` | 릴리스 절차, 도식 목록, `commit` 열의 뜻 | 수정 |
 
 ---
 
@@ -267,11 +282,14 @@ $game-design-studio:game-design-studio ST-C01
 
 문단에 담을 내용: 사례 ID는 제작용 요청문 카탈로그의 키다. 대표 진입 스킬에 ID만 넘겨도 카탈로그를 읽어 실행 경로 하나와 라우팅 영수증으로 바꾼다. 카드의 전문 스킬 호출은 같은 경로를 손으로 고정할 때 쓴다.
 
-Career 그룹은 `$game-design-career:game-design-career CA-C01`, 연계 그룹은 `$game-design-studio:game-design-studio SUITE-01`이 아니라 실제 카탈로그 ID를 쓴다. 연계 사례의 실제 ID는 아래로 확인한다.
+Career 그룹은 `$game-design-career:game-design-career CA-C01`을 쓴다. 연계 그룹의 실제 카탈로그 ID는 `suite:studio-to-career-handoff:case` 형태다. `SUITE-01` 같은 짧은 ID는 없으므로 README 카드의 `data-prompt-id`와 같은 문자열을 그대로 쓴다. 아래로 다시 확인한다.
 
 ```bash
 python3 -c "import json;print([e['id'] for e in json.load(open('guides/prompt-templates/catalog/suite.json'))])"
+grep -o 'data-prompt-id="suite:[^"]*"' README.md | head -4
 ```
+
+기대: 두 출력의 ID가 같다.
 
 - [ ] **Step 5: 대표 진입 스킬 가이드 2개에 App 요청문을 짝지어 넣는다**
 
@@ -301,168 +319,91 @@ git commit -m "docs: show that the entry skill resolves a case ID, on both surfa
 
 ---
 
-### Task 4: 대표 진입 스킬 도식 2개를 만든다
+### Task 4: shared 도식 3개를 신설하고 설치 도식을 스펙이 요구하는 단계까지 늘린다
 
-두 가이드가 오케스트레이터 도식을 빌려 쓰고 있다. 대표 진입은 오케스트레이터의 앞단이지 같은 흐름이 아니다. 라우팅 영수증, 소유 제품 판정, 전문 스킬 위임, 인계 후보 분리가 보이는 자기 도식을 만든다.
+스펙이 명시로 요구하는 도식 셋을 한 태스크로 묶는다. 개수 상수가 다섯 곳에 박혀 있어 도식을 하나씩 나눠 넣으면 중간 상태가 전부 실패하기 때문이다.
 
-**Files:**
-- Modify: `guides/assets/use-case-diagram-sources.json` (`st-s17`, `ca-s16` 추가)
-- Modify: `tooling/lib/studio-diagram-production-contract.mjs`, `tooling/lib/career-diagram-production-contract.mjs`
-- Modify: `guides/assets/diagram-manifest.json` (빌더가 갱신)
-- Modify: `guides/game-design-studio/skills/game-design-studio.md`, `guides/game-design-career/skills/game-design-career.md` (도식 교체)
-- Create: `guides/assets/game-design-studio/skills/game-design-studio.svg`/`.png`, `guides/assets/game-design-career/skills/game-design-career.svg`/`.png` (빌더 출력)
-- Test: `tests/contracts/` 도식 계약 (`npm run check:guide-diagrams`가 부르는 전부)
-
-**Interfaces:**
-- Consumes: `products/*/plugin/references/routing.json`의 `skillIds` — `next_routes`의 모든 대상이 이 목록에 있어야 한다.
-- Produces: 도식 ID `st-s17`, `ca-s16`. Task 6의 snapshot 재생성이 이 산출물을 담는다.
-
-- [ ] **Step 1: 기존 항목을 본으로 읽는다**
-
-```bash
-python3 -c "
-import json
-d=json.load(open('guides/assets/use-case-diagram-sources.json'))
-print(json.dumps([e for e in d if e['id'] in ('st-s09','ca-s06')],ensure_ascii=False,indent=2))
-"
-grep -n '\"st-s16\"' tooling/lib/studio-diagram-production-contract.mjs
-grep -n '\"ca-s15\"' tooling/lib/career-diagram-production-contract.mjs
-```
-
-기대: Studio 원본은 `semantic`에 `skill`·`outputs`·`next_routes`·`required_input`만 두고, Career 원본은 `trigger`·`owned_work`·`reviewer`·`boundary`·`failure`·`preserve`·`human_confirmation`·`resume`·`next_condition`·`next_routes` 배열까지 요구한다는 차이가 보인다.
-
-- [ ] **Step 2: 실패를 먼저 만든다 — contract 표에 항목을 추가한다**
-
-`tooling/lib/studio-diagram-production-contract.mjs`의 `STUDIO_DIAGRAM_PRODUCTION_CONTRACT`에 다음을 추가한다.
-
-```js
-  "st-s17": { kind: "skill", skill: "game-design-studio", trigger: ["진입 trigger", "소유가 불분명한 요청을 받습니다."], requiredInput: "자연어 요청 + 가진 자료", outputs: ["route-receipt", "canonical-artifact"], nextRoutes: ["orchestrate-game-design-project", "define-game-vision", "design-game-systems", "design-game-content", "design-player-experience", "design-game-economy-and-liveops", "plan-game-production", "review-game-design", "visualize-game-design", "export-game-design-documents"], nextCondition: "요청이 Career 소유일 때 단방향 인계 후보로 분리", routeIds: [] },
-```
-
-`tooling/lib/career-diagram-production-contract.mjs`의 표에 다음 행을 추가한다.
-
-```js
-  ["ca-s16", "대표 진입 라우팅", "게임 기획 커리어 대표 진입 직접 호출 흐름", "game-design-career", "소유가 불분명한 요청", "자연어 요청과 가진 자료", "요청 정규화·route 선택", ["route-receipt", "career-stage-goal"], "career-strategist", "route를 추측해 여러 개로 넘기지 않고 하나만 고름", "요청 소유 제품이 불명확", "요청 원문과 미정 항목", "decision owner가 선택된 route를 확인", "선택된 route에서 재개", "선택 route가 Career 스킬 하나로 좁혀졌을 때만", [["여러 stage가 얽힐 때", "orchestrate-game-design-career"], ["역할 비교가 필요할 때", "map-game-design-career"], ["공고 근거가 필요할 때", "research-game-design-jobs"], ["포트폴리오가 목표일 때", "build-game-design-portfolio"], ["관찰 자료가 출발점일 때", "reverse-engineer-game-design"], ["면접 준비일 때", "practice-game-design-interview"], ["기존 포트폴리오 검토일 때", "review-game-design-portfolio"], ["성장 계획일 때", "plan-junior-growth"], ["시각화가 목표일 때", "visualize-career-roadmap"], ["내보내기가 목표일 때", "export-career-documents"]]],
-```
-
-- [ ] **Step 3: 검사를 돌려 실패를 확인한다**
-
-```bash
-npm run check:guide-diagrams
-```
-
-기대: FAIL. `Studio production source IDs` 또는 `Career production source IDs`에서 `st-s17`/`ca-s16`이 원본에 없다고 멈춘다.
-
-- [ ] **Step 4: 원본 JSON 항목 2개를 넣는다**
-
-`guides/assets/use-case-diagram-sources.json`에 Step 2의 계약과 정확히 맞는 항목을 추가한다. Studio 항목:
-
-```json
-{
-  "id": "st-s17",
-  "scope": "game-design-studio-skill",
-  "title": "대표 진입 라우팅",
-  "description": "소유가 불분명한 요청을 소유 제품 하나와 실행 경로 하나로 좁힙니다.",
-  "alt": "게임 기획 대표 진입 직접 호출 흐름",
-  "type": "skill-flow",
-  "eyebrow": "ST-S17 · SKILL",
-  "conclusion": "선택한 route와 근거를 라우팅 영수증에 남기고, Career 소유 요청은 단방향 인계 후보로만 분리합니다.",
-  "steps": [
-    { "stage": "trigger", "label": "진입 trigger", "detail": "소유가 불분명한 요청을 받습니다." },
-    { "stage": "필수 입력", "label": "요청·가진 자료", "detail": "필수 값을 둡니다." },
-    { "stage": "skill-owned work", "label": "요청 정규화와 route 선택", "detail": "작업 경계를 수행합니다." },
-    { "stage": "output", "label": "라우팅 영수증", "detail": "정확한 ID를 남깁니다." },
-    { "stage": "next route", "label": "전문 스킬 위임", "detail": "조건부 handoff입니다." }
-  ],
-  "source_paths": ["guides/game-design-studio/skills/game-design-studio.md"],
-  "used_by": ["guides/game-design-studio/skills/game-design-studio.md"],
-  "semantic": {
-    "skill": "game-design-studio",
-    "outputs": ["route-receipt", "canonical-artifact"],
-    "next_routes": ["orchestrate-game-design-project", "define-game-vision", "design-game-systems", "design-game-content", "design-player-experience", "design-game-economy-and-liveops", "plan-game-production", "review-game-design", "visualize-game-design", "export-game-design-documents"],
-    "required_input": "자연어 요청 + 가진 자료"
-  }
-}
-```
-
-Career 항목은 `ca-s06`의 구조를 그대로 따르되 `id`를 `ca-s16`, `anchor`를 `직접-호출-활용-game-design-career`, `scope`를 `game-design-career-skill`로 두고 `semantic`의 각 값을 Step 2의 계약 행과 문자열 단위로 일치시킨다.
-
-- [ ] **Step 5: 도식을 생성하고 검사한다**
-
-```bash
-npm run build:guide-diagrams
-npm run check:guide-diagrams
-```
-
-기대: SVG·PNG가 생성되고 검사가 통과한다. PNG 렌더에는 Chrome이 필요하다. 실패하면 계약 값과 원본 `semantic` 값의 문자열 차이를 먼저 본다.
-
-- [ ] **Step 6: 두 가이드의 빌린 도식을 교체한다**
-
-`guides/game-design-studio/skills/game-design-studio.md`의 이미지 줄을 아래로 바꾼다.
-
-```markdown
-[![게임 기획 대표 진입 직접 호출 흐름](../../assets/game-design-studio/skills/game-design-studio.png)](../../assets/game-design-studio/skills/game-design-studio.svg)
-```
-
-Career 가이드도 같은 형태로 자기 도식을 가리키게 한다.
-
-- [ ] **Step 7: 도식 계약과 링크를 확인한다**
-
-```bash
-npm run check:guide-diagrams
-node tooling/index-references.mjs --check
-node --test tests/contracts/user-guides-studio.test.mjs tests/contracts/user-guides-career.test.mjs
-```
-
-기대: 전부 통과.
-
-- [ ] **Step 8: 커밋**
-
-```bash
-git add guides/assets/use-case-diagram-sources.json guides/assets/diagram-manifest.json tooling/lib/studio-diagram-production-contract.mjs tooling/lib/career-diagram-production-contract.mjs guides/assets/game-design-studio/skills/game-design-studio.svg guides/assets/game-design-studio/skills/game-design-studio.png guides/assets/game-design-career/skills/game-design-career.svg guides/assets/game-design-career/skills/game-design-career.png guides/game-design-studio/skills/game-design-studio.md guides/game-design-career/skills/game-design-career.md
-git commit -m "docs: give each entry skill its own routing diagram instead of borrowing the orchestrator's"
-```
-
----
-
-### Task 5: 인계 도식을 신설하고 설치·업데이트 도식을 스펙이 요구하는 단계까지 늘린다
-
-스펙이 명시로 요구하는 두 도식이다. 인계 도식에는 최종 owner, supplier evidence, 단방향 반환이 보여야 한다. 설치·업데이트 도식에는 UTF-8 preflight, 마켓플레이스 종류, 사용자 승인, `plugin add`, 검증, 새 세션 재개가 보여야 한다. 한 장에 여섯 단계를 다 넣으면 1400×900 canvas에서 읽히지 않으므로, 기존 `app-cli-install-flow`에 UTF-8 preflight와 마켓플레이스 종류를 더하고 승인·재설치·검증·새 세션은 새 도식으로 뺀다.
+- **대표 진입 라우팅**(`suite-entry-routing-flow`) — 두 가이드가 빌려 쓰는 오케스트레이터 도식을 대체한다. 판단 기록대로 skill 도식이 아니라 shared 도식이다.
+- **단방향 인계**(`suite-handoff-ownership-flow`) — 최종 owner, supplier evidence, 단방향 반환이 보여야 한다.
+- **업데이트 승인**(`suite-update-approval-flow`) — 사용자 승인, `plugin add`, 검증, 새 세션 재개가 보여야 한다.
+- **설치 도식 확장**(`app-cli-install-flow`) — UTF-8 preflight와 마켓플레이스 종류를 더한다. 승인·재설치·검증·새 세션까지 한 장에 넣으면 1400×900에서 읽히지 않으므로 새 도식으로 뺐다.
 
 **Files:**
-- Create: `guides/assets/shared/suite-handoff-ownership-flow.svg`, `guides/assets/shared/suite-handoff-ownership-flow.png`
-- Create: `guides/assets/shared/suite-update-approval-flow.svg`, `guides/assets/shared/suite-update-approval-flow.png`
-- Modify: `guides/assets/shared/app-cli-install-flow.svg`, `guides/assets/shared/app-cli-install-flow.png`
-- Modify: `guides/assets/diagram-manifest.json`
-- Modify: `guides/assets/VISUAL-QA.md`
-- Modify: `shared/suite-handoff/references/` 아래 인계 계약 문서(도식 삽입), `guides/game-design-studio/installation.md`, `guides/game-design-career/installation.md` (업데이트 도식 삽입)
-- Test: `tests/contracts/` 도식 매니페스트 계약
+- Create: `guides/assets/shared/suite-entry-routing-flow.svg`/`.png`, `guides/assets/shared/suite-handoff-ownership-flow.svg`/`.png`, `guides/assets/shared/suite-update-approval-flow.svg`/`.png`
+- Modify: `guides/assets/shared/app-cli-install-flow.svg`/`.png`
+- Modify: `guides/assets/diagram-manifest.json`, `guides/assets/VISUAL-QA.md`
+- Modify: `tooling/lib/use-case-guides.mjs`, `tooling/lib/user-guides.mjs`
+- Modify: `tests/contracts/user-guide-shared-diagrams.test.mjs`, `tests/contracts/user-guide-career-diagrams.test.mjs`, `tests/contracts/user-guide-use-case-manifest.test.mjs`
+- Modify: `shared/suite-handoff/references/` 아래 인계 계약 문서, `guides/game-design-studio/installation.md`, `guides/game-design-career/installation.md`, `guides/game-design-studio/skills/game-design-studio.md`, `guides/game-design-career/skills/game-design-career.md`
 
 **Interfaces:**
 - Consumes: Task 3이 정한 표현(라우팅 영수증, 단방향 인계). 인계 도식의 용어는 `shared/suite-handoff/references`의 계약 용어와 같아야 한다.
-- Produces: 도식 ID `suite-handoff-ownership-flow`, `suite-update-approval-flow`
+- Produces: 도식 ID `suite-entry-routing-flow`, `suite-handoff-ownership-flow`, `suite-update-approval-flow`
 
 - [ ] **Step 1: 계약 용어를 원문에서 가져온다**
 
 ```bash
 ls shared/suite-handoff/references/
-grep -n "owner\|supplier\|반환\|단방향" shared/suite-handoff/references/*.md | head -30
+grep -rn "owner\|supplier\|반환\|단방향" shared/suite-handoff/handoff.md shared/suite-handoff/references/*.md | head -30
 ```
 
 기대: 최종 owner, supplier evidence, 단방향 반환의 정확한 표기가 나온다. 도식 label은 이 표기를 그대로 쓴다. 새 용어를 만들지 않는다.
 
-- [ ] **Step 2: 기존 shared SVG의 형식을 읽는다**
+- [ ] **Step 2: 기존 shared SVG의 규격을 읽는다**
 
 ```bash
-head -40 guides/assets/shared/app-cli-install-flow.svg
-grep -n "viewBox\|aria-label" guides/assets/shared/app-cli-install-flow.svg | head
+grep -n "viewBox\|<title>\|<desc>\|aria-label" guides/assets/shared/app-cli-install-flow.svg | head
 ```
 
-기대: `viewBox="0 0 1400 900"`과 `aria-label="읽기 순서 …"` group이 보인다. 새 도식은 같은 규격을 따른다.
+기대: `viewBox="0 0 1400 900"`, `<svg>`의 직계 자식 `<title>`·`<desc>`, `aria-label="읽기 순서 …"` group이 보인다. 새 도식은 같은 규격을 따른다. `tests/contracts/user-guide-shared-diagrams.test.mjs`가 title/desc를 정규식으로 강제한다.
 
-- [ ] **Step 3: 인계 도식 SVG를 쓴다**
+- [ ] **Step 3: 실패를 먼저 만든다 — 개수 상수와 ID 목록을 늘린다**
 
-`guides/assets/shared/suite-handoff-ownership-flow.svg`를 만든다. 담을 것:
+다섯 곳을 함께 고친다.
+
+```bash
+python3 - <<'EOF'
+import pathlib, re
+edits = [
+    ("tooling/lib/use-case-guides.mjs", "  shared: 8,", "  shared: 11,"),
+    ("tooling/lib/user-guides.mjs", "const expectedDiagramTotal = 20 + registered;", "const expectedDiagramTotal = 23 + registered;"),
+    ("tests/contracts/user-guide-career-diagrams.test.mjs", 'manifest.diagrams.length, 93,', 'manifest.diagrams.length, 96,'),
+    ("tests/contracts/user-guide-use-case-manifest.test.mjs", "    svg: 93,", "    svg: 96,"),
+    ("tests/contracts/user-guide-use-case-manifest.test.mjs", "    png: 93,", "    png: 96,"),
+    ("tests/contracts/user-guide-use-case-manifest.test.mjs", "    shared: 8,", "    shared: 11,"),
+]
+for filename, old, new in edits:
+    p = pathlib.Path(filename)
+    text = p.read_text(encoding="utf8")
+    assert text.count(old) == 1, (filename, old, text.count(old))
+    p.write_text(text.replace(old, new), encoding="utf8")
+EOF
+```
+
+`tests/contracts/user-guide-shared-diagrams.test.mjs`의 `expectedSharedIds`에 세 ID를 정렬 순서에 맞게 넣고(`app-cli-install-flow` 다음이 `canonical-artifact-lifecycle`이므로 `suite-*` 셋은 `project-memory-reuse-flow` 뒤), 테스트 이름의 `eight`를 `eleven`으로 바꾼다.
+
+- [ ] **Step 4: 검사를 돌려 실패를 확인한다**
+
+```bash
+node --test tests/contracts/user-guide-shared-diagrams.test.mjs 2>&1 | tail -20
+```
+
+기대: FAIL. `expectedSharedIds` 비교에서 세 ID가 missing으로 나온다. 이것이 도식을 만들라는 게이트다.
+
+- [ ] **Step 5: 대표 진입 라우팅 도식을 쓴다**
+
+`guides/assets/shared/suite-entry-routing-flow.svg`. 담을 것:
+
+- 자연어 요청 또는 사례 ID 도착
+- 요청 정규화와 소유 제품 판정(Studio / Career)
+- route 하나 선택. 여러 개로 넘기지 않는다
+- `route-receipt.json`의 `routeId`만 채운다. 이 스킬은 자기 파일을 만들지 않는다
+- 전문 스킬 위임
+- 상대 제품 소유일 때는 단방향 인계 후보로만 분리하고 인계 도식으로 넘긴다
+
+- [ ] **Step 6: 인계 도식을 쓴다**
+
+`guides/assets/shared/suite-handoff-ownership-flow.svg`. 담을 것:
 
 - 요청 도착 → 소유 제품 판정 → 최종 owner 확정
 - supplier 제품이 근거만 제공하는 경로와 그 근거의 출처 표시
@@ -470,35 +411,76 @@ grep -n "viewBox\|aria-label" guides/assets/shared/app-cli-install-flow.svg | he
 - 상대 제품이 없거나 비활성일 때 blocker를 남기고 멈춘다
 - 사람 승인 gate
 
-- [ ] **Step 4: 설치 도식을 늘리고 업데이트 도식을 쓴다**
+- [ ] **Step 7: 설치 도식을 늘리고 업데이트 도식을 쓴다**
 
-`app-cli-install-flow.svg`에 두 단계를 더한다. 하나는 UTF-8 preflight(BOM 있는 marketplace JSON이 로딩을 막는다), 하나는 마켓플레이스 종류 분기(Git 마켓플레이스와 로컬 마켓플레이스의 갱신 방법이 다르다).
+`app-cli-install-flow.svg`에 두 단계를 더한다. 하나는 UTF-8 preflight(BOM 있는 marketplace JSON이 `codex plugin list` 로딩을 막는다), 하나는 마켓플레이스 종류 분기(Git 마켓플레이스와 로컬 마켓플레이스의 갱신 방법이 다르다).
 
 `guides/assets/shared/suite-update-approval-flow.svg`를 새로 만든다. 담을 것: 업데이트 알림 → `upgrade-game-design-suite` 검사(설치를 바꾸지 않음) → 사용자 승인 gate → `codex plugin add` → 검증 → 새 채팅·새 세션 재개.
 
-- [ ] **Step 5: lint와 2× 렌더를 돌린다**
+- [ ] **Step 8: lint와 2× 렌더를 돌린다**
 
 ```bash
 WRAP=products/game-design-studio/plugin/skills/visualize-game-design/scripts/run-skillstead.mjs
-node "$WRAP" lint guides/assets/shared/suite-handoff-ownership-flow.svg guides/assets/shared/suite-update-approval-flow.svg guides/assets/shared/app-cli-install-flow.svg
-node "$WRAP" render guides/assets/shared/suite-handoff-ownership-flow.svg guides/assets/shared/suite-handoff-ownership-flow.png
-node "$WRAP" render guides/assets/shared/suite-update-approval-flow.svg guides/assets/shared/suite-update-approval-flow.png
-node "$WRAP" render guides/assets/shared/app-cli-install-flow.svg guides/assets/shared/app-cli-install-flow.png
+node "$WRAP" lint guides/assets/shared/suite-entry-routing-flow.svg guides/assets/shared/suite-handoff-ownership-flow.svg guides/assets/shared/suite-update-approval-flow.svg guides/assets/shared/app-cli-install-flow.svg
+for id in suite-entry-routing-flow suite-handoff-ownership-flow suite-update-approval-flow app-cli-install-flow; do
+  node "$WRAP" render "guides/assets/shared/$id.svg" "guides/assets/shared/$id.png"
+done
 ```
 
 기대: lint 오류 0건, 경고 0건. PNG는 정확히 2800×1800.
 
-- [ ] **Step 6: 매니페스트에 등록하고 문서에 삽입한다**
+- [ ] **Step 9: 매니페스트에 등록하고 문서에 삽입한다**
 
-`guides/assets/diagram-manifest.json`의 `diagrams` 배열에 `scope: "shared"` 항목 2개를 넣는다. 기존 shared 항목과 같은 키(`id`, `scope`, `svg`, `png`, `alt`, `sources`, `usedBy`)를 쓰고, `sources`와 `usedBy`는 실제로 그 도식을 싣는 문서를 가리켜야 한다. `app-cli-install-flow`의 `alt`도 늘어난 단계를 반영해 고친다. 그다음 인계 도식을 인계 계약 문서에, 업데이트 도식을 두 설치 가이드의 `## 업데이트` 절에 삽입한다.
+`guides/assets/diagram-manifest.json`의 `diagrams` 배열에 `scope: "shared"` 항목 3개를 손으로 넣는다. 기존 shared 항목과 같은 키(`id`, `scope`, `svg`, `png`, `alt`, `sources`, `usedBy`)를 쓰고 `svg`는 정확히 `shared/<id>.svg`, `png`는 `shared/<id>.png`여야 한다. `sources`와 `usedBy`의 모든 경로는 실재하는 일반 파일이어야 한다(심볼릭 링크 불가). `app-cli-install-flow`의 `alt`도 늘어난 단계를 반영해 고친다.
 
-- [ ] **Step 7: 검수 기록을 남긴다**
+그다음 도식을 문서에 싣는다. 대표 진입 도식은 두 대표 진입 스킬 가이드의 `### 직접 호출 활용` 절에서 빌려 쓰던 오케스트레이터 도식을 대체한다.
 
-`guides/assets/VISUAL-QA.md`의 표에 새 도식 2개 행을 추가하고 `app-cli-install-flow` 행을 갱신한다. 전체 보기와 원본 해상도에서 각각 확인한 결과(tofu, 텍스트 넘침, 잘린 glyph, containment 실패 없음)와 읽기 순서 일치를 적는다. 실제로 이미지를 열어 확인한 뒤 적는다. 보지 않고 적지 않는다.
+```markdown
+[![Studio와 Career 대표 진입 라우팅 흐름](../../assets/shared/suite-entry-routing-flow.png)](../../assets/shared/suite-entry-routing-flow.svg)
+```
 
-- [ ] **Step 8: 검사를 돌린다**
+인계 도식은 인계 계약 문서에, 업데이트 도식은 두 설치 가이드의 `## 업데이트` 절에 넣는다. 링크 형태는 `](<png>)](<svg>)`를 유지한다. 계약 테스트가 이 형태를 문자열로 검사한다.
+
+- [ ] **Step 10: 새 도식 3개의 의미 계약을 테스트로 고정한다**
+
+`tests/contracts/user-guide-shared-diagrams.test.mjs`에 기존 도식들과 같은 방식으로 테스트를 더한다. 각 도식의 SVG 본문에 스펙이 요구하는 요소가 실제로 있는지 문자열로 검사한다.
+
+```js
+test("entry routing diagram shows one route, the receipt, and the one-way handoff candidate", async () => {
+  const svg = await readFile(path.join(root, "guides/assets/shared/suite-entry-routing-flow.svg"), "utf8");
+  for (const phrase of ["route-receipt.json", "단방향", "소유 제품"]) {
+    assert.match(svg, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "u"), phrase);
+  }
+  // 대표 진입 스킬은 자기 파일을 만들지 않는다. 도식이 산출물을 약속하면 가이드 본문과 어긋난다.
+  assert.doesNotMatch(svg, /자동 적용|승인 없이/u);
+});
+
+test("handoff diagram names the final owner, the supplier evidence, and the one-way return", async () => {
+  const svg = await readFile(path.join(root, "guides/assets/shared/suite-handoff-ownership-flow.svg"), "utf8");
+  for (const phrase of ["최종 owner", "supplier", "단방향 반환", "blocker"]) {
+    assert.match(svg, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "u"), phrase);
+  }
+});
+
+test("update diagram gates every install change behind a named human approval", async () => {
+  const svg = await readFile(path.join(root, "guides/assets/shared/suite-update-approval-flow.svg"), "utf8");
+  for (const phrase of ["upgrade-game-design-suite", "사용자 승인", "codex plugin add", "새 세션"]) {
+    assert.match(svg, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "u"), phrase);
+  }
+  // 검사 단계는 설치를 바꾸지 않는다. 도식이 자동 적용을 암시하면 스펙의 금지 동작을 어긴다.
+  assert.doesNotMatch(svg, /자동 업데이트|자동 적용/u);
+});
+```
+
+- [ ] **Step 11: 검수 기록을 남긴다**
+
+`guides/assets/VISUAL-QA.md`의 표에 새 도식 3개 행을 추가하고 `app-cli-install-flow` 행을 갱신한다. 전체 보기와 원본 해상도에서 각각 확인한 결과(tofu, 텍스트 넘침, 잘린 glyph, containment 실패 없음)와 읽기 순서 일치를 적는다. 실제로 이미지를 열어 확인한 뒤 적는다. 보지 않고 적지 않는다.
+
+- [ ] **Step 12: 검사를 돌린다**
 
 ```bash
+node --test tests/contracts/user-guide-shared-diagrams.test.mjs tests/contracts/user-guide-career-diagrams.test.mjs tests/contracts/user-guide-use-case-manifest.test.mjs
+npm run validate:guides
 npm run check:guide-diagrams
 node tooling/index-references.mjs --check
 node tooling/audit-evidence.mjs --check
@@ -506,18 +488,18 @@ node tooling/audit-evidence.mjs --check
 
 기대: 전부 통과.
 
-- [ ] **Step 9: 커밋**
+- [ ] **Step 13: 커밋**
 
 ```bash
-git add guides/assets/shared guides/assets/diagram-manifest.json guides/assets/VISUAL-QA.md shared/suite-handoff/references guides/game-design-studio/installation.md guides/game-design-career/installation.md
-git commit -m "docs: draw the one-way handoff and the approval-gated update path"
+git add guides/assets/shared guides/assets/diagram-manifest.json guides/assets/VISUAL-QA.md tooling/lib/use-case-guides.mjs tooling/lib/user-guides.mjs tests/contracts shared/suite-handoff guides/game-design-studio guides/game-design-career
+git commit -m "docs: draw the entry routing, the one-way handoff, and the approval-gated update path"
 ```
 
 ---
 
-### Task 6: snapshot, BUILD-MANIFEST, Archify catalog를 재생성하고 재검수한다
+### Task 5: snapshot, BUILD-MANIFEST, Archify catalog를 재생성하고 재검수한다
 
-Task 1~5가 `products/**`와 `shared/**`를 바꿨다. 두 설치 패키지 snapshot과 매니페스트는 생성물이므로 빌더로 다시 만들고, Archify 소스 카탈로그가 새 문서와 도식을 아는지 확인한다.
+Task 1~4가 `products/**`와 `shared/**`를 바꿨다. 두 설치 패키지 snapshot과 매니페스트는 생성물이므로 빌더로 다시 만들고, Archify 소스 카탈로그가 새 문서와 도식을 아는지 확인한다.
 
 **Files:**
 - Regenerate: `plugins/game-design-studio/**`, `plugins/game-design-career/**`, 두 `BUILD-MANIFEST.json`
@@ -525,8 +507,8 @@ Task 1~5가 `products/**`와 `shared/**`를 바꿨다. 두 설치 패키지 snap
 - Test: `npm run check:curated-archify`, `npm run validate:archify-catalog`
 
 **Interfaces:**
-- Consumes: Task 1~5의 모든 원본 변경
-- Produces: 재현 가능한 snapshot. Task 7의 버전 인상이 이 위에 한 번 더 빌드를 돌린다.
+- Consumes: Task 1~4의 모든 원본 변경
+- Produces: 재현 가능한 snapshot. Task 6의 버전 인상이 이 위에 한 번 더 빌드를 돌린다.
 
 - [ ] **Step 1: 카탈로그가 새 파일을 아는지 확인한다**
 
@@ -565,7 +547,7 @@ git commit -m "build: regenerate the product snapshots for the new docs and diag
 
 ---
 
-### Task 7: 두 제품 버전을 `0.2.0`으로 올리고 릴리스 잠금을 맞춘다
+### Task 6: 두 제품 버전을 `0.2.0`으로 올리고 릴리스 잠금을 맞춘다
 
 신규 스킬 3개와 진입점 변경이 들어갔으므로 minor를 올린다. 원천은 두 제품 `plugin.json`이고, 나머지는 그 값에 묶인 상수와 생성물이다.
 
@@ -573,13 +555,13 @@ git commit -m "build: regenerate the product snapshots for the new docs and diag
 - Modify: `products/game-design-studio/plugin/.codex-plugin/plugin.json`, `products/game-design-career/plugin/.codex-plugin/plugin.json`
 - Modify: `shared/updates/suite-release.lock.json`
 - Modify: `tooling/marketplace-smoke.mjs`, `tooling/isolation-smoke.mjs`
-- Modify: `tests/unit/marketplace-smoke.test.mjs`, `tests/unit/installed-suite-products.test.mjs`, `tests/unit/capability-probe.test.mjs`, `tests/unit/game-design-update-check.test.mjs`, `tests/unit/generate-update-manifest.test.mjs`
+- Modify: 버전 고정값을 가진 테스트. `0.1.1`은 `tests/unit/`의 9개 파일과 `tests/e2e/suite/`의 2개 파일에 나오지만 상당수는 임의 fixture 값이라 옮길 필요가 없다. Step 1의 grep과 Step 5의 실패 메시지가 실제 대상을 가른다
 - Regenerate: `shared/updates/installed-components.json`, `plugins/**`
 - Modify: `architecture/plugin-suite.md`
 
 **Interfaces:**
-- Consumes: Task 6이 남긴 깨끗한 snapshot
-- Produces: `0.2.0`으로 일치한 트리. Task 8의 릴리스 게이트가 이것을 검사한다.
+- Consumes: Task 5가 남긴 깨끗한 snapshot
+- Produces: `0.2.0`으로 일치한 트리. Task 7의 릴리스 게이트가 이것을 검사한다.
 
 - [ ] **Step 1: 지금 값이 어디에 박혀 있는지 다시 센다**
 
@@ -607,7 +589,7 @@ node tooling/generate-update-manifest.mjs --check
 
 - [ ] **Step 3: 릴리스 잠금을 맞춘다**
 
-`shared/updates/suite-release.lock.json`의 `installedTag`를 `v0.2.0`으로, `commit`을 이 계획의 내용 작업이 끝난 커밋(= Task 6의 커밋) 해시로 바꾼다.
+`shared/updates/suite-release.lock.json`의 `installedTag`를 `v0.2.0`으로, `commit`을 이 계획의 내용 작업이 끝난 커밋(= Task 5의 커밋) 해시로 바꾼다.
 
 ```bash
 git rev-parse HEAD
@@ -655,7 +637,7 @@ git commit -m "release: raise both products to 0.2.0 and pin the suite release l
 
 ---
 
-### Task 8: 릴리스 게이트를 통과시키고 태그를 준비한다
+### Task 7: 릴리스 게이트를 통과시키고 태그를 준비한다
 
 `npm run validate:release`는 `--skip`을 거부하고 CI가 건너뛰는 네 스테이지를 전부 돌린다. 릴리스 전에 로컬에서 반드시 실행한다는 의무가 `architecture/plugin-suite.md`에 이미 적혀 있다. 태그 생성과 푸시는 사용자 승인 뒤에만 한다.
 
@@ -663,24 +645,26 @@ git commit -m "release: raise both products to 0.2.0 and pin the suite release l
 - 없음 (검증과 태그만)
 
 **Interfaces:**
-- Consumes: Task 7이 남긴 `0.2.0` 트리
+- Consumes: Task 6이 남긴 `0.2.0` 트리
 - Produces: `v0.2.0` 태그 (승인 시)
 
-- [ ] **Step 1: 릴리스 게이트를 돌린다**
+- [ ] **Step 1: 번들 상류가 최신인지 확인한다**
+
+```bash
+npm run check:updates 2>&1 | tail -20
+```
+
+기대: skillstead·archify·im-not-ai 셋 다 `current`. 하나라도 `outdated`면 릴리스에 그 사실을 적을지 상류를 먼저 올릴지 사용자에게 묻는다. `unknown`(네트워크 불가)이면 그대로 기록하고 진행한다.
+
+`npm run validate:release:latest`를 쓰지 않는다. 그 스크립트는 `check-suite-updates.mjs --require-current && validate-suite.mjs --release`라서 Step 2의 릴리스 게이트를 통째로 한 번 더 돌린다.
+
+- [ ] **Step 2: 릴리스 게이트를 돌린다**
 
 ```bash
 npm run validate:release 2>&1 | tee /tmp/validate-release-v0.2.0.log | tail -40
 ```
 
 기대: 모든 스테이지가 `PASS`이고 `SKIPPED`가 하나도 없으며 마지막 줄이 `Suite release readiness: COMPLETE`다. 이 계획 착수 시점의 기준선에서 `format smoke`를 포함한 전 스테이지가 로컬에서 통과했으므로, `UNAVAILABLE`이나 `SKIPPED`가 새로 나타나면 이 계획이 만든 회귀다. 그 자리에서 멈춘다.
-
-- [ ] **Step 2: 번들 상류가 최신인지 확인한다**
-
-```bash
-npm run validate:release:latest 2>&1 | tail -20
-```
-
-기대: skillstead·archify·im-not-ai 셋 다 `current`. 하나라도 `outdated`면 릴리스에 그 사실을 적을지 상류를 먼저 올릴지 사용자에게 묻는다. `unknown`(네트워크 불가)이면 그대로 기록하고 진행한다.
 
 - [ ] **Step 3: 설치 왕복을 로컬에서 한 번 더 돌린다**
 
@@ -720,10 +704,12 @@ git push origin v0.2.0
 
 ## Self-Review
 
-**1. 스펙 범위 대조** — "문서와 도식"의 일곱 항목 중 세 개(신규 스킬 README 표, `routing.json`, 대표 진입 스킬 가이드 존재)는 앞선 계획에서 이미 착지했고 "사전 확인된 사실"에 근거를 적었다. 남은 네 개가 Task 1~5에 대응한다. "릴리스" 절은 Task 7~8이다. `upgrade-game-design-suite`의 카탈로그 엔트리와 스킬 도식 두 항목만 의도적으로 비웠고 판단 기록에 근거를 남겼다.
+**1. 스펙 범위 대조** — "문서와 도식"의 일곱 항목 중 셋(신규 스킬 README 표, `routing.json`, 대표 진입 스킬 가이드 존재)은 앞선 계획에서 이미 착지했고, 넷째의 절반(README 첫 요청 절, 두 제품 troubleshooting의 App·CLI 구분)도 이미 충족돼 있다. 근거는 "사전 확인된 사실"에 적었다. 남은 항목이 Task 1~4에 대응한다. "릴리스" 절은 Task 6~7이다. `upgrade-game-design-suite`의 카탈로그 엔트리와 스킬 도식 두 항목만 의도적으로 비웠고 판단 기록에 근거를 남겼다. 대표 진입 스킬의 도식은 스킬 도식이 아니라 shared 도식으로 만든다. 근거도 같은 곳에 있다.
 
-**2. 자리표시자 점검** — 모든 단계에 실행할 명령 또는 넣을 내용이 있다. 도식 SVG 본문은 코드로 적지 않았다. 1400×900 canvas의 SVG 전체를 계획에 적는 것은 계획이 아니라 산출물이고, 대신 담아야 할 요소를 항목으로 못 박고 lint·2× 렌더·시각 검수를 검증 단계로 뒀다.
+**2. 자리표시자 점검** — 모든 단계에 실행할 명령 또는 넣을 내용이 있다. 도식 SVG 본문은 코드로 적지 않았다. 1400×900 canvas의 SVG 전체를 계획에 적는 것은 계획이 아니라 산출물이고, 대신 담아야 할 요소를 항목으로 못 박고 Step 10의 의미 계약 테스트, lint, 2× 렌더, 시각 검수를 검증 단계로 뒀다.
 
-**3. 타입 일관성** — Task 4의 contract 항목과 원본 JSON의 `semantic` 값은 문자열 단위로 일치해야 하며 Step 5의 `check:guide-diagrams`가 그것을 검사한다. Task 7의 버전 문자열은 `plugin.json`이 유일한 원천이고 나머지는 상수·생성물로 분류했다.
+**3. 타입 일관성** — Task 4는 `use-case-manifest.json`의 `skill_cases`와 두 production contract를 건드리지 않는다. shared 도식 경로만 쓰기 때문이다. 대신 개수 상수 다섯 곳과 `expectedSharedIds`가 함께 움직여야 하고 Step 3이 그 전부를 한 번에 고친다. Task 6의 버전 문자열은 `plugin.json`이 유일한 원천이고 나머지는 상수·생성물로 분류했다.
 
-**4. 순서 의존성** — Task 6은 Task 1~5의 원본 변경을 전부 받아야 하고, Task 7의 `commit` 필드는 Task 6의 커밋 해시를 쓴다. Task 8은 Task 7 없이는 의미가 없다. Task 1~5는 서로 독립이지만 Task 3과 Task 5는 같은 두 설치 가이드를 건드리므로 병렬로 돌리지 않는다.
+**4. 순서 의존성** — Task 5는 Task 1~4의 원본 변경을 전부 받아야 하고, Task 6의 `commit` 필드는 Task 5의 커밋 해시를 쓴다. Task 7은 Task 6 없이는 의미가 없다. Task 1~4는 서로 독립이지만 Task 2와 Task 4가 같은 두 설치 가이드를, Task 3과 Task 4가 같은 두 대표 진입 스킬 가이드를 건드리므로 병렬로 돌리지 않는다.
+
+**5. 검사 상수의 위치** — 도식을 하나만 더해도 `tooling/lib/use-case-guides.mjs`, `tooling/lib/user-guides.mjs`, 계약 테스트 세 곳이 함께 움직여야 한다. 그래서 도식 셋을 한 태스크로 묶었다. 나눠 넣으면 중간 커밋마다 `npm run validate`가 실패한다.
