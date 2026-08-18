@@ -463,3 +463,20 @@ test("terminology accepts only live issued mapping observation provenance", () =
   assert.throws(() => validateDocumentTerminology({ text: "Player Power", language: "en", documentId: "combat-v1", effectiveGlossary: effective, receipt, mappingObservation: issued.observation, mappingCapability: issued.capability }), /glossary/i);
   assert.deepEqual(validateDocumentTerminology({ text: "플레이어 파워", language: "ko", documentId: "combat-v1", effectiveGlossary: effective, receipt }).blocking, []);
 });
+
+test("path identity ignores a directory's size, which unrelated writes change, and keeps a file's", async () => {
+  const { sameEntryIdentity } = await import(new URL("../../shared/scripts/lib/game-design-glossary-schema-evaluator.mjs", import.meta.url).href);
+  const entry = (overrides) => ({ dev: 1, ino: 2, mode: 0o040755, size: 96, isDirectory: () => true, ...overrides });
+
+  assert.equal(sameEntryIdentity(entry(), entry()), true);
+  // A sibling file appearing in an ancestor directory moves that directory's size. Every ancestor of the
+  // schema is walked, so treating that as a changed identity turns ambient churn into "glossary invalid".
+  assert.equal(sameEntryIdentity(entry(), entry({ size: 128 })), true);
+  assert.equal(sameEntryIdentity(entry(), entry({ ino: 3 })), false);
+  assert.equal(sameEntryIdentity(entry(), entry({ dev: 9 })), false);
+  assert.equal(sameEntryIdentity(entry(), entry({ mode: 0o040700 })), false);
+
+  const file = (overrides) => ({ dev: 1, ino: 2, mode: 0o100644, size: 4096, isDirectory: () => false, ...overrides });
+  assert.equal(sameEntryIdentity(file(), file()), true);
+  assert.equal(sameEntryIdentity(file(), file({ size: 4097 })), false, "the schema file we are about to read must not have changed size");
+});

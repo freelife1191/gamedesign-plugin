@@ -17,7 +17,16 @@ const installedPath = path.resolve(evaluatorDir, "../../references/shared/refere
 
 function same(left, right) { try { return canonicalJson(left) === canonicalJson(right); } catch { return false; } }
 function result(ok, code = "glossary-schema.invalid") { return ok ? { ok: true, errors: [] } : { ok: false, errors: [{ code }] }; }
-function sameIdentity(left, right) { return left.dev === right.dev && left.ino === right.ino && left.size === right.size && left.mode === right.mode; }
+// This walk stats every ancestor of the schema, up to the filesystem root, and compares each entry
+// against what realpath resolved. Device, inode, and mode are what make that comparison an identity
+// check. Size is not: a directory's size moves whenever any unrelated process adds or removes an entry
+// in it, so folding it in turned ordinary ambient churn under the plugin cache root into an
+// intermittent "the glossary is invalid". Size still guards the one thing it describes, the schema file
+// we are about to read.
+export function sameEntryIdentity(left, right) {
+  if (left.dev !== right.dev || left.ino !== right.ino || left.mode !== right.mode) return false;
+  return left.isDirectory() ? true : left.size === right.size;
+}
 function inspectSchemaCandidate(candidate) {
   const absolute = path.resolve(candidate); const parsed = path.parse(absolute); const segments = path.relative(parsed.root, absolute).split(path.sep).filter(Boolean);
   if (segments.length === 0 || segments.length > 32) return { status: "invalid" };
@@ -27,14 +36,14 @@ function inspectSchemaCandidate(candidate) {
     try { initial = lstatSync(current); } catch (error) { return error?.code === "ENOENT" ? { status: "absent" } : { status: "invalid" }; }
     let canonical; let resolved;
     try { canonical = realpathSync(current); resolved = lstatSync(canonical); } catch { return { status: "invalid" }; }
-    if (initial.isSymbolicLink() || canonical !== current || !sameIdentity(initial, resolved) || index < segments.length - 1 && !initial.isDirectory() || index === segments.length - 1 && !initial.isFile()) return { status: "invalid" };
+    if (initial.isSymbolicLink() || canonical !== current || !sameEntryIdentity(initial, resolved) || index < segments.length - 1 && !initial.isDirectory() || index === segments.length - 1 && !initial.isFile()) return { status: "invalid" };
   }
   try { return { status: "present", stats: lstatSync(absolute) }; } catch { return { status: "invalid" }; }
 }
 function readSchema(candidate, identity) {
   try {
     const bytes = readFileSync(candidate); const final = inspectSchemaCandidate(candidate);
-    if (final.status !== "present" || !sameIdentity(identity, final.stats)) return null;
+    if (final.status !== "present" || !sameEntryIdentity(identity, final.stats)) return null;
     const text = bytes.toString("utf8"); if (!Buffer.from(text, "utf8").equals(bytes) || text.includes("\0") || text.includes("\uFEFF")) return null;
     return { bytes, schema: JSON.parse(text) };
   } catch { return null; }
