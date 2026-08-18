@@ -330,3 +330,30 @@ test("the contract tells the skill to leave a blocker and invent nothing when th
     assert.ok(section.includes(rule), `the degrade section is missing "${rule}"`);
   }
 });
+
+// QA가 설치본에서 잡은 것 두 가지다. 첫째, Career만 설치된 환경에서 에이전트는 조회를 한 번도 돌리지
+// 않고 Studio 소유 증거 단계를 자기 일감으로 흡수했다. 둘째, 문서가 적어 둔 명령은 사용자 작업
+// 디렉터리에서 그대로 부르면 `Cannot find module`로 죽는다 — 상대 경로 `scripts/`는 설치 패키지
+// 루트에서만 풀리기 때문이다. 조회가 실패로 죽는 것과 상대가 없는 것은 다른 사실인데, 둘을 구분할
+// 방법이 문서에 없으면 에이전트는 조용히 degrade를 건너뛴다.
+test("the degrade section makes the counterpart lookup mandatory and gives a command that resolves", () => {
+  const heading = "\n## 상대 제품이 없을 때\n";
+  const rest = contractMarkdown.slice(contractMarkdown.indexOf(heading) + heading.length);
+  const next = rest.indexOf("\n## ");
+  const section = next === -1 ? rest : rest.slice(0, next);
+
+  assert.match(section, /확인은 선택이 아니다/u, "the lookup must be stated as required, not permitted");
+  assert.match(section, /인계가 필요하다고 적은 영수증은 이 조회를 실제로 돌린 뒤에만 공개한다/u,
+    "the receipt must not declare a handoff before the lookup actually ran");
+  assert.match(section, /흡수/u, "silently absorbing the supplier step must be named as the failure it is");
+
+  // 명령은 정확히 한 번 나오고, 그 한 번이 실행 가능한 형태여야 한다. 상대 경로로 적힌 사본이
+  // 하나라도 남으면 에이전트는 그쪽을 베낀다.
+  const commands = [...section.matchAll(/^node .*inspect-game-design-plugin-updates\.mjs.*$/gmu)].map((m) => m[0]);
+  assert.equal(commands.length, 1, "the degrade section must name the lookup command exactly once");
+  assert.doesNotMatch(commands[0], /^node scripts\//u,
+    "a bare relative scripts/ path only resolves from the installed package root, never from the user's workspace");
+  assert.match(commands[0], /제품 패키지 루트/u, "the command must anchor its working directory");
+  assert.match(section, /패키지 루트는[\s\S]*handoff\.md.*떼어 낸 자리다/u,
+    "the skill needs a way to derive the package root it must run from");
+});

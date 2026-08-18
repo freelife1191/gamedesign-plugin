@@ -219,3 +219,29 @@ test("automatic routing is never described as automatic approval", async () => {
     assert.match(skill, /Never relax a specialist skill's approval, evidence, or safety rule/u, product);
   }
 });
+
+// 1차 수정은 조회 의무를 references/handoff.md 안에만 적었다. 재검증에서 에이전트는 그 파일을 아예
+// 열지 않았고 — SKILL.md, 오케스트레이터, routing.json만 읽었다 — Studio가 설치되지 않은 환경에서
+// "교차 제품 인계: 필요"라고 적었다. 참조 파일에만 있는 의무는 참조를 읽은 실행에만 걸린다. 의무는
+// 대표 스킬 본문에 있어야 한다.
+const HANDOFF_LOOKUP_GATE = Object.freeze([
+  // 영수증 항목 자체가 게이트를 달고 있어야 한다. 이 줄만 보고 답을 쓰는 실행이 있기 때문이다.
+  "never write that one is required until the counterpart lookup in `references/handoff.md` has actually run",
+  // 참조를 언제 읽는지가 결과를 가른다. "나중에 읽어라"는 안 읽는 것과 같다.
+  "before you answer whether a handoff is needed, not after",
+  "Running that lookup is not optional",
+  // 관찰된 실패 모드를 이름으로 적어 둔다.
+  "Folding the supplier's step into this product's own plan",
+]);
+
+test("the entry skill gates the handoff answer on the counterpart lookup, in its own body", async () => {
+  for (const { product } of ENTRY_SKILLS) {
+    const skill = await entrySkill(product);
+    for (const rule of HANDOFF_LOOKUP_GATE) {
+      assert.ok(skill.includes(rule), `${product}: the entry body is missing "${rule}"`);
+    }
+    // 게이트가 영수증 항목에 붙어 있는지 구간으로 확인한다. 본문 아무 데나 있으면 증명이 안 된다.
+    const receipt = skill.slice(skill.indexOf("## Routing receipt"), skill.indexOf("## Cross-product handoff"));
+    assert.match(receipt, /whether a cross-product handoff is required — never write/u, product);
+  }
+});

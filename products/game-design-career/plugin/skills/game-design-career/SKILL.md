@@ -53,7 +53,7 @@ Publish this before starting the work:
 
 - the owning product
 - the actual skill or orchestrator ID that was selected
-- whether a cross-product handoff is required
+- whether a cross-product handoff is required — never write that one is required until the counterpart lookup in `references/handoff.md` has actually run; an unrun lookup makes this line a guess
 - the artifact paths that will be created or updated
 - current facts, assumptions, and blockers
 - the next step that needs a human decision
@@ -62,7 +62,7 @@ When the workspace carries a `route-receipt.json`, keep its `schemaVersion`, `re
 
 ## Cross-product handoff
 
-One request carries at most one handoff, and only the owner starts it. The supplier returns the requested evidence and nothing else: it does not conclude, approve, or start a handoff of its own. Re-check returned evidence against this product's own rules before using it. Read `references/handoff.md` for the request and return envelopes and for what to do when the other product is not installed.
+One request carries at most one handoff, and only the owner starts it. The supplier returns the requested evidence and nothing else: it does not conclude, approve, or start a handoff of its own. Re-check returned evidence against this product's own rules before using it. Read `references/handoff.md` before you answer whether a handoff is needed, not after: it holds the request and return envelopes and the counterpart lookup you have to run first. Running that lookup is not optional. The counterpart being absent does not shrink the request — it changes what you may claim about it. Folding the supplier's step into this product's own plan, so the reader never learns the evidence has no source, is the exact failure this contract exists to prevent.
 
 ## Operating rules
 

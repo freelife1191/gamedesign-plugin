@@ -12487,7 +12487,7 @@
       "product": "studio",
       "source_document": "products/game-design-studio/plugin/skills/game-design-studio/SKILL.md",
       "source_section": "Game Design Studio",
-      "source_digest": "3aab469e4470c1128ffa09b725e7c6be5c91b8c4082968c4f5ff77eb432f90df",
+      "source_digest": "ca8cb80c79bcff53b14be40c6a2a49d5452ed149ab4b15be2a803ccb411cfe13",
       "decision": "excluded",
       "exclusion_code": "excluded-package-surface",
       "decision_reason": "이 package surface는 배포 경계이므로 패키지 외부 링크를 만들지 않고 분석 기록만 유지한다.",
@@ -12503,7 +12503,7 @@
       "product": "career",
       "source_document": "products/game-design-career/plugin/skills/game-design-career/SKILL.md",
       "source_section": "Game Design Career",
-      "source_digest": "1bae76d25d8a4da7085a085fb92d78d84db0ac7e431db57b47cddb2e273c2189",
+      "source_digest": "e82cb0f0210a82d9e9cafa45726ebf006ebd9cb406a73730bc53e4a592fe6d20",
       "decision": "excluded",
       "exclusion_code": "excluded-package-surface",
       "decision_reason": "이 package surface는 배포 경계이므로 패키지 외부 링크를 만들지 않고 분석 기록만 유지한다.",
@@ -12519,7 +12519,7 @@
       "product": "studio",
       "source_document": "plugins/game-design-studio/skills/game-design-studio/SKILL.md",
       "source_section": "Game Design Studio",
-      "source_digest": "3aab469e4470c1128ffa09b725e7c6be5c91b8c4082968c4f5ff77eb432f90df",
+      "source_digest": "ca8cb80c79bcff53b14be40c6a2a49d5452ed149ab4b15be2a803ccb411cfe13",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "이 문서는 products/game-design-studio의 배포 mirror이므로 패키지 외부 링크를 만들지 않는다.",
@@ -12535,7 +12535,7 @@
       "product": "studio",
       "source_document": "plugins/game-design-studio/skills/game-design-studio/references/handoff.md",
       "source_section": "Suite Handoff Contract",
-      "source_digest": "1974bae26497209f2c3f8d83db2ba741798e6b4431f2842442d86e91b036456c",
+      "source_digest": "2ea085571dda5ae994c02f9972deffda03b879c82128c5b38de6fa07ad2a6dcd",
       "origin_source": {
         "source_document": "shared/suite-handoff/references/handoff.md",
         "build_mapping": "suite-handoff"
@@ -12555,7 +12555,7 @@
       "product": "career",
       "source_document": "plugins/game-design-career/skills/game-design-career/references/handoff.md",
       "source_section": "Suite Handoff Contract",
-      "source_digest": "1974bae26497209f2c3f8d83db2ba741798e6b4431f2842442d86e91b036456c",
+      "source_digest": "2ea085571dda5ae994c02f9972deffda03b879c82128c5b38de6fa07ad2a6dcd",
       "origin_source": {
         "source_document": "shared/suite-handoff/references/handoff.md",
         "build_mapping": "suite-handoff"
@@ -12575,7 +12575,7 @@
       "product": "career",
       "source_document": "plugins/game-design-career/skills/game-design-career/SKILL.md",
       "source_section": "Game Design Career",
-      "source_digest": "1bae76d25d8a4da7085a085fb92d78d84db0ac7e431db57b47cddb2e273c2189",
+      "source_digest": "e82cb0f0210a82d9e9cafa45726ebf006ebd9cb406a73730bc53e4a592fe6d20",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "이 문서는 products/game-design-career의 배포 mirror이므로 패키지 외부 링크를 만들지 않는다.",
