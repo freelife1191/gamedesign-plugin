@@ -250,11 +250,22 @@ ChatGPT 데스크톱 앱의 Work 또는 Codex에서 저장소와 플러그인을
 4. **Plugins**에서 marketplace를 열고 필요한 제품을 설치합니다.
 5. 설치 직후 **새 채팅**을 열고 Studio 또는 Career를 선택합니다.
 
+Git 마켓플레이스를 CLI로 먼저 등록해 두면 App의 **Plugins Directory**에서도 같은 `game-design-suite`가 보입니다. 저장소 checkout을 그대로 쓰는 로컬 마켓플레이스와는 이름이 같아도 갱신 방법이 다릅니다. Git 마켓플레이스는 공개 릴리스를 따라가고, 로컬 마켓플레이스는 checkout을 직접 갱신해야 합니다.
+
 제품별 화면 절차는 [Studio 설치 가이드](guides/game-design-studio/installation.md)와 [Career 설치 가이드](guides/game-design-career/installation.md)를 따르세요.
 
 ### Codex CLI에 설치하기
 
-저장소 루트에서 marketplace를 등록하고 설치할 제품을 하나씩 선택합니다.
+marketplace를 등록하고 설치할 제품을 하나씩 선택합니다. 등록 방법은 두 가지이며 갱신 방법이 다릅니다.
+
+GitHub 저장소를 Git 마켓플레이스로 등록하면 공개 릴리스가 최신 판정 근거가 되고, `upgrade-game-design-suite`가 그 태그를 읽어 설치본과 비교합니다.
+
+```bash
+codex plugin marketplace add freelife1191/gamedesign-plugin
+codex plugin marketplace list
+```
+
+저장소를 직접 고치며 쓸 때는 로컬 checkout을 등록합니다. 로컬 마켓플레이스는 Git fetch 대상이 아니므로 공개 릴리스로 갱신되지 않고, 갱신하려면 checkout을 직접 최신으로 만들어야 합니다.
 
 ```bash
 codex plugin marketplace add .
@@ -286,6 +297,25 @@ Marketplace refresh와 설치 패키지 교체는 서로 다른 작업입니다.
 `SessionStart`는 처음 시작할 때와 마지막 확인 뒤 7일이 지난 뒤에만 번들 업데이트를 확인합니다. 결과는 “플러그인 업데이트를 확인해 줘”라는 **알림**일 뿐이며, 플러그인을 자동으로 업데이트하거나 다시 설치하지 않습니다. 확인을 끄려면 Codex를 시작할 환경에 `GAME_DESIGN_UPDATE_CHECKS=false`를 설정하세요. Skillstead·Archify·im-not-ai 번들은 다음 suite release 전까지 현재 버전으로 고정됩니다. 설치된 캐시 폴더는 직접 편집하지 마세요.
 
 `codex plugin list --available`은 설치하지 않은 플러그인 목록을 보여 주는 용도입니다. Codex 0.147.0에서는 이미 설치한 플러그인의 더 새로운 원천 버전을 판별하지 않습니다. 알림을 본 뒤에는 아래처럼 marketplace 종류에 맞는 명시적 명령을 실행하고, 마지막에 새 채팅 또는 새 세션을 열어 새 설치본을 사용하세요.
+
+#### 업그레이드 스킬로 처리하기
+
+설치한 제품의 업그레이드 스킬을 호출하면 아래 수동 절차를 대신 안내받을 수 있습니다.
+
+```text
+$game-design-studio:upgrade-game-design-suite
+$game-design-career:upgrade-game-design-suite
+```
+
+- 설치된 버전과 공개된 최신 릴리스를 비교한 결과를 먼저 보여 주고 승인을 기다립니다.
+- 검사와 계획 단계에서는 어떤 설치도 바꾸지 않습니다.
+- 승인 없이 적용되는 업데이트는 없습니다.
+- 끝나면 이전 버전, 새 버전, 바뀐 제품, 번들 구성 요소 변화, 검증 결과를 요약하고 새 세션에서 이어가는 방법을 알려 줍니다.
+- 자세한 선택지 표는 [Studio 설치 가이드](guides/game-design-studio/installation.md)와 [Career 설치 가이드](guides/game-design-career/installation.md)에 있습니다.
+
+App에서는 같은 스킬을 `@Game Design Studio` 또는 `@Game Design Career` 뒤에 "설치본을 최신 릴리스와 비교해 줘"라고 요청해 호출합니다.
+
+아래 두 절차는 스킬 없이 손으로 처리할 때의 순서입니다.
 
 #### Codex App
 
