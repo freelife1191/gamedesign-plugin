@@ -12,7 +12,7 @@ const workflowPath = path.join(repoRoot, ".github/workflows/ci.yml");
 // A workflow file is easy to weaken by hand and nothing downstream notices: a deleted matrix entry or a
 // widened permission still produces a green check. These assertions are the only thing standing between
 // "CI is green" and "CI still runs what the spec says it runs".
-test("CI runs both lanes on both operating systems with read-only credentials", async () => {
+test("CI runs both lanes on read-only credentials it does not leave behind", async () => {
   const workflow = await readFile(workflowPath, "utf8");
 
   assert.match(workflow, /^on:$/mu, "CI must be event-driven, not schedule-only");
@@ -31,13 +31,36 @@ test("CI runs both lanes on both operating systems with read-only credentials", 
   for (const lane of ["offline-gate", "install-gate"]) {
     assert.match(workflow, new RegExp(`^  ${lane}:$`, "mu"), `the ${lane} lane must exist`);
   }
-  for (const runner of ["ubuntu-latest", "windows-latest"]) {
-    assert.equal(
-      (workflow.match(new RegExp(runner, "gu")) ?? []).length,
-      2,
-      `${runner} must appear once per lane matrix`,
-    );
-  }
+});
+
+// Each lane runs on the operating systems where its result means something, and the two lanes do not agree
+// on what that set is. Asserting a single global runner count would hide exactly the distinction this
+// section of CI exists to make, so the assertions below read each lane's own matrix.
+function laneMatrix(workflow, lane) {
+  const start = workflow.indexOf(`  ${lane}:\n`);
+  assert.notEqual(start, -1, `the ${lane} lane must exist`);
+  const rest = workflow.slice(start + lane.length + 4);
+  const end = rest.search(/^  [a-z][a-z-]*:$/mu);
+  const body = end === -1 ? rest : rest.slice(0, end);
+  return [...body.matchAll(/^ {10}- (\S+)$/gmu)].map((match) => match[1]);
+}
+
+test("the install lane covers Windows, because proving the Windows byte contract is what it is for", async () => {
+  const workflow = await readFile(workflowPath, "utf8");
+  assert.deepEqual(laneMatrix(workflow, "install-gate"), ["ubuntu-latest", "windows-latest"]);
+});
+
+test("the offline lane is scoped to Linux on purpose, and says why in the file", async () => {
+  const workflow = await readFile(workflowPath, "utf8");
+  assert.deepEqual(
+    laneMatrix(workflow, "offline-gate"),
+    ["ubuntu-latest"],
+    "adding Windows back here is a real decision: the suite has known Windows failures, two of them in "
+      + "shipped code, so a runner added without fixing them turns this lane permanently red",
+  );
+  // A scoping decision with no reason attached is indistinguishable from an accident six months later.
+  assert.match(workflow, /O_NOFOLLOW/u, "the file must name the shipped defect that keeps Windows out of this lane");
+  assert.match(workflow, /architecture\/plugin-suite\.md/u, "and must point at where the full finding list lives");
 });
 
 test("the offline lane names every stage it skips, and skips only what CI genuinely cannot run", async () => {

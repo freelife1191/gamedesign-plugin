@@ -184,18 +184,32 @@ plugin manifest에는 hook 필드를 추가하지 않고 기본 발견 경로 `h
 
 ### CI 레인
 
-`.github/workflows/ci.yml`이 pull request와 `main` push에서 두 레인을 `ubuntu-latest`와 `windows-latest` 양쪽으로 실행합니다.
+`.github/workflows/ci.yml`이 pull request와 `main` push에서 두 레인을 실행합니다. 레인마다 결과가 의미를 갖는 운영체제가 다르므로 매트릭스도 다릅니다.
 
-| 레인 | 내용 | 인증 |
-| --- | --- | --- |
-| 오프라인 게이트 | `node tooling/validate-suite.mjs`를 세 스테이지 `--skip`과 함께 실행 | 불필요 |
-| 설치 게이트 | `@openai/codex` 설치 후 `node tooling/install-roundtrip.mjs --require-codex` | 불필요 |
+| 레인 | 내용 | 러너 | 인증 |
+| --- | --- | --- | --- |
+| 오프라인 게이트 | `node tooling/validate-suite.mjs`를 네 스테이지 `--skip`과 함께 실행 | `ubuntu-latest` | 불필요 |
+| 설치 게이트 | `@openai/codex` 설치 후 `node tooling/install-roundtrip.mjs --require-codex` | `ubuntu-latest`, `windows-latest` | 불필요 |
 
 설치 게이트는 한글과 공백을 포함한 `CODEX_HOME`·workspace, `LANG=C`, `LC_ALL=C` 아래에서 두 제품을 실제 설치하고 재설치한 뒤 README, `plugin.json`, 대표 스킬을 source와 SHA-256으로 대조합니다. 경로는 NFC 정규화 후 비교하며, 명령 출력에 `U+FFFD`가 있으면 실패합니다. 모델을 호출하지 않으므로 인증이 필요 없습니다. 로컬에서는 `npm run verify:install-roundtrip`으로 같은 검증을 돌리며, `codex`가 없으면 `SKIPPED`를 보고하고 종료합니다.
 
-CI에서 실행할 수 없는 스테이지는 세 개입니다. 공식 plugin 검증기와 skill quick 검증기는 Codex 설치 산출물을 요구하고, format smoke는 `package.json`에 없는 호스트 제공 모듈을 임포트합니다. `validate-suite`는 이 셋을 조용히 통과시키지 않고 `SKIPPED`로 기록하며, 스킵이 하나라도 있으면 release readiness를 `INCOMPLETE`로 끝냅니다.
+CI에서 실행할 수 없는 스테이지는 네 개입니다. 공식 plugin 검증기와 skill quick 검증기는 Codex 설치 산출물을 요구하고, format smoke는 `package.json`에 없는 호스트 제공 모듈을 임포트하며, diagram render drift는 headless Chromium이 호스트 폰트로 그린 PNG 바이트를 비교하므로 그 PNG를 커밋한 기계에서만 의미가 있습니다. SVG 비교는 결정적이므로 모든 환경에서 그대로 유지됩니다. `validate-suite`는 이 넷을 조용히 통과시키지 않고 `SKIPPED`로 기록하며, 스킵이 하나라도 있으면 release readiness를 `INCOMPLETE`로 끝냅니다.
 
-**릴리스 전에 이 세 스테이지는 로컬에서 반드시 실행합니다.** `npm run validate:release`는 `--skip`을 거부하므로 스킵한 채로 release gate를 통과할 수 없습니다. 인증이 필요한 라이브 스모크 `npm run smoke:marketplace`도 로컬 수동 실행으로 남습니다.
+**릴리스 전에 이 네 스테이지는 로컬에서 반드시 실행합니다.** `npm run validate:release`는 `--skip`을 거부하므로 스킵한 채로 release gate를 통과할 수 없습니다. 인증이 필요한 라이브 스모크 `npm run smoke:marketplace`도 로컬 수동 실행으로 남습니다.
+
+#### 오프라인 게이트를 Linux로 한정한 이유
+
+Windows 오프라인 레인은 만들어 돌려 보고 결과를 읽은 뒤 의도적으로 뺐습니다. 실패 272건은 한 가지 문제가 아니라 성격이 다른 세 부류이고, 그중 둘째·셋째는 CI 변경에 끼워 넣을 수 있는 성질이 아닙니다.
+
+| 부류 | 실패 수 | 내용 |
+| --- | --- | --- |
+| 출하 코드 결함 | 77 | `shared/scripts/lib/load-workspace-env.mjs`는 `O_NOFOLLOW`가 정수가 아니면 즉시 거부하는데 Node는 Windows에서 이 상수를 정의하지 않습니다(21건). `shared/scripts/lib/safe-memory-store.mjs`의 `syncDirectory`는 디렉터리를 열어 `fsync`하며 Windows는 `EPERM`을 돌려줍니다(56건). |
+| 테스트·도구의 POSIX 가정 | 약 65 | `/bin/sh`와 `/tmp` 하드코딩, 드라이브 문자가 겹쳐 `D:\D:\...`가 되는 경로 결합, `chmod`가 무의미한 곳에서 mode 비트 변화를 기대하는 단정, `0600` 가정. |
+| 위 둘의 파급 | 나머지 | 앞의 실패가 만든 상태를 뒤 단정이 다시 읽으며 생긴 연쇄. |
+
+첫 부류는 두 하드닝 원시 함수를 Windows에서 성립하는 형태로 재설계해야 하고, `O_NOFOLLOW`에 대응하는 플래그를 Node가 노출하지 않으므로 `lstat` 후 열고 identity를 재확인하는 방식으로 바꿔야 합니다. 이는 자체 설계 판단이 필요한 별도 작업입니다. **design memory와 image config는 그때까지 Windows에서 동작하지 않습니다.**
+
+Windows에서 실제로 성립해야 하는 계약은 Windows checkout과 설치가 다른 플랫폼과 같은 바이트를 만든다는 것이고, 이는 설치 게이트가 매 실행마다 Windows에서 직접 증명합니다.
 
 ## 관련 문서
 
