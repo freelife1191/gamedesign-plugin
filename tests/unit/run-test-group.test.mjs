@@ -14,6 +14,10 @@ const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 test("the group runner gives every undeclared test a ceiling, so a hang names itself", async () => {
   const source = await readFile(path.join(repoRoot, "tooling/run-test-group.mjs"), "utf8");
   assert.match(source, /"--test",\s*`--test-timeout=\$\{DEFAULT_TEST_TIMEOUT_MS\}`/u);
-  assert.ok(DEFAULT_TEST_TIMEOUT_MS >= 120_000, "the ceiling must clear the slowest declared test budget in the suite");
-  assert.ok(DEFAULT_TEST_TIMEOUT_MS <= 600_000, "a ceiling above ten minutes stops being a diagnosis and becomes another silence");
+  // The floor is set by the slowest whole file rather than the slowest assertion, because node --test
+  // reports each file as a test and so applies the ceiling to the file's total runtime. The cap keeps the
+  // ceiling well under the workflow lane's own limit, so a hang is reported by name instead of taking the
+  // job down with it.
+  assert.ok(DEFAULT_TEST_TIMEOUT_MS >= 600_000, "the ceiling must clear the slowest whole file under runner contention, not just the slowest assertion");
+  assert.ok(DEFAULT_TEST_TIMEOUT_MS <= 1_800_000, "a ceiling at half the lane's own limit stops being a diagnosis and becomes another silence");
 });

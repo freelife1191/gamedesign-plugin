@@ -6,7 +6,7 @@ import process from "node:process";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-export const DEFAULT_TEST_TIMEOUT_MS = 300_000;
+export const DEFAULT_TEST_TIMEOUT_MS = 900_000;
 
 async function collect(directory, files) {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -38,10 +38,13 @@ async function main() {
   if (files.length === 0) throw new Error("no test files found for requested groups");
   const env = { ...process.env };
   delete env.NODE_TEST_CONTEXT;
-  // A default ceiling for every test that does not set its own. Tests that declare a timeout keep it,
-  // so this changes nothing about how long the suite is allowed to take; what it changes is what a hang
-  // looks like. Without it, a test that never returns produces silence until the CI job is killed an
-  // hour later, with no way to tell which test it was. With it, the hang names itself.
+  // A default ceiling for every test that does not set its own, including the per-file wrapper that
+  // `node --test` reports for each file it runs. Without it, a test that never returns produces silence
+  // until the CI job is killed an hour later, with no way to tell which test it was; with it, the hang
+  // names itself. The value has to clear the slowest whole file, not the slowest single assertion:
+  // package-contents runs just over three minutes alone on a developer machine and longer on a shared
+  // runner, where the files execute concurrently and contend for the same cores. A first attempt at five
+  // minutes cut that file off mid-run and reported a timeout for a file whose every subtest had passed.
   const result = spawnSync(process.execPath, ["--test", `--test-timeout=${DEFAULT_TEST_TIMEOUT_MS}`, ...files], { cwd: repoRoot, env, stdio: "inherit" });
   if (result.error) throw result.error;
   if (result.signal) throw new Error(`test process terminated by ${result.signal}`);
