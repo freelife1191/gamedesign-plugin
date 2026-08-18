@@ -12535,7 +12535,7 @@
       "product": "studio",
       "source_document": "plugins/game-design-studio/skills/game-design-studio/references/handoff.md",
       "source_section": "Suite Handoff Contract",
-      "source_digest": "8132639b621dbc9e52a6d18b6d09a219cce630308420fa50a2bb94c771f78609",
+      "source_digest": "372e238fa2f9f65fad393b65850721f79d6118277e0d0bffc283ee716515f1c4",
       "origin_source": {
         "source_document": "shared/suite-handoff/references/handoff.md",
         "build_mapping": "suite-handoff"
@@ -12555,7 +12555,7 @@
       "product": "career",
       "source_document": "plugins/game-design-career/skills/game-design-career/references/handoff.md",
       "source_section": "Suite Handoff Contract",
-      "source_digest": "8132639b621dbc9e52a6d18b6d09a219cce630308420fa50a2bb94c771f78609",
+      "source_digest": "372e238fa2f9f65fad393b65850721f79d6118277e0d0bffc283ee716515f1c4",
       "origin_source": {
         "source_document": "shared/suite-handoff/references/handoff.md",
         "build_mapping": "suite-handoff"
