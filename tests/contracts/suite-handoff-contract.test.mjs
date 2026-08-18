@@ -138,6 +138,43 @@ test("validateHandoffChain relates every return to the request it answers", () =
   }
 });
 
+// 인계 한 번은 요청 하나와 반환 하나다. 요청 수만 세던 동안 [요청, 반환, 반환]이 통과했고,
+// 서로 모순되는 두 반환 중 무엇이 근거였는지 사슬만 봐서는 말할 수 없었다. 요청 상한을 지키는
+// 사례와 짝을 이루도록 반환 상한도 여기서 고정한다.
+test("one request is answered by one return, never two", () => {
+  const single = validateHandoffChain([request(), envelopeReturn()], contract);
+  assert.equal(single.ok, true, single.errors.join("\n"));
+
+  const doubled = validateHandoffChain([request(), envelopeReturn(), envelopeReturn()], contract);
+  assert.equal(doubled.ok, false);
+  assert.ok(
+    doubled.errors.includes("a request is answered by one return at most"),
+    doubled.errors.join("\n"),
+  );
+});
+
+// 네 리스트가 전부 비어도 필드별 검사는 통과한다. 그런 봉투는 형식상 유효하면서 아무 답도 하지
+// 않고, owner 쪽에서 "검증 통과"가 "증거 도착"으로 읽힌다. 계약 4조가 요구하는 대로 거절한다.
+test("a return whose every list is empty is refused", () => {
+  const silent = validateHandoffReturn(
+    envelopeReturn({ facts: [], inferences: [], recommendations: [], unknowns: [] }),
+    contract,
+  );
+  assert.equal(silent.ok, false);
+  assert.ok(
+    silent.errors.includes("a return must carry at least one entry; say so in unknowns when nothing was found"),
+    silent.errors.join("\n"),
+  );
+
+  // 찾은 것이 없다는 사실을 unknowns에 적은 반환은 통과해야 한다. 위 규칙이 "빈 손"을 막는 것이
+  // 아니라 "말하지 않음"을 막는 것임을 고정한다.
+  const nothingFound = validateHandoffReturn(
+    envelopeReturn({ facts: [], inferences: [], recommendations: [], unknowns: ["요청한 근거가 이 제품 산출물에 없다"] }),
+    contract,
+  );
+  assert.equal(nothingFound.ok, true, nothingFound.errors.join("\n"));
+});
+
 // Ruling 10: 봉투 하나만 보면 owner·supplier를 일관되게 뒤바꾼 요청은 합법적인 반대 방향 인계와
 // 구분할 수 없다 — 어느 제품이 최종 산출물을 내는지는 봉투 자체에 적혀 있지 않기 때문이다. 그래서
 // 예전의 "owner and supplier swapped" 단일-봉투 사례는 지웠다: supplierProduct를 기본값에 남겨둔

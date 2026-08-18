@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-career",
   "sourceDateEpoch": 0,
-  "treeSha256": "2355459dba125584379010fa7464f0ffb88ad6ea2f93d58999760ca57a48246d",
+  "treeSha256": "cbd7577f89cdd07748923f448403a51e5cdd08cd7d0b3f32ab2217508b9a22c2",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -2201,8 +2201,8 @@
     },
     {
       "path": "skills/game-design-career/references/handoff.md",
-      "sha256": "372e238fa2f9f65fad393b65850721f79d6118277e0d0bffc283ee716515f1c4",
-      "size": 3509
+      "sha256": "1974bae26497209f2c3f8d83db2ba741798e6b4431f2842442d86e91b036456c",
+      "size": 3970
     },
     {
       "path": "skills/generate-image-assets/SKILL.md",

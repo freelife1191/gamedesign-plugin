@@ -106,6 +106,12 @@ export function validateHandoffReturn(value, contract) {
         errors.push(`${key} must be a list of non-empty strings`);
       }
     }
+    // 리스트가 전부 비어 있어도 개별 필드 검사는 모두 통과한다. 그런 봉투는 형식상 유효하지만
+    // 아무 답도 하지 않는다 — owner 쪽에서는 "검증 통과"가 "증거 도착"으로 읽히므로, 찾은 것이
+    // 없다는 사실 자체를 unknowns에 적게 만들고 침묵한 반환은 여기서 거절한다.
+    if (errors.length === 0 && listKeys.every((key) => value[key].length === 0)) {
+      errors.push("a return must carry at least one entry; say so in unknowns when nothing was found");
+    }
   }
   return { ok: errors.length === 0, errors };
 }
@@ -125,6 +131,12 @@ export function validateHandoffChain(envelopes, contract) {
   const requests = envelopes.filter((envelope) => isObject(envelope) && envelope.kind === contract.requestKind);
   if (requests.length > contract.maxHandoffsPerRequest) {
     errors.push("a request carries one handoff at most");
+  }
+  // 인계 한 번은 요청 하나와 반환 하나다. 요청 수만 세면 [요청, 반환, 반환]이 통과하고, 서로
+  // 모순되는 반환 둘 중 무엇을 근거로 삼았는지 아무도 말할 수 없게 된다. 반환에도 같은 상한.
+  const returns = envelopes.filter((envelope) => isObject(envelope) && envelope.kind === contract.returnKind);
+  if (returns.length > contract.maxHandoffsPerRequest) {
+    errors.push("a request is answered by one return at most");
   }
   const openingRequest = isObject(envelopes[0]) && envelopes[0].kind === contract.requestKind
     ? envelopes[0]
