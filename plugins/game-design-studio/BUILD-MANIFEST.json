@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "04ec4e59f3fc6f4bf60b2849be7842c49404b658c52d350d70d184519f9d33ea",
+  "treeSha256": "c413c4cc9a7c16cdcf0066f685a9b736b72ab1ce8dd7fec90bc1aed70ed76c6d",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -2766,8 +2766,8 @@
     },
     {
       "path": "skills/upgrade-game-design-suite/references/codex-commands.md",
-      "sha256": "2a0ef1c40e70d8ce1b774703239d1b5d946845b58986d4159e482a57015a1ad7",
-      "size": 2576
+      "sha256": "108145b0124b80e07b6a3c936ce89148a2b7c11e350158f222fe5ef0def639ca",
+      "size": 3150
     },
     {
       "path": "skills/visualize-game-design/SKILL.md",
