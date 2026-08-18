@@ -41,7 +41,7 @@ Record five fields before routing: the desired final result, the materials the u
 - Mixed, broad, or ambiguous: delegate to `orchestrate-game-design-project`.
 - Needs Career evidence: this product stays the owner only when it produces the final artifact. Otherwise the Career entry skill owns the request and this product supplies evidence. Read `references/handoff.md` before starting either direction.
 
-Route only to a skill listed in [routing.json](../../references/routing.json) `skillIds`. A skill that is not in that list is not installed.
+Route only to a skill listed in [routing.json](../../references/routing.json) `skillIds`. A skill outside that list is not a routing target.
 
 ## Case ID resolution
 

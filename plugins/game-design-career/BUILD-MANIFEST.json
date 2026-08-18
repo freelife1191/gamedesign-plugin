@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-career",
   "sourceDateEpoch": 0,
-  "treeSha256": "9d132592755eee72fd72a002b88f947e0798156ff695fa3eb62d34e8a9b1ca13",
+  "treeSha256": "bccd4ef736a72b3463dfdd3dc667e17d09f16c7a1a7e820ec58b7ca88e9afe57",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -1611,8 +1611,8 @@
     },
     {
       "path": "scripts/inspect-game-design-plugin-updates.mjs",
-      "sha256": "6f7c091837f3bb9b9646ae4ba2212cf9d7cdf5222d4a4b4c181b78e45554e725",
-      "size": 11490
+      "sha256": "62de820836a764dc374997fd0a973f59f681be6d88be086bf01f176d681ef19a",
+      "size": 12289
     },
     {
       "path": "scripts/lib/complete-png-validation.mjs",
@@ -2196,7 +2196,7 @@
     },
     {
       "path": "skills/game-design-career/SKILL.md",
-      "sha256": "922f158399f5f495f0b20002396afa8cb7d64587b4bc720be273b69ac3acf859",
+      "sha256": "cc301e7e7f9549b443b163c7bb32879889ba3c04934c33f60d409538404d3f5e",
       "size": 4313
     },
     {

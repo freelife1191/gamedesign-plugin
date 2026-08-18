@@ -37,13 +37,10 @@ const REQUIRED_HEADINGS = Object.freeze([
   "## Completion report",
 ]);
 
-// 백틱으로 감싼 하이픈 소문자 토큰은 스킬 ID 모양이다. 이 모양을 쓰면서 스킬이 아닌 낱말은
-// 여기에 등록해야 하고, 그 밖에는 전부 자기 제품 레지스트리에 있어야 한다.
+// 백틱으로 감싼 하이픈 소문자 토큰은 스킬 ID 모양이다. 이 모양을 쓰는 낱말은 전부 자기 제품
+// 레지스트리에 있어야 한다. 본문이 스킬이 아닌 것으로 부르는 유일한 하이픈 토큰인
+// `route-receipt.json`은 점 때문에 이 모양에 애초에 걸리지 않으므로 예외 목록이 필요 없다.
 const SKILL_ID_SHAPE = /^[a-z]+(?:-[a-z0-9]+)+$/u;
-const NON_SKILL_TOKENS = new Set([
-  // 워크스페이스가 들고 있는 영수증 파일 이름이지 호출할 스킬이 아니다.
-  "route-receipt",
-]);
 
 async function entrySkill(product) {
   return readFile(path.join(repoRoot, "products", product, "plugin/skills", product, "SKILL.md"), "utf8");
@@ -90,11 +87,40 @@ test("every skill the entry skill names is in its own routing registry", async (
       "utf8",
     ));
     const named = [...skill.matchAll(/`([^`\n]+)`/gu)].map((match) => match[1]);
-    const skillLike = named.filter((token) => SKILL_ID_SHAPE.test(token) && !NON_SKILL_TOKENS.has(token));
+    const skillLike = named.filter((token) => SKILL_ID_SHAPE.test(token));
     assert.ok(skillLike.length > 0, `${product}: body names no skill at all, so this contract proves nothing`);
     for (const id of skillLike) {
       assert.ok(routing.skillIds.includes(id), `${product}: ${id} is not in routing.skillIds`);
     }
+  }
+});
+
+// 스펙 B절이 요구하는 갈래는 셋이다. 단일 요청은 전문 스킬 하나로, 복합 요청은 오케스트레이터
+// 하나로, 교차가 필요한 요청은 최종 산출물을 내는 쪽이 owner로 간다. REQUIRED_HEADINGS는 표제가
+// 있는지만 보므로 이 구간을 통째로 비워도 아무 검사도 실패하지 않았다. 문구를 고정하되, 본문 아무
+// 데나가 아니라 ## Route decision 구간에서만 잘라 본다.
+const ROUTE_DECISION_RULES = Object.freeze([
+  "One clear result: route straight to the specialist skill that owns it.",
+  "Mixed, broad, or ambiguous: delegate to `{orchestrator}`.",
+  "stays the owner",
+  "produces the final artifact",
+  "Read `references/handoff.md`",
+  "Route only to a skill listed in",
+  "`skillIds`",
+]);
+
+test("the route decision names all three branches and justifies the registry rule truthfully", async () => {
+  for (const { product, orchestrator } of ENTRY_SKILLS) {
+    const skill = await entrySkill(product);
+    const section = skill.slice(skill.indexOf("\n## Route decision\n"), skill.indexOf("\n## Case ID resolution\n"));
+    for (const rule of ROUTE_DECISION_RULES) {
+      const expected = rule.replace("{orchestrator}", orchestrator);
+      assert.ok(section.includes(expected), `${product}: the route decision is missing "${expected}"`);
+    }
+    // svg-infographic은 두 패키지에 설치돼 있으면서 routing.skillIds에는 없다. 목록 밖 스킬을
+    // 미설치라고 부르면 에이전트가 사용자에게 거짓을 말하게 된다. 목록 밖으로 라우팅하지 않는다는
+    // 규칙 자체는 옳으므로 남기고, 그 근거만 사실이어야 한다.
+    assert.doesNotMatch(section, /is not installed/u, `${product}: a skill outside skillIds is not thereby uninstalled`);
   }
 });
 

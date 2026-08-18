@@ -259,3 +259,32 @@ test("parseSuiteHandoffContract accepts a well-formed document built from the sa
   assert.deepEqual(parsed.products, baseContractObject().products);
   assert.ok(Object.isFrozen(parsed));
 });
+
+// 조회가 unknown으로 닫히는 것은 Task 5가 고정했다. 고정되지 않은 것은 그 다음 문장, 즉 상대 제품이
+// 없을 때 스킬이 실제로 무엇을 하라고 적혀 있는가다. 안전이 걸린 쪽은 이쪽이다 — 증거를 지어내지
+// 말라는 지시가 사라져도 코드 테스트는 하나도 실패하지 않는다. 영수증 항목과 사례 ID 산문을 같은
+// 방식으로 고정해 둔 이상, 이 절반만 비워 두는 것은 앞뒤가 맞지 않는다.
+const MISSING_COUNTERPART_RULES = Object.freeze([
+  // 빠진 근거는 조용히 넘어가지 않고 blocker로 남는다.
+  "blocker",
+  // 없는 증거를 만들어 채우지 않는다.
+  "지어내지 않는다",
+  // 사용자가 스스로 풀 수 있게 설치 경로를 함께 준다.
+  "설치 명령",
+  // 미설치와 확인 불가는 다른 사실이고 다른 문장을 만든다.
+  "확인 불가",
+]);
+
+test("the contract tells the skill to leave a blocker and invent nothing when the counterpart is missing", () => {
+  const heading = "\n## 상대 제품이 없을 때\n";
+  const start = contractMarkdown.indexOf(heading);
+  assert.notEqual(start, -1, "the degrade section is missing from the contract");
+  // 문서 아무 데나 낱말이 있으면 통과하는 검사로는 이 절을 증명하지 못한다. 이 절은 문서의 마지막
+  // 절이므로 표제부터 끝까지가 그 구간이고, 뒤에 절이 더 붙으면 그 표제 앞에서 끊는다.
+  const rest = contractMarkdown.slice(start + heading.length);
+  const next = rest.indexOf("\n## ");
+  const section = next === -1 ? rest : rest.slice(0, next);
+  for (const rule of MISSING_COUNTERPART_RULES) {
+    assert.ok(section.includes(rule), `the degrade section is missing "${rule}"`);
+  }
+});

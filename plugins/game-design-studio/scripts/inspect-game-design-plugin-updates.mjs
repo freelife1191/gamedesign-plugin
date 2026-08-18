@@ -85,6 +85,7 @@ function validatePlugin(value, installed) {
   return {
     plugin: value.name,
     version: value.version,
+    enabled: value.enabled,
     sourcePath: value.source.path,
     sourceType: validateMarketplace(value.marketplaceSource),
   };
@@ -135,14 +136,16 @@ function parseInspection(stdout, readText) {
   if (entries.length === 0 || new Set(entries.map(({ sourceType }) => sourceType)).size !== 1) fail("marketplace inspection");
   if (new Set(installed.map(({ plugin }) => plugin)).size !== installed.length
     || new Set(available.map(({ plugin }) => plugin)).size !== available.length) fail("marketplace inspection");
-  return freezeInspection({ sourceType: entries[0].sourceType, installed, available, readText });
+  // freezeInspection is the closed public shape and deliberately drops `enabled`; the validated
+  // entries are returned alongside it so the handoff lookup can read that field without widening it.
+  return { inspection: freezeInspection({ sourceType: entries[0].sourceType, installed, available, readText }), installed };
 }
 
 function defaultRunCommand(command, args, options) {
   return spawnSync(command, args, options);
 }
 
-export function inspectPluginUpdates({ codexPath = "codex", marketplaceName = MARKETPLACE_NAME, runCommand = defaultRunCommand, readText = defaultReadText } = {}) {
+function runMarketplaceInspection({ codexPath = "codex", marketplaceName = MARKETPLACE_NAME, runCommand = defaultRunCommand, readText = defaultReadText } = {}) {
   if (marketplaceName !== MARKETPLACE_NAME || typeof codexPath !== "string" || codexPath.length === 0 || typeof runCommand !== "function" || typeof readText !== "function") fail("marketplace inspection");
   let receipt;
   try {
@@ -158,15 +161,22 @@ export function inspectPluginUpdates({ codexPath = "codex", marketplaceName = MA
   return parseInspection(receipt.stdout, readText);
 }
 
+export function inspectPluginUpdates(options = {}) {
+  return runMarketplaceInspection(options).inspection;
+}
+
 // 인계는 상대 제품이 실제로 설치돼 있을 때만 성립한다. 업데이트 검사와 같은 목록을 읽지만 결과가
 // 다르다. 업데이트는 못 읽으면 실패지만, 인계는 못 읽어도 자기 제품 몫을 끝내야 하므로 여기서는
 // 던지지 않고 unknown으로 닫는다. 미설치와 확인 불가는 사용자에게 다른 문장을 만든다.
+// 인계가 묻는 것은 파일이 디스크에 있느냐가 아니라 상대 제품이 실제로 돌 수 있느냐다. 설치돼 있어도
+// 비활성이면 호스트가 그 스킬을 싣지 않으므로, 인계를 보내면 조용한 막다른 길이 된다. enabled가
+// true인 제품만 목록에 넣는다 — 조회는 성공했으니 status는 known이고, 그 제품은 없는 것으로 센다.
 export function inspectInstalledSuiteProducts(options = {}) {
   try {
-    const inspection = inspectPluginUpdates(options);
-    const products = inspection.installed
+    const { installed } = runMarketplaceInspection(options);
+    const products = installed
+      .filter(({ plugin, enabled }) => PLUGINS.has(plugin) && enabled === true)
       .map(({ plugin }) => plugin)
-      .filter((plugin) => PLUGINS.has(plugin))
       .sort();
     return Object.freeze({ status: "known", products: Object.freeze(products) });
   } catch {

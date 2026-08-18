@@ -5,14 +5,14 @@ import { inspectInstalledSuiteProducts } from "../../shared/scripts/inspect-game
 
 const MARKETPLACE = "game-design-suite";
 
-function pluginEntry({ plugin, installed }) {
+function pluginEntry({ plugin, installed, enabled = installed }) {
   return {
     pluginId: `${plugin}@${MARKETPLACE}`,
     name: plugin,
     marketplaceName: MARKETPLACE,
     version: "0.1.1",
     installed,
-    enabled: installed,
+    enabled,
     source: { source: "local", path: `/private/tmp/marketplace/plugins/${plugin}` },
     marketplaceSource: { sourceType: "local", source: "/private/tmp/marketplace" },
     installPolicy: "AVAILABLE",
@@ -20,9 +20,15 @@ function pluginEntry({ plugin, installed }) {
   };
 }
 
+// 설치 목록 항목은 보통 제품 이름 하나면 충분하다. enabled를 따로 정해야 하는 사례만
+// { plugin, enabled } 객체로 적는다.
+function installedFields(entry) {
+  return typeof entry === "string" ? { plugin: entry } : entry;
+}
+
 function hostOutput({ installed, available }) {
   return JSON.stringify({
-    installed: installed.map((plugin) => pluginEntry({ plugin, installed: true })),
+    installed: installed.map((entry) => pluginEntry({ ...installedFields(entry), installed: true })),
     available: available.map((plugin) => pluginEntry({ plugin, installed: false })),
   });
 }
@@ -75,6 +81,30 @@ test("a product missing from a successful listing is absent, not unknown", () =>
   assert.equal(result.status, "known");
   assert.deepEqual(result.products, ["game-design-career"]);
   assert.deepEqual(readPaths, ["/private/tmp/marketplace/plugins/game-design-career/.codex-plugin/plugin.json"]);
+});
+
+// 비활성 제품은 파일만 디스크에 있고 호스트가 그 스킬을 싣지 않는다. 인계를 보내면 조용한 막다른
+// 길이 되므로 목록에서 빠져야 한다. 그렇다고 확인 불가는 아니다 — 조회는 성공했고 상태는 여전히
+// known이다. 없다는 사실과 모른다는 사실은 사용자에게 다른 문장을 만든다.
+test("a disabled product is absent from the handoff list while the status stays known", () => {
+  const { result, readPaths } = inspectWith({
+    status: 0,
+    signal: null,
+    error: undefined,
+    stderr: "",
+    stdout: hostOutput({
+      installed: ["game-design-studio", { plugin: "game-design-career", enabled: false }],
+      available: [],
+    }),
+  });
+
+  assert.deepEqual(result, { status: "known", products: ["game-design-studio"] });
+  // 호스트는 비활성 제품도 installed로 돌려줬다. 걸러낸 근거가 목록에 없어서가 아니라 enabled가
+  // false여서라는 것을, 그 제품의 스냅샷을 실제로 읽었다는 사실로 고정한다.
+  assert.deepEqual(readPaths, [
+    "/private/tmp/marketplace/plugins/game-design-studio/.codex-plugin/plugin.json",
+    "/private/tmp/marketplace/plugins/game-design-career/.codex-plugin/plugin.json",
+  ]);
 });
 
 test("every way the host call can fail closes to unknown instead of throwing", () => {
