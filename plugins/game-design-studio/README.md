@@ -8,9 +8,15 @@ Game Design Studio는 게임 비전부터 시스템·콘텐츠·플레이어 경
 
 요구 사항은 Codex CLI와 Node.js 18 이상입니다. 설치 대상은 release checkout의 `plugins/game-design-studio`이며, `products/game-design-studio/plugin`은 개발 원천입니다. suite build가 아직 실행되지 않은 개발 checkout에는 설치 가능한 스냅샷이 없을 수 있습니다.
 
-### 로컬 저장소 marketplace 등록
+### marketplace 등록
 
-저장소 루트에는 suite build가 관리하는 `.agents/plugins/marketplace.json`이 있어야 합니다. `<path-to-repository-root>`를 실제 저장소 루트로 바꿉니다.
+등록 방법은 둘이고 갱신 방법이 다릅니다. 공개 릴리스를 최신 판정 근거로 쓰려면 GitHub 저장소를 Git marketplace로 등록합니다.
+
+```bash
+codex plugin marketplace add freelife1191/gamedesign-plugin
+```
+
+저장소를 직접 고치며 쓸 때만 로컬 checkout을 등록합니다. 이 경우 공개 릴리스로 갱신되지 않습니다. 저장소 루트에는 suite build가 관리하는 `.agents/plugins/marketplace.json`이 있어야 합니다. `<path-to-repository-root>`를 실제 저장소 루트로 바꿉니다.
 
 ```bash
 codex plugin marketplace add <path-to-repository-root>
@@ -38,6 +44,10 @@ codex plugin add game-design-studio@game-design-suite
 ## 업데이트와 제거
 
 `SessionStart`는 처음 시작할 때와 마지막 확인 뒤 7일이 지난 뒤에만 번들 업데이트를 확인합니다. 결과는 “플러그인 업데이트를 확인해 줘”라는 **알림**일 뿐이며, 플러그인을 자동으로 업데이트하거나 다시 설치하지 않습니다. 확인을 끄려면 `GAME_DESIGN_UPDATE_CHECKS=false`를 설정하세요. Skillstead·Archify·im-not-ai 번들은 다음 suite release 전까지 현재 버전으로 고정됩니다. 설치된 캐시 폴더는 직접 편집하지 마세요.
+
+설치한 제품의 `$upgrade-game-design-suite`를 호출하면 아래 명령을 대신 안내받을 수 있습니다. 설치된 버전과 공개된 최신 릴리스를 비교한 결과를 먼저 보여 주고 승인을 기다리며, 검사와 계획 단계에서는 어떤 설치도 바꾸지 않습니다. 승인 없이 적용되는 업데이트는 없습니다. 선택지 표는 저장소의 `guides/game-design-studio/installation.md`에 있습니다.
+
+아래는 스킬 없이 손으로 처리할 때의 명령입니다.
 
 `codex plugin list --available`은 설치하지 않은 플러그인 목록만 보여 줍니다. Codex 0.147.0에서는 이미 설치한 Studio의 새 원천 버전을 판별하지 않습니다. 알림을 본 뒤에만 아래 명령을 명시적으로 실행하고, 재설치가 끝나면 새 채팅 또는 새 세션을 열어 새 설치본을 사용하세요.
 
