@@ -257,3 +257,26 @@ test("installed Studio validator rejects malformed, oversized Unicode, traversal
   assert.deepEqual(await readFile(path.join(fixture, "result.json")), originalBytes);
   assert.deepEqual(await readJson(path.join(fixture, "result.json")), originalResult);
 });
+
+// 대표 스킬은 설치본에서 자기 제품 라우팅 레지스트리와 인계 계약을 함께 갖고 있어야 한다. 둘 중
+// 하나만 설치되면 진입점은 존재하지만 갈 곳이 없거나, 갈 곳은 있는데 규칙이 없다.
+test("each installed product carries its entry skill next to the routing registry and the handoff contract", async () => {
+  for (const [root, product] of [[studioRoot, "game-design-studio"], [careerRoot, "game-design-career"]]) {
+    const skill = await readFile(path.join(root, "skills", product, "SKILL.md"), "utf8");
+    const handoff = await readFile(path.join(root, "skills", product, "references/handoff.md"), "utf8");
+    const routing = JSON.parse(await readFile(path.join(root, "references/routing.json"), "utf8"));
+
+    assert.match(skill, new RegExp(`^---\\nname: ${product}\\n`, "u"));
+    assert.ok(routing.skillIds.includes(product), `${product}: entry skill is missing from the installed registry`);
+    assert.ok(handoff.includes("<!-- suite-handoff-contract:start -->"), `${product}: handoff contract is not installed`);
+    assert.ok(routing.plannedPaths.skills.includes(`skills/${product}/SKILL.md`), product);
+  }
+});
+
+test("the installed handoff contract is byte-identical across the two products", async () => {
+  const [studio, career] = await Promise.all([
+    readFile(path.join(studioRoot, "skills/game-design-studio/references/handoff.md")),
+    readFile(path.join(careerRoot, "skills/game-design-career/references/handoff.md")),
+  ]);
+  assert.ok(studio.equals(career));
+});

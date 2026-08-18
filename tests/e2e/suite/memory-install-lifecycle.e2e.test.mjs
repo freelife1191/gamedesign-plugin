@@ -262,6 +262,21 @@ test("explicit plugin update inspection and planning leave isolated Codex state 
   assert.deepEqual(JSON.parse(planRun.stdout), [["plugin", "add", `game-design-studio@${marketplace}`, "--json"]], "--plan prints the install argv for a newer snapshot");
   await assertIsolatedTreesPreserved(before, { workspace, home: env.HOME, codexHome: env.CODEX_HOME, cacheRoot }, "--plan preserves all isolated state");
 
+  // A missing Codex CLI is the realistic way the host call itself fails, not a missing product: the
+  // whole design of this lookup is that a failed listing closes to unknown instead of throwing, so
+  // --products must keep exiting 0 with that closed shape rather than surfacing the spawn failure.
+  const missingCodexPath = path.join(root, "codex-path-that-does-not-exist");
+  const productsRun = spawnSync(process.execPath, [script, "--products"], {
+    cwd: workspace,
+    env: { ...env, CODEX_PATH: missingCodexPath },
+    encoding: "utf8",
+    shell: false,
+    timeout: 30_000,
+  });
+  assert.equal(productsRun.status, 0, productsRun.stderr);
+  assert.deepEqual(JSON.parse(productsRun.stdout), { status: "unknown", products: [] }, "--products closes to unknown when the host call itself fails");
+  await assertIsolatedTreesPreserved(before, { workspace, home: env.HOME, codexHome: env.CODEX_HOME, cacheRoot }, "--products preserves all isolated state");
+
   // Producing a plan must never be the same thing as applying one: the installed version is still
   // 0.1.1 and the cache still holds only that version after both read-only commands.
   const stillInstalled = spawnSync(codex, ["plugin", "list", "--marketplace", marketplace, "--json"], { cwd: workspace, env, encoding: "utf8", shell: false, timeout: 30_000 });
