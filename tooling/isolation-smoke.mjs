@@ -306,7 +306,7 @@ async function verifyOne({ repoRoot, productName, isolationRoot, mutateCopy, act
   await mutateCopy?.({ pluginRoot, productName, actualHome });
 
   const manifest = JSON.parse(await readFile(path.join(pluginRoot, ".codex-plugin/plugin.json"), "utf8"));
-  if (manifest.name !== productName || manifest.version !== "0.1.1" || manifest.skills !== "./skills/") {
+  if (manifest.name !== productName || manifest.version !== "0.2.0" || manifest.skills !== "./skills/") {
     throw new Error(`${productName} manifest mismatch`);
   }
   const skillEntries = await readdir(path.join(pluginRoot, "skills"), { withFileTypes: true });

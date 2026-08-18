@@ -14,7 +14,7 @@ import { sha256 } from "./lib/hash.mjs";
 import { artifactTreeIdentity, runMarketplaceProof, validateRouteReceipt } from "./lib/marketplace-proof-harness.mjs";
 
 const MARKETPLACE = "game-design-suite";
-export const RELEASE_PLUGIN_VERSION = "0.1.1";
+export const RELEASE_PLUGIN_VERSION = "0.2.0";
 const VERSION_PREFLIGHT_ERROR = "marketplace version preflight failed";
 export const PACKAGED_SKILL_COUNTS = Object.freeze({
   "game-design-career": 25,

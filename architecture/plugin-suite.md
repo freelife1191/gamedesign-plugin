@@ -211,6 +211,23 @@ Windows 오프라인 레인은 만들어 돌려 보고 결과를 읽은 뒤 의�
 
 Windows에서 실제로 성립해야 하는 계약은 Windows checkout과 설치가 다른 플랫폼과 같은 바이트를 만든다는 것이고, 이는 설치 게이트가 매 실행마다 Windows에서 직접 증명합니다.
 
+## 0.2.0 릴리스
+
+두 제품이 `0.1.1`에서 `0.2.0`으로 올라갔습니다. minor를 올린 이유는 설치 스킬이 늘고 진입 경로가 바뀐 것입니다.
+
+| 변경 | 내용 |
+| --- | --- |
+| 신규 스킬 3개 | `upgrade-game-design-suite`, 그리고 두 제품의 대표 진입 스킬 `game-design-studio`·`game-design-career` |
+| 진입 경로 | 설치·업데이트 안내가 Git 마켓플레이스와 업그레이드 스킬을 1순위로 제시합니다. 로컬 마켓플레이스는 저장소를 직접 고칠 때의 대안입니다 |
+| shared 도식 3개 추가 | `suite-entry-routing-flow`, `suite-handoff-ownership-flow`, `suite-update-approval-flow` |
+| shared 도식 1개 확장 | `app-cli-install-flow`에 UTF-8 preflight와 마켓플레이스 종류 band |
+
+버전의 유일한 원천은 `products/*/plugin/.codex-plugin/plugin.json`입니다. `plugins/**` snapshot, 두 `BUILD-MANIFEST.json`, `shared/updates/installed-components.json`은 생성물이므로 `npm run build`와 `tooling/generate-update-manifest.mjs`로만 바뀝니다. `tooling/marketplace-smoke.mjs`의 `RELEASE_PLUGIN_VERSION`과 `tooling/isolation-smoke.mjs`의 매니페스트 비교값은 그 원천을 따라가는 상수입니다.
+
+`shared/updates/suite-release.lock.json`의 `installedTag`는 두 제품 버전과 `v` 접두사만 다르게 일치해야 하며, 어긋나면 `loadSuiteRelease`가 `SUITE_VERSION_MISMATCH`로 검증을 멈춥니다.
+
+같은 파일의 `commit` 필드는 **릴리스 내용이 확정된 커밋**을 가리킵니다. 파일이 자기 커밋 해시를 담을 수 없으므로 태그가 붙는 커밋 자체를 적을 방법이 없기 때문입니다. `installed-components.json`의 다른 구성 요소(skillstead·archify·im-not-ai)는 `commit`이 상류 태그가 가리키는 실제 커밋이고 벤더링에 쓰이지만, `game-design-suite` 행의 `commit`은 최신 판정에 쓰이지 않고 40자 hex 형식 검사만 받습니다(`shared/scripts/check-game-design-updates.mjs`). 최신 판정은 `installedTag`만으로 합니다. 한 열이 두 뜻을 갖는다는 사실을 이 문단이 기록합니다.
+
 ## 관련 문서
 
 - [루트 README](../README.md)
