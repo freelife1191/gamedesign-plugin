@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 
 import {
+  DiagnosticError,
   assertNoReplacementCharacter,
   compareInstalledFiles,
   redactInstallFailure,
@@ -50,9 +51,24 @@ test("the tree fingerprint covers content and mode, and misses neither", async (
 });
 
 test("failure messages never carry a home path, a token, or a response body", () => {
-  const redacted = redactInstallFailure(`failed at /Users/someone/.codex with token sk-abc123: {"error":"boom"}`);
+  const foreign = new Error(`failed at /Users/someone/.codex with token sk-abc123: {"error":"boom"}`);
+  const redacted = redactInstallFailure(foreign);
   assert.doesNotMatch(redacted, /Users|\.codex|sk-|boom/u);
   assert.match(redacted, /details redacted/u);
+  // A raw string is foreign too: only text this module authored is allowed through.
+  assert.match(redactInstallFailure(foreign.message), /details redacted/u);
+});
+
+test("our own diagnostics survive redaction, because a redacted CI failure is unactionable", () => {
+  assert.equal(
+    redactInstallFailure(new DiagnosticError("game-design-career/README.md differs between source and install cache")),
+    "game-design-career/README.md differs between source and install cache",
+  );
+  assert.throws(() => assertNoReplacementCharacter("깨진 �", "plugin list stdout"), DiagnosticError);
+  assert.equal(
+    redactInstallFailure(new DiagnosticError("plugin list stdout returned a U+FFFD replacement character")),
+    "plugin list stdout returned a U+FFFD replacement character",
+  );
 });
 
 test("a missing codex CLI is reported as a skip, and refused outright when the gate requires it", async () => {

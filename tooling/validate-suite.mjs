@@ -17,9 +17,12 @@ const STAGES = Object.freeze([
   { name: "evidence audit", command: [process.execPath, "tooling/audit-evidence.mjs", "--check"], rerun: "node tooling/audit-evidence.mjs --check" },
   { name: "vendor hash", command: [process.execPath, "tooling/verify-vendor-hash.mjs"], rerun: "node tooling/verify-vendor-hash.mjs" },
   { name: "update manifest", command: [process.execPath, "tooling/generate-update-manifest.mjs", "--check"], rerun: "node tooling/generate-update-manifest.mjs --check" },
-  { name: "unit tests", command: ["npm", "run", "test:unit"], rerun: "npm run test:unit" },
-  { name: "contract tests", command: ["npm", "run", "test:contracts"], rerun: "npm run test:contracts" },
-  { name: "product tests", command: ["npm", "run", "test:products"], rerun: "npm run test:products" },
+  // These three call the group runner directly rather than through `npm run`. On Windows `npm` is a
+  // .cmd shim, which spawnSync cannot execute without a shell, so the npm form failed instantly there
+  // while looking like a test failure. The rerun hints stay in npm form because that is what a person types.
+  { name: "unit tests", command: [process.execPath, "tooling/run-test-group.mjs", "unit"], rerun: "npm run test:unit" },
+  { name: "contract tests", command: [process.execPath, "tooling/run-test-group.mjs", "contracts"], rerun: "npm run test:contracts" },
+  { name: "product tests", command: [process.execPath, "tooling/run-test-group.mjs", "products", "e2e/career", "e2e/studio"], rerun: "npm run test:products" },
   { name: "clean build drift", command: [process.execPath, "tooling/validate-build-drift.mjs"], rerun: "node tooling/validate-build-drift.mjs" },
   { name: "official plugin validators", command: [process.execPath, "tooling/validate-packages.mjs", "plugins"], rerun: "node tooling/validate-packages.mjs plugins" },
   { name: "skill quick validators", command: [process.execPath, "tooling/validate-packages.mjs", "skills"], rerun: "node tooling/validate-packages.mjs skills" },

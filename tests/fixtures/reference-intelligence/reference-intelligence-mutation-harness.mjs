@@ -123,8 +123,13 @@ function selectedTestSource(mutation, moduleUrl, tamper) {
   else if (tamper === "oversize-output") scenario = `process.stdout.write("PASS\\n" + "x".repeat(${MAX_OUTPUT_BYTES + 1})); ${scenario}`;
   else if (tamper === "misleading-output") scenario = 'process.stdout.write("PASS: mutation detected\\n");';
   else if (["timeout-orphan", "unclosed-evidence-fd"].includes(tamper)) {
+    // The orphan is unref'd and its stdio is ignored, so nothing it does keeps the selected test's event
+    // loop alive. Without an explicit timer the loop empties, Node exits despite the never-settling
+    // promise, and the harness reaches a later stage instead of the timeout this tamper exists to force.
+    // Whether that happens depends on the test runner's internals and therefore on the Node version, so
+    // the hang has to be stated outright rather than inherited from the runner.
     const inherit = tamper === "unclosed-evidence-fd" ? ", 3" : "";
-    scenario = `const child = spawn(process.execPath, [${JSON.stringify(hostilePath)}, process.env.REFERENCE_INTELLIGENCE_HOSTILE_PID_PATH, process.env.REFERENCE_INTELLIGENCE_HOSTILE_SENTINEL], { stdio: ["ignore", "ignore", "ignore"${inherit}] }); child.unref(); ${tamper === "timeout-orphan" ? "await new Promise(() => {});" : scenario}`;
+    scenario = `const child = spawn(process.execPath, [${JSON.stringify(hostilePath)}, process.env.REFERENCE_INTELLIGENCE_HOSTILE_PID_PATH, process.env.REFERENCE_INTELLIGENCE_HOSTILE_SENTINEL], { stdio: ["ignore", "ignore", "ignore"${inherit}] }); child.unref(); ${tamper === "timeout-orphan" ? "const keepalive = setInterval(() => {}, 1000); void keepalive; await new Promise(() => {});" : scenario}`;
   }
   return `import assert, { AssertionError } from "node:assert/strict";\nimport { spawn } from "node:child_process";\nimport { writeSync } from "node:fs";\nimport test from "node:test";\nconst mutationId = ${JSON.stringify(mutation.id)}; const testId = ${JSON.stringify(mutation.testId)}; const sentinel = ${JSON.stringify(mutation.message)};\nfunction mutationEqual(actual, expected) { ${wrapperLead} try { assert.equal(actual, expected, sentinel); } catch (error) { if (!(error instanceof AssertionError) || error.operator !== "strictEqual" || error.message.split("\\n")[0] !== sentinel || !Object.is(error.actual, actual) || !Object.is(error.expected, expected)) throw error; ${environmentCheck} if (process.env.REFERENCE_INTELLIGENCE_MUTATION_EVIDENCE === "fd-json-v3" && process.env.REFERENCE_INTELLIGENCE_MUTATION_ID === mutationId && process.env.REFERENCE_INTELLIGENCE_MUTATION_TEST_ID === testId && process.env.REFERENCE_INTELLIGENCE_MUTATION_MESSAGE === sentinel) { ${writeAction} } throw error; } }\ntest(testId, async () => { ${scenario} });\n`;
 }

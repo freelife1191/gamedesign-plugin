@@ -38,18 +38,25 @@ const COMPARED_FILES = Object.freeze(Object.fromEntries(PRODUCTS.map((product) =
 // is the one thing a failing install gate most needs to read.
 export class PreconditionError extends Error {}
 
+// Our own diagnostics, written here in this file, describing what we checked and what we found. They
+// name a stage, a product, or a package-relative path — never a user home, a credential, or a remote
+// body — so they survive redaction intact. Anything thrown by the filesystem or by a child process is
+// foreign text and gets redacted.
+export class DiagnosticError extends Error {}
+
 export function samePathAfterNfc(left, right) {
   return String(left).normalize("NFC") === String(right).normalize("NFC");
 }
 
 export function assertNoReplacementCharacter(text, label) {
-  if (String(text).includes("�")) throw new Error(`${label} returned a U+FFFD replacement character`);
+  if (String(text).includes("�")) throw new DiagnosticError(`${label} returned a U+FFFD replacement character`);
 }
 
 // Failure text from a child process can carry the user's home path, a credential, or a remote response
 // body. None of that is needed to act on a failure, and all of it ends up in a public CI log.
-export function redactInstallFailure(message) {
-  const source = String(message);
+export function redactInstallFailure(error) {
+  if (error instanceof DiagnosticError) return error.message;
+  const source = String(error instanceof Error ? error.message : error);
   if (/ENOENT/u.test(source)) return "a required file was missing (details redacted)";
   if (/timed out|ETIMEDOUT/iu.test(source)) return "a command timed out (details redacted)";
   return "command failed (details redacted)";
@@ -67,14 +74,14 @@ export async function treeFingerprint(root) {
       const absolute = path.join(directory, entry.name);
       const relative = path.posix.join(prefix, entry.name).normalize("NFC");
       const stats = await lstat(absolute);
-      if (stats.isSymbolicLink()) throw new Error("fingerprinted tree contains a symlink");
+      if (stats.isSymbolicLink()) throw new DiagnosticError("fingerprinted tree contains a symlink");
       const mode = (stats.mode & 0o7777).toString(8);
       if (stats.isDirectory()) {
         hash.update(`D ${relative} ${mode}\n`);
         await walk(absolute, relative);
         continue;
       }
-      if (!stats.isFile()) throw new Error("fingerprinted tree contains a non-regular file");
+      if (!stats.isFile()) throw new DiagnosticError("fingerprinted tree contains a non-regular file");
       hash.update(`F ${relative} ${mode} ${sha256(await readFile(absolute))}\n`);
     }
   };
@@ -90,7 +97,7 @@ export async function compareInstalledFiles(sourceRoot, cacheRoot, relativePaths
     const sourceBytes = await readFile(path.join(sourceRoot, relative));
     const cachedBytes = await readFile(path.join(cacheRoot, relative));
     const digest = sha256(sourceBytes);
-    if (digest !== sha256(cachedBytes)) throw new Error(`${label}/${relative} differs between source and install cache`);
+    if (digest !== sha256(cachedBytes)) throw new DiagnosticError(`${label}/${relative} differs between source and install cache`);
     assertNoReplacementCharacter(sourceBytes.toString("utf8"), `${label}/${relative}`);
     compared.push({ path: relative, sha256: digest });
   }
@@ -101,15 +108,15 @@ function run(command, args, { cwd, env, timeout = 180_000, json = false }) {
   const label = path.basename(command);
   const result = spawnSync(command, args, { cwd, env, encoding: "utf8", shell: false, timeout });
   if (result.error) throw result.error;
-  if (result.signal) throw new Error(`${label} terminated by ${result.signal}`);
-  if (result.status !== 0) throw new Error(`${label} exited ${result.status}`);
+  if (result.signal) throw new DiagnosticError(`${label} terminated by ${result.signal}`);
+  if (result.status !== 0) throw new DiagnosticError(`${label} exited ${result.status}`);
   assertNoReplacementCharacter(result.stdout ?? "", `${label} stdout`);
   assertNoReplacementCharacter(result.stderr ?? "", `${label} stderr`);
   if (!json) return result.stdout;
   try {
     return JSON.parse(result.stdout);
   } catch {
-    throw new Error(`${label} returned invalid JSON`);
+    throw new DiagnosticError(`${label} returned invalid JSON`);
   }
 }
 
@@ -194,6 +201,9 @@ export async function runInstallRoundtrip({
   let status = "INCOMPLETE";
   let failure = null;
   let temporaryStateCleanup = false;
+  // The redaction below is deliberate, and it leaves a CI failure with nothing to act on unless we say
+  // where we were. A stage name is our own literal, so it carries no path, credential, or remote body.
+  let stage = "prepare-workspace";
 
   try {
     await Promise.all([env.HOME, env.CODEX_HOME, env.TMPDIR, workspace].map((directory) => mkdir(directory, { recursive: true })));
@@ -202,29 +212,36 @@ export async function runInstallRoundtrip({
     await mkdir(path.join(workspace, ".game-design"), { recursive: true });
     await writeFile(path.join(workspace, ".game-design", "메모 파일.md"), "설치 전 상태\n", "utf8");
     await writeFile(path.join(workspace, "무관한 이웃 파일.txt"), "install must not touch this\n", "utf8");
+    stage = "stage-marketplace-source";
     await stageMarketplaceSource(canonicalRepoRoot, marketplaceRoot);
 
+    stage = "marketplace-add";
     run(codex, ["plugin", "marketplace", "add", marketplaceRoot, "--json"], { cwd: workspace, env, json: true });
+    stage = "workspace-fingerprint-before";
     const workspaceBefore = await treeFingerprint(workspace);
 
     for (const product of PRODUCTS) {
+      stage = `read-manifest:${product}`;
       const manifestPath = path.join(marketplaceRoot, "plugins", product, ".codex-plugin/plugin.json");
       const { version } = JSON.parse(await readFile(manifestPath, "utf8"));
-      if (typeof version !== "string" || version.length === 0) throw new Error(`${product} manifest has no version`);
+      if (typeof version !== "string" || version.length === 0) throw new DiagnosticError(`${product} manifest has no version`);
       const cacheRoot = path.join(env.CODEX_HOME, "plugins", "cache", MARKETPLACE, product, version);
 
       // Install, then install again. The spec requires the workspace to survive both, and requires the
       // second run to be a real no-op rather than a partial rewrite of the cache.
       for (const attempt of ["install", "reinstall"]) {
+        stage = `plugin-add:${product}:${attempt}`;
         run(codex, ["plugin", "add", `${product}@${MARKETPLACE}`, "--json"], { cwd: workspace, env, json: true });
         if (!samePathAfterNfc(await realpath(cacheRoot), cacheRoot)) {
-          throw new Error(`${attempt} resolved the plugin cache outside its declared path`);
+          throw new DiagnosticError(`${attempt} resolved the plugin cache outside its declared path`);
         }
       }
 
+      stage = `plugin-list:${product}`;
       const listed = run(codex, ["plugin", "list", "--json"], { cwd: workspace, env, json: true });
       assertNoReplacementCharacter(JSON.stringify(listed), "plugin list");
 
+      stage = `compare-installed-files:${product}`;
       const compared = await compareInstalledFiles(
         path.join(marketplaceRoot, "plugins", product),
         cacheRoot,
@@ -235,14 +252,16 @@ export async function runInstallRoundtrip({
       products.push({ product, version, compared });
     }
 
+    stage = "workspace-fingerprint-after";
     if (await treeFingerprint(workspace) !== workspaceBefore) {
-      throw new Error("the workspace changed across install and reinstall");
+      throw new DiagnosticError("the workspace changed across install and reinstall");
     }
     status = "PASS";
   } catch (error) {
     failure = {
       code: "install-roundtrip-failed",
-      message: redactInstallFailure(error instanceof Error ? error.message : error),
+      stage,
+      message: redactInstallFailure(error),
     };
   } finally {
     try {
@@ -274,7 +293,7 @@ async function main() {
       tempParent = args[index + 1];
       index += 1;
     } else {
-      throw new Error(usage);
+      throw new PreconditionError(usage);
     }
   }
   const result = await runInstallRoundtrip({ requireCodex, tempParent });
@@ -287,7 +306,7 @@ if (entry && pathToFileURL(entry).href === import.meta.url) {
   main().catch((error) => {
     const message = error instanceof PreconditionError
       ? error.message
-      : redactInstallFailure(error instanceof Error ? error.message : error);
+      : redactInstallFailure(error);
     process.stderr.write(`${message}\n`);
     process.exitCode = 1;
   });

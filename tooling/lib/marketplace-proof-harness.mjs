@@ -37,8 +37,13 @@ function sameIdentity(left, right) {
   return ["dev", "ino", "mode", "size", "sha256"].every((key) => left[key] === right[key]);
 }
 
+// ctimeMs is here because inode numbers are recycled. Linux filesystems routinely hand a freed inode
+// straight back to the next file created in the same directory, so a validator that deletes a file and
+// writes it again with the same bytes and mode produced an identical dev/ino/mode/size tuple and slipped
+// past this check on a Linux runner while being caught on macOS. Recreating a file always sets a new
+// change time, so ctime is what makes the tuple an identity rather than a description.
 function sameStats(left, right) {
-  return ["dev", "ino", "mode", "size"].every((key) => left[key] === right[key]);
+  return ["dev", "ino", "mode", "size", "ctimeMs"].every((key) => left[key] === right[key]);
 }
 
 function updateLengthPrefixed(hash, kind, value) {
@@ -114,7 +119,7 @@ export async function artifactTreeIdentity(root) {
   if (!rootStats.isDirectory() || rootStats.isSymbolicLink()) throw new Error("artifact root type mismatch");
   const hash = createHash("sha256");
   updateLengthPrefixed(hash, 1, JSON.stringify([
-    "", "directory", rootStats.dev, rootStats.ino, rootStats.mode, rootStats.size,
+    "", "directory", rootStats.dev, rootStats.ino, rootStats.mode, rootStats.size, rootStats.ctimeMs,
   ]));
   const visit = async (directory, relativeDirectory = "") => {
     const entries = await readdir(directory, { withFileTypes: true });
@@ -133,7 +138,7 @@ export async function artifactTreeIdentity(root) {
       const type = before.isDirectory() ? "directory" : before.isFile() ? "file" : null;
       if (!type) throw new Error("artifact tree contains an unsupported entry");
       updateLengthPrefixed(hash, 1, JSON.stringify([
-        portable, type, before.dev, before.ino, before.mode, before.size,
+        portable, type, before.dev, before.ino, before.mode, before.size, before.ctimeMs,
       ]));
       if (type === "directory") {
         await visit(absolute, relative);
