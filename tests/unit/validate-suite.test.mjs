@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { FORMAT_RESULT_FILES, runSuite } from "../../tooling/validate-suite.mjs";
+import { FORMAT_RESULT_FILES, SKIPPABLE_STAGES, runSuite } from "../../tooling/validate-suite.mjs";
 
 const expectedStages = [
   "reference drift",
@@ -143,6 +143,58 @@ test("complete Task 11 delegates readiness to the full format regression gate", 
     assert.equal(result.formatStatus, "PASS");
     assert.deepEqual(formatStage.command.slice(1), ["tests/formats/run-format-gate.mjs"]);
     assert.equal(formatStage.rerun, "npm run test:formats");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("skippable stages are a closed set and a skip is never reported as a pass", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "validate-suite-skip-"));
+  const ran = [];
+  try {
+    const result = await runSuite({
+      repoRoot: root,
+      skip: [...SKIPPABLE_STAGES],
+      runCommand: async (stage) => {
+        ran.push(stage.name);
+        return { status: 0, signal: null };
+      },
+    });
+    assert.deepEqual([...SKIPPABLE_STAGES], [
+      "official plugin validators",
+      "skill quick validators",
+      "format smoke",
+    ]);
+    assert.equal(result.ok, true);
+    assert.equal(result.releaseReady, false);
+    assert.equal(result.formatStatus, "SKIPPED");
+    assert.deepEqual(result.skipped, [...SKIPPABLE_STAGES]);
+    for (const skipped of result.skipped) assert.equal(ran.includes(skipped), false);
+    assert.deepEqual(ran, expectedStages.filter((stage) => !SKIPPABLE_STAGES.includes(stage)));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("an unknown skip name is refused rather than silently ignored", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "validate-suite-skip-"));
+  try {
+    await assert.rejects(
+      () => runSuite({ repoRoot: root, skip: ["unit tests"], runCommand: async () => ({ status: 0, signal: null }) }),
+      /not skippable/u,
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("release mode refuses to run with any stage skipped", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "validate-suite-skip-"));
+  try {
+    await assert.rejects(
+      () => runSuite({ repoRoot: root, release: true, skip: ["format smoke"], runCommand: async () => ({ status: 0, signal: null }) }),
+      /release runs every stage/u,
+    );
   } finally {
     await rm(root, { recursive: true, force: true });
   }

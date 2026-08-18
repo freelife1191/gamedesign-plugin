@@ -27,6 +27,16 @@ const STAGES = Object.freeze([
   { name: "format smoke", command: [process.execPath, "tests/formats/run-format-gate.mjs"], rerun: "npm run test:formats" },
 ]);
 
+// CI cannot run these three. The official plugin and skill validators ship with a Codex install, and
+// the format smoke imports a host-provided module that is not a dependency of this package. Leaving
+// them out is legitimate; leaving them out quietly is not, because a green run would then read as
+// "everything was checked". The set is closed here, and a skip prints on its own line, never as PASS.
+export const SKIPPABLE_STAGES = Object.freeze([
+  "official plugin validators",
+  "skill quick validators",
+  "format smoke",
+]);
+
 async function formatState(repoRoot) {
   const formatsRoot = path.join(repoRoot, "tests/formats");
   const entries = await readdir(formatsRoot).catch((error) => {
@@ -53,10 +63,22 @@ function processPassed(outcome) {
 export async function runSuite({
   repoRoot = fileURLToPath(new URL("..", import.meta.url)),
   release = false,
+  skip = [],
   runCommand = defaultRunCommand,
 } = {}) {
   const absoluteRoot = path.resolve(repoRoot);
+  const skipped = [...new Set(skip)];
+  for (const name of skipped) {
+    if (!SKIPPABLE_STAGES.includes(name)) throw new Error(`${name} is not skippable`);
+  }
+  if (release && skipped.length > 0) throw new Error("release runs every stage; --skip is refused");
+  const isSkipped = (name) => skipped.includes(name);
+
   for (const stage of STAGES.slice(0, -1)) {
+    if (isSkipped(stage.name)) {
+      process.stdout.write(`[suite] SKIP: ${stage.name} (run locally before release)\n`);
+      continue;
+    }
     process.stdout.write(`[suite] ${stage.name}\n`);
     let outcome;
     try {
@@ -66,20 +88,28 @@ export async function runSuite({
     }
     if (!processPassed(outcome)) {
       process.stderr.write(`[suite] FAIL: ${stage.name}\nRerun: ${stage.rerun}\n`);
-      return { ok: false, releaseReady: false, failedStage: stage.name, rerun: stage.rerun };
+      return { ok: false, releaseReady: false, skipped, failedStage: stage.name, rerun: stage.rerun };
     }
     process.stdout.write(`[suite] PASS: ${stage.name}\n`);
   }
 
-  const state = await formatState(absoluteRoot);
   const formatStage = STAGES.at(-1);
+  if (isSkipped(formatStage.name)) {
+    // Skipping means the stage never runs, so its readiness state is never consulted either. A
+    // PARTIAL tree must not fail a run that was told not to look at the tree in the first place.
+    process.stdout.write(`[suite] SKIP: ${formatStage.name} (run locally before release)\n`);
+    process.stdout.write(`Suite release readiness: INCOMPLETE (skipped: ${skipped.join(", ")})\n`);
+    return { ok: true, releaseReady: false, skipped, formatStatus: "SKIPPED" };
+  }
+
+  const state = await formatState(absoluteRoot);
   if (state === "UNAVAILABLE") {
     process.stdout.write("[suite] format smoke: UNAVAILABLE (Task 11 not present)\nSuite release readiness: INCOMPLETE\n");
-    return { ok: !release, releaseReady: false, formatStatus: "UNAVAILABLE", failedStage: release ? "format smoke" : undefined, rerun: release ? formatStage.rerun : undefined };
+    return { ok: !release, releaseReady: false, skipped, formatStatus: "UNAVAILABLE", failedStage: release ? "format smoke" : undefined, rerun: release ? formatStage.rerun : undefined };
   }
   if (state === "PARTIAL") {
     process.stderr.write(`[suite] FAIL: format smoke (partial Task 11 files)\nRerun: ${formatStage.rerun}\n`);
-    return { ok: false, releaseReady: false, formatStatus: "FAIL", failedStage: "format smoke", rerun: formatStage.rerun };
+    return { ok: false, releaseReady: false, skipped, formatStatus: "FAIL", failedStage: "format smoke", rerun: formatStage.rerun };
   }
 
   let outcome;
@@ -90,18 +120,34 @@ export async function runSuite({
   }
   if (!processPassed(outcome)) {
     process.stderr.write(`[suite] FAIL: format smoke\nRerun: ${formatStage.rerun}\n`);
-    return { ok: false, releaseReady: false, formatStatus: "FAIL", failedStage: "format smoke", rerun: formatStage.rerun };
+    return { ok: false, releaseReady: false, skipped, formatStatus: "FAIL", failedStage: "format smoke", rerun: formatStage.rerun };
   }
-  process.stdout.write("[suite] PASS: format smoke\nSuite release readiness: COMPLETE\n");
-  return { ok: true, releaseReady: true, formatStatus: "PASS" };
+  process.stdout.write("[suite] PASS: format smoke\n");
+  process.stdout.write(skipped.length === 0
+    ? "Suite release readiness: COMPLETE\n"
+    : `Suite release readiness: INCOMPLETE (skipped: ${skipped.join(", ")})\n`);
+  return { ok: true, releaseReady: skipped.length === 0, skipped, formatStatus: "PASS" };
 }
 
 async function main() {
+  const usage = "Usage: node tooling/validate-suite.mjs [--release] [--skip <stage>]...";
   const args = process.argv.slice(2);
-  if (args.some((arg) => arg !== "--release") || args.filter((arg) => arg === "--release").length > 1) {
-    throw new Error("Usage: node tooling/validate-suite.mjs [--release]");
+  const skip = [];
+  let release = false;
+  for (let index = 0; index < args.length; index += 1) {
+    if (args[index] === "--release") {
+      if (release) throw new Error(usage);
+      release = true;
+    } else if (args[index] === "--skip") {
+      const name = args[index + 1];
+      if (name === undefined) throw new Error("--skip needs a stage name");
+      skip.push(name);
+      index += 1;
+    } else {
+      throw new Error(usage);
+    }
   }
-  const result = await runSuite({ release: args.includes("--release") });
+  const result = await runSuite({ release, skip });
   if (!result.ok) process.exitCode = 1;
 }
 
