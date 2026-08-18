@@ -18,6 +18,7 @@ const expectedStages = [
   "official plugin validators",
   "skill quick validators",
   "isolation smoke",
+  "diagram render drift",
   "format smoke",
 ];
 
@@ -163,6 +164,7 @@ test("skippable stages are a closed set and a skip is never reported as a pass",
     assert.deepEqual([...SKIPPABLE_STAGES], [
       "official plugin validators",
       "skill quick validators",
+      "diagram render drift",
       "format smoke",
     ]);
     assert.equal(result.ok, true);

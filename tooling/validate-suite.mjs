@@ -27,16 +27,20 @@ const STAGES = Object.freeze([
   { name: "official plugin validators", command: [process.execPath, "tooling/validate-packages.mjs", "plugins"], rerun: "node tooling/validate-packages.mjs plugins" },
   { name: "skill quick validators", command: [process.execPath, "tooling/validate-packages.mjs", "skills"], rerun: "node tooling/validate-packages.mjs skills" },
   { name: "isolation smoke", command: [process.execPath, "tooling/isolation-smoke.mjs"], rerun: "node tooling/isolation-smoke.mjs" },
+  { name: "diagram render drift", command: [process.execPath, "tooling/build-use-case-diagrams.mjs", "--check"], rerun: "npm run check:guide-diagrams" },
   { name: "format smoke", command: [process.execPath, "tests/formats/run-format-gate.mjs"], rerun: "npm run test:formats" },
 ]);
 
-// CI cannot run these three. The official plugin and skill validators ship with a Codex install, and
-// the format smoke imports a host-provided module that is not a dependency of this package. Leaving
-// them out is legitimate; leaving them out quietly is not, because a green run would then read as
-// "everything was checked". The set is closed here, and a skip prints on its own line, never as PASS.
+// CI cannot run these four. The official plugin and skill validators ship with a Codex install; the
+// format smoke imports a host-provided module that is not a dependency of this package; and the diagram
+// render drift compares PNG bytes produced by a headless Chromium against the host's fonts, so it only
+// means something on a machine whose renderer matches the one that committed them. Leaving them out is
+// legitimate; leaving them out quietly is not, because a green run would then read as "everything was
+// checked". The set is closed here, and a skip prints on its own line, never as PASS.
 export const SKIPPABLE_STAGES = Object.freeze([
   "official plugin validators",
   "skill quick validators",
+  "diagram render drift",
   "format smoke",
 ]);
 

@@ -56,10 +56,31 @@ test("the install lane fails rather than skips when codex is missing, and needs 
   const workflow = await readFile(workflowPath, "utf8");
 
   assert.match(workflow, /install-roundtrip\.mjs --require-codex/u);
-  assert.match(workflow, /npm install -g @openai\/codex/u);
+  assert.match(workflow, /--codex \.codex-cli\/node_modules\/@openai\/codex\/bin\/codex\.js/u,
+    "the gate must run the JavaScript entry point, not a launcher that Windows ships as a .cmd shim");
+  assert.match(workflow, /npm install --no-save[^\n]*--prefix \.codex-cli @openai\/codex/u);
+  assert.doesNotMatch(workflow, /npm install -g/u, "a global install leaves only a launcher whose path differs per platform");
   assert.doesNotMatch(
     workflow,
     /OPENAI_API_KEY|CODEX_API_KEY|secrets\./u,
     "the install gate calls no model, so it must not read or carry a credential",
   );
+});
+
+test("the offline lane stages the vendored Archify rather than weakening the contracts that need it", async () => {
+  const workflow = await readFile(workflowPath, "utf8");
+  assert.match(workflow, /node tooling\/stage-host-archify\.mjs/u);
+  // Staging must come before the suite, or the contracts run against a resolver that still sees nothing.
+  assert.ok(
+    workflow.indexOf("stage-host-archify.mjs") < workflow.indexOf("validate-suite.mjs"),
+    "the CLI has to be in place before the stage that resolves it",
+  );
+});
+
+test("a hung lane fails within the hour and a superseded run is cancelled", async () => {
+  const workflow = await readFile(workflowPath, "utf8");
+  assert.match(workflow, /^concurrency:\n  group: [^\n]+\n  cancel-in-progress: true$/mu);
+  const limits = [...workflow.matchAll(/^    timeout-minutes: (\d+)$/gmu)].map((match) => Number(match[1]));
+  assert.equal(limits.length, 2, "every lane needs its own ceiling");
+  for (const limit of limits) assert.ok(limit > 0 && limit <= 60, `a lane ceiling of ${limit} minutes is not a ceiling`);
 });

@@ -10,10 +10,19 @@ on:
 permissions:
   contents: read
 
+# A new push supersedes the run it replaces; keeping the old one alive only burns runner minutes on a
+# tree nobody will merge.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   offline-gate:
     name: Offline gate (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    # The full suite takes roughly ten minutes locally and Windows runners are slower, so this is loose
+    # enough for an honest run and tight enough that a hang fails within the hour instead of after six.
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -27,14 +36,22 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      # The official plugin and skill validators ship with a Codex install, and the format smoke
-      # imports a host-provided module that is not a dependency of this package. Neither can run
-      # here. validate-suite records the three as SKIPPED, so a green run is never read as a full one.
+      # Several contract tests validate their specs against a real Archify CLI resolved from the host.
+      # This puts the copy this repository already vendors, and verifies by hash in the same run, where
+      # the resolver looks — so the contracts assert against the real tool rather than being weakened.
+      - name: Stage the vendored Archify CLI as a host skill
+        run: node tooling/stage-host-archify.mjs
+      # Four stages cannot run here. The official plugin and skill validators ship with a Codex install.
+      # The format smoke imports a host-provided module that is not a dependency of this package. The
+      # diagram render drift compares PNG bytes produced by a headless Chromium against the host's fonts,
+      # so it only means anything on the machine whose renderer committed them. validate-suite records
+      # all four as SKIPPED, so a green run here is never read as a full one.
       - name: Validate suite
         run: >-
           node tooling/validate-suite.mjs
           --skip "official plugin validators"
           --skip "skill quick validators"
+          --skip "diagram render drift"
           --skip "format smoke"
       - name: Note the stages CI could not run
         if: always()
@@ -45,12 +62,14 @@ jobs:
             echo ""
             echo "- official plugin validators"
             echo "- skill quick validators"
+            echo "- diagram render drift"
             echo "- format smoke"
           } >> "$GITHUB_STEP_SUMMARY"
 
   install-gate:
     name: Install gate (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -64,11 +83,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      # Installed into a directory we name rather than globally, so the JavaScript entry point is at a
+      # path that is identical on every runner. A global install would leave only a launcher, and on
+      # Windows that launcher is a .cmd shim, which Node refuses to spawn without a shell — and a shell
+      # would have to re-quote the Hangul, space-containing paths this gate exists to exercise.
       - name: Install the Codex CLI
-        run: npm install -g @openai/codex
+        run: npm install --no-save --no-fund --no-audit --prefix .codex-cli @openai/codex
       # No model is called, so no credential is needed and none is provided. The round trip installs
       # both products under a Hangul, space-containing CODEX_HOME and workspace, then compares the
       # installed bytes against the source. --require-codex turns a missing CLI into a failure rather
       # than a silent skip, because here the CLI was just installed and its absence is a real fault.
       - name: Install round trip
-        run: node tooling/install-roundtrip.mjs --require-codex
+        run: >-
+          node tooling/install-roundtrip.mjs --require-codex
+          --codex .codex-cli/node_modules/@openai/codex/bin/codex.js

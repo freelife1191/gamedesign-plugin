@@ -57,8 +57,11 @@ export function assertNoReplacementCharacter(text, label) {
 export function redactInstallFailure(error) {
   if (error instanceof DiagnosticError) return error.message;
   const source = String(error instanceof Error ? error.message : error);
-  if (/ENOENT/u.test(source)) return "a required file was missing (details redacted)";
-  if (/timed out|ETIMEDOUT/iu.test(source)) return "a command timed out (details redacted)";
+  // A libuv error code names the kind of failure without naming anything about the machine, and a
+  // failure that says only "command failed" costs a whole CI round to diagnose.
+  const code = typeof error?.code === "string" ? error.code : (/\b(E[A-Z]{3,})\b/u.exec(source)?.[1] ?? null);
+  if (code) return `${code} (details redacted)`;
+  if (/timed out|timeout/iu.test(source)) return "a command timed out (details redacted)";
   return "command failed (details redacted)";
 }
 
@@ -104,9 +107,17 @@ export async function compareInstalledFiles(sourceRoot, cacheRoot, relativePaths
   return compared;
 }
 
-function run(command, args, { cwd, env, timeout = 180_000, json = false }) {
-  const label = path.basename(command);
-  const result = spawnSync(command, args, { cwd, env, encoding: "utf8", shell: false, timeout });
+// A launcher is either a native executable we spawn directly, or a JavaScript entry we hand to node.
+// Never a Windows .cmd/.bat shim: Node refuses to spawn those without a shell, and a shell would have to
+// re-quote the Hangul, space-containing paths this whole check exists to exercise.
+function launcher(executable) {
+  return /\.[cm]?js$/u.test(executable) ? [process.execPath, executable] : [executable];
+}
+
+function run(executable, args, { cwd, env, timeout = 180_000, json = false }) {
+  const [command, ...prefix] = launcher(executable);
+  const label = path.basename(executable);
+  const result = spawnSync(command, [...prefix, ...args], { cwd, env, encoding: "utf8", shell: false, timeout });
   if (result.error) throw result.error;
   if (result.signal) throw new DiagnosticError(`${label} terminated by ${result.signal}`);
   if (result.status !== 0) throw new DiagnosticError(`${label} exited ${result.status}`);
@@ -121,7 +132,9 @@ function run(command, args, { cwd, env, timeout = 180_000, json = false }) {
 }
 
 async function findExecutable(name) {
-  const extensions = process.platform === "win32" ? [".cmd", ".exe", ".bat", ""] : [""];
+  // .cmd and .bat are deliberately absent: see launcher(). On Windows a PATH lookup finds only a real
+  // executable, and a shim-only installation is reported as a missing CLI rather than spawned unsafely.
+  const extensions = process.platform === "win32" ? [".exe", ".com", ""] : [""];
   for (const directory of (process.env.PATH ?? "").split(path.delimiter).filter(Boolean)) {
     for (const extension of extensions) {
       const candidate = path.join(directory, `${name}${extension}`);
@@ -176,11 +189,14 @@ export async function runInstallRoundtrip({
   repoRoot = fileURLToPath(new URL("..", import.meta.url)),
   tempParent = tmpdir(),
   requireCodex = false,
+  codexPath = null,
   findExecutableImpl = findExecutable,
 } = {}) {
-  const codex = await findExecutableImpl("codex");
+  const codex = codexPath ?? await findExecutableImpl("codex");
   if (!codex) {
-    if (requireCodex) throw new PreconditionError("codex CLI is required for the install gate but was not found on PATH");
+    if (requireCodex) {
+      throw new PreconditionError("codex CLI is required for the install gate but was not found on PATH; pass --codex <path to the executable or to bin/codex.js>");
+    }
     return {
       status: "SKIPPED",
       reason: "codex-unavailable",
@@ -282,21 +298,25 @@ export async function runInstallRoundtrip({
 }
 
 async function main() {
-  const usage = "Usage: node tooling/install-roundtrip.mjs [--require-codex] [--temp-parent <directory>]";
+  const usage = "Usage: node tooling/install-roundtrip.mjs [--require-codex] [--codex <path>] [--temp-parent <directory>]";
   const args = process.argv.slice(2);
   let requireCodex = false;
   let tempParent = tmpdir();
+  let codexPath = null;
   for (let index = 0; index < args.length; index += 1) {
     if (args[index] === "--require-codex") {
       requireCodex = true;
     } else if (args[index] === "--temp-parent" && args[index + 1] !== undefined) {
       tempParent = args[index + 1];
       index += 1;
+    } else if (args[index] === "--codex" && args[index + 1] !== undefined) {
+      codexPath = path.resolve(args[index + 1]);
+      index += 1;
     } else {
       throw new PreconditionError(usage);
     }
   }
-  const result = await runInstallRoundtrip({ requireCodex, tempParent });
+  const result = await runInstallRoundtrip({ requireCodex, tempParent, codexPath });
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
   if (result.status === "INCOMPLETE") process.exitCode = 1;
 }

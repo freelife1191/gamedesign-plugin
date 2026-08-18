@@ -111,3 +111,10 @@ test("the source-to-cache comparison catches a one-byte drift, and refuses a cac
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test("a libuv error code survives redaction, because \"command failed\" costs a whole CI round", () => {
+  const spawnFailure = Object.assign(new Error("spawnSync C:\\Users\\runner\\AppData\\npm\\codex.cmd EINVAL"), { code: "EINVAL" });
+  const redacted = redactInstallFailure(spawnFailure);
+  assert.equal(redacted, "EINVAL (details redacted)");
+  assert.doesNotMatch(redacted, /Users|codex\.cmd/u);
+});
