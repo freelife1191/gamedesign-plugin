@@ -15,11 +15,13 @@ const ENTRY_SKILLS = Object.freeze([
     product: "game-design-studio",
     orchestrator: "orchestrate-game-design-project",
     counterpart: "game-design-career",
+    counterpartLabel: "Career",
   }),
   Object.freeze({
     product: "game-design-career",
     orchestrator: "orchestrate-game-design-career",
     counterpart: "game-design-studio",
+    counterpartLabel: "Studio",
   }),
 ]);
 
@@ -99,22 +101,25 @@ test("every skill the entry skill names is in its own routing registry", async (
 // 하나로, 교차가 필요한 요청은 최종 산출물을 내는 쪽이 owner로 간다. REQUIRED_HEADINGS는 표제가
 // 있는지만 보므로 이 구간을 통째로 비워도 아무 검사도 실패하지 않았다. 문구를 고정하되, 본문 아무
 // 데나가 아니라 ## Route decision 구간에서만 잘라 본다.
+// 세 번째 갈래는 반쪽으로 적어도 뜻이 통하는 것처럼 보인다. "stays the owner"와 "produces the
+// final artifact"만 고정하면 "우리가 owner다"라고만 말하는 스킬도 통과하고, 실제로 Career 쪽이
+// 소유권을 넘기는 절반을 빠뜨린 채 통과하고 있었다. 양도 문장까지 문자로 고정한다.
 const ROUTE_DECISION_RULES = Object.freeze([
   "One clear result: route straight to the specialist skill that owns it.",
   "Mixed, broad, or ambiguous: delegate to `{orchestrator}`.",
-  "stays the owner",
-  "produces the final artifact",
+  "stays the owner only when it produces the final artifact",
+  "Otherwise the {counterpartLabel} entry skill owns the request and this product supplies evidence.",
   "Read `references/handoff.md`",
   "Route only to a skill listed in",
   "`skillIds`",
 ]);
 
 test("the route decision names all three branches and justifies the registry rule truthfully", async () => {
-  for (const { product, orchestrator } of ENTRY_SKILLS) {
+  for (const { product, orchestrator, counterpartLabel } of ENTRY_SKILLS) {
     const skill = await entrySkill(product);
     const section = skill.slice(skill.indexOf("\n## Route decision\n"), skill.indexOf("\n## Case ID resolution\n"));
     for (const rule of ROUTE_DECISION_RULES) {
-      const expected = rule.replace("{orchestrator}", orchestrator);
+      const expected = rule.replace("{orchestrator}", orchestrator).replace("{counterpartLabel}", counterpartLabel);
       assert.ok(section.includes(expected), `${product}: the route decision is missing "${expected}"`);
     }
     // svg-infographic은 두 패키지에 설치돼 있으면서 routing.skillIds에는 없다. 목록 밖 스킬을

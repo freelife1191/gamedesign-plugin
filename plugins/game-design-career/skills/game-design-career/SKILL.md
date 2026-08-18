@@ -39,7 +39,7 @@ Record five fields before routing: the desired final result, the materials the u
 
 - One clear result: route straight to the specialist skill that owns it.
 - Mixed, broad, or ambiguous: delegate to `orchestrate-game-design-career`.
-- Needs Studio evidence: this product stays the owner when it produces the final artifact, which is the usual case for career work. Read `references/handoff.md` before starting either direction.
+- Needs Studio evidence: this product stays the owner only when it produces the final artifact, which is the usual case for career work. Otherwise the Studio entry skill owns the request and this product supplies evidence. Read `references/handoff.md` before starting either direction.
 
 Route only to a skill listed in [routing.json](../../references/routing.json) `skillIds`. A skill outside that list is not a routing target.
 

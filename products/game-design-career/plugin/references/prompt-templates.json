@@ -1760,7 +1760,7 @@
         "guides/game-design-career/workflow.md"
       ],
       "display_title": "커리어 사례 번호와 제품 사이 근거 요청을 함께 정리",
-      "sample_result_excerpt": "지정한 사례 번호는 이직 준비도 점검 경로로 풀었고, 기획 산출물 근거는 상대 제품에 요청할 항목으로 나눴습니다. 상대 제품 설치 여부를 알 수 없어 요청 발송은 보류했습니다. (ID: career:game-design-career:advanced; 파일: game-design-career/career-entry/advanced/content.md)"
+      "sample_result_excerpt": "지정한 사례 번호는 이직 준비도 점검 경로로 풀었고, 기획 산출물 근거는 상대 제품에 요청할 항목으로 나눴습니다. 상대 제품 조회를 한 번 돌려 설치·활성으로 확인한 뒤 요청을 보냈습니다. (ID: career:game-design-career:advanced; 파일: game-design-career/career-entry/advanced/content.md)"
     },
     {
       "id": "career:generate-image-assets:beginner",

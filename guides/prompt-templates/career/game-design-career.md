@@ -254,7 +254,7 @@ career-entry standard의 소유 제품과 좁힌 route를 보존하고 해소된
 - 함께 검토하는 역할: career-strategist
 
 ### 이 요청으로 받는 결과
-지정한 사례 번호는 이직 준비도 점검 경로로 풀었고, 기획 산출물 근거는 상대 제품에 요청할 항목으로 나눴습니다. 상대 제품 설치 여부를 알 수 없어 요청 발송은 보류했습니다. (ID: career:game-design-career:advanced; 파일: game-design-career/career-entry/advanced/content.md)
+지정한 사례 번호는 이직 준비도 점검 경로로 풀었고, 기획 산출물 근거는 상대 제품에 요청할 항목으로 나눴습니다. 상대 제품 조회를 한 번 돌려 설치·활성으로 확인한 뒤 요청을 보냈습니다. (ID: career:game-design-career:advanced; 파일: game-design-career/career-entry/advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

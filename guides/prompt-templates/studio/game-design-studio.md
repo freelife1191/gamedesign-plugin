@@ -254,7 +254,7 @@ studio-entry standard의 소유 제품과 좁힌 route를 보존하고 해소된
 - 함께 검토하는 역할: lead-game-designer
 
 ### 이 요청으로 받는 결과
-지정한 사례 번호는 경제 설계 경로로 풀었고, 지원자 눈높이 근거는 상대 제품에 요청할 항목으로 나눴습니다. 상대 제품 설치 여부를 알 수 없어 요청 발송은 보류했습니다. (ID: studio:game-design-studio:advanced; 파일: game-design/studio-entry/advanced/content.md)
+지정한 사례 번호는 경제 설계 경로로 풀었고, 지원자 눈높이 근거는 상대 제품에 요청할 항목으로 나눴습니다. 상대 제품 조회를 한 번 돌렸으나 목록을 읽지 못해 확인 불가로 적고, 자기 제품 몫만 완성한 뒤 빠진 근거를 blocker로 남겼습니다. (ID: studio:game-design-studio:advanced; 파일: game-design/studio-entry/advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
