@@ -18,12 +18,19 @@ test("mutation harness child invocation has no minor-version test CLI flags", as
   assert.match(source, /spawn\(process\.execPath, \[selectedTestPath\]/u);
 });
 
+// The child spawns its own `node --test`, so its wall clock tracks the whole
+// suite's contention, not the work it does: ~4.5s unloaded, past 30s when the
+// runner has 19 other files in flight. Derive the child's cap from the test
+// timeout so the two can never drift into a self-inflicted failure again.
+const TAMPER_TEST_TIMEOUT_MS = 90_000;
+const TAMPER_CHILD_TIMEOUT_MS = TAMPER_TEST_TIMEOUT_MS - 10_000;
+
 async function runTamper(tamper) {
   const child = spawn(process.execPath, [harness, "same-event-loser-created", `--tamper=${tamper}`], { cwd: root, stdio: ["ignore", "pipe", "pipe"] });
   const stdout = []; const stderr = []; let byteLength = 0; let settled = false;
   return new Promise((resolve, reject) => {
     const finish = (operation, value) => { if (settled) return; settled = true; clearTimeout(timeout); operation(value); };
-    const timeout = setTimeout(() => { child.kill(); finish(reject, new Error("self-tamper timeout")); }, 30_000);
+    const timeout = setTimeout(() => { child.kill(); finish(reject, new Error("self-tamper timeout")); }, TAMPER_CHILD_TIMEOUT_MS);
     const collect = (target) => (chunk) => { byteLength += chunk.byteLength; if (byteLength > 64 * 1024) { child.kill(); finish(reject, new Error("self-tamper output exceeded limit")); } else target.push(chunk); };
     child.stdout.on("data", collect(stdout)); child.stderr.on("data", collect(stderr)); child.once("error", () => finish(reject, new Error("self-tamper launch failed")));
     child.once("close", (code) => finish(resolve, { code, stdout: Buffer.concat(stdout).toString("utf8"), stderr: Buffer.concat(stderr).toString("utf8") }));
@@ -42,7 +49,7 @@ for (const [tamper, expectedStage] of [
   ["wrong-sentinel", ["verify-evidence", "evidence-mismatch"]],
   ["fake-reporter-output", ["verify-evidence", "evidence-empty"]],
   ["duplicate-evidence", ["verify-evidence", "evidence-line-count"]],
-]) test(`mutation harness rejects ${tamper}`, { timeout: 35_000 }, async () => {
+]) test(`mutation harness rejects ${tamper}`, { timeout: TAMPER_TEST_TIMEOUT_MS }, async () => {
   const result = await runTamper(tamper);
   assert.equal(result.code, 1); assert.equal(result.stdout, "");
   const error = JSON.parse(result.stderr); assert.equal(error.code, "memory.mutation_evidence_failed"); assert.equal(error.mutation, "same-event-loser-created"); assert.equal(error.tamper, tamper); assert.equal(error.stage, expectedStage[0]); assert.equal(error.reason, expectedStage[1]);
