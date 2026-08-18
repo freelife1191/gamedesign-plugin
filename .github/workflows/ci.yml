@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-gate:
+    name: Offline gate (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # The official plugin and skill validators ship with a Codex install, and the format smoke
+      # imports a host-provided module that is not a dependency of this package. Neither can run
+      # here. validate-suite records the three as SKIPPED, so a green run is never read as a full one.
+      - name: Validate suite
+        run: >-
+          node tooling/validate-suite.mjs
+          --skip "official plugin validators"
+          --skip "skill quick validators"
+          --skip "format smoke"
+      - name: Note the stages CI could not run
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "### Skipped here, run locally before release"
+            echo ""
+            echo "- official plugin validators"
+            echo "- skill quick validators"
+            echo "- format smoke"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  install-gate:
+    name: Install gate (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install the Codex CLI
+        run: npm install -g @openai/codex
+      # No model is called, so no credential is needed and none is provided. The round trip installs
+      # both products under a Hangul, space-containing CODEX_HOME and workspace, then compares the
+      # installed bytes against the source. --require-codex turns a missing CLI into a failure rather
+      # than a silent skip, because here the CLI was just installed and its absence is a real fault.
+      - name: Install round trip
+        run: node tooling/install-roundtrip.mjs --require-codex

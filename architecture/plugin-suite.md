@@ -182,6 +182,21 @@ plugin manifest에는 hook 필드를 추가하지 않고 기본 발견 경로 `h
 
 기본 검증은 `npm run validate`, release gate는 `npm run validate:release`입니다. marketplace smoke는 로컬 인증이 필요한 별도 장기 검증이므로 `npm run smoke:marketplace`로 분리합니다.
 
+### CI 레인
+
+`.github/workflows/ci.yml`이 pull request와 `main` push에서 두 레인을 `ubuntu-latest`와 `windows-latest` 양쪽으로 실행합니다.
+
+| 레인 | 내용 | 인증 |
+| --- | --- | --- |
+| 오프라인 게이트 | `node tooling/validate-suite.mjs`를 세 스테이지 `--skip`과 함께 실행 | 불필요 |
+| 설치 게이트 | `@openai/codex` 설치 후 `node tooling/install-roundtrip.mjs --require-codex` | 불필요 |
+
+설치 게이트는 한글과 공백을 포함한 `CODEX_HOME`·workspace, `LANG=C`, `LC_ALL=C` 아래에서 두 제품을 실제 설치하고 재설치한 뒤 README, `plugin.json`, 대표 스킬을 source와 SHA-256으로 대조합니다. 경로는 NFC 정규화 후 비교하며, 명령 출력에 `U+FFFD`가 있으면 실패합니다. 모델을 호출하지 않으므로 인증이 필요 없습니다. 로컬에서는 `npm run verify:install-roundtrip`으로 같은 검증을 돌리며, `codex`가 없으면 `SKIPPED`를 보고하고 종료합니다.
+
+CI에서 실행할 수 없는 스테이지는 세 개입니다. 공식 plugin 검증기와 skill quick 검증기는 Codex 설치 산출물을 요구하고, format smoke는 `package.json`에 없는 호스트 제공 모듈을 임포트합니다. `validate-suite`는 이 셋을 조용히 통과시키지 않고 `SKIPPED`로 기록하며, 스킵이 하나라도 있으면 release readiness를 `INCOMPLETE`로 끝냅니다.
+
+**릴리스 전에 이 세 스테이지는 로컬에서 반드시 실행합니다.** `npm run validate:release`는 `--skip`을 거부하므로 스킵한 채로 release gate를 통과할 수 없습니다. 인증이 필요한 라이브 스모크 `npm run smoke:marketplace`도 로컬 수동 실행으로 남습니다.
+
 ## 관련 문서
 
 - [루트 README](../README.md)
