@@ -4,7 +4,9 @@ import { lstat, readdir, realpath } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import { spawnSync } from "node:child_process";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+export const DEFAULT_TEST_TIMEOUT_MS = 300_000;
 
 async function collect(directory, files) {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -36,13 +38,21 @@ async function main() {
   if (files.length === 0) throw new Error("no test files found for requested groups");
   const env = { ...process.env };
   delete env.NODE_TEST_CONTEXT;
-  const result = spawnSync(process.execPath, ["--test", ...files], { cwd: repoRoot, env, stdio: "inherit" });
+  // A default ceiling for every test that does not set its own. Tests that declare a timeout keep it,
+  // so this changes nothing about how long the suite is allowed to take; what it changes is what a hang
+  // looks like. Without it, a test that never returns produces silence until the CI job is killed an
+  // hour later, with no way to tell which test it was. With it, the hang names itself.
+  const result = spawnSync(process.execPath, ["--test", `--test-timeout=${DEFAULT_TEST_TIMEOUT_MS}`, ...files], { cwd: repoRoot, env, stdio: "inherit" });
   if (result.error) throw result.error;
   if (result.signal) throw new Error(`test process terminated by ${result.signal}`);
   process.exitCode = result.status ?? 1;
 }
 
-main().catch((error) => {
-  process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
-  process.exitCode = 1;
-});
+// Without this guard, importing the module to read a constant runs the whole test group as a side effect.
+const entry = process.argv[1] ? path.resolve(process.argv[1]) : null;
+if (entry && pathToFileURL(entry).href === import.meta.url) {
+  main().catch((error) => {
+    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
+    process.exitCode = 1;
+  });
+}
