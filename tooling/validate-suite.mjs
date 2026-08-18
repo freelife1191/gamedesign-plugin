@@ -26,7 +26,16 @@ const STAGES = Object.freeze([
   { name: "clean build drift", command: [process.execPath, "tooling/validate-build-drift.mjs"], rerun: "node tooling/validate-build-drift.mjs" },
   { name: "official plugin validators", command: [process.execPath, "tooling/validate-packages.mjs", "plugins"], rerun: "node tooling/validate-packages.mjs plugins" },
   { name: "skill quick validators", command: [process.execPath, "tooling/validate-packages.mjs", "skills"], rerun: "node tooling/validate-packages.mjs skills" },
-  { name: "isolation smoke", command: [process.execPath, "tooling/isolation-smoke.mjs"], rerun: "node tooling/isolation-smoke.mjs" },
+  // The isolation smoke runs the official plugin validator on each isolated package as one of its
+  // steps. When the run has already accounted for that validator being absent, this stage inherits the
+  // same accounting instead of failing for a reason the run has openly recorded.
+  {
+    name: "isolation smoke",
+    command: [process.execPath, "tooling/isolation-smoke.mjs"],
+    rerun: "node tooling/isolation-smoke.mjs",
+    inheritsSkipOf: "official plugin validators",
+    inheritedFlag: "--allow-missing-official-validator",
+  },
   { name: "diagram render drift", command: [process.execPath, "tooling/build-use-case-diagrams.mjs", "--check"], rerun: "npm run check:guide-diagrams" },
   { name: "format smoke", command: [process.execPath, "tests/formats/run-format-gate.mjs"], rerun: "npm run test:formats" },
 ]);
@@ -87,9 +96,12 @@ export async function runSuite({
       continue;
     }
     process.stdout.write(`[suite] ${stage.name}\n`);
+    const effective = stage.inheritsSkipOf && isSkipped(stage.inheritsSkipOf)
+      ? { ...stage, command: [...stage.command, stage.inheritedFlag] }
+      : stage;
     let outcome;
     try {
-      outcome = await runCommand(stage, absoluteRoot);
+      outcome = await runCommand(effective, absoluteRoot);
     } catch (error) {
       outcome = { error, status: null, signal: null };
     }

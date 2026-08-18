@@ -264,11 +264,18 @@ function assertExactReferenceFiles(actual, expected, productName) {
   }
 }
 
-async function officialValidatorPath() {
+// The official validator is written by a Codex installation, not shipped in this repository, so a
+// machine without Codex has no way to run it. Callers that already account for that absence elsewhere
+// pass allowMissing and get null; everyone else still gets the hard failure, because silently not
+// validating a package is the failure mode this whole smoke exists to prevent.
+async function officialValidatorPath({ allowMissing = false } = {}) {
   const codexHome = process.env.CODEX_HOME ? path.resolve(process.env.CODEX_HOME) : path.join(homedir(), ".codex");
   const validator = path.join(codexHome, "skills/.system/plugin-creator/scripts/validate_plugin.py");
   const stats = await lstat(validator).catch(() => null);
-  if (!stats?.isFile() || stats.isSymbolicLink()) throw new Error(`official plugin validator unavailable: ${validator}`);
+  if (!stats?.isFile() || stats.isSymbolicLink()) {
+    if (allowMissing) return null;
+    throw new Error(`official plugin validator unavailable: ${validator}`);
+  }
   return realpath(validator);
 }
 
@@ -283,7 +290,7 @@ async function discoverPython() {
   throw new Error("python3 unavailable for official plugin validation");
 }
 
-async function verifyOne({ repoRoot, productName, isolationRoot, mutateCopy, actualHome }) {
+async function verifyOne({ repoRoot, productName, isolationRoot, mutateCopy, actualHome, allowMissingOfficialValidator }) {
   const build = await buildProduct({
     repoRoot,
     productName,
@@ -343,9 +350,14 @@ async function verifyOne({ repoRoot, productName, isolationRoot, mutateCopy, act
   await copyTree(path.join(pluginRoot, "assets/shared/templates/canonical-artifact"), artifact, { label: `${productName} canonical artifact` });
   const env = minimalEnvironment({ root: isolationRoot, home: isolatedHome, codexHome: isolatedCodex });
 
-  const isolatedOfficialValidator = path.join(isolationRoot, "official-validate-plugin.py");
-  await writeFile(isolatedOfficialValidator, await readFile(await officialValidatorPath()));
-  runProcess(await discoverPython(), [isolatedOfficialValidator, pluginRoot], { cwd: isolationRoot, env });
+  const officialValidator = await officialValidatorPath({ allowMissing: allowMissingOfficialValidator });
+  if (officialValidator === null) {
+    process.stdout.write(`${productName}: SKIP official plugin validator (run locally before release)\n`);
+  } else {
+    const isolatedOfficialValidator = path.join(isolationRoot, "official-validate-plugin.py");
+    await writeFile(isolatedOfficialValidator, await readFile(officialValidator));
+    runProcess(await discoverPython(), [isolatedOfficialValidator, pluginRoot], { cwd: isolationRoot, env });
+  }
   const session = runProcess(process.execPath, [path.join(pluginRoot, "scripts/capability-probe.mjs")], {
     cwd: isolationRoot,
     env,
@@ -462,7 +474,7 @@ async function verifyOne({ repoRoot, productName, isolationRoot, mutateCopy, act
   };
 }
 
-export async function runIsolationSmoke({ repoRoot = fileURLToPath(new URL("..", import.meta.url)), mutateCopy } = {}) {
+export async function runIsolationSmoke({ repoRoot = fileURLToPath(new URL("..", import.meta.url)), mutateCopy, allowMissingOfficialValidator = false } = {}) {
   const requestedRepoRoot = path.resolve(repoRoot);
   if (requestedRepoRoot === path.parse(requestedRepoRoot).root) throw new Error(`unsafe repository root: ${requestedRepoRoot}`);
   const canonicalRepoRoot = await canonicalDirectory(requestedRepoRoot, "repository root");
@@ -473,7 +485,7 @@ export async function runIsolationSmoke({ repoRoot = fileURLToPath(new URL("..",
   try {
     for (const productName of PRODUCT_NAMES) {
       const perPlugin = await mkdtemp(path.join(isolationRoot, `${TEMP_PREFIX}${productName}-`));
-      reports.push(await verifyOne({ repoRoot: canonicalRepoRoot, productName, isolationRoot: perPlugin, mutateCopy, actualHome }));
+      reports.push(await verifyOne({ repoRoot: canonicalRepoRoot, productName, isolationRoot: perPlugin, mutateCopy, actualHome, allowMissingOfficialValidator }));
     }
     return reports;
   } finally {
@@ -482,7 +494,12 @@ export async function runIsolationSmoke({ repoRoot = fileURLToPath(new URL("..",
 }
 
 async function main() {
-  const report = await runIsolationSmoke();
+  const args = process.argv.slice(2);
+  const allowMissingOfficialValidator = args.includes("--allow-missing-official-validator");
+  if (args.some((argument) => argument !== "--allow-missing-official-validator")) {
+    throw new Error("Usage: node tooling/isolation-smoke.mjs [--allow-missing-official-validator]");
+  }
+  const report = await runIsolationSmoke({ allowMissingOfficialValidator });
   for (const result of report) {
     process.stdout.write(`${result.name}: PASS (${result.skillCount} exact skills, ${result.vendorFiles.map(({ name, files }) => `${name}:${files}`).join(", ")} vendor files, network:0, canonical MD + quality profile + hooks)\n`);
   }

@@ -201,3 +201,35 @@ test("release mode refuses to run with any stage skipped", async () => {
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test("the isolation smoke inherits the official validator's skip rather than failing for the same reason", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "validate-suite-inherit-"));
+  const commands = new Map();
+  try {
+    await runSuite({
+      repoRoot: root,
+      skip: ["official plugin validators"],
+      runCommand: async (stage) => {
+        commands.set(stage.name, stage.command);
+        return { status: 0, signal: null };
+      },
+    });
+    assert.equal(commands.get("isolation smoke").at(-1), "--allow-missing-official-validator");
+
+    commands.clear();
+    await runSuite({
+      repoRoot: root,
+      runCommand: async (stage) => {
+        commands.set(stage.name, stage.command);
+        return { status: 0, signal: null };
+      },
+    });
+    assert.equal(
+      commands.get("isolation smoke").includes("--allow-missing-official-validator"),
+      false,
+      "a run that validates for real must not be told the validator may be missing",
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
