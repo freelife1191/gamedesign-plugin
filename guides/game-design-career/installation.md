@@ -51,6 +51,8 @@ codex plugin list
 
 ## 업데이트
 
+[![업데이트 알림에서 승인과 재설치와 검증을 거쳐 새 세션에서 재개하는 흐름](../assets/shared/suite-update-approval-flow.png)](../assets/shared/suite-update-approval-flow.svg)
+
 먼저 `$upgrade-game-design-suite`를 부르는 것을 권합니다. 손으로 하는 절차는 그 아래에 그대로 둡니다.
 
 ### `$upgrade-game-design-suite` 스킬로 처리하기

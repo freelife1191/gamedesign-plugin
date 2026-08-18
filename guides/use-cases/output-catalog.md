@@ -48,6 +48,8 @@ content.md
 
 ## Studio → Career handoff
 
+[![최종 owner와 supplier evidence와 단방향 반환을 나눈 인계 흐름](../assets/shared/suite-handoff-ownership-flow.png)](../assets/shared/suite-handoff-ownership-flow.svg)
+
 Studio Canonical Artifact와 Career Canonical Artifact는 분리합니다. Studio에서 Career로는 공개 가능한 **문제**, **결정**, **대안**, **검증 evidence**만 요약해 별도 Career portfolio project brief의 입력으로 전달합니다. Studio 원본을 포트폴리오 원본으로 복제하거나 두 Artifact를 하나의 폴더로 합치지 않습니다.
 
 다음은 handoff와 공개 결과에서 제외합니다.

@@ -2030,8 +2030,8 @@ test("complete aggregate guide validation composes the production use-case cover
     guides: 162,
     skillGuides: 51,
     templates: 30,
-    svg: 93,
-    png: 93,
+    svg: 96,
+    png: 96,
     audiencePaths: 6,
     useCases: 36,
     skillCases: 31,
@@ -2052,10 +2052,10 @@ test("production diagram manifest keeps the exact complete scope inventory", asy
     "game-design-career-skill",
   ].map((scope) => [scope, manifest.diagrams.filter((diagram) => diagram.scope === scope).length]));
 
-  assert.equal(manifest.diagrams.length, 93);
-  assert.equal(new Set(manifest.diagrams.map(({ id }) => id)).size, 93);
+  assert.equal(manifest.diagrams.length, 96);
+  assert.equal(new Set(manifest.diagrams.map(({ id }) => id)).size, 96);
   assert.deepEqual(scopeCounts, {
-    shared: 8,
+    shared: 11,
     "game-design-studio": 6,
     "game-design-career": 6,
     "use-case-audience": 6,

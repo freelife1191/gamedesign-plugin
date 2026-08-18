@@ -12,7 +12,7 @@
 
 ### 직접 호출 활용 — game-design-career
 
-[![게임 기획 커리어 오케스트레이터 흐름도 — 대표 진입은 이 흐름의 앞단](../../assets/game-design-career/skills/orchestrate-game-design-career.png)](../../assets/game-design-career/skills/orchestrate-game-design-career.svg)
+[![대표 진입 스킬이 요청을 소유 제품 하나와 route 하나로 좁히는 흐름](../../assets/shared/suite-entry-routing-flow.png)](../../assets/shared/suite-entry-routing-flow.svg)
 
 #### 직접 호출 조건
 
@@ -59,6 +59,10 @@ $game-design-career:game-design-career CA-C07을 실행 경로로 바꾸고 기�
 #### 예상 파일과 읽는 순서
 
 이 스킬은 자기 파일을 만들지 않습니다. 위임된 스킬이 만든 Canonical Artifact를 `content.md → evidence.yml → export-manifest.yml` 순서로 읽고, workspace에 `route-receipt.json`이 있으면 그 안의 `routeId`만 채웁니다.
+
+상대 제품(Studio) 소유로 판정한 요청은 근거만 요청하는 단방향 인계로 나눕니다. 인계는 한 요청에 한 번이고, 상대 제품이 없거나 비활성이면 증거를 지어내지 않고 blocker로 남깁니다.
+
+[![최종 owner와 supplier evidence와 단방향 반환을 나눈 인계 흐름](../../assets/shared/suite-handoff-ownership-flow.png)](../../assets/shared/suite-handoff-ownership-flow.svg)
 
 #### 다음 스킬 조건
 
