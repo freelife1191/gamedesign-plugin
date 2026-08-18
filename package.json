@@ -14,6 +14,7 @@
     "validate:release": "node tooling/validate-suite.mjs --release",
     "validate:guides": "node tooling/validate-user-guides.mjs --complete",
     "smoke:marketplace": "node tooling/marketplace-smoke.mjs",
+    "verify:install-roundtrip": "node tooling/install-roundtrip.mjs",
     "smoke:image:live": "node tooling/smoke-openai-image.mjs",
     "build:guide-diagrams": "node tooling/build-use-case-diagrams.mjs",
     "check:guide-diagrams": "node tooling/build-use-case-diagrams.mjs --check",
