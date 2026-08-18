@@ -49,7 +49,7 @@ A case ID such as `ST-G04` is not a runtime skill ID and must never be passed to
 
 ## Routing receipt
 
-Publish this before starting the work:
+Publish this first, before any analysis, advice, or draft. A receipt that arrives after the answer proves nothing about how the route was chosen. All six lines appear every time; a line with no value yet reads `미정` and is never dropped:
 
 - the owning product
 - the actual skill or orchestrator ID that was selected

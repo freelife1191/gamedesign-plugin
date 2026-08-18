@@ -220,6 +220,30 @@ test("automatic routing is never described as automatic approval", async () => {
   }
 });
 
+// 설치본 QA에서 나온 것이다. 넓고 모호한 Studio 요청에 에이전트는 대표 스킬을 실제로 열어 읽고도,
+// 설계 상담을 통째로 먼저 하고 영수증을 맨 마지막 한 문단에 붙였으며 "artifact paths" 항목을 통째로
+// 빠뜨렸다. "before starting the work"는 순서를 정하는 문장으로 읽히지 않았고, 항목이 하나 빠져도
+// 어긋난 곳이 없었다. 순서와 무결을 문자로 고정한다.
+const RECEIPT_DISCIPLINE = Object.freeze([
+  // 답을 먼저 내고 나중에 붙인 영수증은 경로를 어떻게 골랐는지 증명하지 못한다.
+  "Publish this first, before any analysis, advice, or draft",
+  // 값이 아직 없는 항목은 생략이 아니라 미정으로 남는다. 생략은 사용자가 물어볼 기회를 없앤다.
+  "All six lines appear every time",
+  "`미정`",
+]);
+
+test("the routing receipt is published before the work and never sheds an item", async () => {
+  for (const { product } of ENTRY_SKILLS) {
+    const skill = await entrySkill(product);
+    const section = skill.slice(skill.indexOf("## Routing receipt"), skill.indexOf("## Cross-product handoff"));
+    for (const rule of RECEIPT_DISCIPLINE) {
+      assert.ok(section.includes(rule), `${product}: the receipt section is missing "${rule}"`);
+    }
+    // 항목 수와 산문이 어긋나면 둘 중 하나가 거짓말이다. RECEIPT_ITEMS가 곧 그 여섯이다.
+    assert.equal(RECEIPT_ITEMS.length, 6, "the receipt prose promises six lines");
+  }
+});
+
 // 1차 수정은 조회 의무를 references/handoff.md 안에만 적었다. 재검증에서 에이전트는 그 파일을 아예
 // 열지 않았고 — SKILL.md, 오케스트레이터, routing.json만 읽었다 — Studio가 설치되지 않은 환경에서
 // "교차 제품 인계: 필요"라고 적었다. 참조 파일에만 있는 의무는 참조를 읽은 실행에만 걸린다. 의무는
