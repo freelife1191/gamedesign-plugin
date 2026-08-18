@@ -171,9 +171,20 @@ function extractDirectUseSection(markdown, skillId) {
   return markdown.slice(bodyStart, next === -1 ? markdown.length : bodyStart + next).trim();
 }
 
+// 대표 진입 스킬은 처음 쓰는 사람이 먼저 여는 표면이라 App 호출과 CLI 호출을 나란히 보여 준다.
+// 나머지 스킬은 CLI 한 표면만 보여 주는 기존 형태를 그대로 유지한다. 두 형태 모두 닫힌 목록이다.
+const PAIRED_REQUEST_SURFACE_SKILL_IDS = new Set(["game-design-studio"]);
+
+function expectedDirectUseHeadings(skillId) {
+  const levels = PAIRED_REQUEST_SURFACE_SKILL_IDS.has(skillId)
+    ? ["입문 App 요청문", "입문 CLI 요청문", "응용 App 요청문", "응용 CLI 요청문", "고급 App 요청문", "고급 CLI 요청문"]
+    : ["입문 요청문", "응용 요청문", "고급 요청문"];
+  return ["직접 호출 조건", ...levels, "예상 파일과 읽는 순서", "다음 스킬 조건"];
+}
+
 function directUseFields(section, skillId) {
   const matches = [...section.matchAll(/^#### (.+)$/gm)];
-  const expected = ["직접 호출 조건", "입문 요청문", "응용 요청문", "고급 요청문", "예상 파일과 읽는 순서", "다음 스킬 조건"];
+  const expected = expectedDirectUseHeadings(skillId);
   assert.deepEqual(matches.map((match) => match[1]), expected, `${skillId}: direct-use H4 order`);
   return Object.fromEntries(matches.map((match, index) => [
     match[1],
@@ -195,10 +206,22 @@ function assertDirectUseContract(markdown, skillId) {
   const section = extractDirectUseSection(markdown, skillId);
   const fields = directUseFields(section, skillId);
 
-  const requests = fencedRequests([fields["입문 요청문"], fields["응용 요청문"], fields["고급 요청문"]].join("\n"));
+  const paired = PAIRED_REQUEST_SURFACE_SKILL_IDS.has(skillId);
+  const cliHeadings = paired
+    ? ["입문 CLI 요청문", "응용 CLI 요청문", "고급 CLI 요청문"]
+    : ["입문 요청문", "응용 요청문", "고급 요청문"];
+  const requests = fencedRequests(cliHeadings.map((heading) => fields[heading]).join("\n"));
   assert.equal(requests.length, 3, `${skillId}: exactly three levelled copyable requests`);
   for (const request of requests) {
     assert.match(request, new RegExp(`\\$game-design-studio:${skillId}\\b`), `${skillId}: direct request target`);
+  }
+  if (paired) {
+    const appRequests = fencedRequests(["입문 App 요청문", "응용 App 요청문", "고급 App 요청문"].map((heading) => fields[heading]).join("\n"));
+    assert.equal(appRequests.length, 3, `${skillId}: exactly three levelled App requests`);
+    for (const request of appRequests) {
+      assert.match(request, /^@Game Design Studio /u, `${skillId}: App request calls the plugin by its App name`);
+      assert.doesNotMatch(request, /\$game-design-studio:/u, `${skillId}: App request must not paste a CLI selector`);
+    }
   }
   const readOrder = fields["예상 파일과 읽는 순서"];
   assert.match(readOrder, /content\.md\s*→\s*evidence\.yml\s*→\s*export-manifest\.yml/, `${skillId}: canonical read order`);

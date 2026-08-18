@@ -494,6 +494,12 @@ $game-design-career:build-game-design-portfolio
 | 경제·운영 설계 | `@Game Design Studio 이벤트 재화의 유입·소비와 중단 기준을 설계해 줘.` | 경제·라이브 운영 설계 → 검토 | 경제 명세, 이벤트 실험 계획 |
 | 제작 범위 점검 | `@Game Design Studio 8주 시제품의 범위와 출시 위험을 점검해 줘.` | 제작 계획 → 기획 검토 → 출력 준비 | 제작 범위·위험 명세, 출력 준비 목록 |
 
+각 카드 제목 옆의 `ST-C01` 같은 값이 사례 ID입니다. 제작용 요청문 카탈로그의 키이므로, 카드의 요청문을 다 읽지 않고 ID만 대표 진입 스킬에 넘겨도 됩니다. 대표 진입 스킬이 카탈로그에서 그 ID를 찾아 실행 경로 하나와 라우팅 영수증으로 바꿉니다. 카드에 적힌 전문 스킬 호출은 같은 경로를 손으로 고정할 때 씁니다.
+
+```text
+$game-design-studio:game-design-studio ST-C01
+```
+
 <details data-prompt-id="studio:case:ST-C01">
 <summary>게임의 방향과 핵심 재미 정의 (studio:case:ST-C01)</summary>
 
@@ -1020,6 +1026,12 @@ ST-C08의 보존 결과 폴더 (`artifact`)와 중단·재개 기록을 읽고 �
 | 면접 준비 | `@Game Design Career 내 포트폴리오 근거로 면접 질문과 답변을 연습해 줘.` | 면접 연습 → 성장 계획 | 질문·답변 기록, 다음 검증 과제 |
 | 역할부터 학습까지 | `@Game Design Career 목표 역할 선택부터 학습 순서까지 한 번에 정리해 줘.` | 경력 오케스트레이터 → 최소 스킬 경로 | 역할 지도, 역량 표, 학습 로드맵 |
 
+각 카드 제목 옆의 `CA-C01` 같은 값이 사례 ID입니다. 제작용 요청문 카탈로그의 키이므로, ID만 대표 진입 스킬에 넘겨도 카탈로그를 읽어 실행 경로 하나와 라우팅 영수증으로 바꿉니다. 카드에 적힌 전문 스킬 호출은 같은 경로를 손으로 고정할 때 씁니다.
+
+```text
+$game-design-career:game-design-career CA-C01
+```
+
 <details data-prompt-id="career:case:CA-C01">
 <summary>기획 직무와 전문 분야 탐색 (career:case:CA-C01)</summary>
 
@@ -1507,6 +1519,12 @@ CA-T01의 보존 결과물과 중단 기록을 읽고 미정인 역할 근거와
 | 프로젝트를 면접 근거로 연결 | `내 시스템 기획 과제를 12주 학습 기록과 면접 답변으로 연결해 줘.` | Career 역량 분석 → Studio 과제 → 면접 연습 | 학습 계획, 답변과 연결 근거 |
 | 기획서·이미지·발표 준비 | `기획서에 필요한 이미지와 발표 자료를 검토 가능한 상태로 준비해 줘.` | Studio 기획 → 이미지 계획·검토 → 문서 출력 | 기획서, 이미지 프롬프트, 발표 자료 초안 |
 | 실패 작업만 재개 | `보존된 원본을 읽고 실패한 이미지와 문서 출력만 다시 진행해 줘.` | 중단 사유 확인 → 실패 경로만 재실행 | 원본 보존 목록, 재시도 기록, 검토 대기 목록 |
+
+연계 사례의 사례 ID는 `suite:studio-to-career-handoff:case`처럼 긴 형태입니다. 그대로 대표 진입 스킬에 넘기면 소유 제품을 먼저 정하고 상대 제품에는 근거만 요청하는 단방향 인계로 바꿉니다. 카드에 적힌 전문 스킬 호출은 같은 경로를 손으로 고정할 때 씁니다.
+
+```text
+$game-design-studio:game-design-studio suite:studio-to-career-handoff:case
+```
 
 <details data-prompt-id="suite:studio-to-career-handoff:case">
 <summary>완성한 기획을 포트폴리오 사례로 정리 (suite:studio-to-career-handoff:case)</summary>

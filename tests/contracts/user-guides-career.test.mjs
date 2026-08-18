@@ -508,6 +508,32 @@ test("Career documents every installed skill with the common contract", async ()
   }
 });
 
+// 대표 진입 스킬은 직접 사용 사례 매니페스트에서 제외돼 있어 카드 계약이 닿지 않는다. 처음 쓰는 사람이
+// 먼저 여는 표면이므로 App 호출과 CLI 호출이 짝으로 남아 있는지는 여기서 따로 고정한다.
+test("Career entry guide shows the App and the CLI request side by side at every level", async () => {
+  const markdown = await readFile(path.join(root, "guides/game-design-career/skills/game-design-career.md"), "utf8");
+  const section = extractH3Section(markdown, "직접 호출 활용 — game-design-career");
+  const headings = [...section.matchAll(/^#### (.+)$/gmu)].map((match) => match[1]);
+  assert.deepEqual(headings, [
+    "직접 호출 조건",
+    "입문 App 요청문", "입문 CLI 요청문",
+    "응용 App 요청문", "응용 CLI 요청문",
+    "고급 App 요청문", "고급 CLI 요청문",
+    "예상 파일과 읽는 순서", "다음 스킬 조건",
+  ], "Career entry direct-use H4 order");
+  const requests = [...section.matchAll(/```text\n([\s\S]*?)\n```/gu)].map((match) => match[1]);
+  assert.equal(requests.length, 6, "three App requests and three CLI requests");
+  for (const [index, request] of requests.entries()) {
+    if (index % 2 === 0) {
+      assert.match(request, /^@Game Design Career /u, "App request calls the plugin by its App name");
+      assert.doesNotMatch(request, /\$game-design-career:/u, "App request must not paste a CLI selector");
+    } else {
+      assert.match(request, /^\$game-design-career:game-design-career /u, "CLI request uses the installed selector");
+    }
+  }
+  assert.match(section, /사례 ID를 그대로 넘겨도 됩니다/u, "entry guide says a case ID alone is enough");
+});
+
 test("Career direct-use cards bind manifest outputs, requests, and conditional routes", async () => {
   const manifest = JSON.parse(await readFile(path.join(root, "guides/use-cases/use-case-manifest.json"), "utf8"));
   const entries = manifest.skill_cases.filter(({ product }) => product === "game-design-career");

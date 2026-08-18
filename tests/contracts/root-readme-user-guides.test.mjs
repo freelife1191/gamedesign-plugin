@@ -2382,6 +2382,26 @@ test("root README starts with simple natural-language requests and keeps explici
   await assertRepresentativePromptCards(readme);
 });
 
+test("each case group tells the reader the entry skill resolves a case ID", async () => {
+  const markdown = await readFile(path.join(root, "README.md"), "utf8");
+  for (const [heading, product] of [
+    ["Studio 기획 사례 7개", "game-design-studio"],
+    ["Career 학습·취업 사례 7개", "game-design-career"],
+    ["Studio와 Career 연계 사례 4개", "game-design-studio"],
+  ]) {
+    const group = exactSection(markdown, heading, 3);
+    const intro = group.slice(0, group.indexOf("<details data-prompt-id="));
+    // 사례 ID는 카탈로그의 키다. 대표 진입 스킬이 그 키를 실행 경로로 바꾼다는 사실이 카드보다 먼저 보여야
+    // 사용자가 ID를 외운 사람만 쓰는 것으로 오해하지 않는다.
+    assert.match(intro, /사례 ID/u, `${heading}: 도입부가 사례 ID를 이름으로 부른다`);
+    assert.match(
+      intro,
+      new RegExp(`\\$${product}:${product} `, "u"),
+      `${heading}: 도입부가 대표 진입 스킬의 실제 CLI 호출을 보여 준다`,
+    );
+  }
+});
+
 test("root README keeps Korean meanings before English helper terms outside canonical commands", async () => {
   const readme = await readFile(path.join(root, "README.md"), "utf8");
   assert.doesNotThrow(() => assertKoreanFirstReadmeTerms(readme), "baseline README is Korean-first");
