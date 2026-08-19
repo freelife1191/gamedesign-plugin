@@ -81,7 +81,7 @@
       "png": "shared/suite-entry-routing-flow.png",
       "alt": "자연어 요청이나 사례 ID를 소유 제품 하나와 route 하나로 좁히고 라우팅 영수증에 남긴 뒤 전문 스킬로 위임하거나 단방향 인계 후보로 분리하는 흐름.",
       "sources": ["../game-design-studio/skills/game-design-studio.md", "../game-design-career/skills/game-design-career.md"],
-      "usedBy": ["../game-design-studio/skills/game-design-studio.md", "../game-design-career/skills/game-design-career.md"]
+      "usedBy": ["../../README.md", "../game-design-studio/skills/game-design-studio.md", "../game-design-career/skills/game-design-career.md"]
     },
     {
       "id": "suite-handoff-ownership-flow",
@@ -90,7 +90,7 @@
       "png": "shared/suite-handoff-ownership-flow.png",
       "alt": "최종 산출물을 내는 제품만 owner가 되고 supplier는 요청받은 증거만 한 번 돌려주며 상대 제품이 없으면 blocker를 남기고 멈추는 단방향 인계 흐름.",
       "sources": ["../../shared/suite-handoff/references/handoff.md"],
-      "usedBy": ["../use-cases/output-catalog.md", "../game-design-studio/skills/game-design-studio.md", "../game-design-career/skills/game-design-career.md"]
+      "usedBy": ["../../README.md", "../use-cases/output-catalog.md", "../game-design-studio/skills/game-design-studio.md", "../game-design-career/skills/game-design-career.md"]
     },
     {
       "id": "suite-update-approval-flow",
@@ -99,7 +99,7 @@
       "png": "shared/suite-update-approval-flow.png",
       "alt": "업데이트 알림에서 검사와 계획을 거쳐 사용자 승인 뒤에만 다시 설치하고 검증한 다음 새 채팅 또는 새 세션에서 재개하는 흐름.",
       "sources": ["../game-design-studio/installation.md", "../game-design-career/installation.md"],
-      "usedBy": ["../game-design-studio/installation.md", "../game-design-career/installation.md"]
+      "usedBy": ["../../README.md", "../game-design-studio/installation.md", "../game-design-career/installation.md"]
     },
     {
       "id": "studio-orchestration-map",

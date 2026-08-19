@@ -1949,8 +1949,11 @@ function assertSharedPngLinks(markdown) {
       "guides/assets/shared/image-provider-cost-routing.png",
       "guides/assets/shared/plugin-selection-flow.png",
       "guides/assets/shared/project-memory-reuse-flow.png",
+      "guides/assets/shared/suite-entry-routing-flow.png",
+      "guides/assets/shared/suite-handoff-ownership-flow.png",
+      "guides/assets/shared/suite-update-approval-flow.png",
     ],
-    "root README embeds the three canonical shared overview diagrams",
+    "root README embeds the six canonical shared overview diagrams",
   );
   for (const { png, start, end } of pngEmbeds) {
     const svg = png.replace(/\.png$/, ".svg");

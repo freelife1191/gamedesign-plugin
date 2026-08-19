@@ -294,6 +294,8 @@ codex plugin list
 
 Marketplace refresh와 설치 패키지 교체는 서로 다른 작업입니다.
 
+[![업데이트 알림에서 승인과 재설치와 검증을 거쳐 새 세션에서 재개하는 흐름](guides/assets/shared/suite-update-approval-flow.png)](guides/assets/shared/suite-update-approval-flow.svg)
+
 `SessionStart`는 처음 시작할 때와 마지막 확인 뒤 7일이 지난 뒤에만 번들 업데이트를 확인합니다. 결과는 “플러그인 업데이트를 확인해 줘”라는 **알림**일 뿐이며, 플러그인을 자동으로 업데이트하거나 다시 설치하지 않습니다. 확인을 끄려면 Codex를 시작할 환경에 `GAME_DESIGN_UPDATE_CHECKS=false`를 설정하세요. Skillstead·Archify·im-not-ai 번들은 다음 suite release 전까지 현재 버전으로 고정됩니다. 설치된 캐시 폴더는 직접 편집하지 마세요.
 
 `codex plugin list --available --json`은 설치하지 않은 플러그인 목록을 보여 주는 용도입니다. Codex 0.147.0에서는 이미 설치한 플러그인의 더 새로운 원천 버전을 판별하지 않습니다. 알림을 본 뒤에는 아래처럼 marketplace 종류에 맞는 명시적 명령을 실행하고, 마지막에 새 채팅 또는 새 세션을 열어 새 설치본을 사용하세요.
@@ -462,6 +464,8 @@ $game-design-career:build-game-design-portfolio
 ## 케이스별 프롬프트로 시작하기
 
 제작용 요청문 목록 (Production catalog)의 대표 카드 18개를 Studio 7개, Career 7개, 연계 4개 순서로 제공합니다. 카드를 열어 입력, 실행 흐름, 결과와 사람 검토 경계를 확인하세요.
+
+[![대표 진입 스킬이 요청을 소유 제품 하나와 route 하나로 좁히는 흐름](guides/assets/shared/suite-entry-routing-flow.png)](guides/assets/shared/suite-entry-routing-flow.svg)
 
 #### 빈칸 요청문을 읽는 법
 
@@ -1521,6 +1525,8 @@ CA-T01의 보존 결과물과 중단 기록을 읽고 미정인 역할 근거와
 | 실패 작업만 재개 | `보존된 원본을 읽고 실패한 이미지와 문서 출력만 다시 진행해 줘.` | 중단 사유 확인 → 실패 경로만 재실행 | 원본 보존 목록, 재시도 기록, 검토 대기 목록 |
 
 연계 사례의 사례 ID는 `suite:studio-to-career-handoff:case`처럼 긴 형태입니다. 그대로 대표 진입 스킬에 넘기면 소유 제품을 먼저 정하고 상대 제품에는 근거만 요청하는 단방향 인계로 바꿉니다. 카드에 적힌 전문 스킬 호출은 같은 경로를 손으로 고정할 때 씁니다.
+
+[![최종 owner와 supplier evidence와 단방향 반환을 나눈 인계 흐름](guides/assets/shared/suite-handoff-ownership-flow.png)](guides/assets/shared/suite-handoff-ownership-flow.svg)
 
 ```text
 $game-design-studio:game-design-studio suite:studio-to-career-handoff:case
