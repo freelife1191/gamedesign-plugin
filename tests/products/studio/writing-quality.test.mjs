@@ -9,13 +9,13 @@ import { fileURLToPath } from "node:url";
 
 import { buildProduct } from "../../../tooling/lib/build-product.mjs";
 import { collectTree } from "../../../tooling/lib/copy-tree.mjs";
+import { packagedVendorFiles } from "../../lib/vendored.mjs";
 
 const bundledImNotAiTag = JSON.parse(readFileSync(new URL("../../../shared/vendor/im-not-ai/vendor.lock.json", import.meta.url), "utf8")).upstream.tag;
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const pluginRoot = path.join(repoRoot, "products/game-design-studio/plugin");
 const validatorUrl = new URL("../../../shared/scripts/validate-writing-revision.mjs", import.meta.url);
-const vendorLockPath = path.join(repoRoot, "shared/vendor/im-not-ai/vendor.lock.json");
 const skillId = "polish-game-design-writing";
 const specialistId = "game-design-writing-editor";
 
@@ -96,12 +96,11 @@ function extractJsonContract(markdown, name) {
 }
 
 async function assertInstalledHumanizeTree(build) {
-  const lock = JSON.parse(await readFile(vendorLockPath, "utf8"));
   const [installed, packaged] = await Promise.all([
     collectTree(path.join(build.outputDir, "skills/humanize-korean"), { label: "Studio installed humanize-korean" }),
     collectTree(build.outputDir, { label: "Studio installed package" }),
   ]);
-  assert.deepEqual(installed.map(({ relativePath, bytes }) => ({ path: relativePath, size: bytes.length, sha256: sha256(bytes) })), lock.tree.files);
+  assert.deepEqual(installed.map(({ relativePath, bytes }) => ({ path: relativePath, size: bytes.length, sha256: sha256(bytes) })), packagedVendorFiles("im-not-ai"));
   assert.deepEqual(packaged.filter(({ relativePath }) => relativePath.endsWith("/sync-im-not-ai.mjs") || relativePath === "sync-im-not-ai.mjs").map(({ relativePath }) => relativePath), []);
 }
 

@@ -12,6 +12,7 @@ import {
 const components = Object.freeze([
   Object.freeze({
     id: "skillstead",
+    module: "vendor",
     repository: "https://github.com/kyungseo/skillstead",
     installedTag: "svg-infographic/v0.9.0",
     commit: "6e5b850f66716af9eb3c6a79f60e4f8ff5716dee",
@@ -20,6 +21,7 @@ const components = Object.freeze([
   }),
   Object.freeze({
     id: "archify",
+    module: "archify",
     repository: "https://github.com/tt-a1i/archify",
     installedTag: "v2.13.0",
     commit: "2c1f8ac2ca28a26d0b68043ec80c9554e20ff0e3",
@@ -28,6 +30,7 @@ const components = Object.freeze([
   }),
   Object.freeze({
     id: "im-not-ai",
+    module: "im-not-ai",
     repository: "https://github.com/epoko77-ai/im-not-ai",
     installedTag: "v2.3.0",
     commit: "82137e858763dadb99561f194c5c00465735017b",
@@ -69,6 +72,7 @@ test("vendor locks produce exact installed component records and package mapping
 
   assert.deepEqual(loadVendorComponents({ repoRoot }), components.map((component) => ({
     id: component.id,
+    module: component.module,
     repository: component.repository,
     installedTag: component.installedTag,
     commit: component.commit,

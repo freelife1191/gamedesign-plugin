@@ -239,8 +239,30 @@ Windows에서 실제로 성립해야 하는 계약은 Windows checkout과 설치
 | `.gitattributes`의 벤더 경로 | 버전 자리를 `*` glob으로 둠 |
 | `shared/updates/installed-components.json` | `tooling/generate-update-manifest.mjs`가 락에서 생성 |
 | `plugins/**` | `npm run build`가 락에서 벤더 트리를 골라 담음(`tooling/lib/vendor-components.mjs`) |
+| `shared/vendor/description-overlays/<id>.json`의 `upstream.sha256` | 상류 SKILL.md의 `description` 문구를 그대로 해싱한 값. 상류가 문구를 바꾸면 빌드가 멈추고 다시 쓴 요약과 새 해시를 요구함 |
 | `README.md`·`shared/contracts/README.md`·`guides/assets/diagram-manifest.json` | 같은 `sync-vendor-references.mjs` 규칙 22개에 포함 |
 | `guides/archify-diagrams/catalog.json`의 벤더 mirror 항목과 digest | `tooling/sync-vendor-catalog-entries.mjs`가 패키지와 락에서 씀. `validate-suite`의 `vendor catalog entries` 스테이지가 drift를 막음 |
+
+### 벤더 description overlay
+
+라우팅은 카탈로그에서 결정됩니다. codex는 설치된 스킬 전체에 카탈로그 예산 하나를 나눠 쓰므로 description마다 몫이 있고, 65개 스킬 기준으로 그 몫은 119자입니다. 그 뒤는 잘립니다 — 말줄임표도 없고, 모델이 잘렸다는 사실을 알 방법도 없습니다.
+
+벤더 3종의 상류 description은 각각 652자, 596자, 289자입니다. 잘려나가는 건 장식이 아닙니다. archify는 `Use when the user asks to visualize…` 트리거 절 전체를, svg-infographic은 `Not for photo-heavy… statistical charts` 제외 범위를, humanize-korean은 트리거 목록과 `단순 맞춤법 교정·번역은 대상 아님`을 잃습니다. 트리거를 잃으면 와야 할 일이 안 오고, 제외 범위를 잃으면 오지 말아야 할 일이 옵니다. 후자가 더 나쁩니다.
+
+벤더 파일은 고칠 수 없습니다. 락이 상류 byte를 전부 고정하고, 패키징 게이트가 수정된 벤더 파일을 거부합니다. 그래서 소스 트리는 상류와 byte 단위로 같게 두고, 빌드가 패키지로 투영하는 순간에 frontmatter 한 필드만 다시 씁니다.
+
+| 부분 | 어디 |
+| --- | --- |
+| 선언 | `shared/vendor/description-overlays/<id>.json` — 대상 경로, 상류 문구의 sha256, 저장소가 쓴 119자 이하 대체 문구 |
+| 적용 | `tooling/lib/vendor-description-overlay.mjs`, `buildProduct`가 벤더 모듈 엔트리마다 호출 |
+| 예산 상수 | `tooling/lib/skill-description-budget.mjs` — 라우팅 측정과 overlay가 같은 값을 봄 |
+| 게이트 | `tooling/isolation-smoke.mjs`의 `verifyVendor`. overlay가 지정한 경로만 상류 소스에 overlay를 적용한 결과와 대조하고, 나머지는 종전대로 락과 byte 대조 |
+
+overlay가 정직한 이유는 상류 문구의 해시를 함께 고정하기 때문입니다. 상류가 description을 다시 쓰면 해시가 어긋나고 빌드가 멈추면서 새 해시를 알려줍니다. 요약이 존재하지 않는 문장을 조용히 대변하는 상태로 남지 않습니다. 대체 문구는 plain YAML scalar여야 합니다 — 따옴표로 열 수 없고 `: `를 담을 수 없습니다. 인용 부호에 예산 두 자를 쓰는 것도 손해입니다.
+
+오버레이는 벤더 루트 **밖**에 둡니다. 락 옆이 읽기는 좋지만, 벤더 루트는 패키징 게이트가 검증하는 닫힌 집합이고 im-not-ai 업그레이드는 루트를 통째로 rename으로 갈아끼웁니다. 안에 두면 저장소 소유 파일이 업그레이드에 조용히 삭제되고, 존재하기 위해 허용목록 두 곳을 넓혀야 합니다.
+
+`tests/unit/probe-skill-routing.test.mjs`의 예산 검사에는 이제 예외가 없습니다. 예전에는 벤더 3종이 이름으로 면제돼 있었습니다.
 
 im-not-ai만 두 번째 증인을 둡니다. `tooling/vendor-pins/im-not-ai.json`이 태그·커밋·라이선스 해시와 파일 15개의 sha256을 들고 있고, `--check`는 벤더 락을 이 핀과 대조합니다. 락이 스스로를 승인하지 못하게 하는 장치입니다. 예전에는 이 표가 `tooling/sync-im-not-ai.mjs` 소스 안에 있어서, 업그레이드를 하려면 그 업그레이드를 지키는 검사를 통과시키기 위해 해시 15개를 손으로 옮겨 적어야 했습니다. 지금은 `--update`가 핀도 함께 씁니다. 사람이 PR diff에서 해시 변화를 읽는다는 성질은 그대로입니다.
 

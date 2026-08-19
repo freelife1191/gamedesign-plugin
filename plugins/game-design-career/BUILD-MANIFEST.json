@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-career",
   "sourceDateEpoch": 0,
-  "treeSha256": "f313bd5e970e330ec77945c3a2f946cb42710497ee027340570e8d89b4e8097a",
+  "treeSha256": "9e5ab681a87657212dbfef8dc75301bf604339672ef8e93ff62859ab014f1554",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -26,8 +26,8 @@
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
-      "sha256": "a27b427d6304e2f35ad9d0d5b9134be674f1e9c81d4a95d9ead85ab85cacb7f1",
-      "size": 2173
+      "sha256": "0b4bccf79cc85de8ec07a7e4514c49fd0c0a97b4adc4e6d052ec9af68ca22e61",
+      "size": 4006
     },
     {
       "path": "agents/art-brief-director.md",
@@ -1861,8 +1861,8 @@
     },
     {
       "path": "skills/archify/SKILL.md",
-      "sha256": "258c8b332f7a6cef15acd8c3a1c29ec5405d52897a55cd358b0baf623c9810f2",
-      "size": 13737
+      "sha256": "42e579c8135950f7493623cf58d720923ec3fc94c33d005547f5f9084a4eaae7",
+      "size": 13202
     },
     {
       "path": "skills/archify/assets/template.html",
@@ -2246,8 +2246,8 @@
     },
     {
       "path": "skills/humanize-korean/SKILL.md",
-      "sha256": "7a60c8240218ac7a3cb15f26f0824a682958cdc0475ba2d828c8375edc870569",
-      "size": 4397
+      "sha256": "52dd0a46675366e7d1c137fc75ca1803832b2e1ac4933d57b755d11f8cc12aa8",
+      "size": 4015
     },
     {
       "path": "skills/humanize-korean/references/ai-tell-taxonomy.md",
@@ -2476,8 +2476,8 @@
     },
     {
       "path": "skills/svg-infographic/SKILL.md",
-      "sha256": "ba02d911917611e25b08dd06c7b26a197f3e62c0f5591b0a2627e6aca60fd6ca",
-      "size": 29915
+      "sha256": "34e4ce896ae8782c0da4f8b11b14deed08272bc85aba0a7598dcb5a448de23cd",
+      "size": 29433
     },
     {
       "path": "skills/svg-infographic/assets/fonts/HiMelody-OFL.txt",

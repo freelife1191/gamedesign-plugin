@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { CATALOG_DESCRIPTION_BUDGET } from "../../tooling/lib/skill-description-budget.mjs";
+import { loadVendorDescriptionOverlays } from "../../tooling/lib/vendor-description-overlay.mjs";
 import { PRODUCTS, REQUIRED_SKILLS, catalogFindings, parseProbeArgs, parseSkillCatalog, skillDescriptions, unquoteScalar } from "../../tooling/probe-skill-routing.mjs";
 
 const repoRoot = new URL("../..", import.meta.url).pathname;
@@ -104,21 +106,29 @@ test("no packaged description reaches the measurement still wearing its quotes",
 // codex spends one catalog allowance across every skill a user has installed, so each description's
 // share shrinks as more skills arrive. Measured against a 65-skill catalog, the cut landed between 120
 // and 123 characters — mid-word, with no ellipsis, and with no way for the model to know text was lost.
-// Everything past the cut is trigger vocabulary the router never sees, so this suite keeps its own
-// descriptions inside that budget. The three vendored skills carry upstream text this repo cannot edit
-// without failing the vendor digest gate; they are named here so a fourth exception cannot appear
-// silently.
-const VENDORED_DESCRIPTIONS = new Set(["archify", "svg-infographic", "humanize-korean"]);
-const CATALOG_BUDGET = 119;
-
-test("every description this suite owns fits the catalog budget the router reads", async () => {
+// Everything past the cut is trigger vocabulary the router never sees, so every packaged description
+// stays inside that budget. Vendored skills used to be exempt, because the upstream text cannot be
+// edited without failing the vendor digest gate; the description overlay removed the exemption by
+// rewriting that one field as the build projects the file, so no skill is excused here any more.
+test("every packaged description fits the catalog budget the router reads", async () => {
   const sources = await skillDescriptions(repoRoot);
   const over = [...sources]
-    .filter(([id]) => !VENDORED_DESCRIPTIONS.has(id.split(":")[1]))
-    .filter(([, description]) => description.length > CATALOG_BUDGET)
+    .filter(([, description]) => description.length > CATALOG_DESCRIPTION_BUDGET)
     .map(([id, description]) => `${id} (${description.length})`);
   assert.deepEqual(over, [], `these descriptions lose their tail before the model reads it: ${over.join(", ")}`);
-  for (const name of VENDORED_DESCRIPTIONS) {
-    assert.ok([...sources.keys()].some((id) => id.endsWith(`:${name}`)), `${name} is exempted but no longer installed`);
+});
+
+// The overlay is what carries the three vendored skills under the budget, and it is the only writer
+// allowed to touch a vendored byte. If one is dropped, the budget assertion above catches it — but
+// only while the skill is still installed. This names the pairing directly, so removing an overlay
+// while its skill still ships fails here rather than waiting for a packaged description to grow.
+test("every vendored skill reaches the catalog through its own description overlay", async () => {
+  const sources = await skillDescriptions(repoRoot);
+  const overlays = [...loadVendorDescriptionOverlays({ repoRoot }).values()];
+  assert.deepEqual(overlays.map(({ id }) => id).sort(), ["archify", "im-not-ai", "skillstead"]);
+  for (const { id, description } of overlays) {
+    assert.ok(description.length <= CATALOG_DESCRIPTION_BUDGET, `${id} overlay is over budget`);
+    const packaged = [...sources].filter(([, value]) => value === description);
+    assert.equal(packaged.length, PRODUCTS.length, `${id} overlay reaches ${packaged.length} packaged skills, expected ${PRODUCTS.length}`);
   }
 });

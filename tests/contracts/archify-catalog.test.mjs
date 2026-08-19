@@ -10,6 +10,7 @@ import {
 } from "../../tooling/lib/archify-catalog.mjs";
 import { findStructuralDuplicates } from "../../tooling/lib/archify-signature.mjs";
 import { vendorMappings } from "../../tooling/lib/vendor-components.mjs";
+import { applyVendorDescriptionOverlay, loadVendorDescriptionOverlays } from "../../tooling/lib/vendor-description-overlay.mjs";
 import {
   collectMarkdownHeadings,
   extractMarkdownLinks,
@@ -316,7 +317,13 @@ test("production shared package mirrors retain structured build origins", async 
     ]);
     assert.equal(sourceStats.isFile() && !sourceStats.isSymbolicLink(), true, `${entry.id}: origin is a regular non-symlink file`);
     assert.equal(mirrorStats.isFile() && !mirrorStats.isSymbolicLink(), true, `${entry.id}: mirror is a regular non-symlink file`);
-    assert.deepEqual(sourceBytes, mirrorBytes, `${entry.id}: mirror remains byte-identical to its origin`);
+    // A vendored mirror is its origin byte for byte with one declared exception: the description
+    // overlay rewrites one frontmatter field as the build projects the file, because the upstream
+    // description runs past the router's catalog budget. Applying the same overlay to the origin here
+    // asks what the build was supposed to produce; a mapping with no overlay passes straight through.
+    const overlay = loadVendorDescriptionOverlays({ repoRoot }).get(entry.origin_source.build_mapping);
+    const { bytes: expectedBytes } = applyVendorDescriptionOverlay({ relativePath: suffix, bytes: sourceBytes }, overlay);
+    assert.deepEqual(expectedBytes, mirrorBytes, `${entry.id}: mirror remains byte-identical to its origin`);
   }
 });
 

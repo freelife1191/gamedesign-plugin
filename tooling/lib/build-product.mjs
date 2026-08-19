@@ -6,6 +6,7 @@ import { collectTree } from "./copy-tree.mjs";
 import { hashFileEntries } from "./hash.mjs";
 import { assertNoSymlinkPath, comparePaths, joinWithin, normalizeRelativePath } from "./paths.mjs";
 import { loadProductContract } from "./product-contract.mjs";
+import { applyVendorDescriptionOverlay, assertVendorDescriptionOverlayTarget, loadVendorDescriptionOverlays } from "./vendor-description-overlay.mjs";
 import { vendorMappings } from "./vendor-components.mjs";
 
 const staticSharedMappings = {
@@ -530,6 +531,7 @@ export async function buildProduct({ repoRoot, productName, stagingRoot, staging
     ...vendorMappings({ repoRoot: absoluteRepoRoot }),
     ...suiteHandoffMappings(productName),
   };
+  const descriptionOverlays = loadVendorDescriptionOverlays({ repoRoot: absoluteRepoRoot });
   const targets = new Map();
 
   for (const moduleName of product.sharedModules) {
@@ -543,7 +545,9 @@ export async function buildProduct({ repoRoot, productName, stagingRoot, staging
       if (moduleName === "suite-update-skill") assertExactSharedSuiteUpdateInventory(sourceRelative, entries);
       if (moduleName === "suite-handoff") assertExactSharedSuiteHandoffInventory(sourceRelative, entries);
       moduleEntries.push(...entries);
-      for (const entry of entries) addEntry(targets, entry, destinationPrefix, `shared:${moduleName}`);
+      const overlay = descriptionOverlays.get(moduleName);
+      assertVendorDescriptionOverlayTarget(overlay, entries);
+      for (const entry of entries) addEntry(targets, applyVendorDescriptionOverlay(entry, overlay), destinationPrefix, `shared:${moduleName}`);
     }
     if (moduleName === "image-assets") {
       const example = moduleEntries.find(({ relativePath }) => relativePath === ".env.example");

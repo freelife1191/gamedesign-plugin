@@ -25,6 +25,7 @@ import { auditTree } from "./lib/tree-audit.mjs";
 import { scanJavaScriptImports } from "./lib/js-import-scanner.mjs";
 import { classifyInactiveReferenceIntelligenceSourcePaths, parseReferenceIntelligenceContract, referenceIntelligenceContractLayouts } from "./lib/reference-intelligence-contract.mjs";
 import { loadVendorComponents, packagedBinaryFiles, vendorDestinationRoots } from "./lib/vendor-components.mjs";
+import { applyVendorDescriptionOverlay, loadVendorDescriptionOverlays } from "./lib/vendor-description-overlay.mjs";
 
 const TEMP_PREFIX = "game-design-isolation-";
 const PRODUCT_NAMES = Object.freeze(["game-design-career", "game-design-studio"]);
@@ -152,6 +153,20 @@ async function inactiveReferenceIntelligenceSourceRuntimes(pluginRoot) {
   return inactive;
 }
 
+// Every packaged byte of a vendored skill is the upstream byte, with one declared exception: the
+// description overlay rewrites one frontmatter field as the build projects SKILL.md, because three
+// upstream descriptions run past the router's catalog budget. The overlaid path is therefore checked
+// against the source with that same overlay applied rather than against the lock digest, and the lock
+// still governs the source it was applied to — `verifyDiagramSkillVendor` is what holds that end.
+// Anything the overlay does not name is still compared to the lock byte for byte.
+async function overlaidVendorFile({ component, repoRoot: sourceRepoRoot }) {
+  const overlay = loadVendorDescriptionOverlays({ repoRoot: sourceRepoRoot }).get(component.module);
+  if (!overlay) return null;
+  const source = await readFile(path.join(sourceRepoRoot, component.sourceRoot, ...overlay.path.split("/")));
+  const { bytes } = applyVendorDescriptionOverlay({ relativePath: overlay.path, bytes: source }, overlay);
+  return { path: overlay.path, size: bytes.length, sha256: sha256(bytes) };
+}
+
 // The expected file count comes from the repository's vendor lock rather than a literal here, so an
 // upstream bump does not have to be transcribed into this gate. What the gate proves is unchanged: the
 // installed package carries exactly the closure the source lock declares, with nothing added or lost.
@@ -164,14 +179,16 @@ async function verifyVendor(pluginRoot, { component, repoRoot: sourceRepoRoot })
   if (lock?.upstream?.tag !== tag || lock?.tree?.root !== treeRoot || !Array.isArray(lock.tree.files)) {
     throw new Error(`${name} package-local vendor lock mismatch`);
   }
+  const overlaid = await overlaidVendorFile({ component, repoRoot: sourceRepoRoot });
   const entries = await collectTree(path.join(pluginRoot, "skills", skillId), { label: `isolated ${name} skill` });
   const actual = new Map(entries.map((entry) => [entry.relativePath, entry.bytes]));
   if (lock.tree.files.length !== files || actual.size !== files) throw new Error(`${name} vendor file count mismatch: ${lock.tree.files.length}/${actual.size}`);
-  for (const expected of lock.tree.files) {
-    const bytes = actual.get(expected.path);
-    if (!bytes) throw new Error(`missing vendored file: ${expected.path}`);
+  for (const locked of lock.tree.files) {
+    const expected = overlaid && overlaid.path === locked.path ? overlaid : locked;
+    const bytes = actual.get(locked.path);
+    if (!bytes) throw new Error(`missing vendored file: ${locked.path}`);
     if (bytes.length !== expected.size || sha256(bytes) !== expected.sha256) {
-      throw new Error(`modified vendored file: ${expected.path}`);
+      throw new Error(`modified vendored file: ${locked.path}`);
     }
   }
   if ([...actual.keys()].some((relative) => !lock.tree.files.some(({ path: locked }) => locked === relative))) {

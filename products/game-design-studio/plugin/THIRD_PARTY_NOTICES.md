@@ -10,6 +10,8 @@
 
 The vendored component retains its upstream `LICENSE.txt`. Game Design Studio selects game-design diagram presets and invokes the vendored lint and render scripts; it does not relicense the upstream component.
 
+**Modification notice.** This distribution changes one line of one file in this component. `skills/svg-infographic/SKILL.md` carries a Game Design Suite–authored `description` in its YAML frontmatter, replacing the upstream text because the skill router truncates every catalog description past a fixed budget and the upstream wording runs past it. The replacement is declared in `shared/vendor/description-overlays/skillstead.json`, which also pins the SHA-256 of the upstream description it replaces. Every other byte of this component is the upstream release, unchanged, and verified against the vendor lock.
+
 ## Archify
 
 - Upstream: https://github.com/tt-a1i/archify
@@ -18,6 +20,8 @@ The vendored component retains its upstream `LICENSE.txt`. Game Design Studio se
 
 The packaged `$archify` skill is a regular-file, SHA-256-locked local release closure. It produces checked architecture HTML and receipts; it does not approve a game-design document.
 
+**Modification notice.** This distribution changes one line of one file in this component. `skills/archify/SKILL.md` carries a Game Design Suite–authored `description` in its YAML frontmatter, replacing the upstream text because the skill router truncates every catalog description past a fixed budget and the upstream wording runs past it. The replacement is declared in `shared/vendor/description-overlays/archify.json`, which also pins the SHA-256 of the upstream description it replaces. Every other byte of this component is the upstream release, unchanged, and verified against the vendor lock.
+
 ## im-not-ai humanize-korean
 
 - Upstream: https://github.com/epoko77-ai/im-not-ai
@@ -25,6 +29,8 @@ The packaged `$archify` skill is a regular-file, SHA-256-locked local release cl
 - License: MIT
 
 The packaged `$humanize-korean` skill is a regular-file, SHA-256-locked copy. Installation uses this local bundle and never runs remote update code.
+
+**Modification notice.** This distribution changes one line of one file in this component. `skills/humanize-korean/SKILL.md` carries a Game Design Suite–authored `description` in its YAML frontmatter, replacing the upstream text because the skill router truncates every catalog description past a fixed budget and the upstream wording runs past it. The replacement is declared in `shared/vendor/description-overlays/im-not-ai.json`, which also pins the SHA-256 of the upstream description it replaces. Every other byte of this component is the upstream release, unchanged, and verified against the vendor lock.
 
 ## Project-provided game-design documents
 
