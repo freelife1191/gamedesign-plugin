@@ -370,7 +370,8 @@ test('execution resolver rejects a same-size CLI replacement after its final rea
     home,
     realpathFn: async (path) => {
       const canonical = await realpath(path);
-      if (path.endsWith('/bin/archify.mjs') && ++cliRealpathCalls === 3) {
+      // A real filesystem path, so the separator is the host's. join() writes the one this host uses.
+      if (path.endsWith(join('bin', 'archify.mjs')) && ++cliRealpathCalls === 3) {
         await rename(replacement, path);
       }
       return canonical;

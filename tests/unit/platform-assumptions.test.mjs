@@ -75,6 +75,14 @@ const RULES = Object.freeze([
     allow: new Set(),
   },
   {
+    name: "a file URL read as a filesystem path through .pathname",
+    pattern: /import\.meta\.url\)?\s*\)?\.pathname/u,
+    reason: "A file URL's pathname is a URL path, not a filesystem path. On Windows it comes back as "
+      + "/D:/a/repo, and path.resolve then produces D:\\D:\\a\\repo — a path that exists nowhere. Use "
+      + "fileURLToPath from node:url, which answers in the host's own path syntax on every platform.",
+    allow: new Set(),
+  },
+  {
     name: "a raw no-follow or directory open constant",
     pattern: /\bO_(?:NOFOLLOW|DIRECTORY)\b/u,
     reason: "Windows defines neither, and `flags | undefined` is `flags` — so naming the constant does not "
@@ -83,11 +91,6 @@ const RULES = Object.freeze([
     allow: new Set([
       // The suite that asserts no shipped module names them has to name them to do so.
       path.join("tests", "unit", "platform-file-hardening.test.mjs"),
-      // These two read the flag the loader actually passed to their injected open, on the platform the
-      // test is running on. They assert about a value the primitive produced rather than producing one,
-      // so they carry the same win32 gate the primitive does.
-      path.join("tests", "unit", "image-config.test.mjs"),
-      path.join("tests", "unit", "workspace-env.test.mjs"),
     ]),
   },
 ]);

@@ -46,10 +46,34 @@ async function windowsShapedModule(root, consumerPath, name) {
   return import(pathToFileURL(modulePath).href);
 }
 
+// Windows defines neither `O_NOFOLLOW` nor `O_DIRECTORY`, so reading them off the host's `constants`
+// there compares `undefined` against `undefined` and proves nothing — and asserting the shipped
+// function returns `undefined` would assert the opposite of what it must do. Where the host defines
+// them the real numbers are used; where it does not, a POSIX-shaped set stands in so the flag
+// combination is still the subject on every host.
+const HOST_DEFINES_POSIX_OPEN_FLAGS = Number.isInteger(constants.O_NOFOLLOW) && Number.isInteger(constants.O_DIRECTORY);
+const POSIX_CONSTANTS = HOST_DEFINES_POSIX_OPEN_FLAGS
+  ? constants
+  : { ...constants, O_RDONLY: 0, O_NOFOLLOW: 0x0100, O_DIRECTORY: 0x10000 };
+
 test("the no-follow flag is the real constant wherever the platform defines one", () => {
-  assert.equal(noFollowOpenFlag(), constants.O_NOFOLLOW);
-  for (const platform of [...POSIX_PLATFORMS, "win32"]) {
-    assert.equal(noFollowOpenFlag({ platform }), constants.O_NOFOLLOW);
+  if (Number.isInteger(constants.O_NOFOLLOW)) {
+    assert.equal(noFollowOpenFlag(), constants.O_NOFOLLOW);
+    for (const platform of [...POSIX_PLATFORMS, "win32"]) {
+      assert.equal(noFollowOpenFlag({ platform }), constants.O_NOFOLLOW);
+    }
+    return;
+  }
+  // A host whose own fs constants omit the flag — Windows. The exemption applies to this host and to
+  // win32 as an argument; every POSIX platform named on such a host is a broken host and still fails.
+  assert.equal(noFollowOpenFlag(), 0, "the running platform must be one the exemption covers");
+  assert.equal(noFollowOpenFlag({ platform: "win32" }), 0);
+  for (const platform of POSIX_PLATFORMS) {
+    assert.throws(
+      () => noFollowOpenFlag({ platform }),
+      (error) => error instanceof Error && error.message === "Secure no-follow file opening is unavailable.",
+      `${platform} must not silently drop the no-follow guarantee`,
+    );
   }
 });
 
@@ -98,14 +122,15 @@ test("a POSIX directory sync opens read-only with no-follow, syncs, and closes e
   };
   const result = await syncDirectory(root, {
     platform: "linux",
+    fsConstants: POSIX_CONSTANTS,
     openFn: async (target, flags) => { calls.push([target, flags]); return handle; },
   });
   assert.deepEqual(result, { synced: true });
-  assert.deepEqual(calls, [[root, constants.O_RDONLY | constants.O_NOFOLLOW], "sync"]);
+  assert.deepEqual(calls, [[root, POSIX_CONSTANTS.O_RDONLY | POSIX_CONSTANTS.O_NOFOLLOW], "sync"]);
   assert.deepEqual(closes, ["close"]);
 
   await assert.rejects(
-    () => syncDirectory(root, { platform: "linux", openFn: async () => ({ sync: async () => { throw new Error("EPERM"); }, close: async () => { closes.push("close-after-failure"); } }) }),
+    () => syncDirectory(root, { platform: "linux", fsConstants: POSIX_CONSTANTS, openFn: async () => ({ sync: async () => { throw new Error("EPERM"); }, close: async () => { closes.push("close-after-failure"); } }) }),
     (error) => error.message === "EPERM",
   );
   assert.deepEqual(closes, ["close", "close-after-failure"]);
@@ -143,10 +168,11 @@ test("a POSIX directory open asks for read-only, directory, and no-follow togeth
   const sentinel = { stat: async () => ({}), close: async () => {} };
   const handle = await openDirectoryHandle(root, {
     platform: "linux",
+    fsConstants: POSIX_CONSTANTS,
     openFn: async (target, flags) => { calls.push([target, flags]); return sentinel; },
   });
   assert.equal(handle, sentinel);
-  assert.deepEqual(calls, [[root, constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW]]);
+  assert.deepEqual(calls, [[root, POSIX_CONSTANTS.O_RDONLY | POSIX_CONSTANTS.O_DIRECTORY | POSIX_CONSTANTS.O_NOFOLLOW]]);
 });
 
 test("this host really pins a real directory by handle", { skip: process.platform === "win32" }, async (t) => {
@@ -283,7 +309,11 @@ test("no shipped module reaches around the primitive for a no-follow flag or a d
   const importers = [];
   for (const candidate of shipped) {
     const source = await readFile(candidate, "utf8");
-    const label = path.relative(shippedRoot, candidate);
+    // The expected importer list is a repo-relative path list, and repo-relative paths are written with
+    // forward slashes wherever they appear in this suite. `path.relative` answers in the host's
+    // separator, so Windows would report `lib\\safe-memory-store.mjs` against an expectation that has
+    // nothing to do with the platform.
+    const label = path.relative(shippedRoot, candidate).split(path.sep).join("/");
     // The raw constant is `undefined` on Windows, and `flags | undefined` quietly becomes `flags` — so
     // naming it directly does not fail there, it drops the guarantee and says nothing. Routing every
     // shipped open through the primitive is what turns that into one declared, allowlisted exemption.

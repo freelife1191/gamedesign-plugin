@@ -51,9 +51,9 @@ export function directorySyncSupported(platform = process.platform) {
 //
 // Everywhere else the sync stays mandatory: an `EPERM` from a POSIX directory sync is a real failure
 // and still propagates.
-export async function syncDirectory(candidate, { platform = process.platform, openFn = open } = {}) {
+export async function syncDirectory(candidate, { platform = process.platform, openFn = open, fsConstants = constants } = {}) {
   if (!directorySyncSupported(platform)) return { synced: false, reason: "platform_unsupported" };
-  const handle = await openFn(candidate, constants.O_RDONLY | noFollowOpenFlag({ platform }));
+  const handle = await openFn(candidate, fsConstants.O_RDONLY | noFollowOpenFlag({ platform, fsConstants }));
   try {
     await handle.sync();
   } finally {

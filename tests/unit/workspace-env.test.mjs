@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
-import { constants } from "node:fs";
 import { chmod, mkdtemp, open, readFile, realpath, rename, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 
 import { readWorkspaceEnv } from "../../shared/scripts/lib/load-workspace-env.mjs";
+import { noFollowOpenFlag } from "../../shared/scripts/lib/platform-file-hardening.mjs";
 import { PERMISSION_BITS_MEANINGFUL } from "../lib/platform-support.mjs";
 
 async function workspace(t) {
@@ -71,7 +71,13 @@ test("workspace env opens a regular dotenv with no-follow and pins its identity 
     },
   });
 
-  assert.equal((flags & constants.O_NOFOLLOW) !== 0, true);
+  // The loader must pass whatever no-follow flag this platform actually has, which is what the shipped
+  // primitive answers. Where the platform defines one that is a real bit in `flags`; on Windows, where
+  // it defines none, the primitive resolves it to zero and the identity pinning asserted just below —
+  // three lstats of the same path and a dev/ino comparison against the opened handle — is what carries
+  // the guarantee instead. Reading the raw constant off `node:fs` here asserted `undefined` there.
+  const expectedNoFollow = noFollowOpenFlag();
+  assert.equal(flags & expectedNoFollow, expectedNoFollow);
   assert.ok(lstatCalls.filter((target) => target === envPath).length >= 3);
   const pathStats = await (await import("node:fs/promises")).lstat(envPath);
   assert.equal(openStats.dev, pathStats.dev);

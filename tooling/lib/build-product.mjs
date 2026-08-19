@@ -179,9 +179,9 @@ const packageLinkProjections = Object.freeze({
 });
 const snapshotStagingCapabilities = new WeakSet();
 
-function isInside(root, candidate) {
-  const relative = path.relative(root, candidate);
-  return relative === "" || (!relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative));
+function isInside(root, candidate, paths = path) {
+  const relative = paths.relative(root, candidate);
+  return relative === "" || (!relative.startsWith(`..${paths.sep}`) && relative !== ".." && !paths.isAbsolute(relative));
 }
 
 async function assertPathComponentsAreDirectoriesWithoutSymlinks(base, candidate, label) {
@@ -206,9 +206,40 @@ async function canonicalTemporaryRoot() {
   return realpath(tmpdir());
 }
 
+// The second candidate exists for macOS, where `os.tmpdir()` answers `/var/folders/...` but a caller
+// may hand in a staging root under `/tmp` — the same directory reached through a symlinked first
+// segment. Windows has no such alias and no `C:\tmp`, so `realpath` there raises ENOENT for a path
+// that was never a candidate in the first place. A candidate that does not exist is dropped rather
+// than fatal; a candidate that exists and fails for any other reason still throws.
 async function temporaryRootCandidates() {
   const requested = [...new Set([path.resolve(tmpdir()), path.resolve(path.parse(tmpdir()).root, "tmp")])];
-  return Promise.all(requested.map(async (root) => ({ requested: root, canonical: await realpath(root) })));
+  const resolved = await Promise.all(requested.map(async (root) => {
+    const canonical = await realpath(root).catch((error) => {
+      if (error.code === "ENOENT") return undefined;
+      throw error;
+    });
+    return canonical === undefined ? undefined : { requested: root, canonical };
+  }));
+  return resolved.filter((candidate) => candidate !== undefined);
+}
+
+// Whether a staging root sits somewhere it must not: over the user's home directory, or inside it.
+//
+// The containing direction is refused everywhere — nothing this build does belongs above a whole user
+// profile. The contained direction needs one platform exemption. On Windows `os.tmpdir()` is
+// `%USERPROFILE%\AppData\Local\Temp`, so the OS scratch directory lives *inside* the profile and
+// "inside the home directory" and "inside the OS temporary root" stop being exclusive; without the
+// exemption this guard fires on every Windows build and names nothing the user can fix. What the
+// guard is for is keeping staging out of the user's own files, not out of the directory the OS hands
+// out for scratch space, so a candidate strictly inside the canonical temporary root is exempt. A
+// candidate that is not inside any temporary root — an explicit `stagingRoot` a caller chose — stays
+// refused on every platform, Windows included. On POSIX hosts the temporary root is not inside the
+// home directory at all, so the exemption never changes an answer there.
+export function stagingRootOverlapsHome({ canonicalHome, canonicalCandidate, canonicalTemporaryRoot, paths = path }) {
+  if (isInside(canonicalCandidate, canonicalHome, paths)) return true;
+  if (!isInside(canonicalHome, canonicalCandidate, paths)) return false;
+  if (canonicalTemporaryRoot === undefined) return true;
+  return !isInside(canonicalTemporaryRoot, canonicalCandidate, paths) || canonicalCandidate === canonicalTemporaryRoot;
 }
 
 async function canonicalizeProspectivePath(candidate) {
@@ -283,7 +314,7 @@ async function prepareOutputDestination({ repoRoot, productName, stagingRoot, st
     throw new Error(`Staging root escapes the canonical OS temporary root: ${absoluteStagingRoot}`);
   }
   const canonicalHome = await realpath(homedir());
-  if (isInside(canonicalHome, canonicalCandidate) || isInside(canonicalCandidate, canonicalHome)) {
+  if (stagingRootOverlapsHome({ canonicalHome, canonicalCandidate, canonicalTemporaryRoot: temporaryRoot?.canonical })) {
     throw new Error(`Staging root must not be the home directory or overlap it: ${absoluteStagingRoot}`);
   }
   if (isInside(canonicalRepoRoot, canonicalCandidate) || isInside(canonicalCandidate, canonicalRepoRoot)) {

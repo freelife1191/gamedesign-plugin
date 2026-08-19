@@ -6,6 +6,7 @@ import { lstat, mkdir, mkdtemp, opendir, readFile, realpath, rename, rm, symlink
 import { tmpdir } from "node:os";
 import path from "node:path";
 import nodeTest from "node:test";
+import { fileURLToPath } from "node:url";
 
 import { canonicalMemoryEventDocument, memoryOperationId } from "../../shared/scripts/validate-design-memory.mjs";
 import { appendMemoryEvent, resolveMemoryStore } from "../../shared/scripts/lib/safe-memory-store.mjs";
@@ -397,7 +398,7 @@ test("receipt history retains distinct exact pairs while corrupt siblings do not
 });
 
 test("runtime validators execute packaged schemas with canonical Unicode and semantic array parity", async (t) => {
-  const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../.."); const [indexSchema, receiptSchema] = await Promise.all([readFile(path.join(root, "shared/memory/schema/memory-index.schema.json"), "utf8").then(JSON.parse), readFile(path.join(root, "shared/memory/schema/memory-receipt.schema.json"), "utf8").then(JSON.parse)]);
+  const root = fileURLToPath(new URL("../..", import.meta.url)); const [indexSchema, receiptSchema] = await Promise.all([readFile(path.join(root, "shared/memory/schema/memory-index.schema.json"), "utf8").then(JSON.parse), readFile(path.join(root, "shared/memory/schema/memory-receipt.schema.json"), "utf8").then(JSON.parse)]);
   assert.equal(indexSchema.properties.entries.items.properties.artifactTypes.uniqueItems, true); assert.equal(receiptSchema.properties.observations.maxItems, 256); assert.equal(receiptSchema.properties.applied.maxItems, 256); assert.equal(receiptSchema.properties.excluded.maxItems, 256); assert.equal(receiptSchema.properties.excluded.items.properties.reason.maxLength, 1024);
   const canonical = { schemaVersion: 1, requestSha256: "a".repeat(64), sourceTreeSha256: "b".repeat(64), projectId: "wind-island", lane: "studio", policy: { scope: "project", maxItems: 5, candidateTtlDays: 30 }, observations: [], applied: [], excluded: [] };
   const bytes = Buffer.from(`${JSON.stringify(canonical)}\n`); const { store } = await approvedStore(t); assert.equal(validateMemoryReceiptSchema(canonical), true); const valid = await publishMemoryReceiptGeneration({ store, requestSha256: canonical.requestSha256, receiptBytes: bytes, limits: { maxReceiptObservationItems: 1, maxReceiptAppliedItems: 1, maxReceiptExcludedItems: 1 } }); assert.equal(valid.complete, true);
@@ -442,7 +443,7 @@ test("receipt evaluator returns false for null and non-object observations", () 
 });
 
 test("schema evaluator imports from an installed layout when authoring schemas are absent", async (t) => {
-  const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../.."); const installed = await workspace(t); const evaluator = path.join(installed, "scripts", "lib", "memory-schema-evaluator.mjs"); const schemaRoot = path.join(installed, "references", "shared", "memory", "schema");
+  const root = fileURLToPath(new URL("../..", import.meta.url)); const installed = await workspace(t); const evaluator = path.join(installed, "scripts", "lib", "memory-schema-evaluator.mjs"); const schemaRoot = path.join(installed, "references", "shared", "memory", "schema");
   await mkdir(path.dirname(evaluator), { recursive: true }); await mkdir(schemaRoot, { recursive: true });
   await writeFile(evaluator, await readFile(path.join(root, "shared", "scripts", "lib", "memory-schema-evaluator.mjs")));
   for (const name of ["memory-index.schema.json", "memory-receipt.schema.json"]) await writeFile(path.join(schemaRoot, name), await readFile(path.join(root, "shared", "memory", "schema", name)));
@@ -452,7 +453,7 @@ test("schema evaluator imports from an installed layout when authoring schemas a
 });
 
 test("packaged observation digest relation annotation is mandatory evaluator authority", async (t) => {
-  const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../.."); const installed = await workspace(t); const evaluator = path.join(installed, "scripts", "lib", "memory-schema-evaluator.mjs"); const schemaRoot = path.join(installed, "references", "shared", "memory", "schema");
+  const root = fileURLToPath(new URL("../..", import.meta.url)); const installed = await workspace(t); const evaluator = path.join(installed, "scripts", "lib", "memory-schema-evaluator.mjs"); const schemaRoot = path.join(installed, "references", "shared", "memory", "schema");
   await mkdir(path.dirname(evaluator), { recursive: true }); await mkdir(schemaRoot, { recursive: true }); await writeFile(evaluator, await readFile(path.join(root, "shared", "scripts", "lib", "memory-schema-evaluator.mjs")));
   for (const name of ["memory-index.schema.json", "memory-receipt.schema.json"]) { const schema = JSON.parse(await readFile(path.join(root, "shared", "memory", "schema", name), "utf8")); if (name === "memory-receipt.schema.json") schema.properties.observations.items["x-memory-observation-digest-relation"] = false; await writeFile(path.join(schemaRoot, name), canonicalBytes(schema)); }
   await assert.rejects(() => import(`${new URL(`file://${evaluator}`).href}?missing-relation=${Date.now()}`), /memory schema unavailable/u);

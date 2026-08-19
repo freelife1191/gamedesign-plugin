@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
 import { CATALOG_DESCRIPTION_BUDGET } from "../../tooling/lib/skill-description-budget.mjs";
 import { loadVendorDescriptionOverlays } from "../../tooling/lib/vendor-description-overlay.mjs";
 import { PRODUCTS, REQUIRED_SKILLS, catalogFindings, parseProbeArgs, parseSkillCatalog, skillDescriptions, unquoteScalar } from "../../tooling/probe-skill-routing.mjs";
 
-const repoRoot = new URL("../..", import.meta.url).pathname;
+const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 
 // A catalog line as codex writes it. Descriptions carry colons, parentheses, and Hangul of their own, so
 // these fixtures keep the shapes that a naive split on ": " or "(" would get wrong.

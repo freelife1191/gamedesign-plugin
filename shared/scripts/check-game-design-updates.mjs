@@ -861,11 +861,14 @@ function defaultFsOps(overrides) {
 export function resolveUpdateCachePath({ env = process.env, home = homedir(), platform = process.platform } = {}) {
   const isWindowsAbsolute = (value) => typeof value === "string"
     && (/^[A-Za-z]:[\\/]/u.test(value) || /^\\\\[^\\]/u.test(value));
+  // The platform is an argument, so the answer has to be in that platform's path syntax rather than
+  // the host's. Asked about a POSIX platform from a Windows host, `path.join` answered
+  // `\tmp\xdg\...` — a path that is neither what the caller asked for nor valid anywhere.
   const absoluteForPlatform = (value) => typeof value === "string"
-    && (platform === "win32" ? isWindowsAbsolute(value) || path.isAbsolute(value) : path.isAbsolute(value));
-  const joinForPlatform = (base, ...parts) => platform === "win32" && isWindowsAbsolute(base)
-    ? path.win32.join(base, ...parts)
-    : path.join(base, ...parts);
+    && (platform === "win32" ? isWindowsAbsolute(value) || path.win32.isAbsolute(value) : path.posix.isAbsolute(value));
+  const joinForPlatform = (base, ...parts) => platform === "win32"
+    ? (isWindowsAbsolute(base) ? path.win32 : path).join(base, ...parts)
+    : path.posix.join(base, ...parts);
   const xdg = absoluteForPlatform(env.XDG_CACHE_HOME) ? env.XDG_CACHE_HOME : null;
   if (!absoluteForPlatform(home)) throw new TypeError("home must be absolute");
   const base = xdg
