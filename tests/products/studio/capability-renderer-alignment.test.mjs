@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 
 import { buildProduct } from "../../../tooling/lib/build-product.mjs";
 import { importVendored } from "../../lib/vendored.mjs";
+import { CHILD_DEADLINE_SCALE } from "../../lib/platform-support.mjs";
 
 const { resolveBrowser } = await importVendored("skillstead", "scripts/render.mjs");
 
@@ -50,7 +51,9 @@ test("clean-built SessionStart probe and Skillstead renderer report the same rea
     cwd: pluginRoot,
     env: { ...process.env },
     encoding: "utf8",
-    timeout: 30000,
+    // A headless Chromium render is several times slower on Windows, and the identity line this test
+    // reads had already been printed when the thirty-second bound killed the process.
+    timeout: 30000 * CHILD_DEADLINE_SCALE,
   });
   assert.equal(render.status, 0, `${render.stdout}\n${render.stderr}`);
   const identity = render.stdout.match(/^renderer: (.+) \((.+)\) \[via (.+)\]$/mu);

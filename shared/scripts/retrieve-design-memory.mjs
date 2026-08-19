@@ -245,16 +245,22 @@ async function reserveSlot(directory, max, width, make) {
   await ensureDirectories(directory, "");
   for (let slot = 0; slot < max; slot += 1) {
     const candidate = path.join(directory, `${String(slot).padStart(width, "0")}.json`);
-    try { await writeExclusive(candidate, make(slot)); return slot; } catch (error) {
+    // A name that already exists is a taken slot, whatever kind of entry holds it. Checking before the
+    // create matters most on Windows, where an exclusive create against a symlink does not fail the way
+    // POSIX fails it: it follows the link and creates the link's target, which would both claim the
+    // slot and write this store's bytes to a path something else chose.
+    if (await nameIsTaken(candidate)) continue;
+    try { await writeExclusive(candidate, make(slot)); } catch (error) {
       if (error?.code === "EEXIST") continue;
-      // A slot already occupied by a symlink to something absent. POSIX reports EEXIST for the
-      // exclusive create because the name is taken; Windows resolves the reparse point first and
-      // reports ENOENT about the target instead. The name is taken either way, and lstat is what says
-      // so — trusting the errno made one platform skip an occupied slot and the other abort the whole
-      // publish over a slot it should simply have stepped past.
+      // The same collision reported differently: POSIX says EEXIST because the name is taken, Windows
+      // resolves the reparse point first and says ENOENT about a target that is not there. lstat is
+      // what tells those apart from a genuinely absent path.
       if (error?.code === "ENOENT" && await nameIsTaken(candidate)) continue;
       throw error;
     }
+    // And what now holds the name has to be the regular file this call just wrote.
+    const created = await lstat(candidate).catch(() => null);
+    if (created?.isFile() && !created.isSymbolicLink()) return slot;
   }
   return null;
 }

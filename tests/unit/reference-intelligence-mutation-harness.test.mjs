@@ -32,7 +32,9 @@ async function capture(args, additions = {}) {
   return await new Promise((resolve, reject) => {
     let settled = false;
     const finish = (operation, value) => { if (settled) return; settled = true; clearTimeout(timer); operation(value); };
-    const timer = setTimeout(() => { child.kill("SIGKILL"); finish(reject, new Error("mutation self-test timeout")); }, 25_000);
+    // The harness this drives now scales its own child deadlines to the host, so the deadline around it
+    // has to scale the same way or it fires first and reports a timeout about the wrong process.
+    const timer = setTimeout(() => { child.kill("SIGKILL"); finish(reject, new Error("mutation self-test timeout")); }, 25_000 * CHILD_DEADLINE_SCALE);
     const collect = (target) => (chunk) => { length += chunk.byteLength; if (length > 128 * 1024) { child.kill("SIGKILL"); finish(reject, new Error("mutation self-test output limit")); } else target.push(chunk); };
     child.stdout.on("data", collect(stdout)); child.stderr.on("data", collect(stderr)); child.once("error", (error) => finish(reject, error));
     child.once("close", (code) => finish(resolve, { code, stdout: Buffer.concat(stdout).toString("utf8"), stderr: Buffer.concat(stderr).toString("utf8") }));

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "facaf7b74d25ee6003bacbcff0aca1b3845e1e229cc8d264c414c6ce7e186c57",
+  "treeSha256": "be20bb50e18fb4339cc6744534bcfef780420219c641a651e75d84b69162828f",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -1776,8 +1776,8 @@
     },
     {
       "path": "scripts/retrieve-design-memory.mjs",
-      "sha256": "108db1418467c8fd309b4e6ec661266111f137a7879878c0a3f51490613bcee1",
-      "size": 50211
+      "sha256": "7e8643d5bea5a98643867a5b902358d69568714ae468001b35b4694bb251a1ed",
+      "size": 50643
     },
     {
       "path": "scripts/review-cutscene-continuity.mjs",

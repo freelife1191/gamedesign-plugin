@@ -555,3 +555,30 @@ test("a canonical result at exactly 64 KiB publishes a truthful receipt and limi
   const overflowSections = { ...exactSections, "발견한 내용": `${exactSections["발견한 내용"]}x` }; const overflowStore = await approvedStore(t, overflowSections); const before = await treeSnapshot(path.join(overflowStore.store.root, "v1", "derived", "receipts")); const overflow = await retrieveApprovedDesignMemory({ workspaceRoot: overflowStore.root, config, requestContext: context });
   assert.equal(overflow.status, "unavailable"); assert.equal(overflow.warnings[0].code, "memory.result_limit_exceeded"); assert.deepEqual(await treeSnapshot(path.join(overflowStore.store.root, "v1", "derived", "receipts")), before);
 });
+
+// A reservation slot whose name is held by a symlink must never be claimed by writing through it. On
+// POSIX the exclusive create refuses the name; on Windows it follows the link and creates the link's
+// target, which would claim the slot AND put this store's bytes wherever the link points — outside the
+// store, at a path something else chose. The reservation now refuses a taken name before it writes,
+// whichever way the platform reports the collision, so the publish steps to the next slot and the
+// link's target is never created.
+test("a reservation slot held by a symlink is stepped over, and nothing is written through the link", async (t) => {
+  const { root, store } = await approvedStore(t);
+  const outside = path.join(root, "outside-the-store.json");
+  const globalDirectory = path.join(store.root, "v1", "derived", ".reservations", "global");
+  await mkdir(globalDirectory, { recursive: true });
+  await symlink(outside, path.join(globalDirectory, "00000.json"));
+
+  const published = await publishMemoryLogGeneration({
+    store,
+    sourceTreeSha256: "c".repeat(64),
+    logBytes: Buffer.from("# healthy\n"),
+    limits: { maxGenerationReservations: 2, maxIdentityInstances: 2 },
+  });
+
+  assert.equal(published.complete, true, JSON.stringify(published));
+  assert.equal(published.status, "created");
+  assert.equal(await lstat(outside).then(() => true, () => false), false, "the link target must not exist");
+  assert.equal((await lstat(path.join(globalDirectory, "00000.json"))).isSymbolicLink(), true, "the occupied slot is left exactly as it was found");
+  assert.equal((await lstat(path.join(globalDirectory, "00001.json"))).isFile(), true, "the reservation lands in the next slot");
+});
