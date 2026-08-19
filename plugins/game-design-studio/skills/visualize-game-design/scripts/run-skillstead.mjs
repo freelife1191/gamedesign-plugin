@@ -16,9 +16,8 @@ function inside(root, target) {
 async function packageRoots() {
   const ownPath = await realpath(fileURLToPath(import.meta.url));
   const pluginRoot = path.resolve(path.dirname(ownPath), "../../..");
-  return [
-    path.join(pluginRoot, "skills/svg-infographic"),
-  ];
+  const roots = [path.join(pluginRoot, "skills/svg-infographic")];
+  return roots;
 }
 
 export async function resolveSkillsteadCli(command) {

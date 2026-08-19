@@ -12,10 +12,11 @@ Report what is installed, what is available, and what changing it would cost. Ne
 ## Workflow
 
 1. Read the current advisory. Run the packaged update check and read its JSON. Call no provider command in this step.
-2. Read [codex-commands.md](references/codex-commands.md) for the exact host commands. Never invent a command that is absent from that file.
-3. Inspect the installation with the packaged inspection script. It validates the marketplace snapshot and produces a reinstall plan without executing it.
-4. Present the four choices below, then stop and wait for an answer.
-5. Apply only the chosen option and report the result.
+2. Report the bundled components alongside the suite version. The advisory carries the installed tag of every bundled skill. A bundled skill is part of the suite package and is never installed or upgraded on its own, so report an available bundled release as something a later suite release delivers, and never as a separate thing to install.
+3. Read [codex-commands.md](references/codex-commands.md) for the exact host commands. Never invent a command that is absent from that file.
+4. Inspect the installation with the packaged inspection script. It validates the marketplace snapshot and produces a reinstall plan without executing it.
+5. Present the four choices below, then stop and wait for an answer.
+6. Apply only the chosen option and report the result.
 
 ## Choices
 
@@ -30,14 +31,14 @@ Report what is installed, what is available, and what changing it would cost. Ne
 - A manifest name mismatch, an equal or lower version, a prerelease, invalid UTF-8, a byte order mark, a symlink, or a path outside the marketplace ends the run as `current` or `unknown` with no install command.
 - A dirty local marketplace checkout stops the update and reports the state. Never stash or discard local changes.
 - Never run a destructive recovery in an install directory. That includes `git reset --hard`, `rm -rf`, replacing files in place, and restoring from a `.bak` copy.
-- Never edit an installed plugin cache or a bundled vendor directory.
+- Never edit an installed plugin cache or a bundled vendor directory. A bundled skill moves only when a new suite release moves it.
 - Never read a GitHub API token or a user API key.
 - Never put a token, a user home absolute path, or a remote response body in a failure message.
 - Never apply an update without an approval given in this conversation. There is no unattended upgrade setting and adding one is out of scope.
 
 ## Result Report
 
-After a successful update, report the previous version, the new version, the products that changed, bundled component changes, and the verification outcome in no more than seven items, then give the instruction to start a new session. Without evidence for a change list, report versions and verification results only and do not guess at features.
+After a successful update, report the previous version, the new version, the products that changed, bundled component changes with their installed tags, and the verification outcome in no more than seven items, then give the instruction to start a new session. Without evidence for a change list, report versions and verification results only and do not guess at features.
 
 ## Completion Signal
 

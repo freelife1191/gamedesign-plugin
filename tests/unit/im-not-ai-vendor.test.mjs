@@ -280,6 +280,8 @@ test("real --update CLI builds a private sibling stage and atomically publishes 
   await mkdir(path.join(fixtureRoot, "shared/vendor"), { recursive: true });
   await cp(new URL("../../tooling/sync-im-not-ai.mjs", import.meta.url), path.join(fixtureRoot, "tooling/sync-im-not-ai.mjs"));
   await cp(vendorRoot, path.join(fixtureRoot, "shared/vendor/im-not-ai"), { recursive: true });
+  await mkdir(path.join(fixtureRoot, "tooling/vendor-pins"), { recursive: true });
+  await cp(new URL("../../tooling/vendor-pins/im-not-ai.json", import.meta.url), path.join(fixtureRoot, "tooling/vendor-pins/im-not-ai.json"));
   const preload = path.join(fixtureRoot, "mock-official-im-not-ai.mjs");
   await writeFile(preload, `
 import { readFile } from "node:fs/promises";
@@ -303,9 +305,23 @@ globalThis.fetch = async (url) => {
   const result = await runNode(["--import", preload, path.join(fixtureRoot, "tooling/sync-im-not-ai.mjs"), "--update"], { env: { ...process.env, IM_NOT_AI_CLI_FIXTURE_ROOT: fixtureRoot } });
   assert.equal(result.exitCode, 0, result.stderr);
   assert.match(result.stdout, /\S/u, `CLI produced no result: ${result.stderr}`);
-  assert.deepEqual(JSON.parse(result.stdout), { status: "published", root: await realpath(path.join(fixtureRoot, "shared/vendor/im-not-ai")) });
+  const pinPath = path.join(await realpath(fixtureRoot), "tooling/vendor-pins/im-not-ai.json");
+  assert.deepEqual(JSON.parse(result.stdout), {
+    status: "published",
+    root: await realpath(path.join(fixtureRoot, "shared/vendor/im-not-ai")),
+    tag: "v2.3.1",
+    pin: { pinPath, tag: "v2.3.1", files: 15 },
+  });
   const installed = path.join(fixtureRoot, "shared/vendor/im-not-ai");
-  assert.equal(JSON.parse(await readFile(path.join(installed, "vendor.lock.json"), "utf8")).upstream.tag, "v2.3.1");
+  const publishedLock = JSON.parse(await readFile(path.join(installed, "vendor.lock.json"), "utf8"));
+  assert.equal(publishedLock.upstream.tag, "v2.3.1");
+  // The pin is the witness the next `--check` compares against. An upgrade that moved the tree but left
+  // the pin behind would fail that check until someone hand-transcribed fifteen digests, so the upgrade
+  // carries the pin with it.
+  const pin = JSON.parse(await readFile(pinPath, "utf8"));
+  assert.equal(pin.tag, "v2.3.1");
+  assert.equal(pin.commit, publishedLock.upstream.commit);
+  assert.deepEqual(pin.files, publishedLock.tree.files.map(({ path: file, sha256, size }) => ({ path: file, sha256, size })));
   assert.equal((await readdir(path.dirname(installed))).some((entry) => entry.startsWith(".im-not-ai.stage-") || entry.startsWith(".im-not-ai.backup-")), false);
 });
 

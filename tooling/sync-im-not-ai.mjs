@@ -1,36 +1,53 @@
 import { createHash, randomUUID } from "node:crypto";
-import { constants } from "node:fs";
-import { lstat, mkdir, mkdtemp, open, readFile, readdir, realpath, rename, rmdir, unlink } from "node:fs/promises";
+import { constants, readFileSync } from "node:fs";
+import { lstat, mkdir, mkdtemp, open, readFile, readdir, realpath, rename, rmdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const OFFICIAL_REPOSITORY = "https://github.com/epoko77-ai/im-not-ai";
-const PINNED = Object.freeze({
-  tag: "v2.3.0",
-  commit: "82137e858763dadb99561f194c5c00465735017b",
-  releasedAt: "2026-07-22T06:28:52Z",
-  skillPath: "codex/skills/humanize-korean",
-  referencesSource: ".claude/skills/humanize-korean/references",
-  licenseSha256: "4cc7e8c439fe42f09d98457599c129ea6df9e5d0e622750d75952b441a38343f",
-});
-const PINNED_FILES = Object.freeze([
-  ["SKILL.md", "6c34dbf00c23ee52e5cb374273952dab9bb5d38552cf1fb7a90ed42854ee304f", 4352],
-  ["references/ai-tell-taxonomy.md", "57b7b40bc90d927d1b76cd4325ae5a58c92d18a20615339b19bc5eac776a6940", 77157],
-  ["references/baseline.json", "3880335a2b760fd505531e303ff9fff7f0725f8f2e98dc965a7808c21616d958", 6139],
-  ["references/baseline_v2.json", "b5f1725bd02fb4cc40eece68c5b8f1d7c7655775743196d8fd0bc5978f2ed916", 13487],
-  ["references/design-notes.md", "e350884ca1cb10c248d247b7fc2b5236211489757bf65a72360434f0254ae293", 5940],
-  ["references/diagnosis-rules.md", "0a8d2c1ddf4b7294b66ddc549d0600fd74c41a187d6501869cb8c9c4d7d0456a", 13082],
-  ["references/empirical-validation.md", "d23302029934de04baecb48759ca7d804d98e861341edec315ac4a1fc40ce31f", 8339],
-  ["references/metrics.py", "a665faef60c88a045e232ac633fe19335d123a58a5dd8e493708c7c5954a5f60", 14550],
-  ["references/metrics_v2.py", "97343e74d16d71eeaae773cfb2e3b5970bd395239b1457b9ca6e8bebae2740bd", 31314],
-  ["references/quick-rules.footer.md", "933c5300b71fdf6eecc0ec0788910afd9a166ce7969ba129e2029ced000f2335", 1920],
-  ["references/quick-rules.header.md", "e129aa91bfe74433d81ff6817e934a233a9a7febd85f1f9484eca1ced33c1c13", 1156],
-  ["references/quick-rules.md", "cc8947e145a34af000b3684ef09ed62c51c0b35080f43b96bcd38e2ff98d28ef", 10040],
-  ["references/rewriting-playbook.md", "854b9e8fa552747972c319d6b409a00a74ed5afcb69eed019dfc5092238be721", 12133],
-  ["references/scholarship.md", "e83346a5b0147a923b725295cbee6b7fa3b22020840b5eee95c35f615b182e64", 35541],
-  ["references/web-service-spec.md", "be887c5e60b9a37e63a4aa8156ada0da4298098a51451925a3a22b9a37e25f6a", 8010],
-]);
 const REPO_ROOT = fileURLToPath(new URL("..", import.meta.url));
+// The pin is the offline second witness for the vendored tree: verification compares the lock against
+// it, so a lock that rewrote itself cannot also authorize itself. It lives in a reviewed data file
+// rather than in this source, because an upgrade otherwise means hand-transcribing fifteen digests
+// into JavaScript before the very check that guards the upgrade will pass again. The file moves only
+// through `--update`, and the digests it carries land in a diff a person reads.
+export const PIN_PATH = path.join(REPO_ROOT, "tooling/vendor-pins/im-not-ai.json");
+
+function loadPin(pinPath = PIN_PATH) {
+  const pin = JSON.parse(readFileSync(pinPath, "utf8"));
+  if (pin?.schemaVersion !== 1) throw vendorError("IM_NOT_AI_PIN_SCHEMA_MISMATCH", "schemaVersion");
+  if (pin.repository !== OFFICIAL_REPOSITORY) throw vendorError("IM_NOT_AI_UNTRUSTED_REPOSITORY", "pin.repository");
+  for (const field of ["tag", "commit", "releasedAt", "skillPath", "referencesSource", "licenseSha256"]) {
+    if (typeof pin[field] !== "string" || pin[field] === "") throw vendorError("IM_NOT_AI_PIN_INVALID", field);
+  }
+  if (!/^v\d+\.\d+\.\d+$/u.test(pin.tag)) throw vendorError("IM_NOT_AI_PIN_INVALID", "tag");
+  if (!/^[a-f0-9]{40}$/u.test(pin.commit)) throw vendorError("IM_NOT_AI_PIN_INVALID", "commit");
+  if (!/^[a-f0-9]{64}$/u.test(pin.licenseSha256)) throw vendorError("IM_NOT_AI_PIN_INVALID", "licenseSha256");
+  if (!Array.isArray(pin.files) || pin.files.length === 0) throw vendorError("IM_NOT_AI_PIN_INVALID", "files");
+  const files = pin.files.map((file, index) => {
+    if (!file || typeof file.path !== "string" || !/^[a-f0-9]{64}$/u.test(file.sha256 ?? "") || !Number.isInteger(file.size) || file.size < 0) {
+      throw vendorError("IM_NOT_AI_PIN_INVALID", `files[${index}]`);
+    }
+    if (file.path === "" || file.path.startsWith("/") || file.path.includes("\\") || file.path.split("/").includes("..")) {
+      throw vendorError("IM_NOT_AI_PIN_INVALID", `files[${index}].path`);
+    }
+    return Object.freeze({ path: file.path, sha256: file.sha256, size: file.size });
+  });
+  if (new Set(files.map(({ path: filePath }) => filePath)).size !== files.length) throw vendorError("IM_NOT_AI_PIN_INVALID", "files");
+  return Object.freeze({ ...pin, files: Object.freeze(files) });
+}
+
+const PINNED = loadPin();
+const PINNED_FILES = PINNED.files;
+
+// The upstream paths the pinned reference files came from. Both the fetch list and the archive
+// allowlist read this, so the two can never drift apart into two different sets of filenames.
+function referenceSourcePaths() {
+  return PINNED_FILES
+    .filter(({ path: file }) => file.startsWith("references/"))
+    .map(({ path: file }) => `${PINNED.referencesSource}/${file.slice("references/".length)}`);
+}
+
 const DEFAULT_VENDOR_ROOT = path.join(REPO_ROOT, "shared/vendor/im-not-ai");
 const PREPARED_VENDOR = new WeakMap();
 const WRITE_NO_FOLLOW = constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW;
@@ -120,7 +137,7 @@ export async function verifyVendoredImNotAi({ root = DEFAULT_VENDOR_ROOT } = {})
   if (files.length !== PINNED_FILES.length) throw vendorError("IM_NOT_AI_LOCK_FILE_COUNT_MISMATCH", "tree.files");
   for (let index = 0; index < files.length; index += 1) {
     const file = files[index];
-    const [expectedPath, expectedHash, expectedSize] = PINNED_FILES[index];
+    const { path: expectedPath, sha256: expectedHash, size: expectedSize } = PINNED_FILES[index];
     if (!file || file.path !== expectedPath || file.sha256 !== expectedHash || file.size !== expectedSize) {
       throw vendorError(expectedLockRecord(index).code, expectedLockRecord(index).path);
     }
@@ -193,18 +210,30 @@ export async function checkLatestImNotAi({ root = DEFAULT_VENDOR_ROOT, fetchRele
 }
 
 async function defaultArchive(release) {
-  const paths = [
-    "LICENSE",
-    `${PINNED.skillPath}/SKILL.md`,
-    ...["ai-tell-taxonomy.md", "baseline.json", "baseline_v2.json", "design-notes.md", "diagnosis-rules.md", "empirical-validation.md", "metrics.py", "metrics_v2.py", "quick-rules.footer.md", "quick-rules.header.md", "quick-rules.md", "rewriting-playbook.md", "scholarship.md", "web-service-spec.md"].map((file) => `${PINNED.referencesSource}/${file}`),
-  ];
+  const paths = ["LICENSE", `${PINNED.skillPath}/SKILL.md`, ...referenceSourcePaths()];
   const files = await Promise.all(paths.map(async (sourcePath) => {
     const response = await fetch(`https://raw.githubusercontent.com/epoko77-ai/im-not-ai/${release.commit}/${sourcePath}`);
     if (!response.ok) throw new Error(`Official im-not-ai archive file unavailable: ${sourcePath}`);
     return { path: sourcePath, bytes: Buffer.from(await response.arrayBuffer()) };
   }));
   const closureFiles = files.map(({ path: filePath, bytes }) => ({ path: filePath, sha256: sha256(bytes), size: bytes.length }));
-  return { ...release, files, closure: { files: closureFiles, licenseSha256: sha256(archiveFile({ files }, "LICENSE")), digest: closureDigest(closureFiles) } };
+  return {
+    ...release,
+    files,
+    unpinned: await unpinnedUpstreamReferences(release).catch(() => null),
+    closure: { files: closureFiles, licenseSha256: sha256(archiveFile({ files }, "LICENSE")), digest: closureDigest(closureFiles) },
+  };
+}
+
+// The vendored file set is a closed allowlist: an upgrade copies the files the pin already names and
+// nothing else, so a reference file added upstream would arrive silently absent. Listing the upstream
+// directory turns that silence into a reported list a person can decide about. It never widens the
+// allowlist on its own, and a failed listing degrades to null rather than blocking the upgrade.
+async function unpinnedUpstreamReferences(release) {
+  const listing = await fetchJson(`https://api.github.com/repos/epoko77-ai/im-not-ai/contents/${PINNED.referencesSource}?ref=${release.commit}`);
+  if (!Array.isArray(listing)) return null;
+  const pinned = new Set(PINNED_FILES.filter(({ path: file }) => file.startsWith("references/")).map(({ path: file }) => file.slice("references/".length)));
+  return listing.filter((entry) => entry?.type === "file" && typeof entry.name === "string" && !pinned.has(entry.name)).map((entry) => entry.name).sort();
 }
 
 function archiveFile(archive, sourcePath) {
@@ -220,7 +249,7 @@ function verifyFutureArchive(archive, release) {
   const expectedPaths = new Set([
     "LICENSE",
     `${PINNED.skillPath}/SKILL.md`,
-    ...PINNED_FILES.filter(([file]) => file.startsWith("references/")).map(([file]) => `${PINNED.referencesSource}/${file.slice("references/".length)}`),
+    ...referenceSourcePaths(),
   ]);
   if (!Array.isArray(release.closure?.files) || typeof release.closure?.digest !== "string") throw vendorError("IM_NOT_AI_RELEASE_CLOSURE_MISSING", "release.closure");
   const declared = new Map(release.closure.files.map((file) => [file.path, file]));
@@ -435,20 +464,45 @@ export async function updateImNotAi({ root = DEFAULT_VENDOR_ROOT, stagingRoot, p
     const staged = await verifyPreparedTree(stageIdentity.realpath, { expectedIdentity: stageIdentity });
     const original = await verifyPreparedTree(vendorRoot, { expectedIdentity: rootIdentity });
     const receipt = createPreparedReceipt({ root: vendorRoot, original, staged });
-    if (publish) return receipt.publish({ fsOps });
-    return { status: "updated", tag: release.tag, verifiedFiles: files.length, publish: receipt.publish };
+    const unpinned = Array.isArray(archive.unpinned) && archive.unpinned.length > 0 ? { unpinnedUpstreamFiles: archive.unpinned } : {};
+    if (publish) return { ...await receipt.publish({ fsOps }), tag: release.tag, ...unpinned };
+    return { status: "updated", tag: release.tag, verifiedFiles: files.length, ...unpinned, publish: receipt.publish };
   } catch (error) {
     await removePrivateTree(privateStage, fsOps).catch(() => undefined);
     throw error;
   }
 }
 
+// Rewrite the offline witness from the tree that was just published. Verification compares the lock
+// against this file, so an upgrade that moved the tree without moving the pin would leave the very
+// next `--check` failing. The digests written here are the ones a reviewer reads in the diff.
+export async function writeImNotAiPin({ root = DEFAULT_VENDOR_ROOT, pinPath = PIN_PATH } = {}) {
+  const lock = await readJson(path.join(root, "vendor.lock.json"));
+  const pin = {
+    schemaVersion: 1,
+    repository: OFFICIAL_REPOSITORY,
+    tag: lock.upstream.tag,
+    commit: lock.upstream.commit,
+    releasedAt: lock.upstream.releasedAt,
+    skillPath: lock.upstream.skillPath,
+    referencesSource: lock.upstream.referencesSource,
+    licenseSha256: lock.license.sha256,
+    files: lock.tree.files.map(({ path: file, sha256: hash, size }) => ({ path: file, sha256: hash, size })),
+  };
+  const temporary = path.join(path.dirname(pinPath), `.${path.basename(pinPath)}.${process.pid}.tmp`);
+  await writeFile(temporary, `${JSON.stringify(pin, null, 2)}\n`, { mode: 0o644 });
+  await rename(temporary, pinPath);
+  return { pinPath, tag: pin.tag, files: pin.files.length };
+}
+
 if (process.argv[1] && await realpath(process.argv[1]).catch(() => path.resolve(process.argv[1])) === await realpath(fileURLToPath(import.meta.url))) {
   const { mode } = parseImNotAiUpdaterArgs(process.argv.slice(2));
-  const result = mode === "check"
-    ? await verifyVendoredImNotAi()
-    : mode === "check-latest"
-      ? await checkLatestImNotAi()
-      : await updateImNotAi({ publish: true });
+  let result;
+  if (mode === "check") result = await verifyVendoredImNotAi();
+  else if (mode === "check-latest") result = await checkLatestImNotAi();
+  else {
+    result = await updateImNotAi({ publish: true });
+    if (result.status === "published") result = { ...result, pin: await writeImNotAiPin() };
+  }
   process.stdout.write(`${JSON.stringify(result)}\n`);
 }

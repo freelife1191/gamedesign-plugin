@@ -4,4 +4,4 @@
 * text=auto eol=lf
 
 shared/vendor/im-not-ai/** whitespace=-trailing-space
-shared/vendor/skillstead/svg-infographic/0.9.0/** whitespace=-trailing-space
+shared/vendor/skillstead/svg-infographic/*/** whitespace=-trailing-space

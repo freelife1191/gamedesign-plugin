@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-career",
   "sourceDateEpoch": 0,
-  "treeSha256": "bb5ce819bc9862770c1d3981f642f5be514719e07d3972a464ff39b8dfb6904a",
+  "treeSha256": "1db91facc7604669c16ff97e225ca2d83acc7b6477b56ecd46572c71bcb8bd98",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -2701,8 +2701,8 @@
     },
     {
       "path": "skills/upgrade-game-design-suite/SKILL.md",
-      "sha256": "8e4e8a1f6db2662c969e6329d627203cfbee8fd630c52eecae03634d4993d6e7",
-      "size": 3143
+      "sha256": "c958db43df7dc5aec83c8653c3b1c9cf2120ec24d044dafc1ae11446c062a9ab",
+      "size": 3574
     },
     {
       "path": "skills/upgrade-game-design-suite/references/codex-commands.md",
@@ -2721,8 +2721,8 @@
     },
     {
       "path": "skills/visualize-career-roadmap/scripts/run-skillstead.mjs",
-      "sha256": "aadaefb302d309907c66e8c1d6cdf6abdc76a0810f31d88997a16fe8235a1c0c",
-      "size": 5027
+      "sha256": "4f18c150554f913d6d183af4cb3b682f2eef1160fa4a5649f546e69b8de1f604",
+      "size": 5041
     },
     {
       "path": "skills/visualize-career-roadmap/scripts/validate-visualization-state.mjs",

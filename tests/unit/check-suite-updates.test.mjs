@@ -137,6 +137,14 @@ test("weekly workflow is a read-only scheduled audit without an update command",
   assert.equal(workflow.triggers.schedule.length, 1);
   assert.match(workflow.triggers.schedule[0].cron, /^\S+(?:\s+\S+){4}$/u);
   assert.equal(workflow.permissions.contents, "read");
-  assert.equal(workflow.commands.some((command) => /(?:^|\s)(?:npm\s+run\s+)?update:|--update\b/u.test(command)), false);
+  // The audit may print the upgrade command in its summary — telling a maintainer what to run is the
+  // point of a recommendation. What it may never do is run one, so the guard reads the lines that
+  // execute and skips the ones that only write text into the step summary.
+  const executed = workflow.commands.filter((command) => !/^echo\b/u.test(command));
+  assert.ok(executed.length > 0, "the audit has to run something for this guard to mean anything");
+  assert.equal(executed.some((command) => /(?:^|\s)(?:npm\s+run\s+)?update:|--update\b/u.test(command)), false);
   assert.equal(workflow.commands.some((command) => /(?:write-all|contents:\s*write|pull-requests:\s*write)/u.test(command)), false);
+  // The recommendation has to name the command a person runs, and has to say it changes nothing here.
+  assert.ok(workflow.commands.some((command) => command.includes("npm run update:vendors")), "the summary has to name the upgrade command");
+  assert.ok(workflow.commands.some((command) => command.includes("아무것도 바꾸지 않습니다")), "the summary has to say the audit changes nothing");
 });

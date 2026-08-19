@@ -211,6 +211,38 @@ Windows 오프라인 레인은 만들어 돌려 보고 결과를 읽은 뒤 의�
 
 Windows에서 실제로 성립해야 하는 계약은 Windows checkout과 설치가 다른 플랫폼과 같은 바이트를 만든다는 것이고, 이는 설치 게이트가 매 실행마다 Windows에서 직접 증명합니다.
 
+## 번들 스킬 최신 유지
+
+번들 스킬 셋(skillstead·archify·im-not-ai)은 제품 패키지 안에 벤더링됩니다. 사용자가 따로 설치하거나 올릴 수 있는 대상이 아니고, 새 스위트 릴리스가 실어 나릅니다.
+
+권고와 승인은 분리되어 있습니다. 검사는 아무것도 바꾸지 않고, 적용은 사람이 답한 뒤에만 일어납니다.
+
+| 명령 | 하는 일 |
+| --- | --- |
+| `npm run check:updates` | 세 상류의 최신 여부를 JSON으로. current 0, outdated 2, unknown 1 |
+| `npm run check:updates:report` | 같은 검사를 사람이 읽는 권고문으로 |
+| `npm run update:vendors` | 권고를 보이고 `업데이트를 진행할까요? [y/N]`를 물은 뒤, 승인 시에만 적용 |
+| `npm run check:vendor-refs` | 제품 문서의 버전 표기가 벤더 락과 어긋나지 않았는지 |
+
+`update:vendors`는 승인 뒤 벤더 트리 갱신, 제품 문서 재작성(`tooling/sync-vendor-references.mjs`), 업데이트 매니페스트 재생성, 패키지 스냅샷 재빌드까지 한 번에 합니다. 대화형 터미널이 아니면 `--yes` 없이는 적용하지 않고 멈춥니다. `--validate`를 주면 릴리스 검증까지 이어서 돌립니다.
+
+주간 워크플로(`.github/workflows/check-bundled-skill-updates.yml`)는 검사만 하고 요약에 권고문을 남깁니다. 상류에 새 릴리스가 있다는 사실은 빌드 실패가 아니라 권고이므로 `outdated`로는 실패하지 않고, 검사 자체가 답을 못 낸 `unknown`에서만 실패합니다. 권한은 `contents: read`로 닫혀 있고 워크플로는 어떤 업데이트 명령도 실행하지 않습니다.
+
+버전 리터럴은 한 곳에서만 움직입니다. 벤더 락이 원천이고, 나머지는 락에서 씁니다.
+
+| 위치 | 어떻게 따라오는가 |
+| --- | --- |
+| `products/*/plugin/THIRD_PARTY_NOTICES.md`, 같은 곳 `README.md`, `polish-game-design-writing/SKILL.md` | `tooling/sync-vendor-references.mjs`가 락에서 다시 씀. `validate-suite`의 `vendor references` 스테이지가 drift를 막음 |
+| `visualize-*/scripts/run-skillstead.mjs`의 저장소 fallback 경로 | 락의 `tree.root`를 읽어 해석. 이 구간은 `// #region repository-only` 마커로 감싸여 있고 빌드가 패키지 사본에서 통째로 잘라냄 |
+| `validate-visualization-evidence.mjs`의 `TRUSTED_RUNTIME_DIGESTS` | linter·renderer는 벤더 스크립트의 sha256, wrapper는 제품 소스에서 마커 구간을 잘라낸 바이트의 sha256. 셋 다 `sync-vendor-references.mjs`가 씀 |
+| `.gitattributes`의 벤더 경로 | 버전 자리를 `*` glob으로 둠 |
+| `shared/updates/installed-components.json` | `tooling/generate-update-manifest.mjs`가 락에서 생성 |
+| `plugins/**` | `npm run build`가 락에서 벤더 트리를 골라 담음(`tooling/lib/vendor-components.mjs`) |
+
+im-not-ai만 두 번째 증인을 둡니다. `tooling/vendor-pins/im-not-ai.json`이 태그·커밋·라이선스 해시와 파일 15개의 sha256을 들고 있고, `--check`는 벤더 락을 이 핀과 대조합니다. 락이 스스로를 승인하지 못하게 하는 장치입니다. 예전에는 이 표가 `tooling/sync-im-not-ai.mjs` 소스 안에 있어서, 업그레이드를 하려면 그 업그레이드를 지키는 검사를 통과시키기 위해 해시 15개를 손으로 옮겨 적어야 했습니다. 지금은 `--update`가 핀도 함께 씁니다. 사람이 PR diff에서 해시 변화를 읽는다는 성질은 그대로입니다.
+
+im-not-ai의 벤더 파일 목록은 닫힌 allowlist입니다. 상류에 참조 파일이 새로 생겨도 업그레이드가 자동으로 가져오지 않습니다. 대신 `--update`가 상류 디렉터리를 조회해 핀에 없는 파일을 `unpinnedUpstreamFiles`로 보고하므로, 넣을지는 사람이 정합니다.
+
 ## 0.2.0 릴리스
 
 두 제품이 `0.1.1`에서 `0.2.0`으로 올라갔습니다. minor를 올린 이유는 설치 스킬이 늘고 진입 경로가 바뀐 것입니다.

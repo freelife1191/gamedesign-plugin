@@ -16,6 +16,7 @@ const STAGES = Object.freeze([
   { name: "reference drift", command: [process.execPath, "tooling/index-references.mjs", "--check"], rerun: "node tooling/index-references.mjs --check" },
   { name: "evidence audit", command: [process.execPath, "tooling/audit-evidence.mjs", "--check"], rerun: "node tooling/audit-evidence.mjs --check" },
   { name: "vendor hash", command: [process.execPath, "tooling/verify-vendor-hash.mjs"], rerun: "node tooling/verify-vendor-hash.mjs" },
+  { name: "vendor references", command: [process.execPath, "tooling/sync-vendor-references.mjs", "--check"], rerun: "node tooling/sync-vendor-references.mjs --check" },
   { name: "update manifest", command: [process.execPath, "tooling/generate-update-manifest.mjs", "--check"], rerun: "node tooling/generate-update-manifest.mjs --check" },
   // These three call the group runner directly rather than through `npm run`. On Windows `npm` is a
   // .cmd shim, which spawnSync cannot execute without a shell, so the npm form failed instantly there

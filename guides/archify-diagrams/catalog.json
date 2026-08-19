@@ -5998,7 +5998,7 @@
       "product": "career",
       "source_document": "plugins/game-design-career/skills/upgrade-game-design-suite/SKILL.md",
       "source_section": "Upgrade Game Design Suite",
-      "source_digest": "8e4e8a1f6db2662c969e6329d627203cfbee8fd630c52eecae03634d4993d6e7",
+      "source_digest": "c958db43df7dc5aec83c8653c3b1c9cf2120ec24d044dafc1ae11446c062a9ab",
       "origin_source": {
         "source_document": "shared/suite-update/skills/upgrade-game-design-suite/SKILL.md",
         "build_mapping": "suite-update-skill"
@@ -9578,7 +9578,7 @@
       "product": "studio",
       "source_document": "plugins/game-design-studio/skills/upgrade-game-design-suite/SKILL.md",
       "source_section": "Upgrade Game Design Suite",
-      "source_digest": "8e4e8a1f6db2662c969e6329d627203cfbee8fd630c52eecae03634d4993d6e7",
+      "source_digest": "c958db43df7dc5aec83c8653c3b1c9cf2120ec24d044dafc1ae11446c062a9ab",
       "origin_source": {
         "source_document": "shared/suite-update/skills/upgrade-game-design-suite/SKILL.md",
         "build_mapping": "suite-update-skill"

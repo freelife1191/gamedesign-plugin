@@ -22,7 +22,7 @@ const LINTER_ID = "Skillstead svg-infographic";
 const LINTER_VERSION = "0.9.0";
 const WRAPPER_PATH = "skills/visualize-game-design/scripts/run-skillstead.mjs";
 const TRUSTED_RUNTIME_DIGESTS = Object.freeze({
-  wrapper: "98d897f7c8ee0848592a926a1ccf0865838c2bf71064eda165e2d13f3a157220",
+  wrapper: "37f1442f6bdfa93d2afe0066091130738ff207a268deeffea5800b61beb85a63",
   linter: "61271a00d5466438eeabe5aeedf961d5df802c0976732ed193e265a7c94493e3",
   renderer: "5f2d6f43c1c6ee43e4c52c9bdf02053297e13ca3315ea16652741f3fe85e3d8e",
 });

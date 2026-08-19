@@ -120,6 +120,10 @@ test("every destructive recovery command appears only inside its prohibition", (
 test("the skill forbids unattended upgrades and never offers a setting for one", () => {
   assert.doesNotMatch(skill, /auto_upgrade/u);
   assert.match(skill, /Never apply an update without an approval given in this conversation/u);
+  // A bundled skill ships inside the package. Telling someone a newer Archify is "available" without
+  // saying it arrives with a suite release invites them to go install it beside the plugin.
+  assert.match(skill, /never installed or upgraded on its own/u);
+  assert.match(skill, /A bundled skill moves only when a new suite release moves it/u);
 });
 
 test("the skill refuses to touch a dirty checkout instead of clearing it", () => {

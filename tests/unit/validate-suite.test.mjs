@@ -10,6 +10,7 @@ const expectedStages = [
   "reference drift",
   "evidence audit",
   "vendor hash",
+  "vendor references",
   "update manifest",
   "unit tests",
   "contract tests",
