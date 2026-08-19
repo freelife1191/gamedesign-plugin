@@ -7,6 +7,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { launchMemoryRetrievalMutationHarness } from "../fixtures/design-memory/launch-memory-retrieval-mutation-harness.mjs";
+import { CHILD_DEADLINE_SCALE } from "../lib/platform-support.mjs";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
 const harness = path.join(root, "tests/fixtures/design-memory/memory-store-mutation-harness.mjs");
@@ -86,8 +87,8 @@ async function runRetrievalWorkerTamper(mutationId, tamper, options = {}) {
 // Same rule as the tamper cap above: one budget per retrieval child, and every test that awaits
 // one derives its own ceiling from it. Retrieval children peak near 5s under full-suite load, so
 // the value has room; what it must never do again is sit apart from the timeouts that depend on it.
-const RETRIEVAL_CHILD_TIMEOUT_MS = 20_000;
-const RETRIEVAL_TEST_TIMEOUT_MS = RETRIEVAL_CHILD_TIMEOUT_MS + 15_000;
+const RETRIEVAL_CHILD_TIMEOUT_MS = 20_000 * CHILD_DEADLINE_SCALE;
+const RETRIEVAL_TEST_TIMEOUT_MS = RETRIEVAL_CHILD_TIMEOUT_MS + 15_000 * CHILD_DEADLINE_SCALE;
 
 async function captureRetrievalChild(child) {
   const stdout = []; const stderr = [];

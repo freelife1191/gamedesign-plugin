@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import { CHILD_ENVIRONMENT_KEYS, INHERITED_EXTRA_DESCRIPTORS, NO_INHERITED_EXTRA_DESCRIPTORS_REASON } from "../lib/platform-support.mjs";
+import { CHILD_ENVIRONMENT_KEYS, INHERITED_EXTRA_DESCRIPTORS, NO_INHERITED_EXTRA_DESCRIPTORS_REASON, CHILD_DEADLINE_SCALE } from "../lib/platform-support.mjs";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
 const harness = path.join(root, "tests/fixtures/reference-intelligence/reference-intelligence-mutation-harness.mjs");
@@ -49,7 +49,7 @@ async function waitForProcessExit(pid, timeoutMs = 2_000) {
   return !processExists(pid);
 }
 
-test("seven reference intelligence mutations emit exact assertion-bound FD evidence", { timeout: 60_000 }, async () => {
+test("seven reference intelligence mutations emit exact assertion-bound FD evidence", { timeout: 60_000 * CHILD_DEADLINE_SCALE }, async () => {
   for (const [mutationId, testId, message, expected, actual] of mutations) {
     const result = await capture([mutationId, "--tamper=normal"]);
     assert.equal(result.code, 0, mutationId);
@@ -69,20 +69,20 @@ for (const [tamper, expectedStage, expectedReason] of [
   ["oversize-output", "run-test", "output-limit"],
   ["misleading-output", "verify-evidence", "test-exit"],
   ["wrong-env", "verify-evidence", "evidence-empty"],
-]) test(`mutation harness fails closed for ${tamper}`, { timeout: 25_000 }, async () => {
+]) test(`mutation harness fails closed for ${tamper}`, { timeout: 25_000 * CHILD_DEADLINE_SCALE }, async () => {
   const result = await capture(["evidence-tier", `--tamper=${tamper}`]);
   assert.equal(result.code, 1); assert.equal(result.stdout, "");
   const error = JSON.parse(result.stderr);
   assert.deepEqual(error, { code: "reference-intelligence.mutation-evidence-failed", mutationId: "evidence-tier", tamper, stage: expectedStage, reason: expectedReason });
 });
 
-test("mutation harness strips caller injection variables from the selected test", { timeout: 25_000 }, async () => {
+test("mutation harness strips caller injection variables from the selected test", { timeout: 25_000 * CHILD_DEADLINE_SCALE }, async () => {
   const result = await capture(["evidence-tier", "--tamper=env-injection"], { REFERENCE_INTELLIGENCE_CALLER_INJECTION: "forged" });
   assert.equal(result.code, 0);
   assert.equal(result.stderr, "");
 });
 
-for (const tamper of ["timeout-orphan", "unclosed-evidence-fd"]) test(`mutation harness kills the full process tree after ${tamper}`, { timeout: 25_000, skip: tamper === "unclosed-evidence-fd" && !INHERITED_EXTRA_DESCRIPTORS ? NO_INHERITED_EXTRA_DESCRIPTORS_REASON : false }, async (t) => {
+for (const tamper of ["timeout-orphan", "unclosed-evidence-fd"]) test(`mutation harness kills the full process tree after ${tamper}`, { timeout: 25_000 * CHILD_DEADLINE_SCALE, skip: tamper === "unclosed-evidence-fd" && !INHERITED_EXTRA_DESCRIPTORS ? NO_INHERITED_EXTRA_DESCRIPTORS_REASON : false }, async (t) => {
   const temporary = await mkdtemp(path.join(tmpdir(), "ri-mutation-hostile-"));
   const pidPath = path.join(temporary, "pid");
   const sentinel = `RI-MUTATION-PROCESS-${tamper}-${process.pid}-${Date.now()}`;

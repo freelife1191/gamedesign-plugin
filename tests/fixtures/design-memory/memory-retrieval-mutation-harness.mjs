@@ -5,7 +5,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { relocateModuleImports } from "../../lib/relocated-module-source.mjs";
-import { CHILD_ENVIRONMENT_KEYS } from "../../lib/platform-support.mjs";
+import { CHILD_ENVIRONMENT_KEYS, CHILD_DEADLINE_SCALE } from "../../lib/platform-support.mjs";
 
 const root = fileURLToPath(new URL("../../..", import.meta.url));
 const retrievalPath = path.join(root, "shared/scripts/retrieve-design-memory.mjs");
@@ -14,8 +14,8 @@ const testPath = path.join(root, "tests/unit/design-memory-retrieval.test.mjs");
 const hostilePath = path.join(root, "tests/fixtures/design-memory/process-tree-hostile.mjs");
 const MAX_EVIDENCE_BYTES = 4096;
 const MAX_OUTPUT_BYTES = 64 * 1024;
-const TEST_TIMEOUT_MS = 15_000;
-const CLOSE_TIMEOUT_MS = 2_000;
+const TEST_TIMEOUT_MS = 15_000 * CHILD_DEADLINE_SCALE;
+const CLOSE_TIMEOUT_MS = 2_000 * CHILD_DEADLINE_SCALE;
 
 function harnessError(reason) { const error = new Error(reason); error.reason = reason; return error; }
 function replaceExact(source, before, after) { const count = source.split(before).length - 1; if (count !== 1) throw harnessError("anchor-count"); return source.replace(before, after); }
@@ -110,7 +110,7 @@ async function runTest(moduleUrl, mutation, tamper, selectedTestPath) {
       pendingFailure = harnessError(reason); clearTimeout(timeout); terminateProcessTree(child);
       closeTimeout = setTimeout(() => { terminateProcessTree(child); for (const stream of [child.stdout, child.stderr, child.stdio[3]]) stream?.destroy(); finish(reject, pendingFailure); }, CLOSE_TIMEOUT_MS);
     };
-    const timeout = setTimeout(() => fail("test-timeout"), ["grandchild-timeout", "grandchild-partial-evidence-timeout"].includes(tamper) ? 5_000 : TEST_TIMEOUT_MS);
+    const timeout = setTimeout(() => fail("test-timeout"), ["grandchild-timeout", "grandchild-partial-evidence-timeout"].includes(tamper) ? 5_000 * CHILD_DEADLINE_SCALE : TEST_TIMEOUT_MS);
     const collectOutput = (target) => (chunk) => { if (pendingFailure) return; outputLength += chunk.byteLength; if (outputLength > MAX_OUTPUT_BYTES) fail("output-limit"); else target.push(chunk); };
     child.stdout.on("data", collectOutput(stdout)); child.stderr.on("data", collectOutput(stderr)); child.stdio[3].on("data", (chunk) => { if (pendingFailure) return; evidenceLength += chunk.byteLength; if (evidenceLength > MAX_EVIDENCE_BYTES) fail("evidence-limit"); else evidence.push(chunk); });
     child.once("error", () => fail("test-launch")); child.once("close", (code) => { if (tamper === "grandchild-close-missing" && pendingFailure) return; pendingFailure ? finish(reject, pendingFailure) : finish(resolve, { code, evidence: Buffer.concat(evidence), output: Buffer.concat([...stdout, ...stderr]).toString("utf8") }); });

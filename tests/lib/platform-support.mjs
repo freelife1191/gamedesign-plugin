@@ -179,3 +179,10 @@ export const NO_DIRECTORY_RENAME_WITH_OPEN_HANDLE_REASON =
 export const INHERITED_EXTRA_DESCRIPTORS = process.platform !== "win32";
 export const NO_INHERITED_EXTRA_DESCRIPTORS_REASON =
   "this platform inherits handles rather than numbered descriptors, so an evidence descriptor cannot be leaked into a grandchild for the cleanup to have to bound";
+
+// How much slack a child-process deadline needs on this host. Windows spawns processes and starts Node
+// several times slower than the POSIX runners, so a deadline tuned on Linux stops measuring "did this
+// finish in time" and starts measuring "is this Windows". What the mutation harnesses assert is that
+// cleanup is bounded, not that the bound is fifteen seconds; the bound scales with the host and the
+// assertion does not move.
+export const CHILD_DEADLINE_SCALE = process.platform === "win32" ? 3 : 1;
