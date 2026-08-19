@@ -8,6 +8,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { buildProduct } from "../../../tooling/lib/build-product.mjs";
+import { vendorVersion } from "../../lib/vendored.mjs";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const pluginRoot = path.join(repoRoot, "products/game-design-studio/plugin");
@@ -524,7 +525,7 @@ test("release documentation ships the plugin license and third-party notices", a
   ]);
   assert.match(license, /MIT License/);
   assert.match(notices, /Skillstead svg-infographic/);
-  assert.match(notices, /0\.9\.0/);
+  assert.ok(notices.includes(vendorVersion("skillstead")), "notices state the vendored Skillstead version");
   assert.match(notices, /Apache-2\.0/);
   assert.match(notices, /Copyright 2026 Kyungseo Park/);
   assert.match(notices, /49/);

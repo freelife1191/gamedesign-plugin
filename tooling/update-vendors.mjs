@@ -23,10 +23,13 @@ const UPDATERS = Object.freeze({
   "im-not-ai": Object.freeze(["tooling/sync-im-not-ai.mjs", "--update"]),
 });
 
-const REGENERATION = Object.freeze([
+export const REGENERATION = Object.freeze([
   Object.freeze({ label: "product documents", argv: ["tooling/sync-vendor-references.mjs"] }),
   Object.freeze({ label: "update manifest", argv: ["tooling/generate-update-manifest.mjs"] }),
   Object.freeze({ label: "package snapshots", argv: ["tooling/build-snapshots.mjs"] }),
+  // The catalog decides about the packaged mirrors, so it can only be written after the snapshots that
+  // contain them.
+  Object.freeze({ label: "diagram catalog entries", argv: ["tooling/sync-vendor-catalog-entries.mjs"] }),
 ]);
 
 export function advisoryLines(report) {

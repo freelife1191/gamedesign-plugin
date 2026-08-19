@@ -223,8 +223,9 @@ Windows에서 실제로 성립해야 하는 계약은 Windows checkout과 설치
 | `npm run check:updates:report` | 같은 검사를 사람이 읽는 권고문으로 |
 | `npm run update:vendors` | 권고를 보이고 `업데이트를 진행할까요? [y/N]`를 물은 뒤, 승인 시에만 적용 |
 | `npm run check:vendor-refs` | 제품 문서의 버전 표기가 벤더 락과 어긋나지 않았는지 |
+| `npm run check:vendor-catalog` | Archify 카탈로그가 패키지 안의 벤더 문서와 어긋나지 않았는지 |
 
-`update:vendors`는 승인 뒤 벤더 트리 갱신, 제품 문서 재작성(`tooling/sync-vendor-references.mjs`), 업데이트 매니페스트 재생성, 패키지 스냅샷 재빌드까지 한 번에 합니다. 대화형 터미널이 아니면 `--yes` 없이는 적용하지 않고 멈춥니다. `--validate`를 주면 릴리스 검증까지 이어서 돌립니다.
+`update:vendors`는 승인 뒤 벤더 트리 갱신, 제품 문서 재작성(`tooling/sync-vendor-references.mjs`), 업데이트 매니페스트 재생성, 패키지 스냅샷 재빌드, Archify 카탈로그 항목 재작성(`tooling/sync-vendor-catalog-entries.mjs`)까지 한 번에 합니다. 대화형 터미널이 아니면 `--yes` 없이는 적용하지 않고 멈춥니다. `--validate`를 주면 릴리스 검증까지 이어서 돌립니다.
 
 주간 워크플로(`.github/workflows/check-bundled-skill-updates.yml`)는 검사만 하고 요약에 권고문을 남깁니다. 상류에 새 릴리스가 있다는 사실은 빌드 실패가 아니라 권고이므로 `outdated`로는 실패하지 않고, 검사 자체가 답을 못 낸 `unknown`에서만 실패합니다. 권한은 `contents: read`로 닫혀 있고 워크플로는 어떤 업데이트 명령도 실행하지 않습니다.
 
@@ -238,6 +239,8 @@ Windows에서 실제로 성립해야 하는 계약은 Windows checkout과 설치
 | `.gitattributes`의 벤더 경로 | 버전 자리를 `*` glob으로 둠 |
 | `shared/updates/installed-components.json` | `tooling/generate-update-manifest.mjs`가 락에서 생성 |
 | `plugins/**` | `npm run build`가 락에서 벤더 트리를 골라 담음(`tooling/lib/vendor-components.mjs`) |
+| `README.md`·`shared/contracts/README.md`·`guides/assets/diagram-manifest.json` | 같은 `sync-vendor-references.mjs` 규칙 22개에 포함 |
+| `guides/archify-diagrams/catalog.json`의 벤더 mirror 항목과 digest | `tooling/sync-vendor-catalog-entries.mjs`가 패키지와 락에서 씀. `validate-suite`의 `vendor catalog entries` 스테이지가 drift를 막음 |
 
 im-not-ai만 두 번째 증인을 둡니다. `tooling/vendor-pins/im-not-ai.json`이 태그·커밋·라이선스 해시와 파일 15개의 sha256을 들고 있고, `--check`는 벤더 락을 이 핀과 대조합니다. 락이 스스로를 승인하지 못하게 하는 장치입니다. 예전에는 이 표가 `tooling/sync-im-not-ai.mjs` 소스 안에 있어서, 업그레이드를 하려면 그 업그레이드를 지키는 검사를 통과시키기 위해 해시 15개를 손으로 옮겨 적어야 했습니다. 지금은 `--update`가 핀도 함께 씁니다. 사람이 PR diff에서 해시 변화를 읽는다는 성질은 그대로입니다.
 
@@ -245,18 +248,28 @@ im-not-ai만 두 번째 증인을 둡니다. `tooling/vendor-pins/im-not-ai.json
 
 im-not-ai의 벤더 파일 목록은 닫힌 allowlist입니다. 상류에 참조 파일이 새로 생겨도 업그레이드가 자동으로 가져오지 않습니다. 대신 `--update`가 상류 디렉터리를 조회해 핀에 없는 파일을 `unpinnedUpstreamFiles`로 보고하므로, 넣을지는 사람이 정합니다.
 
-### skillstead v0.10.0은 아직 못 올립니다
+### 패키징 감사의 바이너리 레인
 
-상류 `svg-infographic/v0.10.0`은 폰트 3개(HiMelody 12MB, Pretendard 2종)와 PNG 1개를 함께 배포합니다. 트리가 55개 283KB에서 319개 18MB로 늘어납니다.
+`tooling/lib/tree-audit.mjs`는 패키지에 들어가는 모든 파일을 UTF-8로 디코딩하고 텍스트 안전성 검사를 겁니다. 상류가 폰트나 이미지를 실어 보내면 그 바이트는 어떤 텍스트로도 디코딩되지 않습니다. skillstead `svg-infographic/v0.10.0`이 폰트 3개(HiMelody 12MB, Pretendard 2종)와 PNG 2개를 함께 배포하면서 이 경로가 필요해졌습니다.
 
-`tooling/lib/tree-audit.mjs`는 패키지에 들어가는 **모든 파일을 UTF-8로 디코딩**하고 텍스트 안전성 검사를 겁니다. 지금 두 제품 패키지에는 바이너리가 한 개도 없고, 바이너리를 허용하는 경로도 없습니다. 그래서 v0.10.0을 벤더링하면 `npm run build`가 `skills/svg-infographic/assets/fonts/HiMelody-Regular.ttf is not valid UTF-8`로 멈춥니다.
+레인은 경로 접두사도 확장자 allowlist도 아닙니다. 파일이 텍스트 디코딩을 건너뛰려면 네 가지를 동시에 만족해야 합니다.
 
-올리려면 결정 두 개가 필요합니다.
+1. 호출자가 정확한 패키지 경로로 등록했을 것. 등록부는 `tooling/lib/vendor-components.mjs`의 `packagedBinaryFiles()`가 벤더 락에서 만듭니다. 락은 상류 태그에 대조해 검증된 것이므로, 어떤 파일이 바이너리인지 말하는 주체는 상류 릴리스뿐입니다.
+2. 바이트가 락이 선언한 크기와 sha256에 일치할 것.
+3. 선두 바이트가 확장자가 주장하는 시그니처일 것. `.png`로 이름만 바꾼 스크립트는 여기서 걸립니다.
+4. 등록됐는데 실제로 없는 경로는 실패로 보고할 것. 지나가면 나중에 생길 파일에 대한 상시 면제가 됩니다.
 
-1. 패키징 감사에 바이너리 레인을 만들 것인가. 벤더 락이 해시로 선언한 파일에 한해 텍스트 검사를 건너뛰는 형태가 될 텐데, 이는 하드닝된 게이트를 완화하는 변경입니다.
-2. 제품 패키지가 제품당 18MB 늘어나는 것을 받아들일 것인가. 늘어나는 264개 파일의 대부분은 상류의 테스트 fixture와 `.test.mjs`입니다.
+sibling 제품 이름과 금지된 절대 경로 검사는 바이너리에도 그대로 걸립니다. 문자열이 되지 못하는 바이트라서 raw buffer에서 찾습니다.
 
-렌더 드리프트는 확인했습니다. v0.10.0 렌더러는 기존 도식 73장을 바이트 동일하게 재현합니다. 즉 막는 것은 렌더 결과가 아니라 패키징 계약뿐입니다.
+한 가지가 더 완화됐습니다. 패키지 밖으로 나가는 상대 경로 참조 검사는 벤더 트리 안의 파일에는 적용하지 않습니다. 이 검사는 **우리** 빌드가 저장소로 되돌아가는 파일을 싣지 않게 하려는 것인데, 상류 테스트 fixture가 탈출 import 경로를 문자열로 인용한 것은 우리가 고칠 수 있는 누수가 아닙니다. 저장소를 특정해서 지목하는 `shared/` fallback 패턴은 벤더 파일에도 여전히 실패로 남습니다. 벤더 루트 목록은 `vendorDestinationRoots()`가 락에서 만듭니다.
+
+이 레인 덕분에 상류가 다음에 폰트나 이미지를 추가해도 코드를 고칠 일이 없습니다. 락에 들어오면 등록부에 자동으로 들어옵니다. 시그니처를 모르는 확장자가 오면 조용히 통과하지 않고 실패하므로, 그때는 사람이 봅니다.
+
+### skillstead v0.10.0의 비용
+
+트리가 55개 283KB에서 319개 18MB로 늘었습니다. 15.4MB가 폰트 3개이고, 늘어난 264개 파일의 대부분은 상류의 테스트 fixture(SVG 138개·YAML 107개)와 `.test.mjs`입니다. 제품 패키지 두 벌이 각각 이만큼 커집니다.
+
+렌더 드리프트는 없습니다. v0.10.0 렌더러는 기존 도식 73장을 바이트 동일하게 재현합니다.
 
 ## 0.2.0 릴리스
 

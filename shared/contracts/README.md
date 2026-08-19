@@ -40,9 +40,9 @@ Studio와 Career는 `sourceDocumentCategories`에 `career`, `fun-intent`, `syste
 | `templates` | `shared/templates/` | `assets/shared/templates/` |
 | `responsible-design` | `shared/responsible-design/` | `references/shared/responsible-design/` |
 | `export` | `shared/export/` | `references/shared/export/` |
-| `vendor` | `shared/vendor/skillstead/svg-infographic/0.9.0/` | `skills/svg-infographic/` |
-| `archify` | `shared/vendor/archify/archify/2.14.0/` | `skills/archify/` |
-| `im-not-ai` | `shared/vendor/im-not-ai/humanize-korean/v2.3.0/` | `skills/humanize-korean/` |
+| `vendor` | `shared/vendor/skillstead/svg-infographic/0.10.0/` | `skills/svg-infographic/` |
+| `archify` | `shared/vendor/archify/archify/2.15.0/` | `skills/archify/` |
+| `im-not-ai` | `shared/vendor/im-not-ai/humanize-korean/v2.3.2/` | `skills/humanize-korean/` |
 | `document-quality` | `shared/document-quality/` | `references/shared/document-quality/` |
 | `image-assets` | `shared/image-assets/` | `references/shared/image-assets/` |
 | `memory` | `shared/memory/skills/`, `shared/memory/schema/`, `shared/memory/references/`, `shared/memory/templates/` | `skills/`, `references/shared/memory/schema/`, `references/shared/memory/references/`, `references/shared/memory/templates/` |

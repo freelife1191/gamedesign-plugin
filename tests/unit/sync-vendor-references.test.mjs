@@ -18,6 +18,9 @@ const TOUCHED = Object.freeze([
   "products/game-design-career/plugin/skills/polish-game-design-writing/SKILL.md",
   "products/game-design-studio/plugin/skills/visualize-game-design/scripts/validate-visualization-evidence.mjs",
   "guides/archify-diagrams/catalog.json",
+  "guides/assets/diagram-manifest.json",
+  "shared/contracts/README.md",
+  "README.md",
 ]);
 
 async function checkout(t) {
@@ -34,7 +37,7 @@ async function checkout(t) {
 }
 
 test("the committed documents already agree with the vendor locks", async () => {
-  assert.deepEqual(await syncVendorReferences({ check: true }), { status: "current", rules: 14, drifted: [] });
+  assert.deepEqual(await syncVendorReferences({ check: true }), { status: "current", rules: 22, drifted: [] });
 });
 
 test("every stated version comes from a lock, not from the document", async () => {
@@ -58,7 +61,7 @@ test("a bumped lock drives every document, and --check refuses to let one lag", 
 
   const pending = await syncVendorReferences({ root, check: true });
   assert.equal(pending.status, "drifted");
-  assert.equal(pending.drifted.length, 5, JSON.stringify(pending.drifted));
+  assert.equal(pending.drifted.length, 6, JSON.stringify(pending.drifted));
 
   const written = await syncVendorReferences({ root });
   assert.equal(written.status, "written");
@@ -72,7 +75,11 @@ test("a bumped lock drives every document, and --check refuses to let one lag", 
   const catalog = await readFile(path.join(root, "guides/archify-diagrams/catalog.json"), "utf8");
   assert.ok(catalog.includes("shared/vendor/archify/archify/9.9.9/"), "catalog citations follow the lock");
   assert.equal(catalog.includes("shared/vendor/archify/archify/2.15.0/"), false, "no citation lags behind");
-  assert.deepEqual(await syncVendorReferences({ root, check: true }), { status: "current", rules: 14, drifted: [] });
+  // The shared contract README states the same build mapping in a table, and it lagged two bumps behind
+  // before it was pinned here.
+  const contracts = await readFile(path.join(root, "shared/contracts/README.md"), "utf8");
+  assert.ok(contracts.includes("shared/vendor/archify/archify/9.9.9/"), "the shared contract mapping follows the lock");
+  assert.deepEqual(await syncVendorReferences({ root, check: true }), { status: "current", rules: 22, drifted: [] });
 });
 
 // A document that no longer states a version is not a synced document. Reporting it clean would let a

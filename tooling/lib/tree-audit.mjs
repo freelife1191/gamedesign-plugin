@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { lstat, readFile, readdir, realpath } from "node:fs/promises";
 import path from "node:path";
 
@@ -32,6 +33,70 @@ const sharedIdentityMatchers = new Map([
   ["skills/game-design-studio/references/handoff.md", /"game-design-(?:studio|career)"/gu],
   ["skills/game-design-career/references/handoff.md", /"game-design-(?:studio|career)"/gu],
 ]);
+
+// A packaged tree is text by contract, and that contract is what lets this audit read every byte we
+// ship. Vendored upstreams do ship the occasional font or image, and those bytes decode as nothing, so
+// the text gate needs a lane rather than an exception. The lane is not a path prefix and not an
+// extension allowlist: a file skips the UTF-8 decode only when the caller registered it by exact path
+// with the size and digest the vendor lock declares, the bytes hash to that digest, and the leading
+// bytes carry the signature its extension claims. Everything else still applies — the path gates, the
+// symlink gate, and a raw-byte search for sibling package names and forbidden absolute paths — so the
+// lane buys an upstream its fonts without buying anyone a place to hide a script.
+export const BINARY_SIGNATURES = new Map([
+  [".ttf", [[0x00, 0x01, 0x00, 0x00], [0x74, 0x72, 0x75, 0x65]]],
+  [".otf", [[0x4f, 0x54, 0x54, 0x4f]]],
+  [".ttc", [[0x74, 0x74, 0x63, 0x66]]],
+  [".woff", [[0x77, 0x4f, 0x46, 0x46]]],
+  [".woff2", [[0x77, 0x4f, 0x46, 0x32]]],
+  [".png", [[0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]]],
+  [".jpg", [[0xff, 0xd8, 0xff]]],
+  [".jpeg", [[0xff, 0xd8, 0xff]]],
+  [".gif", [[0x47, 0x49, 0x46, 0x38]]],
+  [".webp", [[0x52, 0x49, 0x46, 0x46]]],
+  [".ico", [[0x00, 0x00, 0x01, 0x00]]],
+  [".pdf", [[0x25, 0x50, 0x44, 0x46, 0x2d]]],
+].map(([extension, signatures]) => [extension, signatures.map((bytes) => Buffer.from(bytes))]));
+
+function assertRegisteredBinary({ bytes, relativePath, expected, siblingNames, forbiddenAbsolutePaths }) {
+  if (bytes.length !== expected.size) {
+    throw new Error(`${relativePath} is registered as binary at ${expected.size} bytes but is ${bytes.length}`);
+  }
+  if (createHash("sha256").update(bytes).digest("hex") !== expected.sha256) {
+    throw new Error(`${relativePath} does not match its registered binary digest`);
+  }
+  const extension = path.posix.extname(relativePath).toLowerCase();
+  const signatures = BINARY_SIGNATURES.get(extension);
+  if (!signatures) {
+    throw new Error(`${relativePath} is registered as binary but ${extension || "an extensionless name"} has no known signature`);
+  }
+  if (!signatures.some((signature) => bytes.subarray(0, signature.length).equals(signature))) {
+    throw new Error(`${relativePath} does not start with a ${extension} signature`);
+  }
+  // The text checks that still make sense on undecodable bytes run against the raw buffer, so a name
+  // or a host path smuggled into a font table is caught even though the file never becomes a string.
+  for (const sibling of siblingNames) {
+    if (relativePath.includes(sibling) || bytes.includes(Buffer.from(sibling, "utf8"))) {
+      throw new Error(`${relativePath} references sibling package ${sibling}`);
+    }
+  }
+  for (const forbidden of forbiddenAbsolutePaths) {
+    if (bytes.includes(Buffer.from(forbidden, "utf8"))) {
+      throw new Error(`${relativePath} contains forbidden absolute path ${forbidden}`);
+    }
+  }
+}
+
+function normalizeBinaryRegister(binaryFiles) {
+  if (binaryFiles === undefined) return new Map();
+  if (!(binaryFiles instanceof Map)) throw new TypeError("binaryFiles must be a Map of package path to {size, sha256}");
+  for (const [relativePath, expected] of binaryFiles) {
+    if (typeof relativePath !== "string" || relativePath.length === 0) throw new TypeError("binaryFiles keys must be package paths");
+    if (!expected || !Number.isInteger(expected.size) || expected.size < 0 || !/^[a-f0-9]{64}$/u.test(expected.sha256 ?? "")) {
+      throw new TypeError(`binaryFiles entry for ${relativePath} must declare an integer size and a sha256`);
+    }
+  }
+  return binaryFiles;
+}
 
 export const MAX_PACKAGE_PATH_LENGTH = 150;
 
@@ -204,7 +269,7 @@ function containsRawVendorCli(text) {
   return false;
 }
 
-function assertTextIsSafe({ text, relativePath, packageRoot, siblingNames, forbiddenAbsolutePaths, inactiveRelativeReferenceTuples, usedInactiveRelativeReferenceTuples }) {
+function assertTextIsSafe({ text, relativePath, packageRoot, siblingNames, forbiddenAbsolutePaths, inactiveRelativeReferenceTuples, usedInactiveRelativeReferenceTuples, vendorRoots }) {
   const identityMatcher = sharedIdentityMatchers.get(relativePath);
   const siblingCheckedText = identityMatcher ? text.replace(identityMatcher, "") : text;
   for (const sibling of siblingNames) {
@@ -220,6 +285,13 @@ function assertTextIsSafe({ text, relativePath, packageRoot, siblingNames, forbi
     throw new Error(`${relativePath} contains unsupported raw vendor CLI; use the product wrapper`);
   }
 
+  // The escaping-reference gate exists to catch our own build shipping a file that still reaches back
+  // into the repository. A vendored file cannot: its bytes are the upstream tag's, verified against the
+  // upstream tree and pinned by digest in the vendor lock, and we never edit them — so an upstream test
+  // fixture that quotes an escaping import path is a string in a test, not a leak we could repair. The
+  // repo-only `shared/` fallback below stays live for vendored files, because that pattern names this
+  // repository specifically and no upstream has any business writing it.
+  const isVendoredFile = vendorRoots.some((vendorRoot) => relativePath.startsWith(`${vendorRoot}/`));
   for (const match of text.matchAll(relativeReference)) {
     const token = match[1].replaceAll("\\", "/").replace(/[>,.;:]+$/u, "");
     const pathPart = token.split(/[?#]/u, 1)[0];
@@ -230,6 +302,7 @@ function assertTextIsSafe({ text, relativePath, packageRoot, siblingNames, forbi
       if (/(?:^|[/\\])shared[/\\]/u.test(token)) {
         throw new Error(`${relativePath} contains repo-only shared fallback: ${token}`);
       }
+      if (isVendoredFile) continue;
       throw new Error(`${relativePath} relative reference escapes package root: ${token}`);
     }
   }
@@ -241,6 +314,8 @@ export async function auditTree({
   siblingNames = [],
   forbiddenAbsolutePaths = [],
   inactiveRelativeReferenceTuples,
+  binaryFiles,
+  vendorRoots = [],
 }) {
   if (typeof root !== "string" || typeof packageName !== "string" || packageName.length === 0 || (inactiveRelativeReferenceTuples !== undefined && !(inactiveRelativeReferenceTuples instanceof Set))) {
     throw new TypeError("root and packageName are required");
@@ -256,8 +331,12 @@ export async function auditTree({
 
   const forbidden = normalizedForbiddenPaths(forbiddenAbsolutePaths);
   const siblings = [...new Set(siblingNames)].sort(comparePaths);
+  const binaryRegister = normalizeBinaryRegister(binaryFiles);
+  const vendorPrefixes = [...new Set(vendorRoots)].sort(comparePaths);
+  const usedBinaryPaths = new Set();
   let files = 0;
   let utf8Files = 0;
+  let binaryFileCount = 0;
   const usedInactiveRelativeReferenceTuples = new Set();
   const seenFoldedPaths = new Map();
 
@@ -279,6 +358,20 @@ export async function auditTree({
       const canonical = await realpath(entryPath);
       if (!inside(canonicalRoot, canonical)) throw new Error(`${relativePath} escapes package root`);
       const bytes = await readFile(entryPath);
+      const registeredBinary = binaryRegister.get(relativePath);
+      if (registeredBinary) {
+        assertRegisteredBinary({
+          bytes,
+          relativePath,
+          expected: registeredBinary,
+          siblingNames: siblings,
+          forbiddenAbsolutePaths: forbidden,
+        });
+        usedBinaryPaths.add(relativePath);
+        files += 1;
+        binaryFileCount += 1;
+        continue;
+      }
       let text;
       try {
         text = utf8.decode(bytes);
@@ -295,6 +388,7 @@ export async function auditTree({
         forbiddenAbsolutePaths: forbidden,
         inactiveRelativeReferenceTuples,
         usedInactiveRelativeReferenceTuples,
+        vendorRoots: vendorPrefixes,
       });
       files += 1;
       utf8Files += 1;
@@ -302,5 +396,18 @@ export async function auditTree({
   }
 
   await visit(canonicalRoot);
-  return { files, utf8Files, symlinks: 0, usedInactiveRelativeReferenceTuples: [...usedInactiveRelativeReferenceTuples].sort(comparePaths) };
+  // A register entry that never matched a file means the caller and the package disagree about what is
+  // in the tree. Left unreported it would be a standing permission to skip the text gate on a path that
+  // some later build actually creates.
+  const unusedBinaryPaths = [...binaryRegister.keys()].filter((relativePath) => !usedBinaryPaths.has(relativePath));
+  if (unusedBinaryPaths.length > 0) {
+    throw new Error(`registered binary files are absent from ${packageName}: ${unusedBinaryPaths.sort(comparePaths).join(", ")}`);
+  }
+  return {
+    files,
+    utf8Files,
+    binaryFiles: binaryFileCount,
+    symlinks: 0,
+    usedInactiveRelativeReferenceTuples: [...usedInactiveRelativeReferenceTuples].sort(comparePaths),
+  };
 }

@@ -22,6 +22,8 @@ test("every tracked text file is stored and checked out with LF", () => {
   const offenders = git(["ls-files", "--eol"])
     .split("\n")
     .filter(Boolean)
-    .filter((line) => !/^i\/(?:lf|-text)\s+w\/(?:lf|-text)\s/u.test(line));
-  assert.deepEqual(offenders, [], "tracked files must be LF or binary");
+    // `none` is git reporting a file with no line terminator at all — a one-line fixture with no
+    // trailing newline. There is no line ending to get wrong, so it is not an offender.
+    .filter((line) => !/^i\/(?:lf|none|-text)\s+w\/(?:lf|none|-text)\s/u.test(line));
+  assert.deepEqual(offenders, [], "tracked files must be LF, terminator-free, or binary");
 });

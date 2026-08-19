@@ -29,6 +29,8 @@
     "update:im-not-ai": "node tooling/sync-im-not-ai.mjs --update",
     "sync:vendor-refs": "node tooling/sync-vendor-references.mjs",
     "check:vendor-refs": "node tooling/sync-vendor-references.mjs --check",
+    "sync:vendor-catalog": "node tooling/sync-vendor-catalog-entries.mjs",
+    "check:vendor-catalog": "node tooling/sync-vendor-catalog-entries.mjs --check",
     "check:updates": "node tooling/check-suite-updates.mjs",
     "check:updates:report": "node tooling/update-vendors.mjs --report",
     "update:vendors": "node tooling/update-vendors.mjs",

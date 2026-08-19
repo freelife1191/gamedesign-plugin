@@ -23,6 +23,7 @@ const visualizationValidatorScript = path.join(skillRoot, "visualize-game-design
 // upstream bump does not have to be hand-edited into this fixture path.
 const skillsteadTreeRoot = JSON.parse(readFileSync(path.join(repoRoot, "shared/vendor/skillstead/vendor.lock.json"), "utf8")).tree.root;
 const skillsteadScriptRoot = path.join(repoRoot, "shared/vendor/skillstead", skillsteadTreeRoot, "scripts");
+const skillsteadVersion = skillsteadTreeRoot.split("/").at(-1);
 const visualizationWrapper = "skills/visualize-game-design/scripts/run-skillstead.mjs";
 const temporaryDirectories = [];
 
@@ -269,10 +270,10 @@ test("plugin-owned visualization validator proves ordered same-file lint render 
     },
     linted: {
       status: "passed", svgPath: "assets/loop.svg", svgDigest: sha256(svg),
-      linter: "Skillstead svg-infographic", linterVersion: "0.9.0", linterDigest,
+      linter: "Skillstead svg-infographic", linterVersion: skillsteadVersion, linterDigest,
       evidence: [{
         command: `node ${visualizationWrapper} lint assets/loop.svg`, exitCode: 0, log: "check-svg: 0 error(s), 0 warning(s)",
-        linter: "Skillstead svg-infographic", linterVersion: "0.9.0", linterDigest,
+        linter: "Skillstead svg-infographic", linterVersion: skillsteadVersion, linterDigest,
         svgPath: "assets/loop.svg", svgDigest: sha256(svg),
       }],
     },
@@ -533,10 +534,10 @@ test("visualization validator accepts a verified SVG fallback when PNG rendering
     },
     linted: {
       status: "passed", svgPath: "assets/loop.svg", svgDigest,
-      linter: "Skillstead svg-infographic", linterVersion: "0.9.0", linterDigest,
+      linter: "Skillstead svg-infographic", linterVersion: skillsteadVersion, linterDigest,
       evidence: [{
         command: `node ${visualizationWrapper} lint assets/loop.svg`, exitCode: 0, log: "check-svg: 0 error(s), 0 warning(s)",
-        linter: "Skillstead svg-infographic", linterVersion: "0.9.0", linterDigest, svgPath: "assets/loop.svg", svgDigest,
+        linter: "Skillstead svg-infographic", linterVersion: skillsteadVersion, linterDigest, svgPath: "assets/loop.svg", svgDigest,
       }],
     },
     rendered: {

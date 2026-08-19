@@ -1,0 +1,126 @@
+# package-surface — the file-membership SSoT for this package (Wave 1 CP0 contract).
+#
+# Why a manifest: if the digest boundary lives in a glob inside the code, "what counts as
+# the normative surface" hides in the implementation. This file is the single basis for the
+# classification, and preflight refuses fail-closed if even one file is unclassified — there
+# is no path where an omission drops out quietly.
+#
+# The three digests serve different purposes and are never mixed:
+#   runtimeSurfaceDigest      the surface that affects behaviour and agent judgement (tests and
+#                             fixtures excluded). Approved assets that design-kernel references
+#                             normatively are included.
+#   verificationSurfaceDigest tests and fixtures — for the acceptance linkage only
+#   packageTreeDigest         the whole tree copied on install/staging — for original-vs-copy
+#                             identity only
+#
+# The digest receipt itself is never written inside this tree (no self-reference). It is
+# stored only as detached evidence or a CI artifact.
+
+schema_version: 1
+surface_revision: 17
+
+canonicalization:
+  version: 2
+  digest: sha256
+  runtime_normalization: SKILL.md-frontmatter-metadata.version-to-@VERSION@
+  path_encoding: utf8-relative-posix
+  ordering: codepoint-sort-on-relative-path
+  framing: path-NUL-bytelength-NUL-bytes
+  excluded: absolute-path-mtime-mode-symlink
+
+digest_sets:
+  runtimeSurfaceDigest: [production-entrypoint, production-shim, production-lib, normative-doc, profile, asset]
+  verificationSurfaceDigest: [verification]
+  packageTreeDigest: [production-entrypoint, production-shim, production-lib, normative-doc, profile, asset, doc, verification]
+
+entries:
+  # --- production surface ---------------------------------------------------
+  - { path: scripts/preflight.mjs, kind: production-entrypoint }
+  - { path: scripts/generate.mjs, kind: production-entrypoint }
+  - { path: scripts/icon-registry.mjs, kind: production-lib }
+  - { path: scripts/topology-contract.mjs, kind: production-lib }
+  - { path: scripts/route-orthogonal.mjs, kind: production-lib }
+  - { path: scripts/residual-disposition.mjs, kind: production-lib }
+  - { path: scripts/font-subset.py, kind: build-tool }
+  - { path: scripts/skin.mjs, kind: production-entrypoint }
+  - { path: scripts/check-svg.mjs, kind: production-entrypoint }
+  - { path: scripts/check-layout.mjs, kind: production-entrypoint }
+  - { path: scripts/check-language.mjs, kind: verification }
+  - { path: scripts/render.mjs, kind: production-entrypoint }
+  - { path: scripts/compose.mjs, kind: production-entrypoint }
+  - { path: scripts/measure-text.mjs, kind: production-entrypoint }
+  - { path: scripts/font-probe.mjs, kind: production-entrypoint }
+  - { path: scripts/render.sh, kind: production-shim }
+  - { path: scripts/preflight-lib.mjs, kind: production-lib }
+  - { path: scripts/treatment.mjs, kind: production-lib }
+
+  # --- normative docs (the agent-judgement surface) ---------------------------
+  - { path: SKILL.md, kind: normative-doc }
+  - { path: references/design-kernel.md, kind: normative-doc }
+  - { path: references/authoring.md, kind: normative-doc }
+  - { path: references/archetypes.md, kind: normative-doc }
+  - { path: references/sketch.md, kind: normative-doc }
+  - { path: references/legacy/page-title-rail.md, kind: normative-doc }
+  # The derived and verified agent-facing views. Both steer routing and authoring, so they belong to
+  # the runtime surface: a change to either must move runtimeSurfaceDigest, not only the tree digest.
+  - { path: references/types/selection.md, kind: normative-doc }
+  - { path: references/PROMPT-GALLERY.md, kind: normative-doc }
+  # TypePack specs are classified once as a tree — adding a type is one spec file plus one
+  # manifest row and does not touch this file. The 1:1 closure between tree and manifest is
+  # owned by the manifest validator.
+  - { tree: references/types/specs, kind: normative-doc }
+  # Canonical and stress inputs are likewise classified once as a tree — adding an input is one
+  # file plus one manifest row, and the manifest validator checks the file content and the fit
+  # computation against it.
+  - { tree: references/types/inputs, kind: profile }
+
+  # --- profiles / registries -------------------------------------------------
+  - { path: references/language-policy.yaml, kind: profile }
+  - { path: references/package-surface.yaml, kind: profile }
+  - { path: references/skins/registry.yaml, kind: profile }
+  - { path: references/skins/current-v1.yaml, kind: profile }
+  - { path: references/skins/derivation-v1.yaml, kind: profile }
+  - { path: references/skins/sketch-overlay-v1.yaml, kind: profile }
+  - { path: references/skins/pageframe-v1.yaml, kind: profile }
+  - { path: references/skins/legacy-v0.8.yaml, kind: profile }
+  - { path: references/typography/typography-v1.yaml, kind: profile }
+  - { path: references/delivery/font-delivery-v1.yaml, kind: profile }
+  - { path: references/types/manifest.yaml, kind: profile }
+
+  # --- bundled assets (license evidence included) -----------------------------
+  - { path: assets/fonts/HiMelody-Regular.ttf, kind: asset }
+  - { path: assets/fonts/HiMelody-OFL.txt, kind: asset }
+  - { path: assets/fonts/Pretendard-Regular.otf, kind: asset }
+  - { path: assets/fonts/Pretendard-Bold.otf, kind: asset }
+  - { path: assets/fonts/Pretendard-OFL.txt, kind: asset }
+
+  # --- approved canonical reference: design-kernel embeds and links it normatively, so it
+  #     affects agent judgement — a runtime asset, not evidence.
+  - { path: references/media/canonical-skin-contact-sheet.svg, kind: asset }
+  - { path: references/media/canonical-skin-contact-sheet.png, kind: asset }
+
+  # --- human docs ------------------------------------------------------------
+  - { path: README.md, kind: doc }
+  - { path: README.ko.md, kind: doc }
+  - { path: CHANGELOG.md, kind: doc }
+  - { path: LICENSE.txt, kind: doc }
+  - { path: assets/fonts/README.md, kind: doc }
+  - { path: references/media/README.md, kind: doc }
+
+  # --- verification surface --------------------------------------------------
+  - { path: scripts/preflight.test.mjs, kind: verification }
+  - { path: scripts/skin.test.mjs, kind: verification }
+  - { path: scripts/check-svg.test.mjs, kind: verification }
+  - { path: scripts/check-layout.test.mjs, kind: verification }
+  - { path: scripts/run-tests.sh, kind: verification }
+  - { path: scripts/render.test.mjs, kind: verification }
+  - { path: scripts/compose.test.mjs, kind: verification }
+  - { path: scripts/font-probe.test.mjs, kind: verification }
+  - { path: scripts/generate.test.mjs, kind: verification }
+  - { path: scripts/route-orthogonal.test.mjs, kind: verification }
+  - { path: scripts/check-language.test.mjs, kind: verification }
+  - { tree: scripts/legacy, kind: verification }
+  - { tree: scripts/fixtures, kind: verification }
+  - { tree: scripts/skin-fixtures, kind: verification }
+  - { tree: scripts/layout-fixtures, kind: verification }
+  - { tree: scripts/compose-fixtures, kind: verification }

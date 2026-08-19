@@ -4,6 +4,8 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
+import { vendorVersion } from "../lib/vendored.mjs";
+
 const root = fileURLToPath(new URL("../..", import.meta.url));
 const manifestPath = path.join(root, "guides/assets/diagram-manifest.json");
 const manifestDir = path.dirname(manifestPath);
@@ -42,7 +44,7 @@ async function assertRegularFile(value, field) {
 test("shared diagram manifest declares exactly the eleven canonical shared diagram pairs", async () => {
   const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
   assert.equal(manifest.version, 1);
-  assert.equal(manifest.skillsteadVersion, "0.9.0");
+  assert.equal(manifest.skillsteadVersion, vendorVersion("skillstead"));
   assert.ok(Array.isArray(manifest.diagrams));
   const shared = manifest.diagrams.filter(({ scope }) => scope === "shared");
   assert.deepEqual(shared.map(({ id }) => id).sort(), expectedSharedIds);

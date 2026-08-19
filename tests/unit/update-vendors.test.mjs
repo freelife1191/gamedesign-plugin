@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { advisoryLines, outdatedIds, parseUpdateVendorsArgs, updateVendors } from "../../tooling/update-vendors.mjs";
+import { REGENERATION, advisoryLines, outdatedIds, parseUpdateVendorsArgs, updateVendors } from "../../tooling/update-vendors.mjs";
 
 const CURRENT = Object.freeze({
   schemaVersion: 1,
@@ -149,4 +149,16 @@ test("the argument parser accepts only the three documented flags", () => {
   assert.throws(() => parseUpdateVendorsArgs(["--from"]), /--from needs the path/u);
   // A rendered file is evidence someone else gathered. It may report, and it may not authorize an apply.
   assert.throws(() => parseUpdateVendorsArgs(["--from", "out.json"]), /only for --report/u);
+});
+
+// The catalog decides about the packaged mirrors, so it can only be written once the snapshots that
+// contain them exist. Getting this order wrong leaves the catalog one release behind, which the
+// release gate then reports as drift with no obvious cause.
+test("regeneration rewrites the documents, then the packages, then the catalog", () => {
+  assert.deepEqual(REGENERATION.map(({ argv }) => argv[0]), [
+    "tooling/sync-vendor-references.mjs",
+    "tooling/generate-update-manifest.mjs",
+    "tooling/build-snapshots.mjs",
+    "tooling/sync-vendor-catalog-entries.mjs",
+  ]);
 });

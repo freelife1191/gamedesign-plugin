@@ -11,6 +11,7 @@ const expectedStages = [
   "evidence audit",
   "vendor hash",
   "vendor references",
+  "vendor catalog entries",
   "update manifest",
   "unit tests",
   "contract tests",

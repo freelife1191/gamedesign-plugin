@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "skillsteadVersion": "0.9.0",
+  "skillsteadVersion": "0.10.0",
   "diagrams": [
     {
       "id": "plugin-selection-flow",

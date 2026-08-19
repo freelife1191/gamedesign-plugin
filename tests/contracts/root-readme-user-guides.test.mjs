@@ -6,6 +6,8 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
+import { vendorVersion } from "../lib/vendored.mjs";
+
 import {
   collectMarkdownHeadings as visibleMarkdownHeadings,
   collectProductInventory,
@@ -409,7 +411,7 @@ const readableSkillMetadata = new Map([
     ["review-game-design", ["게임 기획 검토", "근거, 위험과 막힌 지점을 검토해 최소 수정이 담긴 검토 문서를 만듭니다."]],
     ["review-image-assets", ["이미지 자산 검토", "시각 품질, 접근성, 권리와 배치를 검토해 사람의 결정을 요청합니다."]],
     ["retrieve-approved-design-memory", ["승인된 프로젝트 기억 조회", "출처·범위·만료를 확인한 승인 기록과 제외 이유를 돌려줍니다."]],
-    ["svg-infographic", ["기획 도식 만들기", "Skillstead 0.9.0에서 번들된 스킬로 편집 가능한 SVG와 검증용 PNG를 만듭니다."]],
+    ["svg-infographic", ["기획 도식 만들기", `Skillstead ${vendorVersion("skillstead")}에서 번들된 스킬로 편집 가능한 SVG와 검증용 PNG를 만듭니다.`]],
     ["upgrade-game-design-suite", ["스위트 업데이트", "설치된 버전과 공개된 릴리스를 비교하고 사람이 고른 처리만 적용합니다."]],
     ["visualize-game-design", ["게임 기획 시각화", "루프, 상태, 흐름과 의존성을 접근 가능한 SVG와 PNG 도식으로 만듭니다."]],
   ])],
@@ -436,7 +438,7 @@ const readableSkillMetadata = new Map([
     ["review-game-design-portfolio", ["기획 포트폴리오 검토", "증거, 개인 기여, 권리와 수정 우선순위를 포트폴리오 검토 문서로 만듭니다."]],
     ["review-image-assets", ["경력 이미지 자산 검토", "시각 품질, 접근성, 권리와 배치를 검토해 사람의 결정을 요청합니다."]],
     ["retrieve-approved-design-memory", ["승인된 프로젝트 기억 조회", "출처·범위·만료를 확인한 승인 기록과 제외 이유를 돌려줍니다."]],
-    ["svg-infographic", ["경력 도식 만들기", "Skillstead 0.9.0에서 번들된 스킬로 편집 가능한 SVG와 검증용 PNG를 만듭니다."]],
+    ["svg-infographic", ["경력 도식 만들기", `Skillstead ${vendorVersion("skillstead")}에서 번들된 스킬로 편집 가능한 SVG와 검증용 PNG를 만듭니다.`]],
     ["upgrade-game-design-suite", ["스위트 업데이트", "설치된 버전과 공개된 릴리스를 비교하고 사람이 고른 처리만 적용합니다."]],
     ["visualize-career-roadmap", ["경력 성장 경로 시각화", "역할, 역량, 학습 의존성과 성장 경로를 SVG와 PNG 도식으로 만듭니다."]],
   ])],

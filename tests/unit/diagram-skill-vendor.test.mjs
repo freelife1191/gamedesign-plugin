@@ -380,7 +380,7 @@ test("immutable Skillstead tree and ZIP metadata reject ordinary extras and syml
         root: vendorRoot,
         name: "skillstead",
         stagingRoot,
-        fetchRelease: async () => ({ tag: "svg-infographic/v0.9.1", releasedAt: "2026-08-12T00:00:00Z" }),
+        fetchRelease: async () => ({ tag: EXPECTED.skillstead.nextTag, releasedAt: "2026-08-12T00:00:00Z" }),
         resolveTagCommit: async () => "2".repeat(40),
         fetchOfficialTree: async () => officialTreeForVendor(vendorRoot, "skillstead"),
         fetchArchive: async () => rawFactory(vendorRoot),
@@ -515,7 +515,7 @@ test("updater rejects an unverified Archify asset digest and does not alter the 
 
 test("updater rejects a fake license or an archive-supplied updater before writing a new closure", async (t) => {
   const { updateDiagramSkill } = await loadUpdaterOrFail();
-  const release = { tag: "svg-infographic/v0.9.1", releasedAt: "2026-08-12T00:00:00Z" };
+  const release = { tag: EXPECTED.skillstead.nextTag, releasedAt: "2026-08-12T00:00:00Z" };
   for (const [label, mutate, expectedCode] of [
     ["license", (files) => files.map((file) => file.path === "LICENSE.txt" ? { ...file, bytes: Buffer.from("fake license\n") } : file), "DIAGRAM_VENDOR_ARCHIVE_LICENSE_HASH_MISMATCH"],
     ["updater", (files) => [...files, { path: "scripts/update.mjs", bytes: Buffer.from("export {};\n") }], "DIAGRAM_VENDOR_ARCHIVE_UPDATER_FORBIDDEN"],

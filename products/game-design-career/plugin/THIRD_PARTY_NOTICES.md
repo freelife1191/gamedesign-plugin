@@ -4,7 +4,7 @@
 
 - Upstream: https://github.com/kyungseo/skillstead
 - Component: `svg-infographic`
-- Version: 0.9.0 (`svg-infographic/v0.9.0`, `6e5b850f66716af9eb3c6a79f60e4f8ff5716dee`)
+- Version: 0.10.0 (`svg-infographic/v0.10.0`, `d46d1443624a7a07773efae213f25dc59bedd358`)
 - License: Apache-2.0
 - Copyright 2026 Kyungseo Park
 

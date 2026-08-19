@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import path from "node:path";
@@ -7,6 +8,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { MAX_PACKAGE_PATH_LENGTH, assertPackagePath, auditTree } from "../../tooling/lib/tree-audit.mjs";
+import { packagedBinaryFiles, vendorDestinationRoots } from "../../tooling/lib/vendor-components.mjs";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const productNames = ["game-design-career", "game-design-studio"];
@@ -27,15 +29,19 @@ async function fixture(t, relativePath, bytes) {
 
 test("each generated plugin is UTF-8, self-contained, and free of sibling or host paths", async () => {
   for (const packageName of productNames) {
+    const binaryFiles = packagedBinaryFiles({ repoRoot, productName: packageName });
     const result = await auditTree({
       root: path.join(repoRoot, "plugins", packageName),
       packageName,
       siblingNames: productNames.filter((name) => name !== packageName),
       forbiddenAbsolutePaths: [repoRoot, path.dirname(repoRoot), homedir()],
       inactiveRelativeReferenceTuples: inactiveReferenceSourceRuntimeTuples,
+      binaryFiles,
+      vendorRoots: vendorDestinationRoots({ repoRoot, productName: packageName }),
     });
     assert.ok(result.files > 100, `${packageName}: unexpectedly small snapshot`);
-    assert.equal(result.files, result.utf8Files);
+    assert.equal(result.files, result.utf8Files + result.binaryFiles);
+    assert.equal(result.binaryFiles, binaryFiles.size);
     assert.equal(result.symlinks, 0);
     assert.deepEqual(result.usedInactiveRelativeReferenceTuples, [...inactiveReferenceSourceRuntimeTuples].sort());
   }
@@ -308,4 +314,80 @@ test("the length budget is measured against the NFC form, not the un-normalized 
   assert.ok(nfd.length > MAX_PACKAGE_PATH_LENGTH, `NFD form (${nfd.length}) must exceed the budget`);
   assert.ok(nfc.length <= MAX_PACKAGE_PATH_LENGTH, `NFC form (${nfc.length}) must stay within the budget`);
   assert.equal(assertPackagePath(nfd, new Map()), nfd);
+});
+
+// The binary lane exists so a vendored upstream can ship a font. It is the vendor lock that says which
+// files those are, and this pins that the lane is exactly as wide as the lock and no wider.
+test("the binary lane admits only lock-registered bytes and still refuses everything else", async (t) => {
+  const png = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.from([0x00, 0xff, 0x10])]);
+  const digest = createHash("sha256").update(png).digest("hex");
+  const registered = new Map([["assets/mark.png", { size: png.length, sha256: digest }]]);
+
+  const root = await fixture(t, "assets/mark.png", png);
+  const audit = await auditTree({ root, packageName: "game-design-studio", binaryFiles: registered });
+  assert.deepEqual({ files: audit.files, utf8Files: audit.utf8Files, binaryFiles: audit.binaryFiles }, { files: 1, utf8Files: 0, binaryFiles: 1 });
+
+  await assert.rejects(() => auditTree({ root, packageName: "game-design-studio" }), /not valid UTF-8/u, "an unregistered binary is still rejected");
+  await assert.rejects(
+    () => auditTree({ root, packageName: "game-design-studio", binaryFiles: new Map([["assets/mark.png", { size: png.length, sha256: "0".repeat(64) }]]) }),
+    /registered binary digest/u,
+    "a registered path with the wrong digest is rejected",
+  );
+  await assert.rejects(
+    () => auditTree({ root, packageName: "game-design-studio", binaryFiles: new Map([["assets/mark.png", { size: png.length + 1, sha256: digest }]]) }),
+    /registered as binary at/u,
+    "a registered path with the wrong size is rejected",
+  );
+  await assert.rejects(
+    () => auditTree({ root, packageName: "game-design-studio", binaryFiles: new Map([...registered, ["assets/absent.png", { size: 1, sha256: "0".repeat(64) }]]) }),
+    /registered binary files are absent/u,
+    "a register entry with no file behind it is reported",
+  );
+});
+
+test("a script renamed to a media extension cannot buy its way into the binary lane", async (t) => {
+  const script = Buffer.from("import fs from \"node:fs\";\n");
+  const registered = new Map([["assets/payload.png", { size: script.length, sha256: createHash("sha256").update(script).digest("hex") }]]);
+  const root = await fixture(t, "assets/payload.png", script);
+  await assert.rejects(
+    () => auditTree({ root, packageName: "game-design-studio", binaryFiles: registered }),
+    /does not start with a \.png signature/u,
+  );
+});
+
+test("binary bytes are still searched for sibling package names and host paths", async (t) => {
+  for (const [label, needle, expected] of [
+    ["sibling", "game-design-career", /references sibling package/u],
+    ["host path", `${homedir()}/private/tool.mjs`, /forbidden absolute path/u],
+  ]) {
+    await t.test(label, async (t) => {
+      const bytes = Buffer.concat([
+        Buffer.from([0x00, 0x01, 0x00, 0x00]),
+        Buffer.from(needle, "utf8"),
+      ]);
+      const root = await fixture(t, "assets/font.ttf", bytes);
+      await assert.rejects(() => auditTree({
+        root,
+        packageName: "game-design-studio",
+        siblingNames: ["game-design-career"],
+        forbiddenAbsolutePaths: [repoRoot, homedir()],
+        binaryFiles: new Map([["assets/font.ttf", { size: bytes.length, sha256: createHash("sha256").update(bytes).digest("hex") }]]),
+      }), expected);
+    });
+  }
+});
+
+// An upstream test fixture may quote an import path that leaves the package. Those bytes are the tag's,
+// verified and unmodifiable, so the escape gate does not apply to them — but the repo-only fallback
+// pattern still does, because no upstream has any reason to write it.
+test("a vendored file may quote an escaping path, and still may not name this repository", async (t) => {
+  const root = await fixture(t, "skills/svg-infographic/scripts/preflight.test.mjs", 'import y from "../../../../outside.mjs";\n');
+  await assert.doesNotReject(() => auditTree({ root, packageName: "game-design-studio", vendorRoots: ["skills/svg-infographic"] }));
+  await assert.rejects(() => auditTree({ root, packageName: "game-design-studio" }), /escapes package root/u);
+
+  const fallback = await fixture(t, "skills/svg-infographic/scripts/loader.mjs", "new URL('../../../../shared/scripts/check.mjs', import.meta.url)\n");
+  await assert.rejects(
+    () => auditTree({ root: fallback, packageName: "game-design-studio", vendorRoots: ["skills/svg-infographic"] }),
+    /repo-only shared fallback/u,
+  );
 });

@@ -2,7 +2,7 @@
 // Run with: node --test skills/svg-infographic/scripts/
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { writeFileSync, mkdtempSync, rmSync, existsSync as existsSyncPath, readdirSync } from "node:fs";
+import { writeFileSync, mkdtempSync, rmSync, existsSync as existsSyncPath, readdirSync, readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
@@ -49,6 +49,34 @@ const runCli = (args, env = {}) =>
     encoding: "utf8",
     env: { ...process.env, ...env },
   });
+
+test("a typography-negative SVG is rejected before the browser runs (exit 5)", () => {
+  const r = runCli([join(here, "skin-fixtures", "typography", "tf-wrapper-lost.svg")]);
+  assert.equal(r.status, 5, r.stdout + r.stderr);
+  assert.match(r.stdout + r.stderr, /typography contract failed/);
+});
+
+test("the renderer typography gate also rejects a single-quote sketch root (exit 5)", () => {
+  const r = runCli([join(here, "skin-fixtures", "typography", "tf-sq-sketch-root.svg")]);
+  assert.equal(r.status, 5, r.stdout + r.stderr);
+  assert.match(r.stdout + r.stderr, /typography contract failed/);
+});
+
+test("a layout-negative SVG is rejected before the browser runs (exit 5)", () => {
+  const r = runCli([join(here, "layout-fixtures", "ln-gap-drift.svg")]);
+  assert.equal(r.status, 5, r.stdout + r.stderr);
+  assert.match(r.stdout + r.stderr, /layout contract failed/);
+});
+
+test("data-layout-unverified is not treated as success by the render hard gate (exit 5)", () => {
+  const src = readFileSync(join(here, "layout-fixtures", "ln-transform.svg"), "utf8");
+  const tmp = join(mkdtempSync(join(tmpdir(), "aw-lu-")), "unverified.svg");
+  writeFileSync(tmp, src.replace('data-layout-parent="p" ', 'data-layout-parent="p" data-layout-unverified="manual review" '));
+  const r = runCli([tmp]);
+  rmSync(dirname(tmp), { recursive: true, force: true });
+  assert.equal(r.status, 5, r.stdout + r.stderr);
+  assert.match(r.stdout + r.stderr, /explicit review state, not a pass/);
+});
 
 test("parseViewBox accepts a valid box and rejects invalid ones", () => {
   assert.deepEqual(parseViewBox('<svg viewBox="0 0 600 300">'), { w: 600, h: 300 });
@@ -105,7 +133,7 @@ test("running Chrome/Edge with localized non-version output is accepted only fro
     "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
     "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
   ];
-  const localized = "기존 브라우저 세션에서 열립니다."; // localized non-version status
+  const localized = /* lang-allow: ko-fixture */ "기존 브라우저 세션에서 열립니다."; // localized non-version status
   const opts = { platform: "win32", documentedPaths };
   const ok = verifyChromiumIdentity(documentedPaths[0], localized, opts);
   assert.equal(ok.ok, true);

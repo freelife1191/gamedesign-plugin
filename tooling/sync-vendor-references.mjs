@@ -39,6 +39,9 @@ async function readLock(root, name) {
   return { tag, commit, version: versionOf(tag) };
 }
 
+const ROOT_README = "README.md";
+const SHARED_CONTRACTS_README = "shared/contracts/README.md";
+const DIAGRAM_MANIFEST = "guides/assets/diagram-manifest.json";
 const ARCHIFY_CATALOG = "guides/archify-diagrams/catalog.json";
 const STUDIO_VALIDATOR = "products/game-design-studio/plugin/skills/visualize-game-design/scripts/validate-visualization-evidence.mjs";
 const STUDIO_WRAPPER = Object.freeze({
@@ -107,12 +110,44 @@ function rulesFor(state) {
         write: `# vendored Archify ${state.archify.version}`,
       },
       {
+        file: `products/${product}/plugin/README.md`,
+        find: /# vendored Skillstead \d+\.\d+\.\d+$/mu,
+        write: `# vendored Skillstead ${state.skillstead.version}`,
+      },
+      {
+        file: `products/${product}/plugin/README.md`,
+        all: true,
+        find: /Skillstead `svg-infographic` \d+\.\d+\.\d+/gu,
+        writeFor: () => `Skillstead \`svg-infographic\` ${state.skillstead.version}`,
+      },
+      {
         file: `products/${product}/plugin/${POLISH_SKILL}`,
         find: /"source": "bundled-im-not-ai-v\d+\.\d+\.\d+"/u,
         write: `"source": "bundled-im-not-ai-${state.imNotAi.tag}"`,
       },
     );
   }
+  // The suite README names the bundled Skillstead release in the two skill tables, and the shared
+  // contract README and the guide diagram manifest each pin it once more. None of these are generated,
+  // so without a rule they lag a bump silently and tell a reader the wrong version.
+  rules.push(
+    {
+      file: ROOT_README,
+      all: true,
+      find: /Skillstead \d+\.\d+\.\d+에서 번들된/gu,
+      writeFor: () => `Skillstead ${state.skillstead.version}에서 번들된`,
+    },
+    {
+      file: DIAGRAM_MANIFEST,
+      find: /^  "skillsteadVersion": "\d+\.\d+\.\d+",$/mu,
+      write: `  "skillsteadVersion": "${state.skillstead.version}",`,
+    },
+    {
+      file: STUDIO_VALIDATOR,
+      find: /^const LINTER_VERSION = "\d+\.\d+\.\d+";$/mu,
+      write: `const LINTER_VERSION = "${state.skillstead.version}";`,
+    },
+  );
   // The Archify diagram catalog cites the vendored trees by path, and those paths carry the version. One
   // prefix rule rewrites every citation at once rather than naming each of the thirty-odd lines, and it
   // covers all three vendors so a citation that appears later is corrected without a new rule.
@@ -121,12 +156,21 @@ function rulesFor(state) {
     archify: `archify/${state.archify.version}`,
     "im-not-ai": `humanize-korean/${state.imNotAi.tag}`,
   };
-  rules.push({
-    file: ARCHIFY_CATALOG,
-    all: true,
-    find: /shared\/vendor\/(skillstead|archify|im-not-ai)\/[^"/]+\/v?\d+\.\d+\.\d+\//gu,
-    writeFor: (match) => `shared/vendor/${match[1]}/${treeRoots[match[1]]}/`,
-  });
+  const vendorPathWrite = (match) => `shared/vendor/${match[1]}/${treeRoots[match[1]]}/`;
+  rules.push(
+    {
+      file: ARCHIFY_CATALOG,
+      all: true,
+      find: /shared\/vendor\/(skillstead|archify|im-not-ai)\/[^"/]+\/v?\d+\.\d+\.\d+\//gu,
+      writeFor: vendorPathWrite,
+    },
+    {
+      file: SHARED_CONTRACTS_README,
+      all: true,
+      find: /shared\/vendor\/(skillstead|archify|im-not-ai)\/[^`/]+\/v?\d+\.\d+\.\d+\//gu,
+      writeFor: vendorPathWrite,
+    },
+  );
   for (const [name, digest] of Object.entries(state.runtime)) {
     rules.push({
       file: STUDIO_VALIDATOR,
@@ -135,6 +179,15 @@ function rulesFor(state) {
     });
   }
   return rules;
+}
+
+// The Archify catalog records a decision per Markdown document and pins the digest it decided against.
+// Documents this tool writes change their digest whenever a lock moves, so the catalog has to follow the
+// same source of truth rather than being re-transcribed by hand. Exposing the rule targets keeps the two
+// tools reading one list instead of two that can disagree.
+export async function vendorReferenceFiles({ root = repoRoot, state } = {}) {
+  const resolved = state ?? await vendorReferenceState({ root });
+  return [...new Set(rulesFor(resolved).map((rule) => rule.file))].sort();
 }
 
 export async function syncVendorReferences({ root = repoRoot, check = false, state } = {}) {

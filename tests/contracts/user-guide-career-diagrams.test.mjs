@@ -8,11 +8,9 @@ import process from "node:process";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import {
-  isCompletePng,
-  parseViewBox,
-  pngDims,
-} from "../../shared/vendor/skillstead/svg-infographic/0.9.0/scripts/render.mjs";
+import { importVendored } from "../lib/vendored.mjs";
+
+const { isCompletePng, parseViewBox, pngDims } = await importVendored("skillstead", "scripts/render.mjs");
 import { validateVisualizationState } from "../../products/game-design-career/plugin/skills/visualize-career-roadmap/scripts/validate-visualization-state.mjs";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));

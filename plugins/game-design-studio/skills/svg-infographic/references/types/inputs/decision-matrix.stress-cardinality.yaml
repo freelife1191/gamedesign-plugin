@@ -1,0 +1,97 @@
+schema_version: 1
+kind: typepack-input
+typepack: decision-matrix
+case: stress-cardinality
+preset: presentation-16x9
+layout: grid
+cols: 3
+count: 9
+prompt_ko: "리스크를 3×3 격자로 배치해줘. 4:5."
+prompt_en: "Place risks on a 3×3 grid. 4:5."
+title:
+  ko: "두 축이 우선순위를 정한다"
+  en: "Two axes set the priority"
+axes:
+  x:
+    tiers:
+      - id: "narrow"
+        label:
+          ko: "좁은 범위"
+          en: "Narrow"
+      - id: "medium"
+        label:
+          ko: "중간 범위"
+          en: "Medium"
+      - id: "broad"
+        label:
+          ko: "넓은 범위"
+          en: "Broad"
+  y:
+    tiers:
+      - id: "low"
+        label:
+          ko: "낮은 영향"
+          en: "Low impact"
+      - id: "medium"
+        label:
+          ko: "중간 영향"
+          en: "Medium impact"
+      - id: "high"
+        label:
+          ko: "높은 영향"
+          en: "High impact"
+cells:
+  - id: "cell-1"
+    x: "narrow"
+    y: "low"
+    trait:
+      ko: "관찰만 유지한다"
+      en: "Monitor only"
+  - id: "cell-2"
+    x: "medium"
+    y: "low"
+    trait:
+      ko: "주기적으로 점검한다"
+      en: "Check periodically"
+  - id: "cell-3"
+    x: "broad"
+    y: "low"
+    trait:
+      ko: "표준 절차로 흡수한다"
+      en: "Absorb into standard practice"
+  - id: "cell-4"
+    x: "narrow"
+    y: "medium"
+    trait:
+      ko: "담당자를 지정한다"
+      en: "Assign an owner"
+  - id: "cell-5"
+    x: "medium"
+    y: "medium"
+    trait:
+      ko: "완화 계획을 세운다"
+      en: "Plan a mitigation"
+  - id: "cell-6"
+    x: "broad"
+    y: "medium"
+    trait:
+      ko: "분기마다 재평가한다"
+      en: "Reassess each quarter"
+  - id: "cell-7"
+    x: "narrow"
+    y: "high"
+    trait:
+      ko: "즉시 대응한다"
+      en: "Act immediately"
+  - id: "cell-8"
+    x: "medium"
+    y: "high"
+    trait:
+      ko: "완화 후 재평가한다"
+      en: "Mitigate, then reassess"
+  - id: "cell-9"
+    x: "broad"
+    y: "high"
+    trait:
+      ko: "경영진에게 보고한다"
+      en: "Escalate to leadership"

@@ -4,11 +4,9 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import {
-  isCompletePng,
-  parseViewBox,
-  pngDims,
-} from "../../shared/vendor/skillstead/svg-infographic/0.9.0/scripts/render.mjs";
+import { importVendored } from "../lib/vendored.mjs";
+
+const { isCompletePng, parseViewBox, pngDims } = await importVendored("skillstead", "scripts/render.mjs");
 import { loadUseCaseManifest, validateUseCaseGuides } from "../../tooling/lib/use-case-guides.mjs";
 import {
   assertReadableResultBoundaries,

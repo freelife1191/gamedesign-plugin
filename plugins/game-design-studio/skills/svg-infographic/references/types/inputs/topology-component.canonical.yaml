@@ -1,0 +1,64 @@
+schema_version: 1
+kind: typepack-input
+typepack: topology-component
+case: canonical
+preset: presentation-16x9
+layout: zones
+variant: compact
+count: 3
+prompt_ko: "사용자에서 게이트웨이와 서비스로 이어지는 대표 architecture 흐름을 보여줘. 16:9."
+prompt_en: "Show the representative architecture flow from user to gateway to service. 16:9."
+title:
+  ko: "요청은 서비스까지 한눈에 흐른다"
+  en: "The request path stays visible at a glance"
+zones:
+  - id: "zone-interaction"
+    label:
+      ko: "사용자와 진입"
+      en: "User and ingress"
+    nodes:
+      - id: "client"
+        name:
+          ko: "사용자 클라이언트"
+          en: "User client"
+        kind: "client"
+        icon: "users"
+  - id: "zone-edge"
+    label:
+      ko: "진입"
+      en: "Ingress"
+    nodes:
+      - id: "gateway"
+        name:
+          ko: "게이트웨이"
+          en: "Gateway"
+        kind: "gateway"
+        icon: "route"
+  - id: "zone-application"
+    label:
+      ko: "애플리케이션"
+      en: "Application"
+    nodes:
+      - id: "service"
+        name:
+          ko: "서비스"
+          en: "Service"
+        kind: "service"
+        icon: "api"
+edges:
+  - id: "request-client-gateway"
+    from: "client"
+    to: "gateway"
+    kind: "request"
+    delivery: "sync"
+    visibility: "public"
+  - id: "request-gateway-service"
+    from: "gateway"
+    to: "service"
+    kind: "request"
+    delivery: "sync"
+    visibility: "public"
+boundary:
+  label:
+    ko: "시스템 경계"
+    en: "System boundary"

@@ -99,6 +99,69 @@ export function loadVendorComponents({ repoRoot } = {}) {
   return Object.freeze(COMPONENTS.map((component) => componentFromLock(path.resolve(repoRoot), component)));
 }
 
+// The packaging audit reads every shipped byte as UTF-8. A vendored upstream may ship a font or an
+// image, and the only trustworthy statement about those files is the vendor lock, which the sync
+// verified against the upstream tag. This turns the locks into the register the audit checks them
+// against: exact package path, declared size, declared digest. Nothing is registered by directory or
+// by guesswork, so a new binary in a future upstream release arrives here automatically, and a text
+// file can never reach the lane no matter where it sits.
+export const VENDOR_BINARY_EXTENSIONS = Object.freeze([
+  ".ttf", ".otf", ".ttc", ".woff", ".woff2",
+  ".png", ".jpg", ".jpeg", ".gif", ".webp", ".ico",
+  ".pdf",
+]);
+
+const binaryExtensions = new Set(VENDOR_BINARY_EXTENSIONS);
+
+export function isVendorBinaryPath(relativePath) {
+  const name = relativePath.split("/").at(-1) ?? "";
+  const dot = name.lastIndexOf(".");
+  return dot > 0 && binaryExtensions.has(name.slice(dot).toLowerCase());
+}
+
+// A product that does not bundle a vendor must not carry that vendor's files in its register: the audit
+// treats a registered path it never meets as a disagreement and fails. Naming the product reads its
+// shared-module list and keeps the register to what the package actually contains.
+function productSharedModules(repoRoot, productName) {
+  if (productName === undefined) return null;
+  const contract = JSON.parse(readFileSync(path.join(repoRoot, "products", productName, "product.json"), "utf8"));
+  if (!Array.isArray(contract.sharedModules)) {
+    throw componentError("VENDOR_COMPONENT_PRODUCT_INVALID", `${productName} must declare sharedModules`);
+  }
+  return new Set(contract.sharedModules);
+}
+
+export function vendorDestinationRoots({ repoRoot, productName } = {}) {
+  const modules = productSharedModules(path.resolve(repoRoot ?? ""), productName);
+  return loadVendorComponents({ repoRoot })
+    .filter((component) => !modules || modules.has(COMPONENTS.find((candidate) => candidate.id === component.id).module))
+    .map((component) => component.destinationRoot)
+    .sort();
+}
+
+export function packagedBinaryFiles({ repoRoot, productName } = {}) {
+  const absoluteRepoRoot = path.resolve(repoRoot ?? "");
+  const modules = productSharedModules(absoluteRepoRoot, productName);
+  const register = new Map();
+  for (const component of loadVendorComponents({ repoRoot })) {
+    const definition = COMPONENTS.find((candidate) => candidate.id === component.id);
+    if (modules && !modules.has(definition.module)) continue;
+    const lock = parseLock(absoluteRepoRoot, definition);
+    const files = lock.tree?.files;
+    if (!Array.isArray(files)) {
+      throw componentError("VENDOR_COMPONENT_LOCK_INVALID", `${component.id} vendor lock must list tree files`);
+    }
+    for (const file of files) {
+      if (!file || typeof file.path !== "string" || !Number.isInteger(file.size) || file.size < 0 || !/^[a-f0-9]{64}$/u.test(file.sha256 ?? "")) {
+        throw componentError("VENDOR_COMPONENT_LOCK_INVALID", `${component.id} vendor lock file entry is malformed`);
+      }
+      if (!isVendorBinaryPath(file.path)) continue;
+      register.set(`${component.destinationRoot}/${file.path}`, { size: file.size, sha256: file.sha256 });
+    }
+  }
+  return register;
+}
+
 export function vendorMappings({ repoRoot } = {}) {
   const mappings = {};
   for (const component of loadVendorComponents({ repoRoot })) {

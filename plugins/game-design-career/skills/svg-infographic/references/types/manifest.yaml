@@ -1,0 +1,686 @@
+# TypePack manifest — single registration point for diagram/infographic types.
+# Adding a type = one TypePack directory + one entry here. Core engine (generic lint,
+# renderer, resolver) is not modified by type additions (kernel invariant).
+#
+# Entry schema (locked with the design kernel, 2026-08):
+#   id:               unique kebab-case
+#   selection_signal: content signals that route a request to this type (the
+#                     selection table is DERIVED from these — no hand-kept copy)
+#   profile:          exact-parametric | constrained-layout | editorial-composition
+#   support:          core | experimental | gated   # charts stay gated until their
+#                                                   # machine verifier + receipt exist;
+#                                                   # gated types must not appear in
+#                                                   # discovery copy or the cookbook
+#   spec:             types/specs/<id>.md           # 1:1 with this entry — the spec's
+#                                                   # frontmatter (spec_schema_version /
+#                                                   # typepack_id / profile) must match,
+#                                                   # sections 1–9 must be complete, the
+#                                                   # path must be unique, and the specs
+#                                                   # tree must have no orphan file
+#   routing_expected / geometry_expected:
+#                     scenario feasibility, declared against the canonical `flat` baseline.
+#                     Deliberately NOT treatment-aware: a feasibility field that varied by
+#                     treatment would make an experimental preview a party to what this package
+#                     promises. A treatment that cannot meet a declaration is recorded as a
+#                     preview limitation in design-kernel 7g and fails closed at build time —
+#                     it never softens the declaration. (Known: topology-component x sketch
+#                     does not route; see design-kernel 7g for the measurement.)
+#   presets:          supported output presets (PageFrame registry ids, e.g. social-4x5)
+#   orientations:     supported orientations (portrait | landscape | square) — kept
+#                     separate from presets; preset ids never encode orientation
+#   verifier:         null | scripts path           # required for accuracy-bearing types
+#   required_roles:   Foundation roles the type consumes (resolver checks coverage)
+#   optional_aliases: domain aliases the type may consume
+#   canonical_prompt: { status, anchor }            # status: reserved | bound.
+#                                                   # reserved = anchor format+uniqueness
+#                                                   # only (the gallery does not exist
+#                                                   # yet); bound = the target file and
+#                                                   # anchor must exist (fail-closed)
+#   receipt_schema:   null | path                   # required for accuracy-bearing types
+#                                                   # (exact-parametric or data-accuracy)
+#   fixtures:         [{ id, kind, preset, path }]  # kind: positive | baseline-red; path is
+#                                                   # an in-package .svg/.json; core needs a
+#                                                   # positive per preset + one baseline-red
+#   examples:         [{ id, gallery_anchor }]      # core requires the anchor to resolve in
+#                                                   # a real gallery file
+#   annexes:          [] | [topology|data-accuracy] # profile-specific spec annexes; each
+#                                                   # declared annex needs its full subsection
+#                                                   # set in the spec (heading alone fails)
+#   migration_origin: legacy | new                  # legacy => legacy_section required and
+#                                                   # its archetypes.md section must be the
+#                                                   # canonical tombstone; new => null
+#   gate:             null | { reason, release }    # required when support: gated —
+#                                                   # gated types are withheld from the
+#                                                   # routable view but stay auditable
+#   legacy_section:   null | "<archetypes heading>" # the legacy section this TypePack
+#                                                   # replaces; that section must be a
+#                                                   # pointer tombstone, not a rival rule
+#   composition:      OPTIONAL capability block (schema v2). Absent => the TypePack
+#                     is composable: false. Fields:
+#     composable: true|false
+#     min_slot_size: { w, h }        # logical px, the inner content area the
+#                                    # fragment's intrinsic bounds must fit (slot
+#                                    # padding excluded, scale profile applied later)
+#     preferred_slot_aspect: { min, max }   # aspect range of the assigned slot — page
+#                                    # aspect is owned by presets/orientations
+#     allowed_slots: [top, bottom]   # template position enum (top/middle/bottom/side) —
+#                                    # a plan slot binding outside this range is refused
+#     variants: [ { id, min_slot_size: {w,h} } ]  # local degrade variants the composition
+#                                    # selects (any loss of meaning is recorded in the receipt)
+#     ports: [ { template, direction: out|in|bidir, kind: flow|reference,
+#                cardinality: "n" | "n..m" | "0..n" } ]  # capability only — the actual
+#                                    # ports are produced by the instance receipt
+#
+# Schema upgrade policy (v1 -> v2, atomic package upgrade): the validator and every
+# manifest in the package move to v2 in the same commit — mixed versions are
+# rejected fail-closed. Existing TypePacks migrate without a composition block and
+# are therefore composable: false until they opt in.
+#
+# Validation gate: unique ids, spec identity/section/inventory closure, unique prompt
+# anchors with their reserved|bound state, promotion evidence for `core`, gate reason
+# for `gated`, legacy tombstone closure, and the derived selection view. TypePacks
+# declare role requirements only — no hex values, no palette ids.
+#
+# Promotion: `experimental` is a preview state. `core` additionally requires at least
+# one registered example and profile-appropriate verification evidence (fixtures for
+# every profile; a machine verifier as well for exact-parametric / data-accuracy).
+#
+# Population happens as the archetype catalog migrates to TypePacks; pilots
+# register here only when promoted.
+
+schema_version: 2
+
+# Wave 1 migration in progress: the archetype catalog moves here one TypePack at a
+# time. `support` stays `experimental` until a type has its examples and fixtures;
+# `gated` types are registered but withheld from discovery copy.
+
+typepacks:
+  - id: cards-kpi-grid
+    selection_signal: "A few key items or figures summarised as equal cards (feature highlights, principles, status counts, capability summaries; not a chart claiming data accuracy)"
+    profile: constrained-layout
+    support: experimental
+    spec: types/specs/cards-kpi-grid.md
+    presets: [document-compact, social-4x5, presentation-16x9]
+    # A module-scale card set cannot fill a fixed preset (owner approved 2026-08-14).
+    preferred_preset: document-compact
+    orientations: [portrait, landscape]
+    verifier: null
+    receipt_schema: null
+    fixtures: []
+    examples:
+      - { id: cards-kpi-grid-canonical, gallery_anchor: PROMPT-GALLERY.md#cards-kpi-grid }
+    required_roles: [canvas, surface, ink, muted, rule, focus]
+    optional_aliases: []
+    canonical_prompt: { status: bound, anchor: PROMPT-GALLERY.md#cards-kpi-grid }
+    annexes: []
+    gate: null
+    migration_origin: legacy
+    legacy_section: "Cards / KPI stat grid"
+    inputs:
+      canonical:
+        id: cards-kpi-grid-canonical
+        path: types/inputs/cards-kpi-grid.canonical.yaml
+        preset: document-compact
+        layout: grid
+        cols: 2
+        count: 4
+      stress:
+        - id: cards-kpi-grid-stress-cardinality
+          path: types/inputs/cards-kpi-grid.stress-cardinality.yaml
+          preset: document-compact
+          layout: grid
+          cols: 2
+          count: 6
+          geometry_expected: fits
+          covers: [cardinality-max]
+        - id: cards-kpi-grid-stress-copy
+          path: types/inputs/cards-kpi-grid.stress-copy.yaml
+          preset: document-compact
+          layout: grid
+          cols: 2
+          count: 4
+          geometry_expected: fits
+          covers: [copy-boundary-candidate]
+        - id: cards-kpi-grid-stress-degrade
+          path: types/inputs/cards-kpi-grid.stress-degrade.yaml
+          preset: social-4x5
+          layout: row
+          floor: compact
+          count: 6
+          geometry_expected: needs-split
+          covers: [cardinality-max, degrade-path]
+    fit:
+      floor_basis: geometry
+      cardinality: { min: 3, canonical: 4, max: 6 }
+      params: { itemMinW: 149, itemMinH: 124, compactItemMinW: 132, compactItemMinH: 104, gapX: 16, gapY: 16 }
+      footprint:
+        - { count: 4, layout: row, w: 644, h: 124 }
+        - { count: 4, layout: grid, cols: 2, w: 314, h: 264 }
+        - { count: 6, layout: grid, cols: 2, w: 314, h: 404 }
+        - { count: 6, layout: row, floor: compact, w: 872, h: 104 }
+      feasibility:
+        - { preset: document-compact, orientation: portrait, count: 6, layout: grid, result: fits }
+        - { preset: social-4x5, orientation: portrait, count: 6, layout: grid, result: fits }
+        - { preset: social-4x5, orientation: portrait, count: 6, layout: row, floor: compact, result: needs-split }
+        - { preset: presentation-16x9, orientation: landscape, count: 6, layout: grid, result: fits }
+        - { preset: presentation-16x9, orientation: landscape, count: 6, layout: row, floor: compact, result: fits }
+    composition:
+      composable: true
+      min_slot_size: { w: 640, h: 240 }
+      preferred_slot_aspect: { min: 1.8, max: 3.2 }
+      allowed_slots: [top, middle]
+      variants:
+        - id: compact
+          min_slot_size: { w: 640, h: 180 }
+      ports:
+        - { template: item-anchor, direction: out, kind: reference, cardinality: 0..n }
+  - id: layer-stack
+    selection_signal: "A hierarchy that stacks on or abstracts the layer beneath it (platform stacks, runtime layers, capability models)"
+    profile: constrained-layout
+    support: experimental
+    spec: types/specs/layer-stack.md
+    presets: [document-compact, social-4x5, presentation-16x9]
+    # Per-scene measurement (27-62% residual) makes fluid the default.
+    preferred_preset: document-compact
+    orientations: [portrait, landscape]
+    verifier: null
+    receipt_schema: null
+    fixtures: []
+    examples:
+      - { id: layer-stack-canonical, gallery_anchor: PROMPT-GALLERY.md#layer-stack }
+    required_roles: [canvas, surface, ink, muted, rule, focus]
+    optional_aliases: []
+    canonical_prompt: { status: bound, anchor: PROMPT-GALLERY.md#layer-stack }
+    annexes: []
+    gate: null
+    migration_origin: legacy
+    legacy_section: "Layer stack"
+    inputs:
+      canonical: { id: layer-stack-canonical, path: types/inputs/layer-stack.canonical.yaml, preset: document-compact, layout: column, count: 4 }
+      stress:
+        - id: layer-stack-stress-cardinality
+          path: types/inputs/layer-stack.stress-cardinality.yaml
+          # Four chips do not fit the fluid width — by rule this uses a wider supported preset.
+          preset: presentation-16x9
+          layout: column
+          count: 5
+          residual_disposition: { bottom: 132, reason: \"Vertical breathing left over from choosing a wider landscape preset to hold four chips — the band is not stretched to fill it.\" }
+          geometry_expected: fits
+          covers: [cardinality-max, chips-max]
+        - id: layer-stack-stress-copy
+          path: types/inputs/layer-stack.stress-copy.yaml
+          preset: document-compact
+          layout: column
+          count: 4
+          geometry_expected: fits
+          covers: [copy-boundary-candidate]
+        - id: layer-stack-stress-degrade
+          path: types/inputs/layer-stack.stress-degrade.yaml
+          preset: social-4x5
+          layout: column
+          floor: wide
+          count: 5
+          geometry_expected: needs-split
+          covers: [cardinality-max, chips-max, degrade-path]
+    fit:
+      floor_basis: geometry
+      cardinality: { min: 3, canonical: 4, max: 5 }
+      params: { itemMinW: 612, itemMinH: 88, wideItemMinW: 1084, wideItemMinH: 88, gapX: 20, gapY: 20 }
+      footprint:
+        - { count: 5, layout: column, w: 612, h: 520 }
+        - { count: 5, layout: column, floor: wide, w: 1084, h: 520 }
+      feasibility:
+        - { preset: document-compact, orientation: portrait, count: 5, layout: column, result: fits }
+        - { preset: document-compact, orientation: portrait, count: 5, layout: column, floor: wide, result: needs-split }
+        - { preset: social-4x5, orientation: portrait, count: 5, layout: column, result: fits }
+        - { preset: social-4x5, orientation: portrait, count: 5, layout: column, floor: wide, result: needs-split }
+        - { preset: presentation-16x9, orientation: landscape, count: 5, layout: column, result: fits }
+        - { preset: presentation-16x9, orientation: landscape, count: 5, layout: column, floor: wide, result: fits }
+  - id: nested-scope
+    selection_signal: "Containment and scope — the inner lives inside the outer (trust zones, scope rings, platform -> app -> feature)"
+    profile: constrained-layout
+    support: experimental
+    spec: types/specs/nested-scope.md
+    presets: [document-compact, social-4x5, presentation-16x9]
+    # Per-scene measurement (27-62% residual) makes fluid the default.
+    preferred_preset: document-compact
+    orientations: [portrait, landscape]
+    verifier: null
+    receipt_schema: null
+    fixtures: []
+    examples:
+      - { id: nested-scope-canonical, gallery_anchor: PROMPT-GALLERY.md#nested-scope }
+    required_roles: [canvas, surface, ink, muted, rule, focus]
+    optional_aliases: []
+    canonical_prompt: { status: bound, anchor: PROMPT-GALLERY.md#nested-scope }
+    annexes: []
+    gate: null
+    migration_origin: legacy
+    legacy_section: "Nested / onion"
+    inputs:
+      canonical: { id: nested-scope-canonical, path: types/inputs/nested-scope.canonical.yaml, preset: document-compact, layout: concentric, count: 3 }
+      stress:
+        - id: nested-scope-stress-cardinality
+          path: types/inputs/nested-scope.stress-cardinality.yaml
+          preset: document-compact
+          layout: concentric
+          count: 4
+          geometry_expected: fits
+          covers: [cardinality-max, containment-depth]
+        - id: nested-scope-stress-copy
+          path: types/inputs/nested-scope.stress-copy.yaml
+          preset: document-compact
+          layout: concentric
+          count: 3
+          geometry_expected: fits
+          covers: [copy-boundary-candidate]
+    fit:
+      floor_basis: geometry
+      cardinality: { min: 3, canonical: 3, max: 4 }
+      params: { itemMinW: 296, itemMinH: 96, inset: 44, gapX: 0, gapY: 0 }
+      footprint:
+        - { count: 4, layout: concentric, w: 560, h: 360 }
+      feasibility:
+        - { preset: document-compact, orientation: portrait, count: 4, layout: concentric, result: fits }
+        - { preset: social-4x5, orientation: portrait, count: 4, layout: concentric, result: fits }
+        - { preset: presentation-16x9, orientation: landscape, count: 4, layout: concentric, result: fits }
+  - id: topology-component
+    selection_signal: "Systems or components and their connections — request paths, cloud/network zones, service architecture with a system boundary"
+    profile: editorial-composition
+    support: experimental
+    spec: types/specs/topology-component.md
+    presets: [social-4x5, presentation-16x9]
+    preferred_preset: presentation-16x9
+    orientations: [portrait, landscape]
+    verifier: null
+    receipt_schema: null
+    fixtures: []
+    examples:
+      - { id: topology-component-canonical, gallery_anchor: PROMPT-GALLERY.md#topology-component }
+    required_roles: [canvas, surface, ink, muted, rule, focus]
+    optional_aliases: []
+    canonical_prompt: { status: bound, anchor: PROMPT-GALLERY.md#topology-component }
+    annexes: [topology]
+    gate: null
+    migration_origin: legacy
+    legacy_section: "Topology / component"
+    inputs:
+      canonical:
+        id: topology-component-canonical
+        path: types/inputs/topology-component.canonical.yaml
+        preset: presentation-16x9
+        layout: zones
+        count: 3
+        routing_expected: routable
+      stress:
+        - id: topology-component-stress-wave1-reference
+          path: types/inputs/topology-component.stress-wave1-reference.yaml
+          preset: social-4x5
+          layout: zones
+          count: 3
+          artifact_policy: transient
+          residual_disposition: { bottom: 148, reason: "Wave 1 canonical geometry is retained as a bounded reference while the tracked canonical moves to the approved compact flagship." }
+          routing_expected: routable
+          geometry_expected: fits
+          covers: [wave1-reference]
+        - id: topology-component-stress-cardinality
+          path: types/inputs/topology-component.stress-cardinality.yaml
+          preset: social-4x5
+          layout: zones
+          count: 4
+          routing_expected: needs-split
+          geometry_expected: fits
+          covers: [cardinality-max, edge-density]
+        - id: topology-component-stress-copy
+          path: types/inputs/topology-component.stress-copy.yaml
+          preset: social-4x5
+          layout: zones
+          count: 3
+          residual_disposition: { bottom: 148, reason: "Even at the copy boundary the zone height derives from node geometry — so the residual is unchanged." }
+          routing_expected: routable
+          geometry_expected: fits
+          covers: [copy-boundary-candidate]
+        - id: topology-component-stress-primitive-coverage
+          path: types/inputs/topology-component.stress-primitive-coverage.yaml
+          preset: presentation-16x9
+          layout: zones
+          count: 4
+          artifact_policy: transient
+          routing_expected: routable
+          geometry_expected: fits
+          covers: [cardinality-max, primitive-coverage]
+    fit:
+      floor_basis: geometry
+      cardinality: { min: 2, canonical: 3, max: 4 }
+      params: { itemMinW: 140, itemMinH: 96, gapX: 16, gapY: 24, maxNodesPerZone: 4, zonePad: 12, zoneLabelBand: 22, zoneGap: 28 }
+      footprint:
+        - { count: 4, layout: zones, w: 632, h: 652 }
+      feasibility:
+        - { preset: social-4x5, orientation: portrait, count: 4, layout: zones, result: fits }
+        - { preset: presentation-16x9, orientation: landscape, count: 4, layout: zones, result: fits }
+  - id: process-flow
+    selection_signal: "Ordered steps or handoffs — processes, pipelines, data flows, review loops"
+    profile: constrained-layout
+    support: experimental
+    spec: types/specs/process-flow.md
+    presets: [document-compact, social-4x5, presentation-16x9]
+    # A structurally narrow flow/band cannot fill a fixed preset — fluid by default, fixed only for wide configurations.
+    preferred_preset: document-compact
+    orientations: [portrait, landscape]
+    verifier: null
+    receipt_schema: null
+    fixtures: []
+    examples:
+      - { id: process-flow-canonical, gallery_anchor: PROMPT-GALLERY.md#process-flow }
+    required_roles: [canvas, surface, ink, muted, rule, focus]
+    optional_aliases: []
+    canonical_prompt: { status: bound, anchor: PROMPT-GALLERY.md#process-flow }
+    annexes: []
+    gate: null
+    migration_origin: legacy
+    legacy_section: "Flow"
+    inputs:
+      canonical:
+        id: process-flow-canonical
+        path: types/inputs/process-flow.canonical.yaml
+        preset: document-compact
+        layout: column
+        count: 4
+      stress:
+        - id: process-flow-stress-cardinality
+          path: types/inputs/process-flow.stress-cardinality.yaml
+          preset: document-compact
+          layout: column
+          count: 5
+          geometry_expected: fits
+          covers: [cardinality-max]
+        - id: process-flow-stress-copy
+          path: types/inputs/process-flow.stress-copy.yaml
+          preset: document-compact
+          layout: column
+          count: 4
+          geometry_expected: fits
+          covers: [copy-boundary-candidate]
+        - id: process-flow-stress-degrade
+          path: types/inputs/process-flow.stress-degrade.yaml
+          preset: social-4x5
+          layout: row
+          count: 5
+          geometry_expected: needs-split
+          covers: [cardinality-max, degrade-path]
+    fit:
+      floor_basis: geometry
+      cardinality: { min: 3, canonical: 4, max: 5 }
+      params: { itemMinW: 132, itemMinH: 88, gapX: 44, gapY: 36 }
+      footprint:
+        - { count: 5, layout: row, w: 836, h: 88 }
+        - { count: 5, layout: column, w: 132, h: 584 }
+      feasibility:
+        - { preset: document-compact, orientation: portrait, count: 5, layout: column, result: fits }
+        - { preset: social-4x5, orientation: portrait, count: 5, layout: row, result: needs-split }
+        - { preset: social-4x5, orientation: portrait, count: 5, layout: column, result: fits }
+        - { preset: presentation-16x9, orientation: landscape, count: 5, layout: row, result: fits }
+        - { preset: presentation-16x9, orientation: landscape, count: 5, layout: column, result: fits }
+  - id: approval-gate
+    selection_signal: "A simple request path with one approval gate or checkpoint (a->b->c; a full sequence diagram is out of scope)"
+    profile: constrained-layout
+    support: experimental
+    spec: types/specs/approval-gate.md
+    presets: [document-compact, social-4x5, presentation-16x9]
+    # A structurally narrow flow/band cannot fill a fixed preset — fluid by default, fixed only for wide configurations.
+    preferred_preset: document-compact
+    orientations: [portrait, landscape]
+    verifier: null
+    receipt_schema: null
+    fixtures: []
+    examples:
+      - { id: approval-gate-canonical, gallery_anchor: PROMPT-GALLERY.md#approval-gate }
+    required_roles: [canvas, surface, ink, muted, rule, focus]
+    optional_aliases: []
+    canonical_prompt: { status: bound, anchor: PROMPT-GALLERY.md#approval-gate }
+    annexes: []
+    gate: null
+    migration_origin: legacy
+    legacy_section: "Approval / sequence-lite"
+    inputs:
+      canonical:
+        id: approval-gate-canonical
+        path: types/inputs/approval-gate.canonical.yaml
+        preset: document-compact
+        layout: row
+        count: 3
+      stress:
+        # Owner decision (2026-08-14): this configuration is stress evidence, not a gallery
+        # promotion candidate. That is also why its declared breathing is accepted — this is
+        # not machine-enforced and is confirmed at promotion review.
+        - id: approval-gate-stress-cardinality
+          path: types/inputs/approval-gate.stress-cardinality.yaml
+          preset: presentation-16x9
+          layout: row
+          count: 4
+          residual_disposition: { bottom: 484, reason: "A 4-node band exceeds the fluid preset width (680) so the preferred preset cannot be used — the vertical breathing is the cost of choosing a wider fixed preset." }
+          geometry_expected: fits
+          covers: [cardinality-max]
+        - id: approval-gate-stress-copy
+          path: types/inputs/approval-gate.stress-copy.yaml
+          preset: document-compact
+          layout: row
+          count: 3
+          geometry_expected: fits
+          covers: [copy-boundary-candidate, gate-caption]
+        - id: approval-gate-stress-degrade
+          path: types/inputs/approval-gate.stress-degrade.yaml
+          preset: social-4x5
+          layout: row
+          count: 4
+          geometry_expected: needs-split
+          covers: [cardinality-max, gate-caption, degrade-path]
+    fit:
+      floor_basis: geometry
+      cardinality: { min: 3, canonical: 3, max: 4 }
+      params: { itemMinW: 140, itemMinH: 88, gapX: 56, gapY: 56 }
+      footprint:
+        - { count: 4, layout: row, extraW: 0, extraH: 40, w: 728, h: 128 }
+      feasibility:
+        # A 4-node band exceeds the fluid width (680) — only this configuration uses a landscape preset.
+        - { preset: document-compact, orientation: portrait, count: 4, layout: row, result: needs-split }
+        - { preset: social-4x5, orientation: portrait, count: 4, layout: row, result: needs-split }
+        - { preset: presentation-16x9, orientation: landscape, count: 4, layout: row, result: fits }
+  - id: before-after
+    selection_signal: "Before and after — migration, modernisation, refactor outcome, trade-off comparison"
+    profile: constrained-layout
+    support: experimental
+    spec: types/specs/before-after.md
+    presets: [document-compact, social-4x5, presentation-16x9]
+    # Per-scene measurement (27-79% residual on the fixed 4:5) makes fluid the default.
+    preferred_preset: document-compact
+    orientations: [portrait, landscape]
+    verifier: null
+    receipt_schema: null
+    fixtures: []
+    examples:
+      - { id: before-after-canonical, gallery_anchor: PROMPT-GALLERY.md#before-after }
+    required_roles: [canvas, surface, ink, muted, rule, focus]
+    optional_aliases: []
+    canonical_prompt: { status: bound, anchor: PROMPT-GALLERY.md#before-after }
+    annexes: []
+    gate: null
+    migration_origin: legacy
+    legacy_section: "Before / after"
+    inputs:
+      canonical: { id: before-after-canonical, path: types/inputs/before-after.canonical.yaml, preset: document-compact, layout: row, count: 2 }
+      stress:
+        - id: before-after-stress-cardinality
+          path: types/inputs/before-after.stress-cardinality.yaml
+          preset: document-compact
+          layout: row
+          count: 2
+          geometry_expected: fits
+          covers: [cardinality-max, mirrored-slots]
+        - id: before-after-stress-copy
+          path: types/inputs/before-after.stress-copy.yaml
+          preset: document-compact
+          layout: row
+          count: 2
+          geometry_expected: fits
+          covers: [cardinality-max, copy-boundary-candidate]
+    fit:
+      floor_basis: geometry
+      cardinality: { min: 2, canonical: 2, max: 2 }
+      # The minimum panel height is **computed from the minimum legal syntax** (not an arbitrary number):
+      #   2×panelPad + panelHeaderH + minSlots×slotMinH + (minSlots-1)×slotGap
+      #   = 2x16 + 34 + 2x38 + 1x10 = 152. The validator checks this sum against itemMinH.
+      params: { itemMinW: 260, itemMinH: 152, gapX: 32, gapY: 32, panelPad: 16, panelHeaderH: 34, slotMinH: 38, slotGap: 10, minSlots: 2 }
+      footprint:
+        - { count: 2, layout: row, w: 552, h: 152 }
+      feasibility:
+        - { preset: document-compact, orientation: portrait, count: 2, layout: row, result: fits }
+        - { preset: social-4x5, orientation: portrait, count: 2, layout: row, result: fits }
+        - { preset: presentation-16x9, orientation: landscape, count: 2, layout: row, result: fits }
+  - id: roadmap-timeline
+    selection_signal: "Time or phases — product phases, milestones, rollout waves, a status snapshot over time (evenly spaced, claiming no proportional duration)"
+    profile: constrained-layout
+    support: experimental
+    spec: types/specs/roadmap-timeline.md
+    presets: [document-compact, social-4x5, presentation-16x9]
+    # A structurally thin band cannot fill a fixed preset (80-87% residual measured per scene)
+    # — fluid by default. Only configurations short on width move to the wider 16:9.
+    preferred_preset: document-compact
+    orientations: [portrait, landscape]
+    verifier: null
+    receipt_schema: null
+    fixtures: []
+    examples:
+      - { id: roadmap-timeline-canonical, gallery_anchor: PROMPT-GALLERY.md#roadmap-timeline }
+    required_roles: [canvas, surface, ink, muted, rule, focus]
+    optional_aliases: []
+    canonical_prompt: { status: bound, anchor: PROMPT-GALLERY.md#roadmap-timeline }
+    annexes: []
+    gate: null
+    migration_origin: legacy
+    legacy_section: "Roadmap / timeline"
+    inputs:
+      canonical: { id: roadmap-timeline-canonical, path: types/inputs/roadmap-timeline.canonical.yaml, preset: document-compact, layout: row, count: 4 }
+      stress:
+        - id: roadmap-timeline-stress-cardinality
+          path: types/inputs/roadmap-timeline.stress-cardinality.yaml
+          preset: presentation-16x9
+          layout: row
+          count: 5
+          residual_disposition: { bottom: 501, reason: "A timeline is a structurally thin band. Five phases need 16:9 for width — and the band is never stretched to the canvas height — so this vertical space is left over." }
+          geometry_expected: fits
+          covers: [cardinality-max, status-and-marker]
+        - id: roadmap-timeline-stress-body
+          path: types/inputs/roadmap-timeline.stress-body.yaml
+          preset: document-compact
+          layout: row
+          count: 4
+          geometry_expected: fits
+          covers: [status-and-marker]
+        - id: roadmap-timeline-stress-tail-current
+          path: types/inputs/roadmap-timeline.stress-tail-current.yaml
+          preset: document-compact
+          layout: row
+          count: 4
+          geometry_expected: fits
+          covers: [terminal-current]
+        - id: roadmap-timeline-stress-copy
+          path: types/inputs/roadmap-timeline.stress-copy.yaml
+          # Long titles grow the card width past the fluid width — only this configuration uses a wider preset.
+          preset: presentation-16x9
+          layout: row
+          count: 4
+          residual_disposition: { bottom: 501, reason: "Long titles leave 16:9 as the only preset wide enough. The band height is set by content and is never stretched to fill the canvas." }
+          geometry_expected: fits
+          covers: [copy-boundary-candidate, status-and-marker]
+        - id: roadmap-timeline-stress-degrade
+          path: types/inputs/roadmap-timeline.stress-degrade.yaml
+          preset: document-compact
+          layout: row
+          count: 5
+          geometry_expected: needs-split
+          covers: [cardinality-max, status-and-marker, degrade-path]
+    fit:
+      floor_basis: geometry
+      cardinality: { min: 3, canonical: 4, max: 5 }
+      # Both numbers derive from the **minimum legal syntax** (they are not arbitrary constants).
+      #   itemMinW = the card width floor. The real width comes from the longest title across both
+      #              locales; this value is its lower bound.
+      #   itemMinH = label band + dot + gap + a body-less card = (9+5+10+8) + 12 + 9 + (12+18+12) = 95
+      #   extraW   = axis end margins, 2 x outerClearance = 28 — the condition that keeps the
+      #              outermost card inside the content box.
+      params: { itemMinW: 132, itemMinH: 95, gapX: 20, gapY: 20 }
+      footprint:
+        - { count: 4, layout: row, extraW: 28, extraH: 0, w: 616, h: 95 }
+        - { count: 5, layout: row, extraW: 28, extraH: 0, w: 768, h: 95 }
+      feasibility:
+        # Five phases need 768px, past the 616px width (fluid and 4:5) — only 16:9 is wide enough.
+        - { preset: document-compact, orientation: portrait, count: 5, layout: row, result: needs-split }
+        - { preset: social-4x5, orientation: portrait, count: 5, layout: row, result: needs-split }
+        - { preset: presentation-16x9, orientation: landscape, count: 5, layout: row, result: fits }
+  - id: decision-matrix
+    selection_signal: "Options or items placed by two qualitative axes — a 2x2 priority/decision quadrant, a 3x3 risk grid"
+    profile: constrained-layout
+    support: experimental
+    spec: types/specs/decision-matrix.md
+    presets: [document-compact, social-4x5, presentation-16x9]
+    # Per-scene measurement (27-79% residual on the fixed 4:5) makes fluid the default.
+    preferred_preset: document-compact
+    orientations: [portrait, landscape]
+    verifier: null
+    receipt_schema: null
+    fixtures: []
+    examples:
+      - { id: decision-matrix-canonical, gallery_anchor: PROMPT-GALLERY.md#decision-matrix }
+    required_roles: [canvas, surface, ink, muted, rule, focus]
+    optional_aliases: []
+    canonical_prompt: { status: bound, anchor: PROMPT-GALLERY.md#decision-matrix }
+    annexes: []
+    gate: null
+    migration_origin: legacy
+    legacy_section: "Decision / risk matrix"
+    inputs:
+      canonical: { id: decision-matrix-canonical, path: types/inputs/decision-matrix.canonical.yaml, preset: document-compact, layout: grid, cols: 2, count: 4 }
+      stress:
+        - id: decision-matrix-stress-cardinality
+          path: types/inputs/decision-matrix.stress-cardinality.yaml
+          # A 3x3 exceeds the fluid width — only this configuration uses a wider supported preset.
+          preset: presentation-16x9
+          layout: grid
+          cols: 3
+          count: 9
+          residual_disposition: { bottom: 358, reason: "With the axis reservation included a 3x3 grid exceeds the fluid width — leaving 16:9 as the only declared preset wide enough. Cell height is set by content and never stretched to fill the canvas — this vertical space is the cost of gaining width." }
+          geometry_expected: fits
+          covers: [cardinality-max]
+        - id: decision-matrix-stress-degrade
+          path: types/inputs/decision-matrix.stress-degrade.yaml
+          preset: document-compact
+          layout: grid
+          cols: 3
+          count: 9
+          geometry_expected: needs-split
+          covers: [cardinality-max, degrade-path]
+        - id: decision-matrix-stress-copy
+          path: types/inputs/decision-matrix.stress-copy.yaml
+          preset: document-compact
+          layout: grid
+          cols: 2
+          count: 4
+          geometry_expected: fits
+          covers: [copy-boundary-candidate]
+    fit:
+      floor_basis: geometry
+      cardinality: { min: 4, canonical: 4, max: 9 }
+      # Cell height is set by content, not by the canvas. itemMinH is the geometry floor of the
+      # **minimum legal cell**: 2 x cellPadY + nameLine + nameGap + traitLine = 28 + 18 + 6 + 16.
+      # The real height comes from the larger line-box across both locales; when it exceeds the
+      # predicted floor the post-render measurement gate decides again.
+      params: { itemMinW: 180, itemMinH: 68, gapX: 16, gapY: 16, cellPadY: 14, nameLine: 18, nameGap: 6, traitLine: 16 }
+      footprint:
+        - { count: 4, layout: grid, cols: 2, extraW: 72, extraH: 58, w: 448, h: 210 }
+        - { count: 9, layout: grid, cols: 3, extraW: 72, extraH: 58, w: 644, h: 294 }
+      feasibility:
+        # A 3x3 grid exceeds the fluid width (616) — only that configuration uses a wider preset.
+        - { preset: document-compact, orientation: portrait, count: 9, layout: grid, result: needs-split }
+        - { preset: social-4x5, orientation: portrait, count: 9, layout: grid, result: fits }
+        - { preset: presentation-16x9, orientation: landscape, count: 9, layout: grid, result: fits }

@@ -15,6 +15,7 @@ import { loadProductContract, validateProductContract } from "../../tooling/lib/
 import { verifyDiagramSkillVendor } from "../../tooling/sync-diagram-skills.mjs";
 import { scanJavaScriptImports } from "../../tooling/lib/js-import-scanner.mjs";
 import { vendorMappings } from "../../tooling/lib/vendor-components.mjs";
+import { vendorTag } from "../lib/vendored.mjs";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const sourceDocumentCategories = ["career", "fun-intent", "systems", "content", "feedback"];
@@ -806,8 +807,11 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
     assert.deepEqual([...gate.allowed_states].sort(), [...allowedStates].sort(), `${gate.id}: allowed_states`);
   }
 
-  assert.equal(vendorLocks.vendor.tree.files.length, 55);
-  assert.deepEqual(await verifyDiagramSkillVendor({ root: path.join(repoRoot, "shared/vendor/skillstead"), name: "skillstead" }), { name: "skillstead", tag: "svg-infographic/v0.9.0", verifiedFiles: 55 });
+  // The closure has to verify completely; how many files an upstream release happens to contain is the
+  // release's business, so it comes from the lock rather than from a number typed here.
+  const skillsteadFiles = vendorLocks.vendor.tree.files.length;
+  assert.ok(skillsteadFiles > 0);
+  assert.deepEqual(await verifyDiagramSkillVendor({ root: path.join(repoRoot, "shared/vendor/skillstead"), name: "skillstead" }), { name: "skillstead", tag: vendorTag("skillstead"), verifiedFiles: skillsteadFiles });
   assert.equal(typeof buildProduct, "function");
   assert.equal(typeof loadProductContract, "function");
   assert.equal(typeof validateProductContract, "function");
