@@ -4,9 +4,10 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { relocateModuleImports } from "../../lib/relocated-module-source.mjs";
+
 const root = fileURLToPath(new URL("../../..", import.meta.url));
 const storePath = path.join(root, "shared/scripts/lib/safe-memory-store.mjs");
-const validatorUrl = pathToFileURL(path.join(root, "shared/scripts/validate-design-memory.mjs")).href;
 const testPath = path.join(root, "tests/unit/design-memory-store.test.mjs");
 const MAX_OUTPUT_BYTES = 4 * 1024 * 1024;
 // The selected test is itself a `node --test` run, so this budget has to absorb the contention of
@@ -88,7 +89,7 @@ async function runTest(moduleUrl, mutationName, mutation, selectedTestPath) {
 
 async function tamperedTest(temporaryRoot, mutation, tamper) {
   if (!tamper || tamper === "missing-anchor" || tamper === "duplicate-anchor") return testPath;
-  let source = await readFile(testPath, "utf8"); source = replaceExact(source, '"../../shared/scripts/validate-design-memory.mjs"', JSON.stringify(validatorUrl));
+  let source = relocateModuleImports(await readFile(testPath, "utf8"), path.dirname(testPath));
   if (tamper === "unrelated-leading-failure") source = replaceExact(source, mutation.testAnchor, `assert.fail("UNRELATED-GENERIC-ASSERT");\n  ${mutation.testAnchor}`);
   else if (tamper === "unrelated-helper-assertion") source = replaceExact(source, "try { assert.deepEqual(actual, expected, sentinel); }", 'try { assert.fail("UNRELATED-IN-HELPER"); }');
   else if (tamper === "helper-type-error") source = replaceExact(source, "try { assert.deepEqual(actual, expected, sentinel); }", "try { undefined.missing(); }");
@@ -107,7 +108,7 @@ if (!mutation || tamperArgument && !tamper) { process.stderr.write('{"code":"mem
 else {
   const temporaryRoot = await mkdtemp(path.join(tmpdir(), "memory-store-mutation-")); let stage = "read-source"; let observed;
   try {
-    const source = await readFile(storePath, "utf8"); stage = "rewrite-import"; let imported = replaceExact(source, '"../validate-design-memory.mjs"', JSON.stringify(validatorUrl)); stage = "apply-mutation";
+    const source = await readFile(storePath, "utf8"); stage = "rewrite-import"; let imported = relocateModuleImports(source, path.dirname(storePath)); stage = "apply-mutation";
     if (tamper === "missing-anchor") imported = replaceExact(imported, mutation.primaryAnchor, mutation.primaryAnchor.slice(1));
     if (tamper === "duplicate-anchor") imported = `${imported}\n/* ${mutation.primaryAnchor} */\n`;
     const mutated = mutation.apply(imported); const temporaryModule = path.join(temporaryRoot, "safe-memory-store.mjs"); await writeFile(temporaryModule, mutated); const selectedTestPath = await tamperedTest(temporaryRoot, mutation, tamper);

@@ -17,16 +17,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Linux only, deliberately. The Windows offline lane was built, run, and read: it reports 272 failing
-  # assertions, and they are not one problem. Two are defects in shipped code — load-workspace-env refuses
-  # outright because Node does not define O_NOFOLLOW on Windows, and safe-memory-store fsyncs a directory,
-  # which Windows returns EPERM for. Porting those means redesigning two hardening primitives, which is its
-  # own piece of work with its own decisions to make, not a fix to fold into a CI change. The rest are POSIX
-  # assumptions in the tests and tooling themselves: hardcoded /bin/sh and /tmp, path joins that produce a
-  # doubled drive letter, a chmod-based assertion that cannot mean anything where chmod is a no-op. What
-  # actually has to hold on Windows is that a Windows checkout and install produce the same bytes as every
-  # other platform, and the install gate below proves exactly that, on Windows, every run. See
-  # architecture/plugin-suite.md for the full finding list and what is owed.
+  # Linux only, deliberately. The Windows offline lane was built, run, and read: it reported 272 failing
+  # assertions, and they were not one problem. The two defects in shipped code are fixed — the no-follow
+  # flag and the directory fsync now go through shared/scripts/lib/platform-file-hardening.mjs, which names
+  # win32 as the one platform exempt from each and keeps every other host failing closed. What remains are
+  # POSIX assumptions in the tests and tooling themselves: hardcoded /bin/sh and /tmp, path joins that
+  # produce a doubled drive letter, a chmod-based assertion that cannot mean anything where chmod is a
+  # no-op. Until those are cleaned up the lane cannot run here, so the two fixed paths are proven by
+  # driving the real primitive with Windows inputs on a POSIX host rather than by running on Windows.
+  # What actually has to hold on Windows is that a Windows checkout and install produce the same bytes as
+  # every other platform, and the install gate below proves exactly that, on Windows, every run. See
+  # architecture/plugin-suite.md for the full finding list and what is still owed.
   offline-gate:
     name: Offline gate (${{ matrix.shard }}, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}

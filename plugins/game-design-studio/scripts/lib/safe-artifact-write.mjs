@@ -2,6 +2,7 @@ import { constants } from "node:fs";
 import { link, lstat, mkdir, open, realpath, rename, unlink } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
+import { noFollowOpenFlag } from "./platform-file-hardening.mjs";
 
 function unsafePath() {
   throw new Error("Unsafe artifact write path.");
@@ -109,7 +110,7 @@ export async function safeWriteArtifactFile({ artifactRoot: rootValue, relativeP
   let temporaryStats;
   try {
     await assertIdentities(parent.identities);
-    handle = await open(temporary, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW ?? 0), mode);
+    handle = await open(temporary, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | noFollowOpenFlag(), mode);
     await handle.writeFile(bytes);
     await handle.sync();
     temporaryStats = await handle.stat();

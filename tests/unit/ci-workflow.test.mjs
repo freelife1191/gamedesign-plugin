@@ -69,11 +69,16 @@ test("the offline lane is scoped to Linux on purpose, and says why in the file",
   assert.deepEqual(
     matrixAxis(workflow, "offline-gate", "os"),
     ["ubuntu-latest"],
-    "adding Windows back here is a real decision: the suite has known Windows failures, two of them in "
-      + "shipped code, so a runner added without fixing them turns this lane permanently red",
+    "adding Windows back here is a real decision: the two shipped defects are fixed, but the tests and "
+      + "tooling still carry POSIX assumptions, so a runner added before those turns this lane permanently red",
   );
   // A scoping decision with no reason attached is indistinguishable from an accident six months later.
-  assert.match(workflow, /O_NOFOLLOW/u, "the file must name the shipped defect that keeps Windows out of this lane");
+  assert.match(workflow, /POSIX assumptions in the tests and tooling/u, "the file must name what still keeps Windows out of this lane");
+  assert.match(
+    workflow,
+    /platform-file-hardening\.mjs/u,
+    "and must say where the two shipped defects were resolved, so the stale reason is not carried forward",
+  );
   assert.match(workflow, /architecture\/plugin-suite\.md/u, "and must point at where the full finding list lives");
 });
 

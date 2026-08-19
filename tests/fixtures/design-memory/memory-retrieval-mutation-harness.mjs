@@ -4,6 +4,8 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { relocateModuleImports } from "../../lib/relocated-module-source.mjs";
+
 const root = fileURLToPath(new URL("../../..", import.meta.url));
 const retrievalPath = path.join(root, "shared/scripts/retrieve-design-memory.mjs");
 const evaluatorPath = path.join(root, "shared/scripts/lib/memory-schema-evaluator.mjs");
@@ -126,7 +128,11 @@ else {
       if (tamper === "duplicate-anchor") source = `${source}\n/* ${mutation.anchor} */\n`;
       source = replaceExact(source, mutation.anchor, mutation.replacement);
     }
-    if (mutation.target === "retrieval") source = source.replace('"./lib/safe-memory-store.mjs"', JSON.stringify(new URL("../../../shared/scripts/lib/safe-memory-store.mjs", import.meta.url).href)).replace('"./lib/memory-schema-evaluator.mjs"', JSON.stringify(new URL("../../../shared/scripts/lib/memory-schema-evaluator.mjs", import.meta.url).href)).replace('"./validate-design-memory.mjs"', JSON.stringify(new URL("../../../shared/scripts/validate-design-memory.mjs", import.meta.url).href));
+    // The retrieval copy runs out of a temp directory, so every relative import it declares has to be
+    // re-anchored at the module's real home. The evaluator copy keeps its relative layout instead —
+    // it is staged under scripts/lib/ beside a staged memory/schema/, which is what its own relative
+    // schema reads resolve against — so it is deliberately left alone here.
+    if (mutation.target === "retrieval") source = relocateModuleImports(source, path.dirname(retrievalPath));
     let modulePath = path.join(temporary, `${mutationId}.mjs`);
     if (mutation.target === "evaluator") { modulePath = path.join(temporary, "scripts", "lib", `${mutationId}.mjs`); const schemaDirectory = path.join(temporary, "memory", "schema"); await mkdir(path.dirname(modulePath), { recursive: true }); await mkdir(schemaDirectory, { recursive: true }); for (const name of ["memory-index.schema.json", "memory-receipt.schema.json"]) await writeFile(path.join(schemaDirectory, name), await readFile(path.join(root, "shared", "memory", "schema", name))); }
     await writeFile(modulePath, source);

@@ -4,6 +4,7 @@ import { lstat, open, realpath } from "node:fs/promises";
 import path from "node:path";
 
 import { parseRestrictedYaml } from "./validate-artifact.mjs";
+import { noFollowOpenFlag } from "./lib/platform-file-hardening.mjs";
 
 export const MEMORY_KINDS = Object.freeze(["project-fact", "decision", "design-lesson", "style-preference", "career-lesson", "external-note"]);
 export const MEMORY_STATUSES = Object.freeze(["candidate", "verified", "approved", "expired", "rejected", "disputed", "superseded", "stale"]);
@@ -282,8 +283,7 @@ export async function observeMemorySourceBindings(record, { workspaceRoot, befor
       for (const segment of segments.slice(0, -1)) { current = path.join(current, segment); const stats = await regularDirectory(current); if (await realpath(current) !== current) { status = "symlink"; throw new Error(); } identities.push({ path: current, stats }); }
       current = path.join(current, segments.at(-1));
       const stats = await lstat(current); if (stats.isSymbolicLink()) { status = "symlink"; throw new Error(); } if (!stats.isFile()) throw new Error();
-      if (!constants.O_NOFOLLOW) throw new Error();
-      const handle = await open(current, constants.O_RDONLY | constants.O_NOFOLLOW); let bytes; let opened; try { opened = await handle.stat(); if (!sameIdentity(opened, stats) || !opened.isFile() || opened.size > 256 * 1024) throw new Error(); bytes = await handle.readFile(); const after = await handle.stat(); if (!sameFileState(after, opened) || bytes.byteLength !== opened.size) throw new Error(); } finally { await handle.close(); }
+      const handle = await open(current, constants.O_RDONLY | noFollowOpenFlag()); let bytes; let opened; try { opened = await handle.stat(); if (!sameIdentity(opened, stats) || !opened.isFile() || opened.size > 256 * 1024) throw new Error(); bytes = await handle.readFile(); const after = await handle.stat(); if (!sameFileState(after, opened) || bytes.byteLength !== opened.size) throw new Error(); } finally { await handle.close(); }
       if (typeof beforeFinalRecheck === "function") await beforeFinalRecheck({ locator: filePart });
       const final = await lstat(current); if (final.isSymbolicLink() || !final.isFile() || !sameFileState(final, opened)) throw new Error();
       for (const identity of identities) { const currentStats = await regularDirectory(identity.path); if (!sameIdentity(currentStats, identity.stats) || await realpath(identity.path) !== identity.path) throw new Error(); }

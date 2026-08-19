@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { homedir } from "node:os";
 import { pathToFileURL } from "node:url";
 
 import { verifyMaintenanceHumanReceipt } from "./lib/design-memory-capabilities.mjs";
@@ -16,7 +17,7 @@ function byteCompare(left, right) { return Buffer.compare(Buffer.from(left, "utf
 function sameIds(left, right) { return left.length === right.length && left.every((value, index) => value === right[index]); }
 function heads(events) { const used = new Set(events.flatMap((item) => item.event.parent_event_ids)); return events.filter((item) => !used.has(item.eventId)).sort((left, right) => byteCompare(left.eventId, right.eventId)); }
 function update(record, status, time, actor = null, basis = null) { return { ...record, status, updated_at: time, approved_by: status === "approved" ? actor : record.approved_by, approval_basis: status === "approved" ? basis : record.approval_basis }; }
-async function storeFor(workspaceRoot, config, initialize) { return resolveMemoryStore({ workspaceRoot, config, platform: process.platform, home: process.env.HOME ?? workspaceRoot, initialize }); }
+async function storeFor(workspaceRoot, config, initialize) { return resolveMemoryStore({ workspaceRoot, config, platform: process.platform, home: homedir() || workspaceRoot, initialize }); }
 async function scanned(store) { const scan = await scanMemoryEvents({ store }); if (!scan.complete) fail("memory.scan_incomplete"); return scan; }
 function authorityFor({ config, action, memoryId, actor, reason, observedParentEventIds, chosenParentEventId, now, humanReceipt }) {
   const authority = verifyMaintenanceHumanReceipt(humanReceipt, { projectId: config?.projectId, scope: config?.scope, action, ...(memoryId === undefined ? {} : { memoryId }), actor, reason, observedParentEventIds, ...(chosenParentEventId === undefined ? {} : { chosenParentEventId }), now });

@@ -14,6 +14,7 @@ import {
   evaluateUpdateAdvisory,
   tagIsPrerelease,
 } from "./lib/update-advisory.mjs";
+import { noFollowOpenFlag } from "./lib/platform-file-hardening.mjs";
 
 const CACHE_FILE = "update-advisory-v1.json";
 const CACHE_DIRECTORY = "game-design-suite";
@@ -228,7 +229,7 @@ async function readRegularJson(cachePath, fsOps) {
   if (!before.isFile() || before.isSymbolicLink() || before.nlink !== 1) return { state: "unsafe" };
   let handle;
   try {
-    handle = await fsOps.open(cachePath, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
+    handle = await fsOps.open(cachePath, constants.O_RDONLY | noFollowOpenFlag());
     const opened = await handle.stat();
     if (!opened.isFile() || opened.nlink !== 1 || !sameFile(before, opened) || opened.size > 1024 * 1024) return { state: "invalid" };
     const text = await handle.readFile({ encoding: "utf8" });
@@ -279,7 +280,7 @@ async function inspectOwnedLockFile(lockPath, fsOps, linkCounts) {
   try {
     entry = await fsOps.lstat(lockPath);
     if (!entry.isFile() || entry.isSymbolicLink() || !linkCounts.includes(entry.nlink) || entry.size > 1024 * 1024) return null;
-    handle = await fsOps.open(lockPath, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
+    handle = await fsOps.open(lockPath, constants.O_RDONLY | noFollowOpenFlag());
     const opened = await handle.stat();
     if (!opened.isFile() || !linkCounts.includes(opened.nlink) || !sameFile(entry, opened) || opened.size > 1024 * 1024) return null;
     const metadata = JSON.parse(await handle.readFile({ encoding: "utf8" }));
@@ -384,7 +385,7 @@ async function inspectRecoveryRecord(recordPath, fsOps, validation) {
   try {
     entry = await fsOps.lstat(recordPath);
     if (!entry.isFile() || entry.isSymbolicLink() || ![1, 2].includes(entry.nlink) || entry.size > 1024 * 1024) return null;
-    handle = await fsOps.open(recordPath, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
+    handle = await fsOps.open(recordPath, constants.O_RDONLY | noFollowOpenFlag());
     const opened = await handle.stat();
     if (!opened.isFile() || ![1, 2].includes(opened.nlink) || !sameFile(entry, opened) || opened.size > 1024 * 1024) return null;
     const value = JSON.parse(await handle.readFile({ encoding: "utf8" }));
@@ -405,7 +406,7 @@ async function writeAppendOnlyRecoveryRecord(recordPath, record, fsOps) {
   let entry;
   let published = false;
   try {
-    handle = await fsOps.open(stagingPath, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW ?? 0), 0o600);
+    handle = await fsOps.open(stagingPath, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | noFollowOpenFlag(), 0o600);
     entry = await handle.stat();
     if (!entry.isFile() || entry.nlink !== 1) throw new Error("unsafe recovery staging record");
     await handle.writeFile(`${JSON.stringify(record)}\n`, { encoding: "utf8" });
@@ -620,7 +621,7 @@ async function createOwnedLock(lockPath, fsOps) {
   let handle;
   let published = false;
   try {
-    handle = await fsOps.open(ownerAnchor, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW ?? 0), 0o600);
+    handle = await fsOps.open(ownerAnchor, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | noFollowOpenFlag(), 0o600);
     entry = await handle.stat();
     if (!entry.isFile() || entry.nlink !== 1) throw new Error("unsafe staging lock");
     await handle.writeFile(`${JSON.stringify({ schemaVersion: 1, owner, createdAt })}\n`, { encoding: "utf8" });
@@ -790,7 +791,7 @@ async function publishCache({ cachePath, record, fsOps }) {
   const temporaryPath = `${cachePath}.${process.pid}.${Date.now()}.${Math.random().toString(16).slice(2)}.tmp`;
   let handle;
   try {
-    handle = await fsOps.open(temporaryPath, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW ?? 0), 0o600);
+    handle = await fsOps.open(temporaryPath, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | noFollowOpenFlag(), 0o600);
     await handle.writeFile(`${JSON.stringify(record)}\n`, { encoding: "utf8" });
     await handle.sync();
     await handle.close();

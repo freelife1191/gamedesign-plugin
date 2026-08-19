@@ -203,11 +203,33 @@ Windows 오프라인 레인은 만들어 돌려 보고 결과를 읽은 뒤 의�
 
 | 부류 | 실패 수 | 내용 |
 | --- | --- | --- |
-| 출하 코드 결함 | 77 | `shared/scripts/lib/load-workspace-env.mjs`는 `O_NOFOLLOW`가 정수가 아니면 즉시 거부하는데 Node는 Windows에서 이 상수를 정의하지 않습니다(21건). `shared/scripts/lib/safe-memory-store.mjs`의 `syncDirectory`는 디렉터리를 열어 `fsync`하며 Windows는 `EPERM`을 돌려줍니다(56건). |
+| 출하 코드 결함 | 77 → 0 | `shared/scripts/lib/load-workspace-env.mjs`는 `O_NOFOLLOW`가 정수가 아니면 즉시 거부했고, Node는 Windows에서 이 상수를 정의하지 않습니다(21건). `shared/scripts/lib/safe-memory-store.mjs`의 `syncDirectory`는 디렉터리를 열어 `fsync`했고 Windows는 `EPERM`을 돌려줍니다(56건). 둘 다 아래 «플랫폼 파일 하드닝»에서 해소했습니다. |
 | 테스트·도구의 POSIX 가정 | 약 65 | `/bin/sh`와 `/tmp` 하드코딩, 드라이브 문자가 겹쳐 `D:\D:\...`가 되는 경로 결합, `chmod`가 무의미한 곳에서 mode 비트 변화를 기대하는 단정, `0600` 가정. |
 | 위 둘의 파급 | 나머지 | 앞의 실패가 만든 상태를 뒤 단정이 다시 읽으며 생긴 연쇄. |
 
-첫 부류는 두 하드닝 원시 함수를 Windows에서 성립하는 형태로 재설계해야 하고, `O_NOFOLLOW`에 대응하는 플래그를 Node가 노출하지 않으므로 `lstat` 후 열고 identity를 재확인하는 방식으로 바꿔야 합니다. 이는 자체 설계 판단이 필요한 별도 작업입니다. **design memory와 image config는 그때까지 Windows에서 동작하지 않습니다.**
+첫 부류는 해소되었습니다. 남은 둘째·셋째 부류는 테스트와 도구의 POSIX 가정이므로 Windows 오프라인 레인은 여전히 빠져 있습니다.
+
+#### 플랫폼 파일 하드닝
+
+`shared/scripts/lib/platform-file-hardening.mjs`가 플랫폼별 판단을 하는 유일한 자리입니다. 이전에는 같은 질문에 두 가지 잘못된 답이 있었습니다. `load-workspace-env`는 상수가 없으면 실행 자체를 거부했고, 나머지 출하 모듈들은 `constants.O_NOFOLLOW ?? 0`이나 맨 상수를 그대로 썼습니다. 후자는 Windows에서 `flags | undefined`가 조용히 `flags`가 되므로 실패하지 않고 보증만 사라집니다 — 어느 플랫폼에서도 아무 말을 하지 않는 열화입니다.
+
+| 보증 | POSIX | Windows | Windows에서 대신 성립하는 것 |
+| --- | --- | --- | --- |
+| `O_NOFOLLOW` | 상수 그대로 | `0` | 여는 쪽이 이미 수행하는 `lstat` → open → identity 재확인 |
+| 디렉터리 `fsync` | 필수, 실패는 실패 | 건너뜀 | NTFS가 `$LogFile`에 메타데이터 연산을 저널링하고 마운트 시 재생 |
+| `Stats.mode` 권한 비트 | POSIX 권한 그대로 | 읽기 전용 속성으로 합성된 값 | 없음 — 검사를 하지 않습니다 |
+
+두 예외는 모두 **허용목록**입니다. 상수를 정의해야 마땅한 POSIX 호스트에서 상수가 없으면 예전처럼 즉시 실패합니다. `win32`만 면제됩니다.
+
+`O_NOFOLLOW`가 하는 일은 마지막 경로 구성 요소가 심링크일 때 `open`을 실패시키는 것 하나뿐이고, Node는 Windows에서 대응 플래그를 노출하지 않습니다(`FILE_FLAG_OPEN_REPARSE_POINT`는 `fs.open`에서 닿을 수 없습니다). 이 스위트의 모든 open은 앞의 `lstat`과 뒤의 `handle.stat()` ↔ 재`lstat` 대조로 감싸여 있습니다. 심링크로 바뀐 경로는 두 번째 `lstat`이 심링크라고 보고해서 걸리고, 다른 정규 파일로 바뀐 경로는 dev/ino 대조로 걸립니다 — POSIX에서도 `O_NOFOLLOW`가 막아 준 적 없는 경우입니다. 둘 다 호출자가 한 바이트를 읽기 전에 돌아갑니다. 그래서 Windows가 잃는 것은 탐지가 아니라 원자성입니다. 바꿔치기된 심링크는 열리지 않는 대신 열렸다가 거부되고, 공격자가 지정한 대상의 바이트는 호출자에게 도달하지 않습니다. 남는 잔여 위험은 공격자가 고른 경로에 대한 일시적 핸들이며, 그래서 이것이 일반적 완화가 아니라 이름 붙은 한 플랫폼의 면제입니다.
+
+디렉터리 `fsync`는 POSIX에서 rename이나 link를 내구화하는 수단입니다. Windows에는 사용자 모드 대응물이 없습니다. `fs.open`은 디렉터리 핸들을 돌려주지 못하고, 볼륨 핸들에 대한 `FlushFileBuffers`는 관리자 권한을 요구합니다. 이를 시도하는 것이 `EPERM`이고 design memory store를 Windows에서 무너뜨린 원인입니다. 건너뛴다고 보증이 사라지지는 않고 제공자가 바뀝니다. 커밋된 바이트는 디렉터리 항목이 생기기 전에 이미 내구화되어 있습니다 — 호출자가 claim 파일 자체를 `fsync`한 뒤에야 link로 제자리에 넣습니다.
+
+`Stats.mode`는 Windows에서 읽기 전용 속성 하나로 합성됩니다. ACL이 무엇이든 읽을 수 있는 파일은 같은 mode를 보고하므로, group·other 비트를 검사하는 것은 그 숫자가 답할 수 없는 질문을 묻는 일입니다. 모든 파일에서 켜지고, 사용자가 취할 수 있는 조치도 없습니다 — `chmod`는 무의미하고 Node는 ACL API를 노출하지 않습니다. 그래서 추측하는 대신 검사를 포기합니다. **Windows 사용자는 `.env` 권한 경고를 아예 받지 않습니다.** 대안은 나타날 때마다 틀린 경고였습니다.
+
+같은 계열의 세 번째 결함도 함께 고쳤습니다. design memory 진입점 셋은 `process.env.HOME`을 읽었는데 Windows는 이 변수를 정의하지 않습니다. `resolveMemoryStore`에는 `win32: ["AppData", "Local"]` 분기가 이미 있었지만 home이 workspace로 대체되면서 global scope 저장소가 엉뚱한 자리에 만들어졌습니다. 이제 셋 다 `os.homedir()`를 씁니다 — POSIX에서는 `$HOME`을, Windows에서는 `%USERPROFILE%`을 읽으므로 기존 동작의 상위집합입니다. 이 저장소의 다른 모듈들이 이미 쓰던 방식이고, `process.env.HOME`이 예외였습니다.
+
+검증은 POSIX 호스트에서 실제 원시 함수를 Windows 입력으로 구동하고 그 결과를 실제 소비자에게 물려서 합니다. `tests/unit/platform-file-hardening.test.mjs`는 `noFollowOpenFlag`가 `0`을 돌려주고 `syncDirectory`가 아무것도 열지 않는 상태로 `load-workspace-env`와 `safe-memory-store`를 재배치해 실행합니다. dotenv는 그대로 읽히고 심링크는 그대로 거부되며, 봉인된 memory event는 커밋되고 스토어 자신의 identity 고정 리더로 되읽힙니다. 원시 함수를 우회해 맨 상수를 쓰는 출하 모듈이 하나라도 생기면 같은 파일의 소스 게이트가 잡습니다. **다만 이는 Windows 형태의 입력이지 Windows 실행은 아닙니다.** 두 경로의 Windows 실기 검증은 나머지 두 부류가 정리되어 오프라인 레인이 Windows에서 돌 수 있게 될 때까지 남은 빚입니다.
 
 Windows에서 실제로 성립해야 하는 계약은 Windows checkout과 설치가 다른 플랫폼과 같은 바이트를 만든다는 것이고, 이는 설치 게이트가 매 실행마다 Windows에서 직접 증명합니다.
 

@@ -2,6 +2,8 @@ import { constants } from "node:fs";
 import { lstat, open } from "node:fs/promises";
 import path from "node:path";
 
+import { noFollowOpenFlag, posixPermissionBitsMeaningful } from "./platform-file-hardening.mjs";
+
 const maximumEnvBytes = 64 * 1024;
 const environmentKeyPattern = /^[A-Za-z_][A-Za-z0-9_]*$/u;
 const safeEnvValuePattern = /^[\t ]*[A-Za-z0-9._:-]*[\t ]*$/u;
@@ -118,11 +120,15 @@ export async function readWorkspaceEnv({
   lstatFn = lstat,
   openFileFn = open,
   readFileFn,
+  platform = process.platform,
 } = {}) {
   validateKeys(supportedKeys, "supportedKeys");
   validateKeys(legacyKeys, "legacyKeys");
   validateAdapters({ lstatFn, openFileFn, readFileFn });
-  if (!Number.isInteger(constants.O_NOFOLLOW)) throw new Error("Secure no-follow file opening is unavailable.");
+  // Resolved before anything is opened so a host that cannot supply the guarantee fails before it
+  // touches the workspace. On Windows the flag resolves to zero and the identity re-verification below
+  // is what holds; see platform-file-hardening.mjs for why that is sound and what it costs.
+  const noFollow = noFollowOpenFlag({ platform });
 
   const supportedKeySet = new Set(supportedKeys);
   const legacyKeySet = new Set(legacyKeys);
@@ -140,7 +146,7 @@ export async function readWorkspaceEnv({
     if (envStats.isSymbolicLink()) throw new Error("Workspace .env symlinks are not allowed.");
     if (!envStats.isFile()) throw new Error("Workspace .env must be a regular file.");
     if (envStats.size > maximumEnvBytes) throw new Error("Workspace .env is too large.");
-    if ((envStats.mode & 0o044) !== 0) {
+    if (posixPermissionBitsMeaningful(platform) && (envStats.mode & 0o044) !== 0) {
       warnings.push({
         code: "insecure_permissions",
         path: ".env",
@@ -150,7 +156,7 @@ export async function readWorkspaceEnv({
 
     let handle;
     try {
-      handle = await openFileFn(envPath, constants.O_RDONLY | constants.O_NOFOLLOW);
+      handle = await openFileFn(envPath, constants.O_RDONLY | noFollow);
       if (handle === null || typeof handle !== "object" || typeof handle.stat !== "function"
         || typeof handle.read !== "function" || typeof handle.close !== "function") {
         throw new Error("Invalid workspace environment file handle.");

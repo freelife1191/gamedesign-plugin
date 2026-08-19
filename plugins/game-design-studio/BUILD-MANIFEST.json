@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "551a9de24235cefb9ce51db75e29991cb189eb3c543f551bfb5c88563c9e5fb5",
+  "treeSha256": "8ba9e858565efac345d4ec0c204d58b50437349910df9788ed6de80b9a521048",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -1591,18 +1591,18 @@
     },
     {
       "path": "scripts/capability-probe.mjs",
-      "sha256": "6afeded93a2371f14e284482ce74d6d70dedaac37fa4ce54c99568c51a1a9064",
-      "size": 20525
+      "sha256": "d3a21a17cf5d3ba65817415ca2226d7f1da1de3d8a0cb5ceb06c27f799779caf",
+      "size": 20593
     },
     {
       "path": "scripts/capture-design-memory.mjs",
-      "sha256": "92f1dfa9df033e252d15afa8bc78c720d0381cde8b197f893a303cf58c51085e",
-      "size": 8250
+      "sha256": "99bf873782abd7c9604e49cd11364b5e6b38c10eabe237db5a10048edf7be8d8",
+      "size": 8278
     },
     {
       "path": "scripts/check-game-design-updates.mjs",
-      "sha256": "397d331d61b740a47079a61352a2a75da25bafcdb8cb2f6839d80959267ddd5a",
-      "size": 47421
+      "sha256": "07b0e2de638dacd3952df07f10e04c0cba895908e7f6e0a71ab53614061e5fbf",
+      "size": 47437
     },
     {
       "path": "scripts/compile-image-prompts.mjs",
@@ -1671,18 +1671,23 @@
     },
     {
       "path": "scripts/lib/image-reference-loader.mjs",
-      "sha256": "6e4c98ddd04128b8bc0fb2aefcd683d744a3df264213442e67db1ce32fbca3cb",
-      "size": 7420
+      "sha256": "6d437d2da788f95dc66e5c4fcb782458fe6ec39c10bead8f68a07d420d7bd4ba",
+      "size": 7482
     },
     {
       "path": "scripts/lib/load-workspace-env.mjs",
-      "sha256": "94dfc8d3156ef6f106903471207a91785f1dfd10efa979f2d421823e23e2d7d4",
-      "size": 8054
+      "sha256": "6cd54cb599c56d8a8604042564bea6cb75060e84af1247fe4bf63f59b3203e88",
+      "size": 8448
     },
     {
       "path": "scripts/lib/memory-schema-evaluator.mjs",
       "sha256": "6dfb89f282d4a5258a23b87fcf529cb3055df7604c435aeb9b97f01299b52734",
       "size": 6755
+    },
+    {
+      "path": "scripts/lib/platform-file-hardening.mjs",
+      "sha256": "3a0536e331a1a9cdd6ccaab238916ce732412455854bfe8bb67a7b8db3dbefd9",
+      "size": 4636
     },
     {
       "path": "scripts/lib/reference-analysis-derivations.mjs",
@@ -1716,13 +1721,13 @@
     },
     {
       "path": "scripts/lib/safe-artifact-write.mjs",
-      "sha256": "a9f45996403c2366c9efde31c94d880d043776a92ded0d5e19da2875814a3443",
-      "size": 6057
+      "sha256": "162f3be1bbe9294d2e40f1398b200fed869d7958cb5029c105ebcd69ba2c1a2f",
+      "size": 6114
     },
     {
       "path": "scripts/lib/safe-memory-store.mjs",
-      "sha256": "08f0d33dbbbd73da4ad8dad6f71f948cc00e1564074be7d604973a2afc38f3bc",
-      "size": 40421
+      "sha256": "1dc9a44edbf4ff5addad403bcea55224a302778244a122cdcba2194a09f7c844",
+      "size": 40253
     },
     {
       "path": "scripts/lib/skillstead-svg-evidence.mjs",
@@ -1746,8 +1751,8 @@
     },
     {
       "path": "scripts/maintain-design-memory.mjs",
-      "sha256": "f114b6f98b9629bd8c9fdaacbd1e3c2427dae29b1ae7dfcd96301a28a767995c",
-      "size": 13282
+      "sha256": "d1c4b6935bd298179b9df15c3edeff1a8e2646f7812fc3919ca18f3604817a56",
+      "size": 13310
     },
     {
       "path": "scripts/manage-game-design-glossary.mjs",
@@ -1766,13 +1771,13 @@
     },
     {
       "path": "scripts/resolve-quality-profile.mjs",
-      "sha256": "0e8490f621378ac6057ed310aba51b6d22f18c979b6cf5873f7d80f2f96f2614",
-      "size": 72021
+      "sha256": "55a0f6c78af0ad5b7d7eec8da908976c25dc13f17aaa4eec52075032cfe421e4",
+      "size": 72089
     },
     {
       "path": "scripts/retrieve-design-memory.mjs",
-      "sha256": "24ee84698d985446175a93fabdc90ec13ab3ff1b73b26125c3b3a72b8a6b2743",
-      "size": 49463
+      "sha256": "efed3a6ff06bde735832cc96c317b2d743d6cde05676ce07118ab4ba2c0e12f9",
+      "size": 49543
     },
     {
       "path": "scripts/review-cutscene-continuity.mjs",
@@ -1811,8 +1816,8 @@
     },
     {
       "path": "scripts/validate-design-memory.mjs",
-      "sha256": "5055806760cc4af8eed7cf188763b5ee8509097aade04651d09799913d687159",
-      "size": 33458
+      "sha256": "8dded0c4421d55d6eaf85bc386f82765e06788f87bc99149c27d45b6b0771166",
+      "size": 33474
     },
     {
       "path": "scripts/validate-game-design-writing-language.mjs",

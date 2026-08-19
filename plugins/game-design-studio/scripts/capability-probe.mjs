@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 
 import { checkGameDesignUpdates } from './check-game-design-updates.mjs';
 import { loadImageConfig, toPublicImageConfig } from './validate-image-config.mjs';
+import { noFollowOpenFlag } from './lib/platform-file-hardening.mjs';
 
 const MAX_STDIN_BYTES = 64 * 1024;
 const MAX_PATH_ENTRIES = 64;
@@ -414,7 +415,7 @@ export async function resolveArchifyInstallation(env = process.env, options = {}
   let canonical;
   let failure;
   try {
-    handle = await openFn(result.cliPath, constants.O_RDONLY | constants.O_NOFOLLOW);
+    handle = await openFn(result.cliPath, constants.O_RDONLY | noFollowOpenFlag());
     beforeStats = await handle.stat({ bigint: true });
     bytes = await handle.readFile();
     afterStats = await handle.stat({ bigint: true });

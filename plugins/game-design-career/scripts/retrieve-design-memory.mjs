@@ -1,11 +1,13 @@
 import { createHash, randomUUID } from "node:crypto";
 import { constants } from "node:fs";
 import { lstat, mkdir, open, opendir, realpath } from "node:fs/promises";
+import { homedir } from "node:os";
 import path from "node:path";
 
 import { readCommittedMemoryEvent, resolveMemoryStore, scanMemoryEvents, foldMemoryEvents } from "./lib/safe-memory-store.mjs";
 import { validateMemoryIndexSchema, validateMemoryReceiptSchema } from "./lib/memory-schema-evaluator.mjs";
 import { observeMemorySourceBindings } from "./validate-design-memory.mjs";
+import { noFollowOpenFlag } from "./lib/platform-file-hardening.mjs";
 
 const HARD_LIMITS = Object.freeze({ maxDirectoryEntries: 256, maxCensusEntries: 100000, maxIdentityInstances: 256, maxGenerationReservations: 10000, maxIndexBytes: 1024 * 1024, maxReceiptBytes: 256 * 1024, maxViewBytes: 1024 * 1024, maxLogBytes: 1024 * 1024, maxIndexEntries: 10000, maxReceiptObservationItems: 256, maxReceiptAppliedItems: 256, maxReceiptExcludedItems: 256 });
 const RESULT_MAX_BYTES = 64 * 1024;
@@ -79,7 +81,7 @@ async function ensureDirectories(root, relative) {
 async function readBounded(candidate, maxBytes) {
   const before = await lstat(candidate);
   if (before.isSymbolicLink() || !before.isFile() || before.size > maxBytes) return { ok: false, code: before.size > maxBytes ? "memory.derived_generation_oversize" : "memory.derived_generation_invalid" };
-  const handle = await open(candidate, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
+  const handle = await open(candidate, constants.O_RDONLY | noFollowOpenFlag());
   try {
     const opened = await handle.stat();
     if (!opened.isFile() || opened.dev !== before.dev || opened.ino !== before.ino || opened.size > maxBytes) return { ok: false, code: "memory.derived_generation_invalid" };
@@ -235,7 +237,7 @@ async function reservationValid(candidate, expected) {
   try { const value = JSON.parse(utf8.decode(read.bytes)); return read.bytes.equals(reservationBytes(expected)) && validReservation(value, expected); } catch { return false; }
 }
 async function writeExclusive(candidate, bytes) {
-  const handle = await open(candidate, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW ?? 0), 0o600);
+  const handle = await open(candidate, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | noFollowOpenFlag(), 0o600);
   try { await handle.writeFile(bytes); await handle.sync(); } finally { await handle.close(); }
 }
 async function reserveSlot(directory, max, width, make) {
@@ -399,7 +401,7 @@ export function rankMemoryEntries(entries, requestContext = {}) {
 export async function rebuildMemoryIndex({ workspaceRoot, config, now } = {}) {
   if (!config?.enabled) return { complete: true, status: "disabled", index: null, bytes: null, sourceTreeSha256: null, indexSha256: null, warnings: [] };
   let store;
-  try { store = await resolveMemoryStore({ workspaceRoot, config, platform: process.platform, home: process.env.HOME ?? workspaceRoot }); } catch { return { complete: false, index: null, bytes: null, sourceTreeSha256: null, indexSha256: null, warnings: [warning("memory.store_unavailable")] }; }
+  try { store = await resolveMemoryStore({ workspaceRoot, config, platform: process.platform, home: homedir() || workspaceRoot }); } catch { return { complete: false, index: null, bytes: null, sourceTreeSha256: null, indexSha256: null, warnings: [warning("memory.store_unavailable")] }; }
   const scan = await scanMemoryEvents({ store }); if (!scan.complete) return { complete: false, index: null, bytes: null, sourceTreeSha256: null, indexSha256: null, warnings: [warning("memory.scan_incomplete"), ...scan.diagnostics] };
   const fold = foldMemoryEvents(scan, { now }); if (!fold.complete) return { complete: false, index: null, bytes: null, sourceTreeSha256: null, indexSha256: null, warnings: [warning("memory.fold_incomplete"), ...fold.diagnostics] };
   const sourceTreeSha256 = sourceTree(scan); if (!sourceTreeSha256) return { complete: false, index: null, bytes: null, sourceTreeSha256: null, indexSha256: null, warnings: [warning("memory.scan_incomplete")] }; const eventById = new Map(scan.events.map((item) => [item.eventId, item]));

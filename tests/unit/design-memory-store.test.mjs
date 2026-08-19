@@ -9,6 +9,7 @@ import test from "node:test";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { canonicalMemoryEventDocument, canonicalQuarantineMarkerDocument, memoryOperationId } from "../../shared/scripts/validate-design-memory.mjs";
+import { relocateModuleImports } from "../lib/relocated-module-source.mjs";
 
 const storeModuleUrl = process.env.DESIGN_MEMORY_STORE_MODULE_URL ?? new URL("../../shared/scripts/lib/safe-memory-store.mjs", import.meta.url).href;
 // The mutation harness runs a tampered copy of this file out of a temp directory, so every path the
@@ -488,10 +489,10 @@ test("a stale store root cannot resurrect an older approved snapshot or append s
 });
 
 test("the stale-root authority regression fails when all root identity checks are removed", async (t) => {
-  const source = await readFile(storeSourcePath, "utf8"); const validatorUrl = pathToFileURL(path.join(path.dirname(path.dirname(storeSourcePath)), "validate-design-memory.mjs")).href;
+  const source = relocateModuleImports(await readFile(storeSourcePath, "utf8"), path.dirname(storeSourcePath));
   const initialCheck = 'if (!await matchesStoreIdentity(store)) { state.complete = false; state.diagnostics.push({ code: "memory.unbound_seal" }); return closed(); }'; const laterCheck = 'if (!await matchesStoreIdentity(store)) { state.diagnostics.push({ code: "memory.unbound_seal" }); return closed(); }';
   assert.equal(source.split(initialCheck).length - 1, 1); assert.equal(source.split(laterCheck).length - 1, 2);
-  const mutated = source.replace('"../validate-design-memory.mjs"', JSON.stringify(validatorUrl)).replace(initialCheck, "").split(laterCheck).join(""); const temporaryRoot = await mkdtemp(path.join(tmpdir(), "memory-root-identity-mutation-")); t.after(() => rm(temporaryRoot, { recursive: true, force: true })); const modulePath = path.join(temporaryRoot, "safe-memory-store.mjs"); await writeFile(modulePath, mutated);
+  const mutated = source.replace(initialCheck, "").split(laterCheck).join(""); const temporaryRoot = await mkdtemp(path.join(tmpdir(), "memory-root-identity-mutation-")); t.after(() => rm(temporaryRoot, { recursive: true, force: true })); const modulePath = path.join(temporaryRoot, "safe-memory-store.mjs"); await writeFile(modulePath, mutated);
   const api = await import(`${pathToFileURL(modulePath).href}?root-identity-mutation=${Date.now()}`);
   await assert.rejects(
     () => assertStaleRootAuthorityClosed(t, api),
