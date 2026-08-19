@@ -13,6 +13,7 @@ import {
   probeChromium,
   probeImageGenerationCapability,
   resolveArchifyInstallation,
+  verifyChromiumIdentity,
 } from '../../shared/scripts/capability-probe.mjs';
 import { spawnProgramSync, writeNonExecutableProgram, writeSpawnableProgram } from '../lib/platform-support.mjs';
 
@@ -734,4 +735,31 @@ test('rejects malformed stdin without failing the optional hook', async () => {
   assert.equal(result.stderr, '');
   const output = JSON.parse(result.stdout);
   assert.ok(output.warnings.some(({ code }) => code === 'input.invalid_json'));
+});
+
+// A Windows Chromium does not answer --version on stdout, so identity there comes from where the file
+// is or what it is called. Both fallbacks existed already; both were unreachable, one because a failed
+// version probe discarded the candidate before them and one because it compared Windows paths as
+// case-sensitive strings.
+test('a Windows Chromium is identified without --version output, by a documented path compared the way Windows compares paths', () => {
+  const documented = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+  assert.deepEqual(
+    verifyChromiumIdentity(documented, '', { platform: 'win32', documentedPaths: [documented] }),
+    { ok: true, version: 'identity from documented install path; no --version output' },
+  );
+  assert.equal(
+    verifyChromiumIdentity('c:\\Program Files\\Google\\Chrome\\.\\Application\\CHROME.EXE', '', { platform: 'win32', documentedPaths: [documented] }).ok,
+    true,
+    'the same file spelled with different casing and an interior . segment is the same file on Windows',
+  );
+  assert.equal(
+    verifyChromiumIdentity('C:\\Users\\someone\\Downloads\\chrome.exe', 'not a version', { platform: 'win32', documentedPaths: [documented] }).ok,
+    false,
+    'an unrecognized --version output from outside every documented path stays unidentified',
+  );
+  // A real version string is still the primary answer wherever the platform produces one.
+  assert.deepEqual(
+    verifyChromiumIdentity(documented, 'Google Chrome 151.0.7922.71', { platform: 'win32', documentedPaths: [] }),
+    { ok: true, version: 'Google Chrome 151.0.7922.71' },
+  );
 });

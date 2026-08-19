@@ -290,7 +290,10 @@ test("update prepares a private sibling stage and publishes only through its opa
 });
 
 test("real --update CLI builds a private sibling stage and atomically publishes the verified archive", async (t) => {
-  const fixtureRoot = await mkdtemp(path.join(tmpdir(), "im-not-ai-cli-update-"));
+  // Realpath at creation, not at the assertion. Windows hands out the 8.3 form of the temp directory
+  // (C:\Users\RUNNER~1\...) while realpath answers the long profile name, so a fixture that keeps the
+  // raw mkdtemp path and an expectation that realpaths it are two different strings for one directory.
+  const fixtureRoot = await realpath(await mkdtemp(path.join(tmpdir(), "im-not-ai-cli-update-")));
   t.after(() => rm(fixtureRoot, { recursive: true, force: true }));
   await mkdir(path.join(fixtureRoot, "tooling"));
   await mkdir(path.join(fixtureRoot, "shared/vendor"), { recursive: true });
@@ -338,10 +341,10 @@ globalThis.fetch = async (url) => {
   const result = await runNode(["--import", pathToFileURL(preload).href, path.join(fixtureRoot, "tooling/sync-im-not-ai.mjs"), "--update"], { env: { ...process.env, IM_NOT_AI_CLI_FIXTURE_ROOT: fixtureRoot } });
   assert.equal(result.exitCode, 0, result.stderr);
   assert.match(result.stdout, /\S/u, `CLI produced no result: ${result.stderr}`);
-  const pinPath = path.join(await realpath(fixtureRoot), "tooling/vendor-pins/im-not-ai.json");
+  const pinPath = path.join(fixtureRoot, "tooling/vendor-pins/im-not-ai.json");
   assert.deepEqual(JSON.parse(result.stdout), {
     status: "published",
-    root: await realpath(path.join(fixtureRoot, "shared/vendor/im-not-ai")),
+    root: path.join(fixtureRoot, "shared/vendor/im-not-ai"),
     tag: futureTag,
     unpinnedUpstreamFiles: ["brand-new-reference.md"],
     removedUpstreamFiles: ["references/metrics.py"],

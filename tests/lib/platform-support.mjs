@@ -170,3 +170,12 @@ export const DIRECTORY_RENAME_WITH_OPEN_HANDLE = (() => {
 
 export const NO_DIRECTORY_RENAME_WITH_OPEN_HANDLE_REASON =
   "this platform refuses to rename a directory that has an open handle inside it, so the mid-build swap this case has to stage fails before the code under test can answer it";
+
+// Whether a child can be handed an extra inherited descriptor by number. A POSIX process inherits a
+// numbered descriptor table, so fd 3 in the parent is fd 3 in the child and a tamper can deliberately
+// leak an evidence pipe into a grandchild. Windows inherits HANDLEs rather than fd numbers and libuv
+// carries no fourth stdio entry there, so the leak cannot be staged at all — the grandchild never
+// starts, and the case fails for a reason that has nothing to do with what it tests.
+export const INHERITED_EXTRA_DESCRIPTORS = process.platform !== "win32";
+export const NO_INHERITED_EXTRA_DESCRIPTORS_REASON =
+  "this platform inherits handles rather than numbered descriptors, so an evidence descriptor cannot be leaked into a grandchild for the cleanup to have to bound";

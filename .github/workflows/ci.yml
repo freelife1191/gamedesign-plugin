@@ -39,9 +39,11 @@ jobs:
   offline-gate:
     name: Offline gate (${{ matrix.shard }}, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    # One shard, not the whole suite, so the ceiling is a third of what a single-queue run needed. Loose
-    # enough for an honest run on a shared runner, tight enough that a hang fails in minutes not hours.
-    timeout-minutes: 30
+    # One shard, not the whole suite, so the ceiling is a fraction of what a single-queue run needed.
+    # Loose enough for an honest run on a shared runner, tight enough that a hang fails in minutes not
+    # hours. Windows runs the same shard roughly four times slower than Linux, which is what set this
+    # number: the contract shard alone spends over twenty minutes there on work that takes four here.
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:

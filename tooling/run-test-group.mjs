@@ -6,7 +6,7 @@ import process from "node:process";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-export const DEFAULT_TEST_TIMEOUT_MS = 1_200_000;
+export const DEFAULT_TEST_TIMEOUT_MS = 1_500_000;
 
 async function collect(directory, files) {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -46,9 +46,10 @@ async function main() {
   // runner, where the files execute concurrently and contend for the same cores. A first attempt at five
   // minutes cut that file off mid-run and reported a timeout for a file whose every subtest had passed.
   // Windows moved the floor again: the same contract suite that finishes in four minutes on Linux takes
-  // roughly four times as long there, and fifteen minutes cut off a file that was still working. Twenty
-  // minutes clears it and still leaves the thirty-minute lane ten minutes in which a real hang names
-  // itself rather than being killed anonymously by the job.
+  // roughly four times as long there, and both fifteen and twenty minutes cut off a file that was
+  // still working. Twenty-five clears it, and the Windows lane's ceiling moved to forty-five so a real
+  // hang still names itself in the twenty minutes that remain rather than being killed anonymously by
+  // the job.
   const result = spawnSync(process.execPath, ["--test", `--test-timeout=${DEFAULT_TEST_TIMEOUT_MS}`, ...files], { cwd: repoRoot, env, stdio: "inherit" });
   if (result.error) throw result.error;
   if (result.signal) throw new Error(`test process terminated by ${result.signal}`);

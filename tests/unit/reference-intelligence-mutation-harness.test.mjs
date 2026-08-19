@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import { CHILD_ENVIRONMENT_KEYS } from "../lib/platform-support.mjs";
+import { CHILD_ENVIRONMENT_KEYS, INHERITED_EXTRA_DESCRIPTORS, NO_INHERITED_EXTRA_DESCRIPTORS_REASON } from "../lib/platform-support.mjs";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
 const harness = path.join(root, "tests/fixtures/reference-intelligence/reference-intelligence-mutation-harness.mjs");
@@ -82,7 +82,7 @@ test("mutation harness strips caller injection variables from the selected test"
   assert.equal(result.stderr, "");
 });
 
-for (const tamper of ["timeout-orphan", "unclosed-evidence-fd"]) test(`mutation harness kills the full process tree after ${tamper}`, { timeout: 25_000 }, async (t) => {
+for (const tamper of ["timeout-orphan", "unclosed-evidence-fd"]) test(`mutation harness kills the full process tree after ${tamper}`, { timeout: 25_000, skip: tamper === "unclosed-evidence-fd" && !INHERITED_EXTRA_DESCRIPTORS ? NO_INHERITED_EXTRA_DESCRIPTORS_REASON : false }, async (t) => {
   const temporary = await mkdtemp(path.join(tmpdir(), "ri-mutation-hostile-"));
   const pidPath = path.join(temporary, "pid");
   const sentinel = `RI-MUTATION-PROCESS-${tamper}-${process.pid}-${Date.now()}`;

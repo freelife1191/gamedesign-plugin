@@ -105,7 +105,7 @@ test("retrieval mutation launcher ignores a caller preload targeting the harness
   const result = await runRetrievalTamper("leak-complete", "missing-evidence", { env: { NODE_OPTIONS: `--import=data:text/javascript,${encodeURIComponent(preloadSource)}` } });
   assert.equal(result.code, 1);
   assert.equal(result.stdout, "");
-  const error = JSON.parse(result.stderr); assert.equal(error.stage, "verify-evidence"); assert.equal(error.reason, "test-exit");
+  const error = JSON.parse(result.stderr); assert.equal(error.stage, "verify-evidence", result.stderr); assert.equal(error.reason, "test-exit", result.stderr);
 });
 
 test("retrieval mutation worker ignores a caller preload targeting the selected test", { timeout: RETRIEVAL_TEST_TIMEOUT_MS }, async () => {
@@ -114,7 +114,7 @@ test("retrieval mutation worker ignores a caller preload targeting the selected 
   const result = await runRetrievalWorkerTamper("leak-complete", "missing-evidence", { env: { NODE_OPTIONS: `--import=data:text/javascript,${encodeURIComponent(preloadSource)}` } });
   assert.equal(result.code, 1);
   assert.equal(result.stdout, "");
-  const error = JSON.parse(result.stderr); assert.equal(error.stage, "verify-evidence"); assert.equal(error.reason, "test-exit");
+  const error = JSON.parse(result.stderr); assert.equal(error.stage, "verify-evidence", result.stderr); assert.equal(error.reason, "test-exit", result.stderr);
 });
 
 test("retrieval mutation harness removes caller injection variables from the selected test", { timeout: RETRIEVAL_TEST_TIMEOUT_MS }, async () => {
@@ -193,5 +193,5 @@ for (const [tamper, expectedStage, expectedReason] of [
   ["oversize-stdout-stderr", "run-test", "output-limit"],
 ]) test(`retrieval mutation harness fails closed for ${tamper}`, { timeout: RETRIEVAL_TEST_TIMEOUT_MS }, async () => {
   const result = await runRetrievalTamper("leak-complete", tamper);
-  assert.equal(result.code, 1); assert.equal(result.stdout, ""); const error = JSON.parse(result.stderr); assert.equal(error.code, "memory.mutation_evidence_failed"); assert.equal(error.mutationId, "leak-complete"); assert.equal(error.tamper, tamper); assert.equal(error.stage, expectedStage); assert.equal(error.reason, expectedReason);
+  assert.equal(result.code, 1); assert.equal(result.stdout, ""); const error = JSON.parse(result.stderr); assert.equal(error.code, "memory.mutation_evidence_failed"); assert.equal(error.mutationId, "leak-complete"); assert.equal(error.tamper, tamper); assert.equal(error.stage, expectedStage, result.stderr); assert.equal(error.reason, expectedReason, result.stderr);
 });

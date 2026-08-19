@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { MUTATIONS, launchMutationEvidence } from "../fixtures/cutscene/cutscene-mutation-harness.mjs";
+import { INHERITED_EXTRA_DESCRIPTORS, NO_INHERITED_EXTRA_DESCRIPTORS_REASON } from "../lib/platform-support.mjs";
 
 // This oracle is intentionally independent from the child harness. A worker
 // can only prove itself when this parent-owned map catches a changed code/path.
@@ -41,7 +42,7 @@ for (const [tamper, reason] of [
 
 function processExists(pid) { try { process.kill(pid, 0); return true; } catch (error) { if (error?.code === "ESRCH") return false; throw error; } }
 async function exited(pid) { const deadline = Date.now() + 2_000; while (processExists(pid) && Date.now() < deadline) await new Promise((resolve) => setTimeout(resolve, 20)); return !processExists(pid); }
-for (const tamper of ["timeout-orphan", "unclosed-evidence-fd"]) test(`process-tree cleanup bounds ${tamper}`, { timeout: 15_000 }, async (t) => {
+for (const tamper of ["timeout-orphan", "unclosed-evidence-fd"]) test(`process-tree cleanup bounds ${tamper}`, { timeout: 15_000, skip: tamper === "unclosed-evidence-fd" && !INHERITED_EXTRA_DESCRIPTORS ? NO_INHERITED_EXTRA_DESCRIPTORS_REASON : false }, async (t) => {
   const temporary = await mkdtemp(path.join(tmpdir(), "cutscene-mutation-orphan-")); const pidPath = path.join(temporary, "pid"); let pid;
   t.after(async () => { if (pid && processExists(pid)) process.kill(pid, "SIGKILL"); await rm(temporary, { recursive: true, force: true }); });
   await assert.rejects(() => launchMutationEvidence("approval-authority", { tamper, orphanPidPath: pidPath }), { reason: "test-timeout" });

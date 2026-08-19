@@ -18,6 +18,7 @@ import {
 // every cache-hit assertion saw nothing. An empty env keeps both sides on the same path on every
 // platform. The one test whose subject IS the environment passes its own and still wins.
 const check = (options) => checkGameDesignUpdates({ env: {}, ...options });
+const suppress = (options) => suppressUpdateNotification({ env: {}, ...options });
 
 const CHECKED_AT = "2026-08-15T00:00:00.000Z";
 const SIX_DAYS_LATER = Date.parse("2026-08-21T00:00:00.000Z");
@@ -1344,7 +1345,7 @@ test("suppressing an announced version writes the answer and silences the next c
   const { pluginRoot, home } = await fixture(t);
   await writeCache({ home, value: outdatedCacheValue({ lastNotifiedAt: CHECKED_AT, lastNotifiedComponents: notificationIdentity() }) });
 
-  const suppression = await suppressUpdateNotification({ pluginRoot, home, now: Date.parse(CHECKED_AT), env: {} });
+  const suppression = await suppress({ pluginRoot, home, now: Date.parse(CHECKED_AT), env: {} });
 
   assert.equal(suppression.status, "suppressed");
   assert.deepEqual([...suppression.suppressed], notificationIdentity());
@@ -1369,7 +1370,7 @@ test("suppression leaves the advisory and the seven-day claim exactly as the las
   const before = outdatedCacheValue({ lastNotifiedAt: CHECKED_AT, lastNotifiedComponents: notificationIdentity() });
   await writeCache({ home, value: before });
 
-  await suppressUpdateNotification({ pluginRoot, home, now: SIX_DAYS_LATER, env: {} });
+  await suppress({ pluginRoot, home, now: SIX_DAYS_LATER, env: {} });
 
   const after = await readCacheValue(home);
   assert.deepEqual({ ...after, suppressedComponents: [] }, before, "only the suppression list may change");
@@ -1379,7 +1380,7 @@ test("suppressing a component the advisory never reported as outdated changes no
   const { pluginRoot, home } = await fixture(t);
   await writeCache({ home, value: outdatedCacheValue() });
 
-  const suppression = await suppressUpdateNotification({
+  const suppression = await suppress({
     pluginRoot,
     home,
     now: Date.parse(CHECKED_AT),
@@ -1394,7 +1395,7 @@ test("suppressing a component the advisory never reported as outdated changes no
 test("suppression refuses to invent an advisory when no check has cached one", async (t) => {
   const { pluginRoot, home } = await fixture(t);
 
-  const suppression = await suppressUpdateNotification({ pluginRoot, home, now: Date.parse(CHECKED_AT), env: {} });
+  const suppression = await suppress({ pluginRoot, home, now: Date.parse(CHECKED_AT), env: {} });
 
   assert.equal(suppression.status, "unavailable");
   assert.deepEqual([...suppression.suppressed], []);
@@ -1404,7 +1405,7 @@ test("suppression writes nothing while update checks are turned off", async (t) 
   const { pluginRoot, home } = await fixture(t);
   await writeCache({ home, value: outdatedCacheValue() });
 
-  const suppression = await suppressUpdateNotification({
+  const suppression = await suppress({
     pluginRoot,
     home,
     now: Date.parse(CHECKED_AT),
@@ -1539,12 +1540,12 @@ test("an id that names no tracked component is refused instead of reported as un
   await writeCache({ home, value: outdatedCacheValue({ lastNotifiedAt: CHECKED_AT, lastNotifiedComponents: notificationIdentity() }) });
 
   for (const componentIds of [["game-design-studio"], ["game-design-career"], ["archify", "game-design-studio"], [""]]) {
-    const suppression = await suppressUpdateNotification({ pluginRoot, home, now: Date.parse(CHECKED_AT), componentIds });
+    const suppression = await suppress({ pluginRoot, home, now: Date.parse(CHECKED_AT), componentIds });
     assert.equal(suppression.status, "unavailable", JSON.stringify(componentIds));
     assert.deepEqual(suppression.suppressed, []);
     assert.deepEqual((await readCacheValue(home)).suppressedComponents, [], JSON.stringify(componentIds));
   }
 
-  const accepted = await suppressUpdateNotification({ pluginRoot, home, now: Date.parse(CHECKED_AT), componentIds: ["archify"] });
+  const accepted = await suppress({ pluginRoot, home, now: Date.parse(CHECKED_AT), componentIds: ["archify"] });
   assert.equal(accepted.status, "suppressed");
 });
