@@ -97,7 +97,34 @@ export async function assertSafeTemporaryRoot({ requestedRoot, prefix = TEMP_PRE
   return canonical;
 }
 
-function minimalEnvironment({ root, home, codexHome }) {
+// The smoke runs each package with the smallest environment it can still work in, so that anything it
+// picks up from the developer's shell shows as a failure rather than as a pass. The floor differs by
+// platform: on POSIX it is Node plus the two standard binary directories, while on Windows a process
+// cannot start at all without System32 on PATH and without USERPROFILE, SystemRoot, and a temp variable
+// the C runtime reads — %TMP%, not $TMPDIR. Naming the POSIX floor on Windows produced an environment so
+// minimal that every spawn failed for a reason that had nothing to do with package isolation.
+export function minimalEnvironment({ root, home, codexHome, platform = process.platform, hostEnv = process.env }) {
+  if (platform === "win32") {
+    const systemRoot = hostEnv.SystemRoot ?? hostEnv.SYSTEMROOT ?? "C:\\Windows";
+    return {
+      USERPROFILE: home,
+      HOME: home,
+      CODEX_HOME: codexHome,
+      SystemRoot: systemRoot,
+      TEMP: root,
+      TMP: root,
+      TMPDIR: root,
+      PATHEXT: hostEnv.PATHEXT ?? ".COM;.EXE;.BAT;.CMD",
+      PATH: [
+        path.dirname(process.execPath),
+        path.win32.join(systemRoot, "System32"),
+        systemRoot,
+        path.win32.join(systemRoot, "System32", "Wbem"),
+      // The separator is the target platform's, not the host's — `path.delimiter` answers for whatever
+      // Node is running on, which is the wrong question when the platform is an argument.
+      ].join(";"),
+    };
+  }
   return {
     HOME: home,
     CODEX_HOME: codexHome,

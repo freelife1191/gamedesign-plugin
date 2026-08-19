@@ -149,7 +149,12 @@ test("safe packaged loading rejects an explicit symlink ancestor and the first f
     /symlink ancestor|non-symlink|symlink.*path/i,
   );
 
-  if ((await lstat("/tmp")).isSymbolicLink()) {
+  // macOS is the host where the very first path segment of a temp root is itself a symlink (/tmp is a
+  // link to /private/tmp), which is the only way to exercise a symlink ancestor at depth one. Linux and
+  // Windows have no such directory, and on Windows /tmp is not a path at all, so the lstat has to be
+  // allowed to fail rather than assumed to succeed.
+  const posixTmp = await lstat("/tmp").catch(() => null);
+  if (posixTmp?.isSymbolicLink()) {
     const firstSegmentRoot = await mkdtemp("/tmp/quality-first-segment-");
     t.after(() => rm(firstSegmentRoot, { recursive: true, force: true }));
     await mkdir(path.join(firstSegmentRoot, "profiles/studio"), { recursive: true });

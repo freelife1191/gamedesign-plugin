@@ -12,6 +12,7 @@ import { hashFileEntries, sha256 } from "../../tooling/lib/hash.mjs";
 import { buildProduct } from "../../tooling/lib/build-product.mjs";
 import { buildSnapshots } from "../../tooling/build-snapshots.mjs";
 import { findPolicyLeak, findPolicyLeakInBytes, readNeutralPresetPolicy } from "./neutral-preset-policy.mjs";
+import { PERMISSION_BITS_MEANINGFUL } from "../lib/platform-support.mjs";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const productNames = ["game-design-career", "game-design-studio"];
@@ -310,7 +311,9 @@ test("clean replacement touches only the two explicit plugin directories and che
   t.after(() => rm(builds.recovery.recoveryRoot, { recursive: true, force: true }));
   const pluginsAfter = await lstat(path.join(fixtureRepo, "plugins"));
   const unrelatedAfter = await lstat(path.dirname(unrelated));
-  assert.equal(pluginsAfter.mode & 0o777, 0o711);
+  // dev/ino below prove the directory was never replaced on any platform. The mode comparison only means
+  // something where the mode is a stored POSIX permission set rather than a synthesised attribute.
+  if (PERMISSION_BITS_MEANINGFUL) assert.equal(pluginsAfter.mode & 0o777, 0o711);
   assert.deepEqual([pluginsAfter.dev, pluginsAfter.ino], [pluginsBefore.dev, pluginsBefore.ino]);
   assert.deepEqual([unrelatedAfter.dev, unrelatedAfter.ino], [unrelatedBefore.dev, unrelatedBefore.ino]);
   assert.equal(await readFile(unrelated, "utf8"), "do not touch\n");

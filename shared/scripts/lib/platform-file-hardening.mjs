@@ -11,6 +11,7 @@ import { open } from "node:fs/promises";
 const PLATFORMS_WITHOUT_NO_FOLLOW = new Set(["win32"]);
 const PLATFORMS_WITHOUT_DIRECTORY_SYNC = new Set(["win32"]);
 const PLATFORMS_WITHOUT_POSIX_PERMISSION_BITS = new Set(["win32"]);
+const PLATFORMS_WITHOUT_DIRECTORY_HANDLES = new Set(["win32"]);
 
 // `O_NOFOLLOW` makes `open` fail when the last path component is a symlink. Node documents it as
 // unavailable on Windows and exposes no equivalent — `FILE_FLAG_OPEN_REPARSE_POINT` is not reachable
@@ -69,4 +70,29 @@ export async function syncDirectory(candidate, { platform = process.platform, op
 // from this suite at all; the alternative was a warning that is wrong every time it appears.
 export function posixPermissionBitsMeaningful(platform = process.platform) {
   return !PLATFORMS_WITHOUT_POSIX_PERMISSION_BITS.has(platform);
+}
+
+// `O_DIRECTORY` plus a `fs.open` on a directory is how a POSIX reader pins a directory's identity for
+// the whole of a `readdir`: the handle keeps naming the same inode even if the path is swapped
+// underneath. Windows has neither half — the constant is undefined, and libuv opens files without
+// `FILE_FLAG_BACKUP_SEMANTICS`, so `fs.open` on a directory fails outright rather than returning a
+// handle. Naming the constant anyway is the silent-degradation trap again: `flags | undefined` is
+// `flags`, so the open proceeds without the guarantee and then fails on the directory instead.
+//
+// What holds without the handle is the same fallback as everywhere else in this file: the callers
+// already `lstat` the path before the read and again after it, and compare dev/ino/mtime across the
+// pair. A directory swapped mid-read is caught by that comparison and the read is discarded. The
+// atomicity is what is lost, not the detection.
+export function directoryHandleSupported(platform = process.platform) {
+  return !PLATFORMS_WITHOUT_DIRECTORY_HANDLES.has(platform);
+}
+
+// Opens a directory for identity pinning, or returns null where the platform cannot. Callers must treat
+// null as "pin by path instead", never as an error and never as success — a caller that ignores it would
+// dereference null and fail loudly, which is the intended shape.
+export async function openDirectoryHandle(candidate, { platform = process.platform, openFn = open, fsConstants = constants } = {}) {
+  if (!directoryHandleSupported(platform)) return null;
+  const directoryFlag = fsConstants?.O_DIRECTORY;
+  if (!Number.isInteger(directoryFlag)) throw new Error("Secure directory opening is unavailable.");
+  return openFn(candidate, fsConstants.O_RDONLY | directoryFlag | noFollowOpenFlag({ platform, fsConstants }));
 }

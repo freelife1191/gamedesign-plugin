@@ -17,17 +17,25 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Linux only, deliberately. The Windows offline lane was built, run, and read: it reported 272 failing
-  # assertions, and they were not one problem. The two defects in shipped code are fixed — the no-follow
-  # flag and the directory fsync now go through shared/scripts/lib/platform-file-hardening.mjs, which names
-  # win32 as the one platform exempt from each and keeps every other host failing closed. What remains are
-  # POSIX assumptions in the tests and tooling themselves: hardcoded /bin/sh and /tmp, path joins that
-  # produce a doubled drive letter, a chmod-based assertion that cannot mean anything where chmod is a
-  # no-op. Until those are cleaned up the lane cannot run here, so the two fixed paths are proven by
-  # driving the real primitive with Windows inputs on a POSIX host rather than by running on Windows.
-  # What actually has to hold on Windows is that a Windows checkout and install produce the same bytes as
-  # every other platform, and the install gate below proves exactly that, on Windows, every run. See
-  # architecture/plugin-suite.md for the full finding list and what is still owed.
+  # Both operating systems. The Windows offline lane was built, run, read, removed, and is now back: the
+  # 272 failing assertions it reported were three different problems, not one. The two defects in shipped
+  # code went first — the no-follow flag and the directory fsync now go through
+  # shared/scripts/lib/platform-file-hardening.mjs, which names win32 as the one platform exempt from each
+  # and keeps every other host failing closed. Addressed here is the second class, the class this lane was
+  # withdrawn for: POSIX assumptions in the tests and tooling themselves. A hardcoded /bin/sh, a /tmp that
+  # is not a path on Windows, a fabricated program with a shebang that Windows cannot execute, a
+  # chmod-based assertion where chmod is a no-op. Each of those now goes through
+  # tests/lib/platform-support.mjs, which either supplies the platform's own spelling for the thing or
+  # declines the case by name — never by quietly passing.
+  #
+  # A lane that cannot fail is not a gate, so this one gates. Every fix above is reasoned from what Windows
+  # does differently and the POSIX side is proven, but this lane running on Windows IS the Windows verdict
+  # and it has not returned one yet. A failure it reports on its first runs is a class that was not on the
+  # list, not a regression: the list lives in architecture/plugin-suite.md and that is where the row goes.
+  # The format smoke and the render drift are skipped here on every platform and are not covered either way.
+  #
+  # The narrow Windows hardening gate below stays separate on purpose — it is the floor that must hold
+  # whatever this lane is doing, and it would be worth nothing if it lived inside the lane it outlives.
   offline-gate:
     name: Offline gate (${{ matrix.shard }}, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -39,6 +47,7 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
+          - windows-latest
         # Four jobs instead of one queue. The three test stages are three quarters of the run and have
         # nothing to say to each other, so serialising them only spent wall clock. `validate-suite.mjs`
         # owns the partition and a unit test holds it to covering every stage exactly once, which is what
@@ -58,7 +67,10 @@ jobs:
       # Several contract tests validate their specs against a real Archify CLI resolved from the host.
       # This puts the copy this repository already vendors, and verifies by hash in the same run, where
       # the resolver looks — so the contracts assert against the real tool rather than being weakened.
+      # bash on both runners, not because the step needs a shell but because the two default shells quote
+      # differently and the argument below contains spaces. One shell means one quoting rule to reason about.
       - name: Stage the vendored Archify CLI as a host skill
+        shell: bash
         run: node tooling/stage-host-archify.mjs
       # Four stages cannot run here. The official plugin and skill validators ship with a Codex install.
       # The format smoke imports a host-provided module that is not a dependency of this package. The
@@ -66,6 +78,7 @@ jobs:
       # so it only means anything on the machine whose renderer committed them. validate-suite records
       # all four as SKIPPED, so a green run here is never read as a full one.
       - name: Validate suite
+        shell: bash
         run: >-
           node tooling/validate-suite.mjs
           --shard ${{ matrix.shard }}
@@ -85,6 +98,31 @@ jobs:
             echo "- diagram render drift"
             echo "- format smoke"
           } >> "$GITHUB_STEP_SUMMARY"
+
+  # The narrow Windows lane. The two shipped defects that used to break design memory and image config on
+  # Windows are fixed, and the fix is one module — shared/scripts/lib/platform-file-hardening.mjs — that
+  # names win32 as the single platform exempt from the no-follow flag, the directory fsync, and the POSIX
+  # permission bits. Its own suite drives that module with Windows inputs on any host, which is what makes
+  # it safe to run everywhere; running it HERE is what turns "Windows-shaped input" into "ran on Windows".
+  # This lane is deliberately one file, and stays one file now that the offline gate covers Windows too.
+  # Its value is exactly that it does not depend on the whole suite being Windows-clean: whatever the broad
+  # lane reports on any given day, the platform exemptions the products ship with keep their own Windows
+  # evidence. One file that always runs is worth more here than the same file inside a suite that might not.
+  windows-hardening-gate:
+    name: Windows hardening gate
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # The raw node test runner over one file: no shard, no stage accounting, nothing that could turn a
+      # miss into a recorded skip. If the file stops existing the step fails.
+      - name: Prove the platform exemptions on a real Windows host
+        run: node --test tests/unit/platform-file-hardening.test.mjs
 
   # Both operating systems, and Windows is the point of it. This is the lane that proves the spec's Windows
   # contract: that a checkout and install on Windows yields the same bytes the other platforms yield.

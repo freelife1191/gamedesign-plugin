@@ -188,7 +188,8 @@ plugin manifest에는 hook 필드를 추가하지 않고 기본 발견 경로 `h
 
 | 레인 | 내용 | 러너 | 인증 |
 | --- | --- | --- | --- |
-| 오프라인 게이트 | `node tooling/validate-suite.mjs`를 네 스테이지 `--skip`과 함께 실행 | `ubuntu-latest` | 불필요 |
+| 오프라인 게이트 | `node tooling/validate-suite.mjs`를 네 스테이지 `--skip`과 함께 실행 | `ubuntu-latest`, `windows-latest` | 불필요 |
+| Windows 하드닝 게이트 | `node --test tests/unit/platform-file-hardening.test.mjs` | `windows-latest` | 불필요 |
 | 설치 게이트 | `@openai/codex` 설치 후 `node tooling/install-roundtrip.mjs --require-codex` | `ubuntu-latest`, `windows-latest` | 불필요 |
 
 설치 게이트는 한글과 공백을 포함한 `CODEX_HOME`·workspace, `LANG=C`, `LC_ALL=C` 아래에서 두 제품을 실제 설치하고 재설치한 뒤 README, `plugin.json`, 대표 스킬을 source와 SHA-256으로 대조합니다. 경로는 NFC 정규화 후 비교하며, 명령 출력에 `U+FFFD`가 있으면 실패합니다. 모델을 호출하지 않으므로 인증이 필요 없습니다. 로컬에서는 `npm run verify:install-roundtrip`으로 같은 검증을 돌리며, `codex`가 없으면 `SKIPPED`를 보고하고 종료합니다.
@@ -197,17 +198,39 @@ CI에서 실행할 수 없는 스테이지는 네 개입니다. 공식 plugin �
 
 **릴리스 전에 이 네 스테이지는 로컬에서 반드시 실행합니다.** `npm run validate:release`는 `--skip`을 거부하므로 스킵한 채로 release gate를 통과할 수 없습니다. 인증이 필요한 라이브 스모크 `npm run smoke:marketplace`도 로컬 수동 실행으로 남습니다.
 
-#### 오프라인 게이트를 Linux로 한정한 이유
+#### 오프라인 게이트가 Windows로 돌아온 경로
 
-Windows 오프라인 레인은 만들어 돌려 보고 결과를 읽은 뒤 의도적으로 뺐습니다. 실패 272건은 한 가지 문제가 아니라 성격이 다른 세 부류이고, 그중 둘째·셋째는 CI 변경에 끼워 넣을 수 있는 성질이 아닙니다.
+Windows 오프라인 레인은 만들어 돌려 보고 결과를 읽은 뒤 한 번 뺐다가 다시 넣었습니다. 실패 272건은 한 가지 문제가 아니라 성격이 다른 세 부류였고, 셋 다 답을 받았습니다.
 
-| 부류 | 실패 수 | 내용 |
-| --- | --- | --- |
-| 출하 코드 결함 | 77 → 0 | `shared/scripts/lib/load-workspace-env.mjs`는 `O_NOFOLLOW`가 정수가 아니면 즉시 거부했고, Node는 Windows에서 이 상수를 정의하지 않습니다(21건). `shared/scripts/lib/safe-memory-store.mjs`의 `syncDirectory`는 디렉터리를 열어 `fsync`했고 Windows는 `EPERM`을 돌려줍니다(56건). 둘 다 아래 «플랫폼 파일 하드닝»에서 해소했습니다. |
-| 테스트·도구의 POSIX 가정 | 약 65 | `/bin/sh`와 `/tmp` 하드코딩, 드라이브 문자가 겹쳐 `D:\D:\...`가 되는 경로 결합, `chmod`가 무의미한 곳에서 mode 비트 변화를 기대하는 단정, `0600` 가정. |
-| 위 둘의 파급 | 나머지 | 앞의 실패가 만든 상태를 뒤 단정이 다시 읽으며 생긴 연쇄. |
+| 부류 | 실패 수 | 내용 | 처리 |
+| --- | --- | --- | --- |
+| 출하 코드 결함 | 77 | `shared/scripts/lib/load-workspace-env.mjs`는 `O_NOFOLLOW`가 정수가 아니면 즉시 거부했고, Node는 Windows에서 이 상수를 정의하지 않습니다(21건). `shared/scripts/lib/safe-memory-store.mjs`의 `syncDirectory`는 디렉터리를 열어 `fsync`했고 Windows는 `EPERM`을 돌려줍니다(56건). | 아래 «플랫폼 파일 하드닝». 코드에서 제거. |
+| 테스트·도구의 POSIX 가정 | 약 65 | `/bin/sh`와 `/tmp` 하드코딩, shebang으로 만든 가짜 실행 파일, `chmod`가 무의미한 곳에서 mode 비트 변화를 기대하는 단정, `0600` 가정. | 아래 «테스트 쪽 플랫폼 가정». `tests/lib/platform-support.mjs` 한 자리로 모음. |
+| 위 둘의 파급 | 나머지 | 앞의 실패가 만든 상태를 뒤 단정이 다시 읽으며 생긴 연쇄. | 원인 둘이 사라지면 함께 사라집니다. |
 
-첫 부류는 해소되었습니다. 남은 둘째·셋째 부류는 테스트와 도구의 POSIX 가정이므로 Windows 오프라인 레인은 여전히 빠져 있습니다.
+#### 테스트 쪽 플랫폼 가정
+
+출하 코드의 결함과 테스트의 가정은 성격이 다릅니다. 앞은 사용자 기계에서 제품이 깨지는 일이고, 뒤는 검증이 한 플랫폼에서만 돌아가는 일입니다. 그래서 처리 방식도 다릅니다 — 제품은 Windows에서 **동작해야** 하고, 테스트는 Windows에서 **거짓말하지 않아야** 합니다.
+
+`tests/lib/platform-support.mjs`가 그 판단을 하는 유일한 자리입니다. 규칙은 하나입니다. **단정을 약하게 만들어 통과시키지 않고, 이름 없는 스킵도 두지 않습니다.** 플랫폼이 표현할 수 없는 것은 이유를 붙여 건너뛰고, 그 단정이 원래 확인하던 것은 모든 플랫폼에서 그대로 돕니다.
+
+| 가정 | POSIX | Windows | 대신 하는 것 |
+| --- | --- | --- | --- |
+| `/bin/sh`를 오라클로 사용 | 그대로 실행 | 없음 | 오라클만 내려놓습니다. 적대적 shell word를 감사기가 거부하는지는 양쪽에서 그대로 확인합니다. |
+| README의 bash 레시피 실행 | 그대로 실행 | 없음 | README **본문** 단정은 양쪽에서 돌고, 실행만 bash가 있는 호스트로 한정합니다. |
+| shebang으로 만든 가짜 실행 파일 | `#!/usr/bin/env node` + `0o755` | 같은 JavaScript + `.cmd` 런처 | 본문이 한 벌이라 두 플랫폼이 갈라지지 않습니다. 스폰 이음매를 받는 코드에서는 `spawnProgramSync`가 그 JavaScript를 현재 Node에 넘깁니다 — realpath·lstat·X_OK·버전 파싱·심링크 별칭 해석은 전부 실제 파일에 대해 그대로 돕니다. |
+| 실행 불가 파일 | 실행 비트 해제 | 표현 불가 | `writeNonExecutableProgram`이 `null`을 돌려주고 그 케이스만 빠집니다. 나머지 두 거부 사유는 양쪽에서 돕니다. |
+| `/tmp` 임시 루트 | `os.tmpdir()`와 동일 | 경로 아님 | `temporaryDirectory()`. macOS에서 첫 경로 구성 요소가 심링크여야 하는 한 케이스만 `shortOnDarwin`으로 남깁니다. |
+| `chmod` 후 mode 비트 단정 | 그대로 | 무의미 | `PERMISSION_BITS_MEANINGFUL`로 감쌉니다. dev/ino 같은 플랫폼 중립 단정은 그대로 돕니다. |
+| FIFO 같은 특수 파일 | `mkfifo` | 만들 수 없음 | 케이스를 이름과 함께 스킵합니다. 픽스처를 바꾸지 않은 채 거부를 단정하는 것보다 낫습니다. |
+| npm 런처 스폰 | 실행 파일 | `.cmd` 심 — shell 없이는 스폰 거부 | 런처가 실행했을 스크립트를 `process.execPath`로 직접 돌리고, `package.json`의 해당 줄은 따로 단정합니다. |
+| isolation smoke의 최소 환경 | Node + `/usr/bin` + `/bin`, `$TMPDIR` | System32 없이는 프로세스가 시작조차 못 함 | `minimalEnvironment`가 플랫폼을 인자로 받습니다. Windows에서는 `%USERPROFILE%`·`SystemRoot`·`%TMP%`·`PATHEXT`와 System32를 넣습니다. |
+
+`tests/unit/platform-assumptions.test.mjs`가 이 가정들이 다시 들어오는 것을 막습니다. `tests/`와 `tooling/` 전체를 훑어 하드코딩된 shell 경로, `/tmp` 임시 루트, 맨 `O_NOFOLLOW`·`O_DIRECTORY`를 찾고, 면제는 glob이 아니라 정확한 파일 경로 목록입니다 — 면제를 추가하는 diff가 곧 이유를 적는 자리입니다. 유효하지 않게 된 면제도 같은 파일이 잡습니다.
+
+**이 레인이 덮지 않는 것.** `tests/formats/`는 macOS Quick Look과 headless Chromium을 구동하므로 모든 CI 플랫폼에서 `SKIPPED`이고, 위 게이트의 탐색 대상에서도 빠져 있습니다. 그래서 `npm test`(트리 전체 순회)는 여전히 Windows에서 끝까지 돌지 않고, 오프라인 게이트가 실행하는 네 shard만 돕니다.
+
+**이 수정들이 아직 받지 못한 것.** 위 표의 각 항목은 Windows에서 무엇이 왜 다른지를 근거로 고쳤고, POSIX 회귀는 네 shard 전부 로컬에서 `fail 0`으로 확인했습니다. 그러나 **레인 자체가 Windows에서 돈 적은 아직 없습니다.** Windows 판정을 내는 것은 이 CI 레인이고, 첫 실행이 곧 그 판정입니다. 첫 실행이 남은 항목을 보고하면 그것은 되돌아온 결함이 아니라 이 목록에 아직 없던 부류입니다 — 위 표에 줄을 추가하고 `tests/lib/platform-support.mjs`에 자리를 만드는 것이 그때의 처리 방식입니다. 하드닝 게이트가 별도 레인으로 남아 있는 이유도 여기에 있습니다. 넓은 레인이 첫 실행에서 무엇을 보고하든, 출하 코드의 플랫폼 면제에는 독립적인 Windows 증거가 있습니다.
 
 #### 플랫폼 파일 하드닝
 
@@ -217,9 +240,10 @@ Windows 오프라인 레인은 만들어 돌려 보고 결과를 읽은 뒤 의�
 | --- | --- | --- | --- |
 | `O_NOFOLLOW` | 상수 그대로 | `0` | 여는 쪽이 이미 수행하는 `lstat` → open → identity 재확인 |
 | 디렉터리 `fsync` | 필수, 실패는 실패 | 건너뜀 | NTFS가 `$LogFile`에 메타데이터 연산을 저널링하고 마운트 시 재생 |
+| `O_DIRECTORY` 디렉터리 핸들 | 상수 그대로 | 핸들 없음(`null`) | 읽기 앞뒤의 `lstat` 쌍 대조 |
 | `Stats.mode` 권한 비트 | POSIX 권한 그대로 | 읽기 전용 속성으로 합성된 값 | 없음 — 검사를 하지 않습니다 |
 
-두 예외는 모두 **허용목록**입니다. 상수를 정의해야 마땅한 POSIX 호스트에서 상수가 없으면 예전처럼 즉시 실패합니다. `win32`만 면제됩니다.
+이 예외들은 모두 **허용목록**입니다. 상수를 정의해야 마땅한 POSIX 호스트에서 상수가 없으면 예전처럼 즉시 실패합니다. `win32`만 면제됩니다.
 
 `O_NOFOLLOW`가 하는 일은 마지막 경로 구성 요소가 심링크일 때 `open`을 실패시키는 것 하나뿐이고, Node는 Windows에서 대응 플래그를 노출하지 않습니다(`FILE_FLAG_OPEN_REPARSE_POINT`는 `fs.open`에서 닿을 수 없습니다). 이 스위트의 모든 open은 앞의 `lstat`과 뒤의 `handle.stat()` ↔ 재`lstat` 대조로 감싸여 있습니다. 심링크로 바뀐 경로는 두 번째 `lstat`이 심링크라고 보고해서 걸리고, 다른 정규 파일로 바뀐 경로는 dev/ino 대조로 걸립니다 — POSIX에서도 `O_NOFOLLOW`가 막아 준 적 없는 경우입니다. 둘 다 호출자가 한 바이트를 읽기 전에 돌아갑니다. 그래서 Windows가 잃는 것은 탐지가 아니라 원자성입니다. 바꿔치기된 심링크는 열리지 않는 대신 열렸다가 거부되고, 공격자가 지정한 대상의 바이트는 호출자에게 도달하지 않습니다. 남는 잔여 위험은 공격자가 고른 경로에 대한 일시적 핸들이며, 그래서 이것이 일반적 완화가 아니라 이름 붙은 한 플랫폼의 면제입니다.
 
@@ -229,7 +253,11 @@ Windows 오프라인 레인은 만들어 돌려 보고 결과를 읽은 뒤 의�
 
 같은 계열의 세 번째 결함도 함께 고쳤습니다. design memory 진입점 셋은 `process.env.HOME`을 읽었는데 Windows는 이 변수를 정의하지 않습니다. `resolveMemoryStore`에는 `win32: ["AppData", "Local"]` 분기가 이미 있었지만 home이 workspace로 대체되면서 global scope 저장소가 엉뚱한 자리에 만들어졌습니다. 이제 셋 다 `os.homedir()`를 씁니다 — POSIX에서는 `$HOME`을, Windows에서는 `%USERPROFILE%`을 읽으므로 기존 동작의 상위집합입니다. 이 저장소의 다른 모듈들이 이미 쓰던 방식이고, `process.env.HOME`이 예외였습니다.
 
-검증은 POSIX 호스트에서 실제 원시 함수를 Windows 입력으로 구동하고 그 결과를 실제 소비자에게 물려서 합니다. `tests/unit/platform-file-hardening.test.mjs`는 `noFollowOpenFlag`가 `0`을 돌려주고 `syncDirectory`가 아무것도 열지 않는 상태로 `load-workspace-env`와 `safe-memory-store`를 재배치해 실행합니다. dotenv는 그대로 읽히고 심링크는 그대로 거부되며, 봉인된 memory event는 커밋되고 스토어 자신의 identity 고정 리더로 되읽힙니다. 원시 함수를 우회해 맨 상수를 쓰는 출하 모듈이 하나라도 생기면 같은 파일의 소스 게이트가 잡습니다. **다만 이는 Windows 형태의 입력이지 Windows 실행은 아닙니다.** 두 경로의 Windows 실기 검증은 나머지 두 부류가 정리되어 오프라인 레인이 Windows에서 돌 수 있게 될 때까지 남은 빚입니다.
+검증은 POSIX 호스트에서 실제 원시 함수를 Windows 입력으로 구동하고 그 결과를 실제 소비자에게 물려서 합니다. `tests/unit/platform-file-hardening.test.mjs`는 `noFollowOpenFlag`가 `0`을 돌려주고 `syncDirectory`가 아무것도 열지 않는 상태로 `load-workspace-env`와 `safe-memory-store`를 재배치해 실행합니다. dotenv는 그대로 읽히고 심링크는 그대로 거부되며, 봉인된 memory event는 커밋되고 스토어 자신의 identity 고정 리더로 되읽힙니다. 원시 함수를 우회해 맨 상수를 쓰는 출하 모듈이 하나라도 생기면 같은 파일의 소스 게이트가 잡습니다.
+
+이 파일 자체는 이제 **Windows에서 실제로 돕니다.** 전용 레인 하나가 `windows-latest`에서 이 파일만 `node --test`로 실행합니다 — shard도 스테이지 회계도 없으므로 스킵이 숨을 자리가 없습니다. 오프라인 게이트의 Windows 절반도 같은 파일을 `unit` shard 안에서 돌리지만, 좁은 레인은 따로 남깁니다. 이것은 넓은 레인이 무슨 상태이든 성립해야 하는 바닥이고, 넓은 레인 안에 들어가는 순간 그 성질을 잃습니다.
+
+`O_DIRECTORY`도 같은 계열이라 같은 자리로 옮겼습니다. POSIX에서 디렉터리 핸들은 `readdir` 한 번 동안 inode를 고정하는 수단이고, Windows에는 그 상수도 그 핸들도 없습니다(libuv가 `FILE_FLAG_BACKUP_SEMANTICS` 없이 열기 때문에 `fs.open`이 디렉터리에서 실패합니다). `openDirectoryHandle`은 그런 호스트에서 `null`을 돌려주고, 호출자는 이미 앞뒤로 걸어 둔 `lstat` 쌍으로 같은 대조를 합니다. 여기서도 잃는 것은 탐지가 아니라 원자성입니다.
 
 Windows에서 실제로 성립해야 하는 계약은 Windows checkout과 설치가 다른 플랫폼과 같은 바이트를 만든다는 것이고, 이는 설치 게이트가 매 실행마다 Windows에서 직접 증명합니다.
 

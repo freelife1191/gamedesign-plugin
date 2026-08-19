@@ -1,8 +1,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { lstat, mkdir, mkdtemp, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { lstat, mkdir, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
@@ -10,6 +9,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { deflateSync } from "node:zlib";
 
 import { buildProduct } from "../../../tooling/lib/build-product.mjs";
+import { temporaryDirectory as platformTemporaryDirectory } from "../../lib/platform-support.mjs";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const pluginRoot = path.join(repoRoot, "products/game-design-studio/plugin");
@@ -31,8 +31,8 @@ test.afterEach(async () => {
   await Promise.all(temporaryDirectories.splice(0).map((directory) => rm(directory, { recursive: true, force: true })));
 });
 
-async function temporaryDirectory(prefix) {
-  const directory = await mkdtemp(path.join(tmpdir(), prefix));
+async function temporaryDirectory(prefix, options) {
+  const directory = await platformTemporaryDirectory(prefix, options);
   temporaryDirectories.push(directory);
   return directory;
 }
@@ -453,8 +453,10 @@ test("plugin-owned visualization validator proves ordered same-file lint render 
 });
 
 test("packaged Skillstead wrapper survives tmp realpath symlink and relative aliases", async () => {
-  const stagingRoot = await mkdtemp("/tmp/studio-skillstead-wrapper-");
-  temporaryDirectories.push(stagingRoot);
+  // Named /tmp on the hosts that have one, because on macOS that path is itself a symlink and the wrapper
+  // surviving a symlinked staging root is half of what this test is for. Linux already runs it against a
+  // real directory, and Windows joins Linux there rather than failing on a path it does not have.
+  const stagingRoot = await temporaryDirectory("studio-skillstead-wrapper-", { shortOnDarwin: true });
   const built = await buildProduct({ repoRoot, productName: "game-design-studio", stagingRoot, sourceDateEpoch: 0 });
   const wrapperPath = path.join(built.outputDir, visualizationWrapper);
   assert.equal((await lstat(wrapperPath)).isFile(), true, "packaged wrapper exists");

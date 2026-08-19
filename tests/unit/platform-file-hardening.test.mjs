@@ -8,7 +8,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { canonicalMemoryEventDocument } from "../../shared/scripts/validate-design-memory.mjs";
 import { relocateModuleImports } from "../lib/relocated-module-source.mjs";
-import { directorySyncSupported, noFollowOpenFlag, posixPermissionBitsMeaningful, syncDirectory } from "../../shared/scripts/lib/platform-file-hardening.mjs";
+import { directoryHandleSupported, directorySyncSupported, noFollowOpenFlag, openDirectoryHandle, posixPermissionBitsMeaningful, syncDirectory } from "../../shared/scripts/lib/platform-file-hardening.mjs";
 
 const hardeningPath = fileURLToPath(new URL("../../shared/scripts/lib/platform-file-hardening.mjs", import.meta.url));
 const storePath = fileURLToPath(new URL("../../shared/scripts/lib/safe-memory-store.mjs", import.meta.url));
@@ -109,6 +109,56 @@ test("a POSIX directory sync opens read-only with no-follow, syncs, and closes e
     (error) => error.message === "EPERM",
   );
   assert.deepEqual(closes, ["close", "close-after-failure"]);
+});
+
+test("a directory handle is available on every platform except the one that cannot return one", () => {
+  assert.equal(directoryHandleSupported(), process.platform !== "win32");
+  assert.equal(directoryHandleSupported("win32"), false);
+  for (const platform of POSIX_PLATFORMS) assert.equal(directoryHandleSupported(platform), true);
+});
+
+test("a Windows directory open returns no handle and opens nothing, while a POSIX one fails closed without the constant", async () => {
+  const opens = [];
+  assert.equal(
+    await openDirectoryHandle("/any/directory", { platform: "win32", openFn: (...args) => { opens.push(args); throw new Error("must not open"); }, fsConstants: {} }),
+    null,
+    "a platform with no directory handle must report that, not attempt an open that fails inside the caller",
+  );
+  assert.deepEqual(opens, []);
+
+  // Same shape as the no-follow flag: a POSIX host missing the constant is a broken host, not an exempt
+  // one, and must keep failing rather than opening without the guarantee.
+  for (const platform of POSIX_PLATFORMS) {
+    await assert.rejects(
+      () => openDirectoryHandle("/any/directory", { platform, openFn: async () => { throw new Error("must not open"); }, fsConstants: {} }),
+      (error) => error instanceof Error && error.message === "Secure directory opening is unavailable.",
+      `${platform} must not silently drop the directory-handle guarantee`,
+    );
+  }
+});
+
+test("a POSIX directory open asks for read-only, directory, and no-follow together", async (t) => {
+  const root = await scratch(t, "directory-handle-");
+  const calls = [];
+  const sentinel = { stat: async () => ({}), close: async () => {} };
+  const handle = await openDirectoryHandle(root, {
+    platform: "linux",
+    openFn: async (target, flags) => { calls.push([target, flags]); return sentinel; },
+  });
+  assert.equal(handle, sentinel);
+  assert.deepEqual(calls, [[root, constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW]]);
+});
+
+test("this host really pins a real directory by handle", { skip: process.platform === "win32" }, async (t) => {
+  const root = await scratch(t, "directory-handle-real-");
+  await writeFile(path.join(root, "entry"), "contents");
+  const handle = await openDirectoryHandle(root);
+  try {
+    const stats = await handle.stat();
+    assert.equal(stats.isDirectory(), true);
+  } finally {
+    await handle.close();
+  }
 });
 
 test("this host really syncs a real directory", { skip: process.platform === "win32" }, async (t) => {

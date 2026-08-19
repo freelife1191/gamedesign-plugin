@@ -6,6 +6,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { readWorkspaceEnv } from "../../shared/scripts/lib/load-workspace-env.mjs";
+import { PERMISSION_BITS_MEANINGFUL } from "../lib/platform-support.mjs";
 
 async function workspace(t) {
   const root = await mkdtemp(path.join(tmpdir(), "workspace-env-"));
@@ -166,6 +167,10 @@ test("workspace env rejects files above 64 KiB before a supplied reader runs", a
 
 test("workspace env rejects unsafe adapter inputs and reports permission warnings", async (t) => {
   const root = await workspace(t);
+  // Group- and other-readable is a claim about POSIX permission bits. Where those bits are synthesised
+  // the loader deliberately withholds the warning rather than firing it on every file, and
+  // tests/unit/platform-file-hardening.test.mjs is what asserts that side of it.
+  if (!PERMISSION_BITS_MEANINGFUL) return;
   await writeEnv(root, "ALLOWED=file-value\n", 0o644);
   const result = await readWorkspaceEnv({ workspaceRoot: root, env: {}, supportedKeys: ["ALLOWED"] });
   assert.ok(result.warnings.some((warning) => warning.code === "insecure_permissions"));

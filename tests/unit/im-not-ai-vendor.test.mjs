@@ -292,6 +292,14 @@ test("real --update CLI builds a private sibling stage and atomically publishes 
   await mkdir(path.join(fixtureRoot, "tooling"));
   await mkdir(path.join(fixtureRoot, "shared/vendor"), { recursive: true });
   await cp(new URL("../../tooling/sync-im-not-ai.mjs", import.meta.url), path.join(fixtureRoot, "tooling/sync-im-not-ai.mjs"));
+  // The staged tree has to carry everything the staged tool imports, not just the tool. The platform
+  // hardening primitive is one of those: the tool asks it which open flags this host can actually offer,
+  // so a stage without it fails to resolve a module rather than failing the check it was staged to run.
+  await mkdir(path.join(fixtureRoot, "shared/scripts/lib"), { recursive: true });
+  await cp(
+    new URL("../../shared/scripts/lib/platform-file-hardening.mjs", import.meta.url),
+    path.join(fixtureRoot, "shared/scripts/lib/platform-file-hardening.mjs"),
+  );
   await cp(vendorRoot, path.join(fixtureRoot, "shared/vendor/im-not-ai"), { recursive: true });
   await mkdir(path.join(fixtureRoot, "tooling/vendor-pins"), { recursive: true });
   await cp(new URL("../../tooling/vendor-pins/im-not-ai.json", import.meta.url), path.join(fixtureRoot, "tooling/vendor-pins/im-not-ai.json"));

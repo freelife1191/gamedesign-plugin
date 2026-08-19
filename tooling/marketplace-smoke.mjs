@@ -12,6 +12,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { cleanupGuardedTempRoot, createGuardedTempRoot } from "./lib/guarded-temp.mjs";
 import { sha256 } from "./lib/hash.mjs";
 import { artifactTreeIdentity, runMarketplaceProof, validateRouteReceipt } from "./lib/marketplace-proof-harness.mjs";
+import { posixPermissionBitsMeaningful } from "../shared/scripts/lib/platform-file-hardening.mjs";
 
 const MARKETPLACE = "game-design-suite";
 export const RELEASE_PLUGIN_VERSION = "0.2.0";
@@ -410,7 +411,12 @@ export async function bridgeLocalAuth({ source, destination }) {
   if (afterSource.dev !== sourceIdentity.dev || afterSource.ino !== sourceIdentity.ino || afterSource.mode !== sourceIdentity.mode) {
     throw new Error("local session auth source identity changed");
   }
-  if (!copied.isFile() || copied.isSymbolicLink() || (copied.mode & 0o777) !== 0o600) {
+  // The mode check is only a check where the mode is a POSIX permission set. Windows synthesises it from
+  // a single read-only attribute, so a file `chmod`ed to 0600 there reads back as 0666 and the throw would
+  // fire on every run while telling the user nothing they could act on. The copy is still required to be a
+  // regular non-symlink file, and it still lands under a guarded temp root that no other user can reach.
+  if (!copied.isFile() || copied.isSymbolicLink()) throw new Error("temporary session auth is not a regular file");
+  if (posixPermissionBitsMeaningful() && (copied.mode & 0o777) !== 0o600) {
     throw new Error("temporary session auth is not a regular 0600 file");
   }
   return { authSource: "local-session" };
@@ -434,7 +440,7 @@ async function findExecutable(name) {
   throw new Error(`${name} executable unavailable`);
 }
 
-async function findTrustedShells() {
+export async function findTrustedShells() {
   const trusted = new Set();
   for (const candidate of ["/bin/sh", "/bin/bash", "/bin/zsh"]) {
     const canonical = await realpath(candidate).catch(() => null);

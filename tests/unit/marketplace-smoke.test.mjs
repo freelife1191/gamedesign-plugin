@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { lstat, mkdir, mkdtemp, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
+import { lstat, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -13,6 +13,7 @@ import {
   buildProofCommand,
   captureFileIdentity,
   createSmokeFailure,
+  findTrustedShells,
   PACKAGED_SKILL_COUNTS,
   parseExecJsonl,
   preservePrimarySmokeFailure,
@@ -23,6 +24,7 @@ import {
   validateCliJson,
 } from "../../tooling/marketplace-smoke.mjs";
 import { artifactTreeIdentity, runMarketplaceProof } from "../../tooling/lib/marketplace-proof-harness.mjs";
+import { PERMISSION_BITS_MEANINGFUL } from "../lib/platform-support.mjs";
 
 const product = "game-design-career";
 const pluginId = `${product}@game-design-suite`;
@@ -194,13 +196,16 @@ async function traceFixture() {
     bindingNonce,
     routeId: "entry-intake",
   }));
-  const [proofIdentity, artifactIdentity, trustedShell] = await Promise.all([
-    captureFileIdentity(PROOF_HARNESS_PATH), artifactTreeIdentity(artifactPath), realpath("/bin/sh"),
+  // The fixture's trusted shells are whatever the smoke tool itself would find on this host, resolved by
+  // the tool's own function rather than by a second copy of the rule. On Windows that list is empty —
+  // there is no /bin/sh to canonicalise — and the one test that needs a trusted shell to exist says so.
+  const [proofIdentity, artifactIdentity, trustedShellPaths] = await Promise.all([
+    captureFileIdentity(PROOF_HARNESS_PATH), artifactTreeIdentity(artifactPath), findTrustedShells(),
   ]);
   return {
     root, cacheRoot, workspaceRoot: path.dirname(artifactPath), skillPath, skillSha256,
     validatorPath, validatorSha256, artifactPath, proofIdentity, artifactSha256: artifactIdentity.sha256, requestSha256, bindingNonce,
-    trustedShellPaths: [trustedShell], workspaceProver,
+    trustedShellPaths, workspaceProver,
   };
 }
 
@@ -269,6 +274,9 @@ test("exec JSONL requires one exact trusted proof-harness command and receipt", 
 test("exec JSONL accepts the exact command inside the current shell wrapper", async () => {
   const fixture = await traceFixture();
   try {
+    // A host with no trusted shell cannot wrap a command in one. The rejection half of this pair — an
+    // untrusted `sh` is refused — runs everywhere, including there, and is the half that guards anything.
+    if (fixture.trustedShellPaths.length === 0) return;
     const source = events(fixture);
     source[2].item.command = `${fixture.trustedShellPaths[0]} -lc ${JSON.stringify(source[2].item.command)}`;
     const result = await parseExecJsonl(source.map(JSON.stringify).join("\n"), { ...fixture });
@@ -617,7 +625,7 @@ test("local session auth is copied as an opaque regular 0600 file", async () => 
     assert.deepEqual(await bridgeLocalAuth({ source, destination }), { authSource: "local-session" });
     const stats = await lstat(destination);
     assert.equal(stats.isFile(), true);
-    assert.equal(stats.mode & 0o777, 0o600);
+    if (PERMISSION_BITS_MEANINGFUL) assert.equal(stats.mode & 0o777, 0o600);
     assert.equal(await readFile(destination, "utf8"), "dummy-secret-that-must-not-be-reported\n");
   } finally { await rm(root, { recursive: true, force: true }); }
 });

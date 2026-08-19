@@ -2,10 +2,10 @@ import assert from "node:assert/strict";
 import { lstat, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { execFileSync } from "node:child_process";
 import test from "node:test";
 
 import { buildProduct } from "../../tooling/lib/build-product.mjs";
+import { FIFO_SUPPORTED, createFifo } from "../lib/platform-support.mjs";
 
 const expectedReferenceFiles = [
   "references/shared/reference-intelligence/catalog/overlays/business-model.json",
@@ -155,11 +155,13 @@ test("reference-intelligence rejects unsafe source changes before publishing out
     ["environment file", async (fixture) => writeText(fixture.repoRoot, "shared/reference-intelligence/schema/.env", "SECRET=blocked\n"), /real \.env|secret environment/iu],
     ["credential file", async (fixture) => writeText(fixture.repoRoot, "shared/reference-intelligence/catalog/credentials.json", "{\"token\":\"blocked\"}\n"), /credential|unexpected shared reference-intelligence package file/iu],
     ["symlink", async (fixture) => symlink("evidence-policy.md", path.join(fixture.repoRoot, "shared/reference-intelligence/references/policy-link.md")), /symlink/iu],
-    ["special file", async (fixture) => execFileSync("/usr/bin/mkfifo", [path.join(fixture.repoRoot, "shared/reference-intelligence/templates/blocked.fifo")]), /unsupported filesystem entry/iu],
+    ["special file", async (fixture) => createFifo(path.join(fixture.repoRoot, "shared/reference-intelligence/templates/blocked.fifo")), /unsupported filesystem entry/iu, FIFO_SUPPORTED],
     ["product overlay collision", async (fixture) => writeText(fixture.repoRoot, "products/reference-intelligence-fixture/plugin/skills/analyze-game-design-references/SKILL.md", "overlay\n"), /reference-intelligence destination collision/iu],
   ];
-  for (const [label, mutate, expected] of cases) {
-    await t.test(label, async (t) => {
+  for (const [label, mutate, expected, available = true] of cases) {
+    // A case whose mutation this platform cannot create is skipped by name rather than run against a
+    // fixture it never mutated — which would assert that a rejection happened when nothing was rejected.
+    await t.test(label, { skip: available ? false : `${label} cannot be created on ${process.platform}` }, async (t) => {
       const fixture = await buildFixture(t);
       await mutate(fixture);
       await assertNoOutputPublication(fixture, () => fixture.build(), expected);

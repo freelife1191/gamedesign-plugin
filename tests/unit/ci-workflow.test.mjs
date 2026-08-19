@@ -21,14 +21,14 @@ test("CI runs both lanes on read-only credentials it does not leave behind", asy
   assert.match(workflow, /^permissions:\n  contents: read$/mu, "the workflow must not be able to write to the repository");
 
   const checkouts = (workflow.match(/actions\/checkout@/gu) ?? []).length;
-  assert.equal(checkouts, 2, "each lane checks out exactly once");
+  assert.equal(checkouts, 3, "each lane checks out exactly once");
   assert.equal(
     (workflow.match(/persist-credentials: false/gu) ?? []).length,
     checkouts,
     "every checkout must drop the credential it would otherwise leave on disk",
   );
 
-  for (const lane of ["offline-gate", "install-gate"]) {
+  for (const lane of ["offline-gate", "windows-hardening-gate", "install-gate"]) {
     assert.match(workflow, new RegExp(`^  ${lane}:$`, "mu"), `the ${lane} lane must exist`);
   }
 });
@@ -64,22 +64,43 @@ test("the install lane covers Windows, because proving the Windows byte contract
   assert.deepEqual(matrixAxis(workflow, "install-gate", "os"), ["ubuntu-latest", "windows-latest"]);
 });
 
-test("the offline lane is scoped to Linux on purpose, and says why in the file", async () => {
+test("the offline lane runs on Windows too, and says in the file what that took", async () => {
   const workflow = await readFile(workflowPath, "utf8");
   assert.deepEqual(
     matrixAxis(workflow, "offline-gate", "os"),
-    ["ubuntu-latest"],
-    "adding Windows back here is a real decision: the two shipped defects are fixed, but the tests and "
-      + "tooling still carry POSIX assumptions, so a runner added before those turns this lane permanently red",
+    ["ubuntu-latest", "windows-latest"],
+    "dropping Windows from this lane is a real decision, not a way to make a red run green",
   );
-  // A scoping decision with no reason attached is indistinguishable from an accident six months later.
-  assert.match(workflow, /POSIX assumptions in the tests and tooling/u, "the file must name what still keeps Windows out of this lane");
+  // A lane that came back after being removed has to carry the reason it came back, or the next person to
+  // see it red will remove it again for the reason that no longer applies.
+  assert.match(workflow, /POSIX assumptions in the tests and tooling/u, "the file must name what used to keep Windows out of this lane");
   assert.match(
     workflow,
     /platform-file-hardening\.mjs/u,
     "and must say where the two shipped defects were resolved, so the stale reason is not carried forward",
   );
+  assert.match(
+    workflow,
+    /tests\/lib\/platform-support\.mjs/u,
+    "and must say where the test-side assumptions were resolved, which is the half that gated this lane",
+  );
   assert.match(workflow, /architecture\/plugin-suite\.md/u, "and must point at where the full finding list lives");
+});
+
+// The narrow lane exists so that the shipped platform exemptions have Windows evidence that does not
+// depend on the whole offline suite being Windows-clean. If it ever collapses into the broad lane it stops
+// being that, so its separateness is asserted rather than assumed.
+test("the shipped platform exemptions have their own Windows lane, outside the offline gate", async () => {
+  const workflow = await readFile(workflowPath, "utf8");
+  const body = laneBody(workflow, "windows-hardening-gate");
+  assert.match(body, /^    runs-on: windows-latest$/mu, "the point of the lane is the operating system it runs on");
+  assert.doesNotMatch(body, /strategy:|matrix:/u, "one job, so there is no matrix entry to drop it from");
+  assert.match(
+    body,
+    /node --test tests\/unit\/platform-file-hardening\.test\.mjs/u,
+    "the raw runner over the one file, so no stage accounting can turn a miss into a skip",
+  );
+  assert.doesNotMatch(body, /--skip "/u, "nothing in this lane may be skipped");
 });
 
 test("the offline lane's shards are the tool's partition, so no stage falls between two jobs", async () => {
@@ -129,6 +150,6 @@ test("a hung lane fails within the hour and a superseded run is cancelled", asyn
   const workflow = await readFile(workflowPath, "utf8");
   assert.match(workflow, /^concurrency:\n  group: [^\n]+\n  cancel-in-progress: true$/mu);
   const limits = [...workflow.matchAll(/^    timeout-minutes: (\d+)$/gmu)].map((match) => Number(match[1]));
-  assert.equal(limits.length, 2, "every lane needs its own ceiling");
+  assert.equal(limits.length, 3, "every lane needs its own ceiling");
   for (const limit of limits) assert.ok(limit > 0 && limit <= 60, `a lane ceiling of ${limit} minutes is not a ceiling`);
 });

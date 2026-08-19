@@ -3,12 +3,12 @@ import { createHash } from "node:crypto";
 import { access, lstat, mkdir, mkdtemp, readFile, readdir, realpath, rm, symlink } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { buildProduct } from "../../../tooling/lib/build-product.mjs";
 import { vendorVersion } from "../../lib/vendored.mjs";
+import { runBash, runPosixShell } from "../../lib/platform-support.mjs";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const pluginRoot = path.join(repoRoot, "products/game-design-studio/plugin");
@@ -881,20 +881,9 @@ test("release-bound source and built text contain no user or workspace absolute 
 });
 
 test("portable CODEX_HOME shell expansion preserves spaces and honors an override", async () => {
-  const command = 'CODEX_ROOT="${CODEX_HOME:-$HOME/.codex}"; printf "%s" "$CODEX_ROOT"';
-  const fallback = spawnSync("/bin/sh", ["-c", command], {
-    encoding: "utf8",
-    env: { HOME: "/tmp/home with spaces", PATH: process.env.PATH },
-  });
-  assert.equal(fallback.status, 0, fallback.stderr);
-  assert.equal(fallback.stdout, "/tmp/home with spaces/.codex");
-  const overridden = spawnSync("/bin/sh", ["-c", command], {
-    encoding: "utf8",
-    env: { HOME: "/tmp/ignored home", CODEX_HOME: "/tmp/custom codex", PATH: process.env.PATH },
-  });
-  assert.equal(overridden.status, 0, overridden.stderr);
-  assert.equal(overridden.stdout, "/tmp/custom codex");
-
+  // What the README says is asserted on every platform; only running what it says needs a POSIX shell.
+  // The recipe is a shell command line, so a host without one cannot execute it and cannot be made to —
+  // the alternative would be asserting against a re-implementation, which proves the re-implementation.
   const readme = await readFile(readmePath, "utf8");
   assert.ok(readme.includes('CODEX_ROOT="${CODEX_HOME:-$HOME/.codex}"'));
   assert.ok(readme.includes('python3 "$CODEX_ROOT/skills/.system/skill-creator/scripts/quick_validate.py"'));
@@ -903,8 +892,20 @@ test("portable CODEX_HOME shell expansion preserves spaces and honors an overrid
     .map((match) => match[1])
     .filter((block) => block.includes("CODEX_ROOT="));
   assert.equal(validationBlocks.length, 2);
+
+  const command = 'CODEX_ROOT="${CODEX_HOME:-$HOME/.codex}"; printf "%s" "$CODEX_ROOT"';
+  const fallback = runPosixShell(command, { env: { HOME: "/tmp/home with spaces", PATH: process.env.PATH } });
+  if (fallback === null) return;
+  assert.equal(fallback.status, 0, fallback.stderr);
+  assert.equal(fallback.stdout, "/tmp/home with spaces/.codex");
+  const overridden = runPosixShell(command, {
+    env: { HOME: "/tmp/ignored home", CODEX_HOME: "/tmp/custom codex", PATH: process.env.PATH },
+  });
+  assert.equal(overridden.status, 0, overridden.stderr);
+  assert.equal(overridden.stdout, "/tmp/custom codex");
+
   for (const block of validationBlocks) {
-    const syntax = spawnSync("/bin/bash", ["-n"], { encoding: "utf8", input: block });
+    const syntax = runBash(["-n"], { input: block });
     assert.equal(syntax.status, 0, syntax.stderr);
   }
 });
