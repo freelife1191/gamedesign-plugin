@@ -12,16 +12,19 @@ import {
 
 const repoRoot = path.resolve(fileURLToPath(new URL("../../", import.meta.url)));
 const products = ["game-design-career", "game-design-studio"];
+// An upstream bump changes how many files the vendored tree carries — skillstead went from 55 to 319
+// when it started shipping fonts. The lock counts them, so the expectation follows the bump.
+const vendorFileCounts = await Promise.all(["skillstead", "archify"].map(async (name) => ({
+  name,
+  files: JSON.parse(await readFile(path.join(repoRoot, "shared/vendor", name, "vendor.lock.json"), "utf8")).tree.files.length,
+})));
 
 test("each generated plugin passes a standalone byte- and process-verified smoke", async () => {
   const report = await runIsolationSmoke({ repoRoot });
   assert.deepEqual(report.map(({ name }) => name), products);
   for (const result of report) {
     assert.equal(result.skillCount, result.name === "game-design-studio" ? 26 : 25);
-    assert.deepEqual(result.vendorFiles, [
-      { name: "skillstead", files: 55 },
-      { name: "archify", files: 62 },
-    ]);
+    assert.deepEqual(result.vendorFiles, vendorFileCounts);
     assert.deepEqual(result.hooks, ["SessionStart", "Stop"]);
     assert.deepEqual(result.validation, { ok: true, requestedFormats: ["md"] });
     assert.equal(result.stopStatus, "passed");
