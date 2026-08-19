@@ -20,6 +20,11 @@ const TOUCHED = Object.freeze([
   "guides/archify-diagrams/catalog.json",
   "guides/assets/diagram-manifest.json",
   "shared/contracts/README.md",
+  "shared/scripts/capability-probe.mjs",
+  "architecture/plugin-suite.md",
+  "architecture/knowledge-and-evidence.md",
+  "guides/game-design-studio/skills/svg-infographic.md",
+  "guides/game-design-career/skills/svg-infographic.md",
   "README.md",
 ]);
 
@@ -37,7 +42,7 @@ async function checkout(t) {
 }
 
 test("the committed documents already agree with the vendor locks", async () => {
-  assert.deepEqual(await syncVendorReferences({ check: true }), { status: "current", rules: 22, drifted: [] });
+  assert.deepEqual(await syncVendorReferences({ check: true }), { status: "current", rules: 29, drifted: [] });
 });
 
 test("every stated version comes from a lock, not from the document", async () => {
@@ -79,7 +84,40 @@ test("a bumped lock drives every document, and --check refuses to let one lag", 
   // before it was pinned here.
   const contracts = await readFile(path.join(root, "shared/contracts/README.md"), "utf8");
   assert.ok(contracts.includes("shared/vendor/archify/archify/9.9.9/"), "the shared contract mapping follows the lock");
-  assert.deepEqual(await syncVendorReferences({ root, check: true }), { status: "current", rules: 22, drifted: [] });
+  assert.deepEqual(await syncVendorReferences({ root, check: true }), { status: "current", rules: 29, drifted: [] });
+});
+
+// The renderer version is stated in prose on five more surfaces than the tables cover. Those five had
+// drifted to two different stale versions before they were pinned here, so a bump has to reach them too.
+test("a skillstead bump reaches the architecture notes, the guide pages, the contract and the probe", async (t) => {
+  const root = await checkout(t);
+  const lockPath = path.join(root, "shared/vendor/skillstead/vendor.lock.json");
+  const lock = JSON.parse(await readFile(lockPath, "utf8"));
+  lock.upstream.tag = "svg-infographic/v9.9.9";
+  lock.upstream.commit = "e".repeat(40);
+  lock.tree.files = lock.tree.files.slice(0, 7);
+  // The validator digests the renderer scripts of whichever tree the lock names, so the bumped tree has
+  // to exist before the sync can be asked what the new digests are.
+  const vendorRoot = path.join(root, "shared/vendor/skillstead");
+  await cp(path.join(vendorRoot, lock.tree.root, "scripts"), path.join(vendorRoot, "svg-infographic/9.9.9/scripts"), { recursive: true });
+  lock.tree.root = "svg-infographic/9.9.9";
+  await writeFile(lockPath, `${JSON.stringify(lock, null, 2)}\n`);
+
+  assert.equal((await syncVendorReferences({ root })).status, "written");
+  for (const [relative, expected] of [
+    ["architecture/knowledge-and-evidence.md", "Skillstead `svg-infographic` 9.9.9"],
+    ["architecture/plugin-suite.md", "Skillstead 9.9.9"],
+    ["guides/game-design-studio/skills/svg-infographic.md", "vendored Skillstead 9.9.9"],
+    ["guides/game-design-career/skills/svg-infographic.md", "vendored Skillstead 9.9.9"],
+    ["shared/scripts/capability-probe.mjs", "vendored Skillstead 9.9.9"],
+    ["shared/contracts/README.md", "vendored Skillstead 9.9.9"],
+    // The reserved-destination clause counts the lock's paths, so a lock that carries seven says seven.
+    ["shared/contracts/README.md", "Skillstead lock의 7개 path"],
+  ]) {
+    const document = await readFile(path.join(root, relative), "utf8");
+    assert.ok(document.includes(expected), `${relative} must state ${expected}`);
+  }
+  assert.deepEqual(await syncVendorReferences({ root, check: true }), { status: "current", rules: 29, drifted: [] });
 });
 
 // A document that no longer states a version is not a synced document. Reporting it clean would let a

@@ -15,5 +15,7 @@
 | PNG/PDF/DOCX/PPTX가 없음 | Chromium 또는 문서 renderer가 없거나 QA 실패 | capability probe와 export manifest의 `unavailable`·`blocked` 원인 확인 | renderer를 준비해 실패 형식만 재실행; MD와 SVG를 새 기준으로 덮어쓰지 않음 | `보존된 Artifact에서 unavailable인 PNG와 PDF만 다시 준비해줘.` | `content.md`, manifest, SVG와 통과한 파생본 |
 | 근거·권리·개인정보 검토에서 차단됨 | 공고 출처·날짜, 제3자 저작물 권리, 동의 또는 개인정보 최소화가 부족함 | `evidence.yml`, 원문 사용 범위, 비공개 회사 정보와 개인 식별자를 확인 | 비식별화하고 인용 범위를 줄이며 허용된 공개 자료로 교체; 근거 없는 claim은 gap으로 유지 | `개인정보와 비공개 내용을 제외하고 evidence-gap을 유지한 채 로드맵을 재개해줘.` | 확인 가능한 역량·프로젝트 기록과 비민감 근거 |
 | 작업이 중단되어 어디서 이어야 할지 모름 | Artifact 경로, 기준 날짜와 마지막 차단 상태가 요청에 없음 | `content.md`, evidence, decisions, assets와 마지막 상태 보고 확인 | 기존 Artifact와 evidence ID를 지정하고 차단 한 단계만 재개 | `system-designer-12-week-roadmap/content.md를 기준으로 완료된 주차를 보존하고 blocked 항목부터 재개해줘.` | 전체 Canonical Artifact와 완료된 검토 |
+| 설치는 됐는데 어떤 스킬을 불러야 할지 모름 | 요청이 넓거나 여러 영역이 섞여 소유 스킬이 하나로 정해지지 않음 | 요청에 결과물 하나가 지정되어 있는지 확인 | 대표 진입 스킬에 요청이나 사례 ID를 그대로 넘겨 소유 제품과 실행 경로를 먼저 고정 | `$game-design-career:game-design-career 이 요청을 정규화하고 route 하나를 골라 라우팅 영수증으로 남겨.` | 사용자 원문과 기존 Artifact |
+| 새 스킬이나 고쳐진 문서가 보이지 않음 | 설치본이 이전 릴리스이거나 설치 뒤 세션을 새로 열지 않음 | `codex plugin list`의 버전과 `$upgrade-game-design-suite`의 비교 결과 확인 | 승인 뒤에만 다시 설치하고 App은 새 채팅, CLI는 새 세션에서 재개. 설치된 캐시 폴더를 직접 고치지 않음 | `$upgrade-game-design-suite 설치된 버전과 최신 릴리스를 비교해서 보여줘.` | 설치된 다른 플러그인, marketplace 등록과 로컬 Artifact |
 
 이미지 live smoke의 예시 설정은 `gpt-image-2`와 `low`를 사용하지만, 실제 포트폴리오 작업은 검증된 redacted 설정과 비용·권리 결정을 따릅니다. API key 값, 개인 연락처, 타인의 개인정보 또는 회사 비공개 자료를 대화·로그·Artifact에 붙여 넣지 마세요.

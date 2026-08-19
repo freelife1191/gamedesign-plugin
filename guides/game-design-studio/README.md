@@ -82,6 +82,10 @@ Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스
 9. [MD·PDF·DOCX·PPTX 내보내기](exports.md)에서 필요한 형식만 준비합니다.
 10. 막히면 [문제 해결](troubleshooting.md)에서 보존된 결과로 재개합니다.
 
+어떤 스킬이 요청의 소유자인지 모르겠다면 [대표 진입 스킬](skills/game-design-studio.md)에 요청이나 사례 ID를 그대로 넘깁니다. 소유 제품 하나와 실행 경로 하나를 고르고 라우팅 영수증을 남깁니다.
+
+설치본을 올릴 때는 `$upgrade-game-design-suite`를 먼저 부릅니다. 검사와 계획 단계에서는 설치를 바꾸지 않고, 승인 뒤에만 다시 설치합니다. 절차는 [설치의 업데이트](installation.md#업데이트)에 있습니다.
+
 ---
 
 ## 목적별 레시피

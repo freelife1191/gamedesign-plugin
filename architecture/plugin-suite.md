@@ -63,7 +63,7 @@ plugins/game-design-<product>/
 │   │   ├── agents/openai.yaml      # 필요한 스킬에만 존재
 │   │   ├── references/             # 필요한 스킬에만 존재
 │   │   └── scripts/                # 필요한 스킬에만 존재
-│   └── svg-infographic/            # Skillstead 0.8.3
+│   └── svg-infographic/            # Skillstead 0.10.0
 ├── agents/                         # Studio 12개 / Career 10개 역할 프롬프트
 ├── hooks/hooks.json
 ├── scripts/                        # 공통·제품 실행 스크립트 30개
@@ -170,7 +170,7 @@ plugin manifest에는 hook 필드를 추가하지 않고 기본 발견 경로 `h
 | 단계 | 증명하는 것 |
 | --- | --- |
 | reference/evidence audit | 원문 인덱스, 최신성, source mapping과 drift |
-| vendor hash | Skillstead 0.8.3 원본과 lock의 byte 일치 |
+| vendor hash | Skillstead 0.10.0 원본과 lock의 byte 일치 |
 | unit/contract/product/E2E | schema, 스킬, 역할, hook, 제품 시나리오 |
 | 기억·레퍼런스·용어 안전성 | 출처 변경(drift), 승인 권한, 보수적 근거 판정, 원문 무치환과 복구(rollback) |
 | 컷씬 생애주기(lifecycle) | 프롬프트 전용(prompt-only), 비용·상한(cap), 이름이 기록된 승인, 순차 단계(wave), 부분 재시도와 연속성 관문(continuity gate) |

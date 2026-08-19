@@ -29,6 +29,9 @@ async function checkout(t) {
     "shared/contracts/README.md",
     "products/game-design-studio/product.json",
     "products/game-design-career/product.json",
+    // Rule targets inside the scan roots: the tool refreshes their digests, so it reads them.
+    "guides/game-design-studio/skills/svg-infographic.md",
+    "guides/game-design-career/skills/svg-infographic.md",
   ]) {
     await mkdir(path.join(root, path.dirname(relative)), { recursive: true });
     await cp(path.join(repoRoot, relative), path.join(root, relative));

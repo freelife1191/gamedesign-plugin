@@ -35,12 +35,18 @@ async function readLock(root, name) {
   const lock = JSON.parse(await readFile(path.join(root, "shared/vendor", name, "vendor.lock.json"), "utf8"));
   const tag = lock?.upstream?.tag;
   const commit = lock?.upstream?.commit;
+  const files = lock?.tree?.files;
   if (typeof tag !== "string" || !/^[a-f0-9]{40}$/u.test(commit ?? "")) throw referenceError("VENDOR_REFERENCE_LOCK_INVALID", name);
-  return { tag, commit, version: versionOf(tag) };
+  if (!Array.isArray(files) || files.length === 0) throw referenceError("VENDOR_REFERENCE_LOCK_INVALID", name);
+  return { tag, commit, version: versionOf(tag), pathCount: files.length };
 }
 
 const ROOT_README = "README.md";
 const SHARED_CONTRACTS_README = "shared/contracts/README.md";
+const CAPABILITY_PROBE = "shared/scripts/capability-probe.mjs";
+const ARCHITECTURE_SUITE = "architecture/plugin-suite.md";
+const ARCHITECTURE_KNOWLEDGE = "architecture/knowledge-and-evidence.md";
+const SKILLSTEAD_GUIDES = Object.freeze(PRODUCTS.map((product) => `guides/${product}/skills/svg-infographic.md`));
 const DIAGRAM_MANIFEST = "guides/assets/diagram-manifest.json";
 const ARCHIFY_CATALOG = "guides/archify-diagrams/catalog.json";
 const STUDIO_VALIDATOR = "products/game-design-studio/plugin/skills/visualize-game-design/scripts/validate-visualization-evidence.mjs";
@@ -146,6 +152,37 @@ function rulesFor(state) {
       file: STUDIO_VALIDATOR,
       find: /^const LINTER_VERSION = "\d+\.\d+\.\d+";$/mu,
       write: `const LINTER_VERSION = "${state.skillstead.version}";`,
+    },
+  );
+  // The architecture notes, the two Skillstead guide pages, the shared contract and the capability probe
+  // each describe the bundled renderer in the present tense. Before these rules existed the three of them
+  // had drifted to three different versions — 0.8.3, 0.9.0 and the real one — so a reader was told the
+  // package carries a renderer it has not carried for two releases.
+  rules.push(
+    {
+      file: ARCHITECTURE_KNOWLEDGE,
+      all: true,
+      find: /Skillstead `svg-infographic` \d+\.\d+\.\d+/gu,
+      writeFor: () => `Skillstead \`svg-infographic\` ${state.skillstead.version}`,
+    },
+    {
+      file: ARCHITECTURE_SUITE,
+      all: true,
+      find: /Skillstead \d+\.\d+\.\d+/gu,
+      writeFor: () => `Skillstead ${state.skillstead.version}`,
+    },
+    ...[...SKILLSTEAD_GUIDES, SHARED_CONTRACTS_README, CAPABILITY_PROBE].map((file) => ({
+      file,
+      all: true,
+      find: /vendored Skillstead \d+\.\d+\.\d+/gu,
+      writeFor: () => `vendored Skillstead ${state.skillstead.version}`,
+    })),
+    // The reserved-destination clause promises the packaged skill tree equals the lock exactly. That
+    // promise is only checkable if the number it quotes is the lock's own path count.
+    {
+      file: SHARED_CONTRACTS_README,
+      find: /Skillstead lock의 \d+개 path/u,
+      write: `Skillstead lock의 ${state.skillstead.pathCount}개 path`,
     },
   );
   // The Archify diagram catalog cites the vendored trees by path, and those paths carry the version. One

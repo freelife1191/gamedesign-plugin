@@ -141,7 +141,7 @@ Source는 사용자 제공 원문의 맥락, 사례와 표현을 확인할 때�
 - Studio의 package-local redistribution guard는 49개 모두 권리 근거가 확인되기 전 `public`·`distributable` 모드에서 fail-closed 합니다.
 - Career를 포함한 어떤 snapshot도 원문 권리를 추정해 공개 배포해서는 안 됩니다.
 
-Skillstead `svg-infographic` 0.8.3은 별도 Apache-2.0 라이선스입니다. `shared/vendor/skillstead/vendor.lock.json`은 upstream, 버전과 파일별 hash를 고정하며, 각 package는 원본 라이선스와 제3자 고지를 포함합니다.
+Skillstead `svg-infographic` 0.10.0은 별도 Apache-2.0 라이선스입니다. `shared/vendor/skillstead/vendor.lock.json`은 upstream, 버전과 파일별 hash를 고정하며, 각 package는 원본 라이선스와 제3자 고지를 포함합니다.
 
 ## 갱신 절차
 
