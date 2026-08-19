@@ -12,7 +12,7 @@ advisory 캐시는 스키마 2다. `upgrade-game-design-suite`의 “이 버전�
 
 advisory는 컴포넌트별 GitHub Releases를 먼저 읽고, 릴리스 목록이 비어 있을 때만 같은 저장소의 tag 목록을 읽는다. 추적 대상 저장소는 모두 tag로 버전을 발행하며 릴리스를 한 번도 발행하지 않은 곳도 있어서, 릴리스만 보면 해당 컴포넌트가 `unknown`이 되고 `unknown` 하나가 전체 advisory를 `unknown`으로 만들어 어떤 알림도 뜨지 않는다. tag에는 draft·prerelease 표시가 없으므로 draft는 항상 거짓으로 두고 prerelease는 tag 버전 자체가 prerelease 식별자를 가질 때만 참으로 읽는다. 릴리스를 발행하는 저장소에서는 tag 요청을 아예 보내지 않는다.
 
-`codex plugin list --available`은 설치하지 않은 플러그인 inventory일 뿐이다. Codex 0.147.0에서는 설치한 플러그인이 이 목록에 아예 나오지 않으므로, 설치본의 비교 대상 버전은 host가 알려준 그 플러그인의 marketplace snapshot 디렉터리에 있는 `.codex-plugin/plugin.json`에서 읽는다. 파일을 읽기만 하고 쓰지 않으므로 승인 게이트 앞 단계에 남는다. 경로가 절대 경로가 아니거나 manifest를 읽을 수 없거나 이름이 다르거나 안정 버전이 아니면 비교 대상을 비워 `not-comparable`로 남긴다. Git marketplace는 사용자가 `codex plugin marketplace upgrade game-design-suite`를 명시적으로 실행한 뒤 재설치한다. 로컬 marketplace는 Git fetch 대상이 아니므로 checkout을 갱신하고 suite build를 실행한 뒤 재설치한다. 어느 경우나 새 채팅 또는 새 세션에서 새 설치본을 사용한다.
+`codex plugin list --available --json`은 설치하지 않은 플러그인 inventory일 뿐이다. Codex 0.147.0에서는 설치한 플러그인이 이 목록에 아예 나오지 않으므로, 설치본의 비교 대상 버전은 host가 알려준 그 플러그인의 marketplace snapshot 디렉터리에 있는 `.codex-plugin/plugin.json`에서 읽는다. 파일을 읽기만 하고 쓰지 않으므로 승인 게이트 앞 단계에 남는다. 경로가 절대 경로가 아니거나 manifest를 읽을 수 없거나 이름이 다르거나 안정 버전이 아니면 비교 대상을 비워 `not-comparable`로 남긴다. Git marketplace는 사용자가 `codex plugin marketplace upgrade game-design-suite`를 명시적으로 실행한 뒤 재설치한다. 로컬 marketplace는 Git fetch 대상이 아니므로 checkout을 갱신하고 suite build를 실행한 뒤 재설치한다. 어느 경우나 새 채팅 또는 새 세션에서 새 설치본을 사용한다.
 
 ## Product contract and source root
 

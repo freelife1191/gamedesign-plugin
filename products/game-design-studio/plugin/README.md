@@ -49,7 +49,7 @@ codex plugin add game-design-studio@game-design-suite
 
 아래는 스킬 없이 손으로 처리할 때의 명령입니다.
 
-`codex plugin list --available`은 설치하지 않은 플러그인 목록만 보여 줍니다. Codex 0.147.0에서는 이미 설치한 Studio의 새 원천 버전을 판별하지 않습니다. 알림을 본 뒤에만 아래 명령을 명시적으로 실행하고, 재설치가 끝나면 새 채팅 또는 새 세션을 열어 새 설치본을 사용하세요.
+`codex plugin list --available --json`은 설치하지 않은 플러그인 목록만 보여 줍니다. Codex 0.147.0에서는 이미 설치한 Studio의 새 원천 버전을 판별하지 않습니다. 알림을 본 뒤에만 아래 명령을 명시적으로 실행하고, 재설치가 끝나면 새 채팅 또는 새 세션을 열어 새 설치본을 사용하세요.
 
 Git marketplace로 등록한 경우 snapshot을 갱신하고 플러그인을 다시 설치합니다.
 
