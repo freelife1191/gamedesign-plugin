@@ -31,7 +31,7 @@ function retryCreatesDebris(source) {
 const mutations = {
   "same-event-loser-created": {
     testId: "same-event-status", assertion: "sorted statuses must be created,present", sentinel: "MEM-MUT-SAME-EVENT-STATUS", primaryAnchor: sameEventAnchor,
-    testAnchor: 'mutationDeepEqual({ mutation: "same-event-loser-created", testId: "same-event-status", sentinel: "MEM-MUT-SAME-EVENT-STATUS" }, actualStatuses, ["created", "present"]);',
+    testAnchor: 'mutationDeepEqual({ mutation: "same-event-loser-created", testId: "same-event-status", sentinel: "MEM-MUT-SAME-EVENT-STATUS" }, statuses, ["created", "present"]);',
     apply: (source) => replaceExact(source, sameEventAnchor, sameEventAnchor.replace('status: "present"', 'status: "created"')),
   },
   "concurrent-fold-authority": {
@@ -72,7 +72,7 @@ function parseEvidence(bytes, mutationName, mutation) {
 }
 
 async function runTest(moduleUrl, mutationName, mutation, selectedTestPath) {
-  const childEnvironment = { ...process.env, DESIGN_MEMORY_STORE_MODULE_URL: moduleUrl, DESIGN_MEMORY_FIXTURE_ROOT: path.join(root, "tests/fixtures/design-memory"), DESIGN_MEMORY_MUTATION_EVIDENCE: "v1", DESIGN_MEMORY_MUTATION_NAME: mutationName, DESIGN_MEMORY_MUTATION_TEST_ID: mutation.testId, DESIGN_MEMORY_MUTATION_SENTINEL: mutation.sentinel }; delete childEnvironment.NODE_TEST_CONTEXT;
+  const childEnvironment = { ...process.env, DESIGN_MEMORY_STORE_MODULE_URL: moduleUrl, DESIGN_MEMORY_FIXTURE_ROOT: path.join(root, "tests/fixtures/design-memory"), DESIGN_MEMORY_STORE_SOURCE_PATH: storePath, DESIGN_MEMORY_MUTATION_EVIDENCE: "v1", DESIGN_MEMORY_MUTATION_NAME: mutationName, DESIGN_MEMORY_MUTATION_TEST_ID: mutation.testId, DESIGN_MEMORY_MUTATION_SENTINEL: mutation.sentinel }; delete childEnvironment.NODE_TEST_CONTEXT;
   const child = spawn(process.execPath, [selectedTestPath], {
     cwd: root, env: childEnvironment, stdio: ["ignore", "pipe", "pipe", "pipe"],
   });
@@ -94,7 +94,7 @@ async function tamperedTest(temporaryRoot, mutation, tamper) {
   else if (tamper === "helper-type-error") source = replaceExact(source, "try { assert.deepEqual(actual, expected, sentinel); }", "try { undefined.missing(); }");
   else if (tamper === "wrong-operator") source = replaceExact(source, "try { assert.deepEqual(actual, expected, sentinel); }", "try { assert.equal(actual, expected, sentinel); }");
   else if (tamper === "wrong-message") source = replaceExact(source, "try { assert.deepEqual(actual, expected, sentinel); }", 'try { assert.deepEqual(actual, expected, "MEM-MUT-WRONG-MESSAGE"); }');
-  else if (tamper === "observed-value-error") source = replaceExact(source, "const actualStatuses = results.map((_, index) => parsed[index].status).sort();", 'const actualStatuses = (() => { throw new TypeError("OBSERVED-VALUE"); })();');
+  else if (tamper === "observed-value-error") source = replaceExact(source, "statuses = results.map((value) => value.status).sort();", 'statuses = (() => { throw new TypeError("OBSERVED-VALUE"); })();');
   else if (tamper === "wrong-sentinel") source = replaceExact(source, 'if (mutationEvidenceMatches(error, { mutation, testId, sentinel }, "deepStrictEqual")) {\n      writeSync(3, `${JSON.stringify({ mutation, testId, sentinel })}\\n`);', 'if (mutationEvidenceMatches(error, { mutation, testId, sentinel }, "deepStrictEqual")) {\n      writeSync(3, `${JSON.stringify({ mutation, testId, sentinel: "MEM-MUT-WRONG-SENTINEL" })}\\n`);');
   else if (tamper === "fake-reporter-output") source = replaceExact(source, mutation.testAnchor, `process.stdout.write("not ok 1 - fake ${mutation.sentinel}\\n"); process.stderr.write("# fail 1 ${mutation.sentinel}\\n"); assert.fail("UNRELATED-GENERIC-ASSERT");\n  ${mutation.testAnchor}`);
   else if (tamper === "duplicate-evidence") source = replaceExact(source, 'if (mutationEvidenceMatches(error, { mutation, testId, sentinel }, "deepStrictEqual")) {\n      writeSync(3, `${JSON.stringify({ mutation, testId, sentinel })}\\n`);', 'if (mutationEvidenceMatches(error, { mutation, testId, sentinel }, "deepStrictEqual")) {\n      writeSync(3, `${JSON.stringify({ mutation, testId, sentinel })}\\n`); writeSync(3, `${JSON.stringify({ mutation, testId, sentinel })}\\n`);');

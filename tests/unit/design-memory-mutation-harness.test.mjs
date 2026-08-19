@@ -18,6 +18,22 @@ test("mutation harness child invocation has no minor-version test CLI flags", as
   assert.match(source, /spawn\(process\.execPath, \[selectedTestPath\]/u);
 });
 
+// A tampered copy of the selected test runs out of a temp directory, so every path that file
+// resolves against its own location resolves to nothing there. One of them — the pristine store
+// source the stale-root regression reads — failed on every tampered run, which pinned the exit code
+// at 1 whether or not the mutation was caught and made an unobserved mutation report the same
+// `evidence-empty` that ten of the eleven tampers below expect. Each such path has to sit behind an
+// env seam, and the harness has to set every seam the selected test reads.
+const SELECTED_TEST_SEAMS = ["DESIGN_MEMORY_STORE_MODULE_URL", "DESIGN_MEMORY_STORE_SOURCE_PATH", "DESIGN_MEMORY_FIXTURE_ROOT"];
+
+test("the selected test resolves nothing against its own location without a seam the harness sets", async () => {
+  const selected = await readFile(path.join(root, "tests/unit/design-memory-store.test.mjs"), "utf8");
+  const unguarded = selected.split("\n").filter((line) => line.includes("import.meta.url") && !SELECTED_TEST_SEAMS.some((seam) => line.includes(seam)));
+  assert.deepEqual(unguarded, [], "a copy of the selected test cannot resolve these");
+  const source = await readFile(harness, "utf8");
+  for (const seam of SELECTED_TEST_SEAMS) assert.match(source, new RegExp(`${seam}:`, "u"), `${seam} is read by the selected test but never set by the harness`);
+});
+
 // Three timeouts sit in this one call chain: the harness caps the grandchild `node --test` it
 // spawns, we cap the harness, and node caps this test. Every cap outside the harness has to be
 // looser than the harness's own, or we kill it before it can report the stage it failed at and the
