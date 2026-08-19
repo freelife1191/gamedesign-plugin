@@ -4,6 +4,7 @@ import { lstat, open, realpath } from "node:fs/promises";
 import path from "node:path";
 
 import { inspectCompletePng } from "./complete-png-validation.mjs";
+import { noFollowOpenFlag } from "./platform-file-hardening.mjs";
 
 export const maximumReferenceImages = 8;
 export const maximumReferenceImageBytes = 12 * 1024 * 1024;
@@ -85,7 +86,7 @@ async function verifyPins(pins) {
 async function verifyReferenceFile(destination, expectedIdentity, expectedDigest) {
   let handle;
   try {
-    handle = await open(destination, constants.O_RDONLY | constants.O_NOFOLLOW);
+    handle = await open(destination, constants.O_RDONLY | noFollowOpenFlag());
     const before = await handle.stat();
     if (!before.isFile() || !sameIdentity(expectedIdentity, identity(before))) throw new Error("reference identity changed");
     const bytes = await handle.readFile();
@@ -107,7 +108,7 @@ export async function readSecureReferenceFile({ artifactRoot, path: referencePat
   let handle;
   try {
     await verifyPins(pins);
-    handle = await open(destination, constants.O_RDONLY | constants.O_NOFOLLOW);
+    handle = await open(destination, constants.O_RDONLY | noFollowOpenFlag());
     const before = await handle.stat();
     if (!before.isFile() || before.size < 1 || before.size > maximumReferenceImageBytes) throw new Error("unsafe reference file");
     const bytes = await handle.readFile();

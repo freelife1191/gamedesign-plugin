@@ -4,12 +4,13 @@ import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { CHILD_ENVIRONMENT_KEYS, CHILD_DEADLINE_SCALE } from "../../lib/platform-support.mjs";
 
 const root = fileURLToPath(new URL("../../..", import.meta.url));
 const MAX_EVIDENCE_BYTES = 4 * 1024;
 const MAX_OUTPUT_BYTES = 64 * 1024;
-const TEST_TIMEOUT_MS = 15_000;
-const CLOSE_TIMEOUT_MS = 2_000;
+const TEST_TIMEOUT_MS = 15_000 * CHILD_DEADLINE_SCALE;
+const CLOSE_TIMEOUT_MS = 2_000 * CHILD_DEADLINE_SCALE;
 const hostilePath = path.join(root, "tests/fixtures/design-memory/process-tree-hostile.mjs");
 
 const mutations = {
@@ -136,7 +137,7 @@ function selectedTestSource(mutation, moduleUrl, tamper) {
 
 function allowlistedEnvironment(mutation, tamper) {
   const env = {};
-  for (const key of ["PATH", "TMPDIR", "TEMP", "TMP", "LANG", "LC_ALL", "HOME"]) if (typeof process.env[key] === "string") env[key] = process.env[key];
+  for (const key of CHILD_ENVIRONMENT_KEYS) if (typeof process.env[key] === "string") env[key] = process.env[key];
   Object.assign(env, {
     REFERENCE_INTELLIGENCE_MUTATION_EVIDENCE: tamper === "wrong-env" ? "wrong" : "fd-json-v3",
     REFERENCE_INTELLIGENCE_MUTATION_ID: mutation.id,

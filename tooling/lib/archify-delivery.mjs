@@ -5,6 +5,7 @@ import { lstat, mkdir, open, readFile, readdir, realpath, rename, rmdir, unlink,
 import path from "node:path";
 
 import { resolveArchifyInstallation } from "../../shared/scripts/capability-probe.mjs";
+import { noFollowOpenFlag, openDirectoryHandle } from "../../shared/scripts/lib/platform-file-hardening.mjs";
 import { loadArchifyCatalog, publishableArchifyEntries } from "./archify-catalog.mjs";
 import { archifyVisualQaArtifactPath, collectArchifyVisualQaRenderPaths, loadArchifyVisualQa } from "./archify-visual-qa.mjs";
 import { findStructuralDuplicates } from "./archify-signature.mjs";
@@ -122,10 +123,13 @@ async function snapshotDirectory(filename, label, root) {
   try {
     const beforePath = await lstat(requested, { bigint: true });
     if (!beforePath.isDirectory() || beforePath.isSymbolicLink()) throw new Error(`${label} must be a non-symlink directory`);
-    handle = await open(requested, fsConstants.O_RDONLY | fsConstants.O_DIRECTORY | fsConstants.O_NOFOLLOW);
-    const before = await handle.stat({ bigint: true });
+    // A directory handle pins the inode for the whole readdir where the platform has one. Where it does
+    // not, the pin is the pair of lstats already bracketing this block: `beforePath` above and
+    // `afterPath` below, compared identically. See platform-file-hardening.mjs for what that costs.
+    handle = await openDirectoryHandle(requested);
+    const before = handle === null ? beforePath : await handle.stat({ bigint: true });
     const children = (await readdir(requested)).sort(comparePaths);
-    const after = await handle.stat({ bigint: true });
+    const after = handle === null ? await lstat(requested, { bigint: true }) : await handle.stat({ bigint: true });
     const canonical = await realpath(requested);
     const afterPath = await lstat(requested, { bigint: true });
     const canonicalRoot = root ? await realpath(path.resolve(root)) : null;
@@ -136,7 +140,7 @@ async function snapshotDirectory(filename, label, root) {
       throw new Error(`${label} identity changed while read`);
     }
     const snapshot = Object.freeze({ path: canonical, label, identity: directoryIdentity(before), children: Object.freeze(children) });
-    await handle.close(); handle = null;
+    await handle?.close(); handle = null;
     return snapshot;
   } catch (error) { primary = error; }
   try { await handle?.close(); } catch (close) { throw primary ? new AggregateError([primary, close], `${label} read and close failed`) : close; }
@@ -173,7 +177,7 @@ async function snapshotRegular(filename, label) {
   try {
     const beforePath = await lstat(requested, { bigint: true });
     if (!beforePath.isFile() || beforePath.isSymbolicLink()) throw new Error(`${label} must be a regular non-symlink file`);
-    handle = await open(requested, fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW);
+    handle = await open(requested, fsConstants.O_RDONLY | noFollowOpenFlag());
     const before = await handle.stat({ bigint: true });
     const bytes = await handle.readFile();
     const after = await handle.stat({ bigint: true });
@@ -202,7 +206,7 @@ async function assertSnapshotCurrent(snapshot) {
 
 async function writeExclusive(filename, bytes, mode = 0o600) {
   await mkdir(path.dirname(filename), { recursive: true, mode: 0o700 });
-  const handle = await open(filename, fsConstants.O_WRONLY | fsConstants.O_CREAT | fsConstants.O_EXCL | fsConstants.O_NOFOLLOW, mode);
+  const handle = await open(filename, fsConstants.O_WRONLY | fsConstants.O_CREAT | fsConstants.O_EXCL | noFollowOpenFlag(), mode);
   try { await handle.writeFile(bytes); } finally { await handle.close(); }
   return snapshotRegular(filename, "private delivery file");
 }

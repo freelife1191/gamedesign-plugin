@@ -12,6 +12,8 @@ import { hashFileEntries, sha256 } from "../../tooling/lib/hash.mjs";
 import { buildProduct } from "../../tooling/lib/build-product.mjs";
 import { buildSnapshots } from "../../tooling/build-snapshots.mjs";
 import { findPolicyLeak, findPolicyLeakInBytes, readNeutralPresetPolicy } from "./neutral-preset-policy.mjs";
+import { PERMISSION_BITS_MEANINGFUL } from "../lib/platform-support.mjs";
+import { DIRECTORY_RENAME_WITH_OPEN_HANDLE, NO_DIRECTORY_RENAME_WITH_OPEN_HANDLE_REASON } from "../lib/platform-support.mjs";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const productNames = ["game-design-career", "game-design-studio"];
@@ -310,7 +312,9 @@ test("clean replacement touches only the two explicit plugin directories and che
   t.after(() => rm(builds.recovery.recoveryRoot, { recursive: true, force: true }));
   const pluginsAfter = await lstat(path.join(fixtureRepo, "plugins"));
   const unrelatedAfter = await lstat(path.dirname(unrelated));
-  assert.equal(pluginsAfter.mode & 0o777, 0o711);
+  // dev/ino below prove the directory was never replaced on any platform. The mode comparison only means
+  // something where the mode is a stored POSIX permission set rather than a synthesised attribute.
+  if (PERMISSION_BITS_MEANINGFUL) assert.equal(pluginsAfter.mode & 0o777, 0o711);
   assert.deepEqual([pluginsAfter.dev, pluginsAfter.ino], [pluginsBefore.dev, pluginsBefore.ino]);
   assert.deepEqual([unrelatedAfter.dev, unrelatedAfter.ino], [unrelatedBefore.dev, unrelatedBefore.ino]);
   assert.equal(await readFile(unrelated, "utf8"), "do not touch\n");
@@ -462,8 +466,13 @@ test("snapshot installation rejects symlinked plugin boundaries before either de
   });
 });
 
+// Four of the cases below swap the live plugins directory out from under a running build. That swap is
+// the scenario, not a detail of it: the guard under test exists to notice the root changing identity
+// mid-run. A platform that will not rename a directory with an open handle inside it cannot stage the
+// swap at all — the rename fails before the build is given anything to notice — so those cases are
+// declined there by name rather than rewritten into a different scenario that would test the rewrite.
 test("snapshot replacement binds the plugins root entry across preflight and root renames", async (t) => {
-  await t.test("root swapped to external symlink before backup", async (t) => {
+  await t.test("root swapped to external symlink before backup", { skip: DIRECTORY_RENAME_WITH_OPEN_HANDLE ? false : NO_DIRECTORY_RENAME_WITH_OPEN_HANDLE_REASON }, async (t) => {
     const { fixtureRepo, temporaryRoot } = await createSnapshotFixture(t);
     for (const productName of productNames) {
       const destination = path.join(fixtureRepo, "plugins", productName);
@@ -533,7 +542,7 @@ test("snapshot replacement binds the plugins root entry across preflight and roo
     assert.equal(await readFile(unrelated, "utf8"), "unrelated original\n");
   });
 
-  await t.test("late empty plugins directory cannot capture child installs", async (t) => {
+  await t.test("late empty plugins directory cannot capture child installs", { skip: DIRECTORY_RENAME_WITH_OPEN_HANDLE ? false : NO_DIRECTORY_RENAME_WITH_OPEN_HANDLE_REASON }, async (t) => {
     const { fixtureRepo } = await createSnapshotFixture(t);
     for (const productName of productNames) {
       const destination = path.join(fixtureRepo, "plugins", productName);
@@ -561,7 +570,7 @@ test("snapshot replacement binds the plugins root entry across preflight and roo
     }
   });
 
-  await t.test("root swapped immediately after worker spawn is rejected before child validation", async (t) => {
+  await t.test("root swapped immediately after worker spawn is rejected before child validation", { skip: DIRECTORY_RENAME_WITH_OPEN_HANDLE ? false : NO_DIRECTORY_RENAME_WITH_OPEN_HANDLE_REASON }, async (t) => {
     const { fixtureRepo, temporaryRoot } = await createSnapshotFixture(t);
     for (const productName of productNames) {
       const destination = path.join(fixtureRepo, "plugins", productName);
@@ -683,7 +692,7 @@ test("snapshot worker interruption always restores or reports every original", a
     });
   }
 
-  await t.test("displaced visible root after first backup still reports both originals after SIGKILL", async (t) => {
+  await t.test("displaced visible root after first backup still reports both originals after SIGKILL", { skip: DIRECTORY_RENAME_WITH_OPEN_HANDLE ? false : NO_DIRECTORY_RENAME_WITH_OPEN_HANDLE_REASON }, async (t) => {
     const { fixtureRepo } = await createSnapshotFixture(t);
     for (const productName of productNames) {
       const destination = path.join(fixtureRepo, "plugins", productName);

@@ -12,6 +12,14 @@ import {
   suppressUpdateNotification,
 } from "../../shared/scripts/check-game-design-updates.mjs";
 
+// Every fixture in this file scopes the advisory cache under its own `home`, but `env` defaults to
+// process.env, so a host variable decided the path instead. On Windows %LOCALAPPDATA% is always set:
+// the check read and wrote the real user cache while writeCache() had written under the fixture, and
+// every cache-hit assertion saw nothing. An empty env keeps both sides on the same path on every
+// platform. The one test whose subject IS the environment passes its own and still wins.
+const check = (options) => checkGameDesignUpdates({ env: {}, ...options });
+const suppress = (options) => suppressUpdateNotification({ env: {}, ...options });
+
 const CHECKED_AT = "2026-08-15T00:00:00.000Z";
 const SIX_DAYS_LATER = Date.parse("2026-08-21T00:00:00.000Z");
 const SEVEN_DAYS_LATER = Date.parse("2026-08-22T00:00:00.000Z");
@@ -192,7 +200,7 @@ test("relative Windows LOCALAPPDATA falls back to absolute home cache without wr
 
   let result;
   try {
-    result = await checkGameDesignUpdates({
+    result = await check({
       pluginRoot,
       home,
       platform: "win32",
@@ -213,7 +221,7 @@ test("relative Windows LOCALAPPDATA falls back to absolute home cache without wr
 test("checks only the four literal official release endpoints on a cache miss", async (t) => {
   const { pluginRoot, home } = await fixture(t);
   const calls = [];
-  const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+  const result = await check({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
 
   assert.deepEqual(calls.map(({ url }) => url), ENDPOINTS);
   assert.ok(calls.every(({ options }) => options.method === "GET" && options.redirect === "error" && options.signal instanceof AbortSignal));
@@ -234,7 +242,7 @@ test("reuses a six-day cache without network access", async (t) => {
   await writeCache({ home, value: cacheValue() });
   const fetchFn = () => { throw new Error("network must not run"); };
 
-  const result = await checkGameDesignUpdates({ pluginRoot, home, now: SIX_DAYS_LATER, fetchFn });
+  const result = await check({ pluginRoot, home, now: SIX_DAYS_LATER, fetchFn });
 
   assert.equal(result.cache, "hit");
   assert.equal(result.checkedAt, CHECKED_AT);
@@ -247,8 +255,8 @@ test("concurrent fresh outdated cache hits atomically claim one notification wit
   const fetchFn = checkingFetch(calls);
 
   const results = await Promise.all([
-    checkGameDesignUpdates({ pluginRoot, home, now: SIX_DAYS_LATER, fetchFn }),
-    checkGameDesignUpdates({ pluginRoot, home, now: SIX_DAYS_LATER, fetchFn }),
+    check({ pluginRoot, home, now: SIX_DAYS_LATER, fetchFn }),
+    check({ pluginRoot, home, now: SIX_DAYS_LATER, fetchFn }),
   ]);
 
   assert.equal(calls.length, 0);
@@ -270,7 +278,7 @@ test("a previously notified outdated version stays suppressed after a shared-cac
     value: outdatedCacheValue({ lastNotifiedComponents: notificationIdentity(), lastNotifiedAt: CHECKED_AT }),
   });
   const calls = [];
-  const result = await checkGameDesignUpdates({
+  const result = await check({
     pluginRoot,
     home,
     now: SEVEN_DAYS_LATER,
@@ -304,9 +312,9 @@ test("a newer tag for the same component is claimed once across concurrent share
     return currentResponse(url);
   };
 
-  const first = checkGameDesignUpdates({ pluginRoot, home, now: SEVEN_DAYS_LATER, fetchFn });
+  const first = check({ pluginRoot, home, now: SEVEN_DAYS_LATER, fetchFn });
   while (calls.length === 0) await new Promise((resolve) => setTimeout(resolve, 1));
-  const second = checkGameDesignUpdates({ pluginRoot, home, now: SEVEN_DAYS_LATER, fetchFn });
+  const second = check({ pluginRoot, home, now: SEVEN_DAYS_LATER, fetchFn });
   releaseFirst();
   const results = await Promise.all([first, second]);
 
@@ -323,7 +331,7 @@ test("treats exactly seven days as stale and refreshes the cache", async (t) => 
   await writeCache({ home, value: cacheValue() });
   const calls = [];
 
-  const result = await checkGameDesignUpdates({ pluginRoot, home, now: SEVEN_DAYS_LATER, fetchFn: checkingFetch(calls) });
+  const result = await check({ pluginRoot, home, now: SEVEN_DAYS_LATER, fetchFn: checkingFetch(calls) });
 
   assert.equal(result.cache, "miss");
   assert.equal(result.checkedAt, "2026-08-22T00:00:00.000Z");
@@ -335,7 +343,7 @@ test("refreshes cache entries older than seven days", async (t) => {
   await writeCache({ home, value: cacheValue({ checkedAt: "2026-08-14T23:59:59.999Z" }) });
   const calls = [];
 
-  await checkGameDesignUpdates({ pluginRoot, home, now: SEVEN_DAYS_LATER, fetchFn: checkingFetch(calls) });
+  await check({ pluginRoot, home, now: SEVEN_DAYS_LATER, fetchFn: checkingFetch(calls) });
 
   assert.equal(calls.length, ENDPOINTS.length);
 });
@@ -350,9 +358,9 @@ test("concurrent Studio and Career checks share one network operation and cache"
     if (calls.length === 1) await firstStarted;
     return currentResponse(url);
   };
-  const studio = checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn });
+  const studio = check({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn });
   while (calls.length === 0) await new Promise((resolve) => setTimeout(resolve, 1));
-  const career = checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn });
+  const career = check({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn });
   releaseFirst();
   const [studioResult, careerResult] = await Promise.all([studio, career]);
 
@@ -370,7 +378,7 @@ test("does not trust or replace a symlink cache", async (t) => {
   await symlink(outside, cachePath);
   const calls = [];
 
-  const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+  const result = await check({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
 
   assert.equal(result.status, "unknown");
   assert.equal(calls.length, 0);
@@ -389,7 +397,7 @@ test("rejects future, truncated JSON, and unknown-key cache evidence before refr
     await mkdir(path.dirname(cachePath), { recursive: true });
     await writeFile(cachePath, kind === "raw" ? value : `${JSON.stringify(value)}\n`);
     const calls = [];
-    const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+    const result = await check({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
     assert.equal(result.cache, "miss");
     assert.equal(calls.length, ENDPOINTS.length);
   }
@@ -409,7 +417,7 @@ test("rejects legacy, partial, future, and non-closed notification state before 
     await writeCache({ home, value });
     const calls = [];
 
-    const result = await checkGameDesignUpdates({ pluginRoot, home, now: SIX_DAYS_LATER, fetchFn: checkingFetch(calls) });
+    const result = await check({ pluginRoot, home, now: SIX_DAYS_LATER, fetchFn: checkingFetch(calls) });
 
     assert.equal(result.cache, "miss");
     assert.equal(calls.length, ENDPOINTS.length);
@@ -442,7 +450,7 @@ test("preserves an active task-owned lock and does not start a competing check",
   });
   const calls = [];
 
-  const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+  const result = await check({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
 
   assert.equal(result.status, "unknown");
   assert.equal(calls.length, 0);
@@ -454,7 +462,7 @@ test("reclaims a provably stale file lock and completes the check", async (t) =>
   const lockPath = await writeFileLock({ home, createdAt: new Date(Date.now() - 120_000).toISOString() });
   const calls = [];
 
-  const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+  const result = await check({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
 
   assert.equal(result.status, "current");
   assert.equal(calls.length, ENDPOINTS.length);
@@ -469,7 +477,7 @@ test("keeps stale empty legacy directories unknown because they cannot have a re
   await mkdir(lockPath, { mode: 0o700 });
   await utimes(lockPath, new Date(Date.now() - 120_000), new Date(Date.now() - 120_000));
   const calls = [];
-  const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+  const result = await check({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
 
   assert.deepEqual(result, expectedUnknownResult());
   assert.equal(calls.length, 0);
@@ -493,7 +501,7 @@ test("staging cleanup preserves an externally swapped canonical lock tree", asyn
   const calls = [];
   let swapped = false;
 
-  const result = await checkGameDesignUpdates({
+  const result = await check({
     pluginRoot,
     home,
     now: Date.parse(CHECKED_AT),
@@ -543,7 +551,7 @@ test("normal lock retains its owner anchor until the holder releases", async (t)
   const published = deferred();
   const resume = deferred();
   let ownerAnchor;
-  const checking = checkGameDesignUpdates({
+  const checking = check({
     pluginRoot,
     home,
     now: Date.parse(CHECKED_AT),
@@ -581,7 +589,7 @@ test("reclaims an interrupted hard-link publication only after stale owner death
   await link(lockPath, stagingPath);
   const calls = [];
 
-  const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+  const result = await check({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
 
   // Catches a mutation that never accepts a stale nlink=2 task-owned publication.
   assert.equal(result.status, "current");
@@ -602,7 +610,7 @@ test("a contender never normalizes a live winner between link publication and cl
   const calls = [];
   let winnerStagingPath;
   let contenderLinkFailed = false;
-  const winner = checkGameDesignUpdates({
+  const winner = check({
     pluginRoot,
     home,
     now: Date.parse(CHECKED_AT),
@@ -617,7 +625,7 @@ test("a contender never normalizes a live winner between link publication and cl
     },
   });
   await published.promise;
-  const contender = checkGameDesignUpdates({
+  const contender = check({
     pluginRoot,
     home,
     now: Date.parse(CHECKED_AT),
@@ -687,7 +695,7 @@ test("preserves ambiguous linked residue and external siblings without network a
     const beforeEntries = (await readdir(path.dirname(cachePath))).sort();
     const calls = [];
 
-    const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+    const result = await check({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
 
     if (name === "multiple-hard-links") {
       assert.deepEqual(result, expectedUnknownResult(), name);
@@ -713,7 +721,7 @@ test("preserves a linked owner when PID probing cannot prove ESRCH", async (t) =
   await link(lockPath, stagingPath);
   const calls = [];
 
-  const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+  const result = await check({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
 
   assert.deepEqual(result, expectedUnknownResult());
   assert.equal(calls.length, 0);
@@ -729,7 +737,7 @@ test("stale legacy directory recovery performs no canonical mutation", async (t)
   await mkdir(lockPath, { mode: 0o700 });
   await utimes(lockPath, new Date(Date.now() - 120_000), new Date(Date.now() - 120_000));
   const calls = [];
-  const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+  const result = await check({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
 
   assert.deepEqual(result, expectedUnknownResult());
   assert.equal(calls.length, 0);
@@ -748,7 +756,7 @@ test("never reclaims symlink or hostile lock directories", async (t) => {
   await symlink(outside, `${cachePath}.lock`);
   const symlinkCalls = [];
 
-  const symlinkResult = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(symlinkCalls) });
+  const symlinkResult = await check({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(symlinkCalls) });
   assert.equal(symlinkResult.status, "unknown");
   assert.equal(symlinkCalls.length, 0);
   assert.equal((await lstat(`${cachePath}.lock`)).isSymbolicLink(), true);
@@ -757,7 +765,7 @@ test("never reclaims symlink or hostile lock directories", async (t) => {
   await rm(`${cachePath}.lock`);
   const hostilePath = await writeLock({ home, createdAt: new Date(Date.now() - 120_000).toISOString(), extra: true });
   const hostileCalls = [];
-  const hostileResult = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(hostileCalls) });
+  const hostileResult = await check({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(hostileCalls) });
   assert.equal(hostileResult.status, "unknown");
   assert.equal(hostileCalls.length, 0);
   assert.deepEqual((await readdir(hostilePath)).sort(), ["hostile.txt", "owner.json"]);
@@ -769,8 +777,8 @@ test("concurrent contenders recover one stale lock with one network winner", asy
   const calls = [];
   const fetchFn = checkingFetch(calls);
 
-  const first = checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn });
-  const second = checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn });
+  const first = check({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn });
+  const second = check({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn });
   const results = await Promise.all([first, second]);
 
   assert.equal(calls.length, ENDPOINTS.length);
@@ -794,7 +802,7 @@ test("a stale recovery contender cannot move a fresh publisher into its release 
   const calls = [];
   let legacyReleaseAttempted = false;
 
-  const result = await checkGameDesignUpdates({
+  const result = await check({
     pluginRoot,
     home,
     now: Date.parse(CHECKED_AT),
@@ -832,7 +840,7 @@ test("numeric-sorts recovery claims so an unsorted active latest claim blocks re
   await writeRecoveryRecord(paths.claim(2), claimRecord(generation, paths.targetId, 2, `game-design-update-check:${process.pid}-active`));
   const calls = [];
 
-  const result = await checkGameDesignUpdates({
+  const result = await check({
     pluginRoot,
     home,
     now: Date.parse(CHECKED_AT),
@@ -857,7 +865,7 @@ test("resumes from a retired hard-link by unlinking only the old canonical", asy
   await link(lockPath, paths.retired);
   const calls = [];
 
-  const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+  const result = await check({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
 
   assert.equal((await lstat(paths.claim(2))).isFile(), true);
   assert.equal(result.status, "current");
@@ -872,7 +880,7 @@ test("ignores unrelated recovery-prefixed entries while reclaiming the exact sta
   await writeFile(`${lockPath}.recovery.v1.not-this-target.garbage`, "unrelated\n", { mode: 0o600 });
   const calls = [];
 
-  const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+  const result = await check({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
 
   assert.equal(result.status, "current");
   assert.equal(calls.length, ENDPOINTS.length);
@@ -885,7 +893,7 @@ test("keeps a published claim authoritative when claim staging cleanup fails", a
   const paths = recoveryPaths(lockPath, generation);
   const calls = [];
 
-  const result = await checkGameDesignUpdates({
+  const result = await check({
     pluginRoot,
     home,
     now: Date.parse(CHECKED_AT),
@@ -909,7 +917,7 @@ test("normal owner-anchor cleanup failure still removes the canonical lock on re
   const lockPath = `${cachePath}.lock`;
   const calls = [];
 
-  const result = await checkGameDesignUpdates({
+  const result = await check({
     pluginRoot,
     home,
     now: Date.parse(CHECKED_AT),
@@ -931,7 +939,7 @@ test("a same-PID retry appends an abort after EIO and wins a next-sequence claim
   const { pluginRoot, home } = await fixture(t);
   const lockPath = await writeFileLock({ home, createdAt: new Date(Date.now() - 120_000).toISOString() });
   const firstCalls = [];
-  const first = await checkGameDesignUpdates({
+  const first = await check({
     pluginRoot,
     home,
     now: Date.parse(CHECKED_AT),
@@ -939,7 +947,7 @@ test("a same-PID retry appends an abort after EIO and wins a next-sequence claim
     fsOps: { unlink: async (target) => target === lockPath ? Promise.reject(Object.assign(new Error("injected canonical EIO"), { code: "EIO" })) : unlink(target) },
   });
   const secondCalls = [];
-  const second = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(secondCalls) });
+  const second = await check({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(secondCalls) });
 
   assert.deepEqual(first, expectedUnknownResult());
   assert.equal(firstCalls.length, 0);
@@ -956,7 +964,7 @@ test("rechecks the canonical generation immediately before unlinking a retired s
   let swapped = false;
   const calls = [];
 
-  const result = await checkGameDesignUpdates({
+  const result = await check({
     pluginRoot,
     home,
     now: Date.parse(CHECKED_AT),
@@ -1003,7 +1011,7 @@ test("fails closed for malformed, gapped, symlinked, or mismatched exact-generat
     const before = (await readdir(path.dirname(lockPath))).sort();
     const calls = [];
 
-    const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+    const result = await check({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
 
     assert.deepEqual(result, expectedUnknownResult(), name);
     assert.equal(calls.length, 0, name);
@@ -1017,7 +1025,7 @@ test("recovery directory access failure performs no canonical mutation", async (
   const before = await readFile(lockPath, "utf8");
   const calls = [];
 
-  const result = await checkGameDesignUpdates({
+  const result = await check({
     pluginRoot,
     home,
     now: Date.parse(CHECKED_AT),
@@ -1040,7 +1048,7 @@ test("a completed retired recovery remains inert when a later publisher creates 
   await unlink(lockPath);
   const calls = [];
 
-  const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+  const result = await check({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
 
   assert.equal(result.status, "current");
   assert.equal(calls.length, ENDPOINTS.length);
@@ -1058,7 +1066,7 @@ test("resumes a real-FS canonical plus owner-anchor plus retired nlink=3 crash",
   await link(lockPath, paths.retired);
   const calls = [];
 
-  const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+  const result = await check({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
 
   assert.equal((await lstat(paths.claim(2))).isFile(), true);
   assert.equal(result.status, "current");
@@ -1075,7 +1083,7 @@ test("ignores a different-inode historical staging orphan while selecting the ex
   await writeFile(`${lockPath}.staging.historical-orphan`, "unrelated\n", { mode: 0o600 });
   const calls = [];
 
-  const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+  const result = await check({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
 
   assert.equal(result.status, "current");
   assert.equal(calls.length, ENDPOINTS.length);
@@ -1090,7 +1098,7 @@ test("does not take over a fresh dead latest claim before its lease expires", as
   const before = (await readdir(path.dirname(lockPath))).sort();
   const calls = [];
 
-  const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+  const result = await check({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
 
   assert.deepEqual(result, expectedUnknownResult());
   assert.equal(calls.length, 0);
@@ -1105,7 +1113,7 @@ test("takes over an expired dead latest claim and appends the next numeric seque
   await writeRecoveryRecord(paths.claim(1), claimRecord(generation, paths.targetId, 1, "game-design-update-check:99999998-expired-dead", new Date(Date.now() - 120_000).toISOString()));
   const calls = [];
 
-  const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+  const result = await check({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
 
   assert.equal(result.status, "current");
   assert.equal(calls.length, ENDPOINTS.length);
@@ -1117,7 +1125,7 @@ test("canonical release EIO preserves the complete normal lock pair until recove
   const cachePath = resolveUpdateCachePath({ env: {}, home, platform: process.platform });
   const lockPath = `${cachePath}.lock`;
   const calls = [];
-  const first = await checkGameDesignUpdates({
+  const first = await check({
     pluginRoot,
     home,
     now: Date.parse(CHECKED_AT),
@@ -1126,7 +1134,7 @@ test("canonical release EIO preserves the complete normal lock pair until recove
   });
   const ownerAnchor = (await readdir(path.dirname(lockPath))).find((name) => name.startsWith(`${path.basename(lockPath)}.staging.`));
   const followUpCalls = [];
-  const followUp = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(followUpCalls) });
+  const followUp = await check({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(followUpCalls) });
 
   assert.equal(first.status, "current");
   assert.equal(calls.length, ENDPOINTS.length);
@@ -1152,7 +1160,7 @@ test("rejects empty, missing, partial, duplicate, and unknown installed manifest
     const calls = [];
     let publications = 0;
 
-    const result = await checkGameDesignUpdates({
+    const result = await check({
       pluginRoot,
       home,
       now: Date.parse(CHECKED_AT),
@@ -1180,7 +1188,7 @@ test("fails open to closed unknown evidence for HTTP, malformed JSON, and hostil
 
   for (const [name, firstResponse] of hostileCases) {
     const calls = [];
-    const result = await checkGameDesignUpdates({
+    const result = await check({
       pluginRoot,
       home: path.join(home, name),
       now: Date.parse(CHECKED_AT),
@@ -1202,7 +1210,7 @@ test("aborts a never-resolving fetch at the policy timeout and returns bounded u
   const { pluginRoot, home } = await fixture(t, { policyOverrides: { totalTimeoutMs: 20 } });
   let signal;
   const startedAt = Date.now();
-  const result = await checkGameDesignUpdates({
+  const result = await check({
     pluginRoot,
     home,
     now: Date.parse(CHECKED_AT),
@@ -1220,7 +1228,7 @@ test("aborts a never-resolving fetch at the policy timeout and returns bounded u
 test("opt-out performs neither cache writes nor network calls", async (t) => {
   const { pluginRoot, home } = await fixture(t);
   const calls = [];
-  const result = await checkGameDesignUpdates({
+  const result = await check({
     pluginRoot,
     home,
     now: Date.parse(CHECKED_AT),
@@ -1245,7 +1253,7 @@ test("publishes cache atomically and leaves prior evidence intact when publicati
   const cachePath = await writeCache({ home, value: cacheValue({ checkedAt: "2026-08-01T00:00:00.000Z" }) });
   const before = await readFile(cachePath, "utf8");
   const calls = [];
-  const result = await checkGameDesignUpdates({
+  const result = await check({
     pluginRoot,
     home,
     now: Date.parse(CHECKED_AT),
@@ -1269,7 +1277,7 @@ test("a schemaVersion 1 cache is treated as a first run instead of being trusted
   await writeCache({ home, value: { ...cacheValue(), schemaVersion: 1 } });
   const calls = [];
 
-  const result = await checkGameDesignUpdates({
+  const result = await check({
     pluginRoot,
     home,
     now: Date.parse(CHECKED_AT),
@@ -1291,7 +1299,7 @@ test("a suppressed version combination hides the prompt without hiding the fact"
   });
   const calls = [];
 
-  const result = await checkGameDesignUpdates({
+  const result = await check({
     pluginRoot,
     home,
     now: Date.parse(CHECKED_AT),
@@ -1314,7 +1322,7 @@ test("suppression does not carry over to a different latest version", async (t) 
   });
   const calls = [];
 
-  const result = await checkGameDesignUpdates({
+  const result = await check({
     pluginRoot,
     home,
     now: SEVEN_DAYS_LATER,
@@ -1337,14 +1345,14 @@ test("suppressing an announced version writes the answer and silences the next c
   const { pluginRoot, home } = await fixture(t);
   await writeCache({ home, value: outdatedCacheValue({ lastNotifiedAt: CHECKED_AT, lastNotifiedComponents: notificationIdentity() }) });
 
-  const suppression = await suppressUpdateNotification({ pluginRoot, home, now: Date.parse(CHECKED_AT), env: {} });
+  const suppression = await suppress({ pluginRoot, home, now: Date.parse(CHECKED_AT), env: {} });
 
   assert.equal(suppression.status, "suppressed");
   assert.deepEqual([...suppression.suppressed], notificationIdentity());
   assert.deepEqual((await readCacheValue(home)).suppressedComponents, notificationIdentity());
 
   const calls = [];
-  const result = await checkGameDesignUpdates({
+  const result = await check({
     pluginRoot,
     home,
     now: Date.parse(CHECKED_AT),
@@ -1362,7 +1370,7 @@ test("suppression leaves the advisory and the seven-day claim exactly as the las
   const before = outdatedCacheValue({ lastNotifiedAt: CHECKED_AT, lastNotifiedComponents: notificationIdentity() });
   await writeCache({ home, value: before });
 
-  await suppressUpdateNotification({ pluginRoot, home, now: SIX_DAYS_LATER, env: {} });
+  await suppress({ pluginRoot, home, now: SIX_DAYS_LATER, env: {} });
 
   const after = await readCacheValue(home);
   assert.deepEqual({ ...after, suppressedComponents: [] }, before, "only the suppression list may change");
@@ -1372,7 +1380,7 @@ test("suppressing a component the advisory never reported as outdated changes no
   const { pluginRoot, home } = await fixture(t);
   await writeCache({ home, value: outdatedCacheValue() });
 
-  const suppression = await suppressUpdateNotification({
+  const suppression = await suppress({
     pluginRoot,
     home,
     now: Date.parse(CHECKED_AT),
@@ -1387,7 +1395,7 @@ test("suppressing a component the advisory never reported as outdated changes no
 test("suppression refuses to invent an advisory when no check has cached one", async (t) => {
   const { pluginRoot, home } = await fixture(t);
 
-  const suppression = await suppressUpdateNotification({ pluginRoot, home, now: Date.parse(CHECKED_AT), env: {} });
+  const suppression = await suppress({ pluginRoot, home, now: Date.parse(CHECKED_AT), env: {} });
 
   assert.equal(suppression.status, "unavailable");
   assert.deepEqual([...suppression.suppressed], []);
@@ -1397,7 +1405,7 @@ test("suppression writes nothing while update checks are turned off", async (t) 
   const { pluginRoot, home } = await fixture(t);
   await writeCache({ home, value: outdatedCacheValue() });
 
-  const suppression = await suppressUpdateNotification({
+  const suppression = await suppress({
     pluginRoot,
     home,
     now: Date.parse(CHECKED_AT),
@@ -1453,7 +1461,7 @@ test("a component that publishes no releases is compared against its tags instea
   const { pluginRoot, home } = await fixture(t);
   const calls = [];
 
-  const result = await checkGameDesignUpdates({
+  const result = await check({
     pluginRoot,
     home,
     now: Date.parse(CHECKED_AT),
@@ -1483,7 +1491,7 @@ test("a component with published releases is never asked for its tags", async (t
   const { pluginRoot, home } = await fixture(t);
   const calls = [];
 
-  const result = await checkGameDesignUpdates({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
+  const result = await check({ pluginRoot, home, now: Date.parse(CHECKED_AT), fetchFn: checkingFetch(calls) });
 
   assert.equal(result.status, "current");
   assert.deepEqual(calls.map(({ url }) => url), ENDPOINTS);
@@ -1496,7 +1504,7 @@ test("a prerelease tag is skipped instead of turning its component unknown", asy
   const { pluginRoot, home } = await fixture(t);
   const calls = [];
 
-  const result = await checkGameDesignUpdates({
+  const result = await check({
     pluginRoot,
     home,
     now: Date.parse(CHECKED_AT),
@@ -1511,7 +1519,7 @@ test("tag evidence without a name leaves the advisory unknown", async (t) => {
   const { pluginRoot, home } = await fixture(t);
   const calls = [];
 
-  const result = await checkGameDesignUpdates({
+  const result = await check({
     pluginRoot,
     home,
     now: Date.parse(CHECKED_AT),
@@ -1532,12 +1540,12 @@ test("an id that names no tracked component is refused instead of reported as un
   await writeCache({ home, value: outdatedCacheValue({ lastNotifiedAt: CHECKED_AT, lastNotifiedComponents: notificationIdentity() }) });
 
   for (const componentIds of [["game-design-studio"], ["game-design-career"], ["archify", "game-design-studio"], [""]]) {
-    const suppression = await suppressUpdateNotification({ pluginRoot, home, now: Date.parse(CHECKED_AT), componentIds });
+    const suppression = await suppress({ pluginRoot, home, now: Date.parse(CHECKED_AT), componentIds });
     assert.equal(suppression.status, "unavailable", JSON.stringify(componentIds));
     assert.deepEqual(suppression.suppressed, []);
     assert.deepEqual((await readCacheValue(home)).suppressedComponents, [], JSON.stringify(componentIds));
   }
 
-  const accepted = await suppressUpdateNotification({ pluginRoot, home, now: Date.parse(CHECKED_AT), componentIds: ["archify"] });
+  const accepted = await suppress({ pluginRoot, home, now: Date.parse(CHECKED_AT), componentIds: ["archify"] });
   assert.equal(accepted.status, "suppressed");
 });

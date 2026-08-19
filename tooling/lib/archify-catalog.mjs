@@ -7,6 +7,7 @@ import { comparePaths, joinWithin, normalizeRelativePath } from "./paths.mjs";
 import { findStructuralDuplicates } from "./archify-signature.mjs";
 import { loadProductContract } from "./product-contract.mjs";
 import { vendorMappings } from "./vendor-components.mjs";
+import { applyVendorDescriptionOverlay, loadVendorDescriptionOverlays } from "./vendor-description-overlay.mjs";
 
 export const DELIVERY_STATES = Object.freeze([
   "not-applicable", "planned", "spec-authored", "auto-validated",
@@ -442,7 +443,14 @@ async function assertPackageMirrorOrigin(repoRoot, entry, mapping) {
     assertRegularContained(repoRoot, entry.origin_source.source_document, `${label}.origin_source.source_document`),
   ]);
   const [mirrorBytes, originBytes] = await Promise.all([readFile(mirrorFile), readFile(originFile)]);
-  if (!mirrorBytes.equals(originBytes)) {
+  // The mirror is the shared source byte for byte, with one declared exception: the vendor description
+  // overlay rewrites one frontmatter field as the build projects a vendored SKILL.md, because the
+  // upstream description runs past the router's catalog budget. Applying the same overlay here compares
+  // the mirror against what the build was supposed to produce rather than against a source the build
+  // was never going to copy verbatim. A mapping with no overlay passes the origin bytes through.
+  const overlay = loadVendorDescriptionOverlays({ repoRoot }).get(mapping.module);
+  const { bytes: expectedBytes } = applyVendorDescriptionOverlay({ relativePath: mapping.suffix, bytes: originBytes }, overlay);
+  if (!mirrorBytes.equals(expectedBytes)) {
     throw new Error(`${label}.origin_source must be byte-identical to ${mapping.sourceDocument}`);
   }
 }

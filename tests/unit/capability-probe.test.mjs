@@ -13,7 +13,9 @@ import {
   probeChromium,
   probeImageGenerationCapability,
   resolveArchifyInstallation,
+  verifyChromiumIdentity,
 } from '../../shared/scripts/capability-probe.mjs';
+import { spawnProgramSync, writeNonExecutableProgram, writeSpawnableProgram } from '../lib/platform-support.mjs';
 
 const script = fileURLToPath(new URL('../../shared/scripts/capability-probe.mjs', import.meta.url));
 const repoRoot = fileURLToPath(new URL('../../', import.meta.url));
@@ -246,9 +248,15 @@ test('SessionStart surfaces injected update advisories without changing capabili
 test('SessionStart emits JSON within its 25-second 15-second capability and 5-second update budget', async () => {
   const workspace = await temporaryWorkspace();
   const home = await temporaryDirectory('game-design-bounded-home-');
-  const browser = join(await temporaryDirectory('game-design-slow-browser-'), 'google-chrome');
-  await writeFile(browser, '#!/bin/sh\n/bin/sleep 15\nprintf "Google Chrome 151.0.0.0\\n"\n');
-  await chmod(browser, 0o755);
+  // The probe here is a real child process, so the browser it spawns has to be a real program. On Windows
+  // that program is a .cmd, which the product's own spawn refuses without a shell — so there the browser
+  // fails fast instead of hanging, and this test falls back to proving the other half of the budget, the
+  // update fetch that never resolves. Both halves run on POSIX.
+  const browser = await writeSpawnableProgram(
+    await temporaryDirectory('game-design-slow-browser-'),
+    'google-chrome',
+    'await new Promise((resolve) => setTimeout(resolve, 15_000));\nprocess.stdout.write("Google Chrome 151.0.0.0\\n");',
+  );
 
   const startedAt = Date.now();
   const output = runInjectedProbe({
@@ -363,7 +371,8 @@ test('execution resolver rejects a same-size CLI replacement after its final rea
     home,
     realpathFn: async (path) => {
       const canonical = await realpath(path);
-      if (path.endsWith('/bin/archify.mjs') && ++cliRealpathCalls === 3) {
+      // A real filesystem path, so the separator is the host's. join() writes the one this host uses.
+      if (path.endsWith(join('bin', 'archify.mjs')) && ++cliRealpathCalls === 3) {
         await rename(replacement, path);
       }
       return canonical;
@@ -571,15 +580,14 @@ test('uses the exact portable Skillstead browser candidate order', () => {
 
 test('normalizes the Skillstead browser override to a verified real executable identity', async () => {
   const cwd = await temporaryWorkspace();
-  const browser = join(cwd, 'Google Chrome');
+  const browser = await writeSpawnableProgram(cwd, 'Google Chrome', 'process.stdout.write("Google Chrome 151.0.7922.71\\n");');
   const alias = join(cwd, 'browser alias');
-  await writeFile(browser, '#!/bin/sh\nprintf "Google Chrome 151.0.7922.71\\n"\n');
-  await chmod(browser, 0o755);
   await symlink(browser, alias);
 
   const capability = await probeChromium({
     platform: process.platform,
     env: { PATH: '', SVG_INFOGRAPHIC_BROWSER: alias },
+    spawnSyncFn: spawnProgramSync,
   });
   assert.deepEqual(capability, {
     available: true,
@@ -592,12 +600,13 @@ test('normalizes the Skillstead browser override to a verified real executable i
 test('uses Skillstead PATH precedence and reports the selected command name', async () => {
   const cwd = await temporaryWorkspace();
   const bin = join(cwd, 'bin');
-  const browser = join(bin, 'google-chrome');
   await mkdir(bin);
-  await writeFile(browser, '#!/bin/sh\nprintf "Chromium 151.0.0.0\\n"\n');
-  await chmod(browser, 0o755);
+  const browser = await writeSpawnableProgram(bin, 'google-chrome', 'process.stdout.write("Chromium 151.0.0.0\\n");');
 
-  assert.deepEqual(await probeChromium({ platform: 'linux', env: { PATH: bin } }), {
+  // The host's own platform, not a hardcoded 'linux'. PATH parsing is one of the things that differs —
+  // the separator and the extension list both come from the platform — so naming a foreign one here would
+  // hand the resolver a PATH string it splits on the wrong character.
+  assert.deepEqual(await probeChromium({ platform: process.platform, env: { PATH: bin }, spawnSyncFn: spawnProgramSync }), {
     available: true,
     command: await realpath(browser),
     version: 'Chromium 151.0.0.0',
@@ -608,20 +617,21 @@ test('uses Skillstead PATH precedence and reports the selected command name', as
 test('rejects non-files, non-executables, and non-Chromium version identities', async () => {
   const cwd = await temporaryWorkspace();
   const directory = join(cwd, 'chrome-directory');
-  const nonExecutable = join(cwd, 'google-chrome');
-  const wrongIdentity = join(cwd, 'fake-browser');
+  const nonExecutableBody = 'process.stdout.write("Google Chrome 1\\n");\n';
   await mkdir(directory);
-  await writeFile(nonExecutable, '#!/bin/sh\nprintf "Google Chrome 1\\n"\n');
-  await writeFile(wrongIdentity, '#!/bin/sh\nprintf "Firefox 1\\n"\n');
-  await chmod(wrongIdentity, 0o755);
+  // Only two of the three rejections are expressible everywhere. "Not executable" is a POSIX permission
+  // fact, and Windows grants X_OK to anything it can read, so there is no file there that exists and is
+  // refused for that reason — the helper returns null rather than fabricating one that proves nothing.
+  const nonExecutable = await writeNonExecutableProgram(cwd, 'google-chrome', nonExecutableBody);
+  const wrongIdentity = await writeSpawnableProgram(cwd, 'fake-browser', 'process.stdout.write("Firefox 1\\n");');
 
-  for (const candidate of [directory, nonExecutable, wrongIdentity]) {
+  for (const candidate of [directory, nonExecutable, wrongIdentity].filter((entry) => entry !== null)) {
     assert.deepEqual(
-      await probeChromium({ platform: process.platform, env: { PATH: '', SVG_INFOGRAPHIC_BROWSER: candidate } }),
+      await probeChromium({ platform: process.platform, env: { PATH: '', SVG_INFOGRAPHIC_BROWSER: candidate }, spawnSyncFn: spawnProgramSync }),
       { available: false },
     );
   }
-  assert.equal(await readFile(nonExecutable, 'utf8'), '#!/bin/sh\nprintf "Google Chrome 1\\n"\n');
+  if (nonExecutable !== null) assert.equal(await readFile(nonExecutable, 'utf8'), nonExecutableBody);
 });
 
 test('is read-only and emits JSON only', async () => {
@@ -725,4 +735,31 @@ test('rejects malformed stdin without failing the optional hook', async () => {
   assert.equal(result.stderr, '');
   const output = JSON.parse(result.stdout);
   assert.ok(output.warnings.some(({ code }) => code === 'input.invalid_json'));
+});
+
+// A Windows Chromium does not answer --version on stdout, so identity there comes from where the file
+// is or what it is called. Both fallbacks existed already; both were unreachable, one because a failed
+// version probe discarded the candidate before them and one because it compared Windows paths as
+// case-sensitive strings.
+test('a Windows Chromium is identified without --version output, by a documented path compared the way Windows compares paths', () => {
+  const documented = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+  assert.deepEqual(
+    verifyChromiumIdentity(documented, '', { platform: 'win32', documentedPaths: [documented] }),
+    { ok: true, version: 'identity from documented install path; no --version output' },
+  );
+  assert.equal(
+    verifyChromiumIdentity('c:\\Program Files\\Google\\Chrome\\.\\Application\\CHROME.EXE', '', { platform: 'win32', documentedPaths: [documented] }).ok,
+    true,
+    'the same file spelled with different casing and an interior . segment is the same file on Windows',
+  );
+  assert.equal(
+    verifyChromiumIdentity('C:\\Users\\someone\\Downloads\\chrome.exe', 'not a version', { platform: 'win32', documentedPaths: [documented] }).ok,
+    false,
+    'an unrecognized --version output from outside every documented path stays unidentified',
+  );
+  // A real version string is still the primary answer wherever the platform produces one.
+  assert.deepEqual(
+    verifyChromiumIdentity(documented, 'Google Chrome 151.0.7922.71', { platform: 'win32', documentedPaths: [] }),
+    { ok: true, version: 'Google Chrome 151.0.7922.71' },
+  );
 });

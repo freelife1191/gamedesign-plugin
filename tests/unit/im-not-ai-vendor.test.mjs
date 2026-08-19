@@ -5,7 +5,7 @@ import { cp, lstat, mkdir, mkdtemp, readFile, readdir, realpath, rm, symlink, wr
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const vendorRoot = path.join(repoRoot, "shared/vendor/im-not-ai");
@@ -179,7 +179,10 @@ globalThis.fetch = async () => { throw new Error("offline verifier import attemp
 await import(process.argv[2]);
 process.stdout.write("offline-verifier-imported\\n");
 `);
-  const result = await runNode(["--experimental-loader", loaderPath, runnerPath, updaterUrl.href]);
+  // --experimental-loader and --import take a module specifier, not a filesystem path. A POSIX
+  // absolute path happens to resolve as one; a Windows one is read as the scheme `c:` and the loader
+  // refuses it outright.
+  const result = await runNode(["--experimental-loader", pathToFileURL(loaderPath).href, runnerPath, updaterUrl.href]);
   assert.equal(result.exitCode, 0, result.stderr);
   assert.equal(result.stdout, "offline-verifier-imported\n");
   assert.match(result.stderr, /ExperimentalWarning/u);
@@ -287,11 +290,22 @@ test("update prepares a private sibling stage and publishes only through its opa
 });
 
 test("real --update CLI builds a private sibling stage and atomically publishes the verified archive", async (t) => {
-  const fixtureRoot = await mkdtemp(path.join(tmpdir(), "im-not-ai-cli-update-"));
+  // Realpath at creation, not at the assertion. Windows hands out the 8.3 form of the temp directory
+  // (C:\Users\RUNNER~1\...) while realpath answers the long profile name, so a fixture that keeps the
+  // raw mkdtemp path and an expectation that realpaths it are two different strings for one directory.
+  const fixtureRoot = await realpath(await mkdtemp(path.join(tmpdir(), "im-not-ai-cli-update-")));
   t.after(() => rm(fixtureRoot, { recursive: true, force: true }));
   await mkdir(path.join(fixtureRoot, "tooling"));
   await mkdir(path.join(fixtureRoot, "shared/vendor"), { recursive: true });
   await cp(new URL("../../tooling/sync-im-not-ai.mjs", import.meta.url), path.join(fixtureRoot, "tooling/sync-im-not-ai.mjs"));
+  // The staged tree has to carry everything the staged tool imports, not just the tool. The platform
+  // hardening primitive is one of those: the tool asks it which open flags this host can actually offer,
+  // so a stage without it fails to resolve a module rather than failing the check it was staged to run.
+  await mkdir(path.join(fixtureRoot, "shared/scripts/lib"), { recursive: true });
+  await cp(
+    new URL("../../shared/scripts/lib/platform-file-hardening.mjs", import.meta.url),
+    path.join(fixtureRoot, "shared/scripts/lib/platform-file-hardening.mjs"),
+  );
   await cp(vendorRoot, path.join(fixtureRoot, "shared/vendor/im-not-ai"), { recursive: true });
   await mkdir(path.join(fixtureRoot, "tooling/vendor-pins"), { recursive: true });
   await cp(new URL("../../tooling/vendor-pins/im-not-ai.json", import.meta.url), path.join(fixtureRoot, "tooling/vendor-pins/im-not-ai.json"));
@@ -324,13 +338,13 @@ globalThis.fetch = async (url) => {
   return { ok: true, arrayBuffer: async () => bytes };
 };
 `);
-  const result = await runNode(["--import", preload, path.join(fixtureRoot, "tooling/sync-im-not-ai.mjs"), "--update"], { env: { ...process.env, IM_NOT_AI_CLI_FIXTURE_ROOT: fixtureRoot } });
+  const result = await runNode(["--import", pathToFileURL(preload).href, path.join(fixtureRoot, "tooling/sync-im-not-ai.mjs"), "--update"], { env: { ...process.env, IM_NOT_AI_CLI_FIXTURE_ROOT: fixtureRoot } });
   assert.equal(result.exitCode, 0, result.stderr);
   assert.match(result.stdout, /\S/u, `CLI produced no result: ${result.stderr}`);
-  const pinPath = path.join(await realpath(fixtureRoot), "tooling/vendor-pins/im-not-ai.json");
+  const pinPath = path.join(fixtureRoot, "tooling/vendor-pins/im-not-ai.json");
   assert.deepEqual(JSON.parse(result.stdout), {
     status: "published",
-    root: await realpath(path.join(fixtureRoot, "shared/vendor/im-not-ai")),
+    root: path.join(fixtureRoot, "shared/vendor/im-not-ai"),
     tag: futureTag,
     unpinnedUpstreamFiles: ["brand-new-reference.md"],
     removedUpstreamFiles: ["references/metrics.py"],

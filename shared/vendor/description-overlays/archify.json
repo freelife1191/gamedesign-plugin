@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "path": "SKILL.md",
+  "upstream": {
+    "sha256": "b97646936146a72fc83a989a7fbd60aa18f4a09dd46113679e2393a81f79f76f"
+  },
+  "description": "Use when visualizing system architecture, workflows, sequences, data flows, or state machines, or converting Mermaid."
+}

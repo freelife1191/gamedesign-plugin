@@ -3,12 +3,12 @@ import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import path from "node:path";
-import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { MAX_PACKAGE_PATH_LENGTH, assertPackagePath, auditTree } from "../../tooling/lib/tree-audit.mjs";
 import { packagedBinaryFiles, vendorDestinationRoots } from "../../tooling/lib/vendor-components.mjs";
+import { posixShellFirstWord } from "../lib/platform-support.mjs";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const productNames = ["game-design-career", "game-design-studio"];
@@ -151,9 +151,12 @@ test("tree audit rejects POSIX-shell-equivalent raw vendor commands after quote 
   ];
   for (const shellWord of shellWords) {
     await t.test(JSON.stringify(shellWord), async (t) => {
-      const resolved = spawnSync("/bin/sh", ["-c", `set -- ${shellWord}; printf '%s' "$1"`], { encoding: "utf8" });
-      assert.equal(resolved.status, 0, resolved.stderr);
-      assert.match(resolved.stdout, /^skills\/svg-infographic\/scripts\/(?:check-svg|render)\.mjs$/u);
+      // The shell is the oracle, not the subject: it establishes that this hostile word really does
+      // resolve to the vendor path before the audit is asked to reject it. A host with no POSIX shell
+      // cannot answer that, and the rejection below is what the test is actually for, so the oracle is
+      // the only part that stands down.
+      const resolved = posixShellFirstWord(shellWord);
+      if (resolved !== null) assert.match(resolved, /^skills\/svg-infographic\/scripts\/(?:check-svg|render)\.mjs$/u);
       const root = await fixture(t, "SKILL.md", `node ${shellWord} input.svg output.png\n`);
       await assert.rejects(() => auditTree({ root, packageName: "game-design-studio" }), /raw vendor CLI/u);
     });
@@ -186,9 +189,8 @@ test("tree audit applies POSIX backslash escaping to every non-newline character
     "skills/\\svg-infographic/\\scripts/\\check-svg.mjs",
   ];
   for (const shellWord of shellWords) {
-    const resolved = spawnSync("/bin/sh", ["-c", `set -- ${shellWord}; printf '%s' "$1"`], { encoding: "utf8" });
-    assert.equal(resolved.status, 0, resolved.stderr);
-    assert.match(resolved.stdout, /^skills\/svg-infographic\/scripts\/(?:check-svg|render)\.mjs$/u);
+    const resolved = posixShellFirstWord(shellWord);
+    if (resolved !== null) assert.match(resolved, /^skills\/svg-infographic\/scripts\/(?:check-svg|render)\.mjs$/u);
     const root = await fixture(t, "SKILL.md", `node ${shellWord} input.svg output.png\n`);
     await assert.rejects(() => auditTree({ root, packageName: "game-design-studio" }), /raw vendor CLI/u);
   }

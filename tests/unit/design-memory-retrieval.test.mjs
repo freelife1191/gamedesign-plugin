@@ -6,6 +6,7 @@ import { lstat, mkdir, mkdtemp, opendir, readFile, realpath, rename, rm, symlink
 import { tmpdir } from "node:os";
 import path from "node:path";
 import nodeTest from "node:test";
+import { fileURLToPath } from "node:url";
 
 import { canonicalMemoryEventDocument, memoryOperationId } from "../../shared/scripts/validate-design-memory.mjs";
 import { appendMemoryEvent, resolveMemoryStore } from "../../shared/scripts/lib/safe-memory-store.mjs";
@@ -397,7 +398,7 @@ test("receipt history retains distinct exact pairs while corrupt siblings do not
 });
 
 test("runtime validators execute packaged schemas with canonical Unicode and semantic array parity", async (t) => {
-  const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../.."); const [indexSchema, receiptSchema] = await Promise.all([readFile(path.join(root, "shared/memory/schema/memory-index.schema.json"), "utf8").then(JSON.parse), readFile(path.join(root, "shared/memory/schema/memory-receipt.schema.json"), "utf8").then(JSON.parse)]);
+  const root = fileURLToPath(new URL("../..", import.meta.url)); const [indexSchema, receiptSchema] = await Promise.all([readFile(path.join(root, "shared/memory/schema/memory-index.schema.json"), "utf8").then(JSON.parse), readFile(path.join(root, "shared/memory/schema/memory-receipt.schema.json"), "utf8").then(JSON.parse)]);
   assert.equal(indexSchema.properties.entries.items.properties.artifactTypes.uniqueItems, true); assert.equal(receiptSchema.properties.observations.maxItems, 256); assert.equal(receiptSchema.properties.applied.maxItems, 256); assert.equal(receiptSchema.properties.excluded.maxItems, 256); assert.equal(receiptSchema.properties.excluded.items.properties.reason.maxLength, 1024);
   const canonical = { schemaVersion: 1, requestSha256: "a".repeat(64), sourceTreeSha256: "b".repeat(64), projectId: "wind-island", lane: "studio", policy: { scope: "project", maxItems: 5, candidateTtlDays: 30 }, observations: [], applied: [], excluded: [] };
   const bytes = Buffer.from(`${JSON.stringify(canonical)}\n`); const { store } = await approvedStore(t); assert.equal(validateMemoryReceiptSchema(canonical), true); const valid = await publishMemoryReceiptGeneration({ store, requestSha256: canonical.requestSha256, receiptBytes: bytes, limits: { maxReceiptObservationItems: 1, maxReceiptAppliedItems: 1, maxReceiptExcludedItems: 1 } }); assert.equal(valid.complete, true);
@@ -442,7 +443,7 @@ test("receipt evaluator returns false for null and non-object observations", () 
 });
 
 test("schema evaluator imports from an installed layout when authoring schemas are absent", async (t) => {
-  const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../.."); const installed = await workspace(t); const evaluator = path.join(installed, "scripts", "lib", "memory-schema-evaluator.mjs"); const schemaRoot = path.join(installed, "references", "shared", "memory", "schema");
+  const root = fileURLToPath(new URL("../..", import.meta.url)); const installed = await workspace(t); const evaluator = path.join(installed, "scripts", "lib", "memory-schema-evaluator.mjs"); const schemaRoot = path.join(installed, "references", "shared", "memory", "schema");
   await mkdir(path.dirname(evaluator), { recursive: true }); await mkdir(schemaRoot, { recursive: true });
   await writeFile(evaluator, await readFile(path.join(root, "shared", "scripts", "lib", "memory-schema-evaluator.mjs")));
   for (const name of ["memory-index.schema.json", "memory-receipt.schema.json"]) await writeFile(path.join(schemaRoot, name), await readFile(path.join(root, "shared", "memory", "schema", name)));
@@ -452,7 +453,7 @@ test("schema evaluator imports from an installed layout when authoring schemas a
 });
 
 test("packaged observation digest relation annotation is mandatory evaluator authority", async (t) => {
-  const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../.."); const installed = await workspace(t); const evaluator = path.join(installed, "scripts", "lib", "memory-schema-evaluator.mjs"); const schemaRoot = path.join(installed, "references", "shared", "memory", "schema");
+  const root = fileURLToPath(new URL("../..", import.meta.url)); const installed = await workspace(t); const evaluator = path.join(installed, "scripts", "lib", "memory-schema-evaluator.mjs"); const schemaRoot = path.join(installed, "references", "shared", "memory", "schema");
   await mkdir(path.dirname(evaluator), { recursive: true }); await mkdir(schemaRoot, { recursive: true }); await writeFile(evaluator, await readFile(path.join(root, "shared", "scripts", "lib", "memory-schema-evaluator.mjs")));
   for (const name of ["memory-index.schema.json", "memory-receipt.schema.json"]) { const schema = JSON.parse(await readFile(path.join(root, "shared", "memory", "schema", name), "utf8")); if (name === "memory-receipt.schema.json") schema.properties.observations.items["x-memory-observation-digest-relation"] = false; await writeFile(path.join(schemaRoot, name), canonicalBytes(schema)); }
   await assert.rejects(() => import(`${new URL(`file://${evaluator}`).href}?missing-relation=${Date.now()}`), /memory schema unavailable/u);
@@ -506,7 +507,7 @@ test("global and local malformed reservation matrix consumes slots without grant
       const { root, store } = await approvedStore(t); const first = "a".repeat(64); const created = await publishMemoryViewGeneration({ store, sourceTreeSha256: first, viewBytes: Buffer.from("# view\n") }); const candidate = await mutateReservation({ store, created, first, scope, mutate: (value) => value }); await mutateFile(candidate, root);
       const scan = await scanDerivedGenerations({ store, limits: { maxGenerationReservations: 2, maxIdentityInstances: 2 } }); assert.equal(scan.complete, true, `${scope}/${name}`); assert.equal(scan.warnings.some((item) => item.code === "memory.derived_reservation_invalid"), true, `${scope}/${name}`);
       assert.equal((await loadMemoryView({ store, sourceTreeSha256: first, viewSha256: created.generationSha256, limits: { maxGenerationReservations: 2, maxIdentityInstances: 2 } })).status, "corrupt", `${scope}/${name}`);
-      assert.equal((await publishMemoryLogGeneration({ store, sourceTreeSha256: "b".repeat(64), logBytes: Buffer.from("# healthy\n"), limits: { maxGenerationReservations: 2, maxIdentityInstances: 2 } })).complete, true, `${scope}/${name}`);
+      const beforePublish = await scanDerivedGenerations({ store, limits: { maxGenerationReservations: 2, maxIdentityInstances: 2 } }); const healthy = await publishMemoryLogGeneration({ store, sourceTreeSha256: "b".repeat(64), logBytes: Buffer.from("# healthy\n"), limits: { maxGenerationReservations: 2, maxIdentityInstances: 2 } }); assert.equal(healthy.complete, true, `${scope}/${name}: publish ${JSON.stringify(healthy)} after scan ${JSON.stringify(beforePublish.complete)}/${JSON.stringify(beforePublish.warnings)}`);
     }
     for (const [field, replacement] of fieldMutations) {
       const { store } = await approvedStore(t); const first = "a".repeat(64); const created = await publishMemoryViewGeneration({ store, sourceTreeSha256: first, viewBytes: Buffer.from("# view\n") }); await mutateReservation({ store, created, first, scope, mutate: (value) => ({ ...value, [field]: replacement(value[field]) }) });
@@ -553,4 +554,31 @@ test("a canonical result at exactly 64 KiB publishes a truthful receipt and limi
   mutationEqual({ mutationId: "result-preflight", testId: "result-exact-limit", sentinel: "MEM-RET-MUT-RESULT-PREFLIGHT" }, canonicalBytes(exact).byteLength, 64 * 1024); assert.equal(exact.status, "ready"); const receipt = await loadMemoryReceipt({ store: exactStore.store, requestSha256: exact.requestSha256, receiptSha256: exact.receiptSha256 }); assert.equal(receipt.status, "ready"); assert.equal(receipt.receipt.applied[0].memoryId, exact.guidance[0].memoryId);
   const overflowSections = { ...exactSections, "발견한 내용": `${exactSections["발견한 내용"]}x` }; const overflowStore = await approvedStore(t, overflowSections); const before = await treeSnapshot(path.join(overflowStore.store.root, "v1", "derived", "receipts")); const overflow = await retrieveApprovedDesignMemory({ workspaceRoot: overflowStore.root, config, requestContext: context });
   assert.equal(overflow.status, "unavailable"); assert.equal(overflow.warnings[0].code, "memory.result_limit_exceeded"); assert.deepEqual(await treeSnapshot(path.join(overflowStore.store.root, "v1", "derived", "receipts")), before);
+});
+
+// A reservation slot whose name is held by a symlink must never be claimed by writing through it. On
+// POSIX the exclusive create refuses the name; on Windows it follows the link and creates the link's
+// target, which would claim the slot AND put this store's bytes wherever the link points — outside the
+// store, at a path something else chose. The reservation now refuses a taken name before it writes,
+// whichever way the platform reports the collision, so the publish steps to the next slot and the
+// link's target is never created.
+test("a reservation slot held by a symlink is stepped over, and nothing is written through the link", async (t) => {
+  const { root, store } = await approvedStore(t);
+  const outside = path.join(root, "outside-the-store.json");
+  const globalDirectory = path.join(store.root, "v1", "derived", ".reservations", "global");
+  await mkdir(globalDirectory, { recursive: true });
+  await symlink(outside, path.join(globalDirectory, "00000.json"));
+
+  const published = await publishMemoryLogGeneration({
+    store,
+    sourceTreeSha256: "c".repeat(64),
+    logBytes: Buffer.from("# healthy\n"),
+    limits: { maxGenerationReservations: 2, maxIdentityInstances: 2 },
+  });
+
+  assert.equal(published.complete, true, JSON.stringify(published));
+  assert.equal(published.status, "created");
+  assert.equal(await lstat(outside).then(() => true, () => false), false, "the link target must not exist");
+  assert.equal((await lstat(path.join(globalDirectory, "00000.json"))).isSymbolicLink(), true, "the occupied slot is left exactly as it was found");
+  assert.equal((await lstat(path.join(globalDirectory, "00001.json"))).isFile(), true, "the reservation lands in the next slot");
 });

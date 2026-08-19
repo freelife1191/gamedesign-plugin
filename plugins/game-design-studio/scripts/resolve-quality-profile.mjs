@@ -8,6 +8,7 @@ import { snapshotDataOnly } from "./data-only-snapshot.mjs";
 import { qualitySourceAnchors, qualitySourceByteDigests } from "./quality-source-anchors.mjs";
 import { validateQualityProfile } from "./validate-quality-profile.mjs";
 import { assertValidReferencePreset } from "./validate-reference-preset.mjs";
+import { noFollowOpenFlag } from "./lib/platform-file-hardening.mjs";
 
 const stableIdPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 const removalKeyPattern = /^(?:remove(?:_|$)|.*_removals?$)/u;
@@ -1207,7 +1208,7 @@ async function readSafeFile(root, relativePath) {
   const filePath = await assertSafeFile(root, relativePath);
   let handle;
   try {
-    handle = await open(filePath, constants.O_RDONLY | constants.O_NOFOLLOW);
+    handle = await open(filePath, constants.O_RDONLY | noFollowOpenFlag());
     const [handleStats, pathStats] = await Promise.all([handle.stat(), lstat(filePath)]);
     if (!handleStats.isFile() || pathStats.isSymbolicLink() || !pathStats.isFile()
       || handleStats.dev !== pathStats.dev || handleStats.ino !== pathStats.ino) {

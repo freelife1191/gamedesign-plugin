@@ -3,6 +3,7 @@ import { constants, readFileSync } from "node:fs";
 import { lstat, mkdir, mkdtemp, open, readFile, readdir, realpath, rename, rmdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { noFollowOpenFlag } from "../shared/scripts/lib/platform-file-hardening.mjs";
 
 const OFFICIAL_REPOSITORY = "https://github.com/epoko77-ai/im-not-ai";
 const REPO_ROOT = fileURLToPath(new URL("..", import.meta.url));
@@ -61,8 +62,8 @@ function assertReferencesSource(referencesSource) {
 
 const DEFAULT_VENDOR_ROOT = path.join(REPO_ROOT, "shared/vendor/im-not-ai");
 const PREPARED_VENDOR = new WeakMap();
-const WRITE_NO_FOLLOW = constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW;
-const READ_NO_FOLLOW = constants.O_RDONLY | constants.O_NOFOLLOW;
+const WRITE_NO_FOLLOW = constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | noFollowOpenFlag();
+const READ_NO_FOLLOW = constants.O_RDONLY | noFollowOpenFlag();
 const DEFAULT_FS_OPS = Object.freeze({ lstat, mkdir, mkdtemp, open, readdir, realpath, rename, rmdir, unlink });
 
 function sha256(bytes) {

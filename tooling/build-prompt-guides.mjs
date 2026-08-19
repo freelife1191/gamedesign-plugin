@@ -21,6 +21,7 @@ import {
   validateRenderedPromptCard,
 } from "./lib/prompt-guides.mjs";
 import { joinWithin, normalizeRelativePath } from "./lib/paths.mjs";
+import { noFollowOpenFlag } from "../shared/scripts/lib/platform-file-hardening.mjs";
 
 const LIBRARY_FILE = "guides/prompt-templates/README.md";
 const PRODUCT_IDS = Object.freeze(["game-design-studio", "game-design-career"]);
@@ -230,7 +231,7 @@ async function ensureTargetParents(root, plan, createdDirectories) {
 }
 
 async function writeExclusiveStageFile(stage, contents) {
-  const flags = fsConstants.O_CREAT | fsConstants.O_EXCL | fsConstants.O_WRONLY | (fsConstants.O_NOFOLLOW ?? 0);
+  const flags = fsConstants.O_CREAT | fsConstants.O_EXCL | fsConstants.O_WRONLY | noFollowOpenFlag({ fsConstants });
   const handle = await open(stage, flags, 0o600);
   try {
     await handle.writeFile(contents, "utf8");

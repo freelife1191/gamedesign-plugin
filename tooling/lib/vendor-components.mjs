@@ -84,6 +84,7 @@ function componentFromLock(repoRoot, component) {
   }
   return Object.freeze({
     id: component.id,
+    module: component.module,
     repository: component.repository,
     installedTag: lock.upstream.tag,
     commit: lock.upstream.commit,

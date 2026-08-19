@@ -6,6 +6,7 @@ import {
   findStructuralDuplicates,
   structuralSignature,
 } from "../../tooling/lib/archify-signature.mjs";
+import { CHILD_DEADLINE_SCALE } from "../lib/platform-support.mjs";
 
 function meta(title) {
   return { title, quality_profile: "showcase" };
@@ -177,7 +178,9 @@ function boundedWorkflowSignatures(specs) {
   ].join("\n");
   const result = spawnSync(process.execPath, ["--input-type=module", "--eval", program], {
     encoding: "utf8",
-    timeout: 3_000,
+    // The claim is that the signature stays bounded, not that a whole Node start-up plus the work fits
+    // in three seconds on every host. Windows spends most of that budget before the program runs.
+    timeout: 3_000 * CHILD_DEADLINE_SCALE,
   });
   assert.equal(result.error?.code, undefined, result.stderr);
   assert.equal(result.status, 0, result.stderr);

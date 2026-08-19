@@ -86,7 +86,14 @@ function calculatePythonSequenceMatcherChangeRate(originalText, revisedText) {
         "print(1 - SequenceMatcher(None, original, revised, autojunk=False).ratio())",
       ].join("\n"),
     ],
-    { encoding: "utf8", input: JSON.stringify([originalText, revisedText]) },
+    // Python decodes stdin with the locale encoding unless told otherwise, and the Windows locale is
+    // not UTF-8. Left alone, the Hangul fixtures reached the oracle as mojibake and it answered a
+    // different ratio than the implementation under test — the oracle was wrong, not the code.
+    {
+      encoding: "utf8",
+      input: JSON.stringify([originalText, revisedText]),
+      env: { ...process.env, PYTHONUTF8: "1", PYTHONIOENCODING: "utf-8" },
+    },
   );
   assert.equal(execution.status, 0, execution.stderr);
   return Number(execution.stdout.trim());

@@ -4,6 +4,7 @@ import { mkdtemp, mkdir, readFile, realpath, rename, rm, symlink, writeFile } fr
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
 import {
   canonicalMemoryEventDocument,
@@ -243,7 +244,7 @@ test("canonical quarantine marker input rejects NUL and NFD strings", () => {
 });
 
 test("event runtime validator and JSON Schema agree on canonical event-type fixtures", async () => {
-  const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../..");
+  const root = fileURLToPath(new URL("../..", import.meta.url));
   const [eventSchema, recordSchema] = await Promise.all([
     readFile(path.join(root, "shared/memory/schema/memory-event.schema.json"), "utf8").then(JSON.parse),
     readFile(path.join(root, "shared/memory/schema/memory-record.schema.json"), "utf8").then(JSON.parse),
@@ -332,7 +333,7 @@ test("quarantine marker rejects secret actor and reason without disclosure", () 
 });
 
 test("schema limits accept the boundary and reject limit plus one", async () => {
-  const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../..");
+  const root = fileURLToPath(new URL("../..", import.meta.url));
   const index = JSON.parse(await readFile(path.join(root, "shared/memory/schema/memory-index.schema.json"), "utf8"));
   const receipt = JSON.parse(await readFile(path.join(root, "shared/memory/schema/memory-receipt.schema.json"), "utf8"));
   assert.equal(index.properties.entries.maxItems, 10000);

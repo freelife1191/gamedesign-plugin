@@ -9,6 +9,7 @@ import { deflateSync, inflateSync } from "node:zlib";
 import { buildUseCaseDiagrams } from "../../tooling/build-use-case-diagrams.mjs";
 import * as studioProductionContract from "../../tooling/lib/studio-diagram-production-contract.mjs";
 import { renderDiagramSvg } from "../../tooling/lib/use-case-diagrams.mjs";
+import { PERMISSION_BITS_MEANINGFUL } from "../lib/platform-support.mjs";
 
 const productionRepoRoot = fileURLToPath(new URL("../..", import.meta.url));
 
@@ -526,7 +527,10 @@ test("builder rejects a repository output parent symlinked to an OS temporary di
   assert.equal(await readFile(path.join(externalRoot, "aud-01.svg"), "utf8"), "outside bytes");
 });
 
-test("builder preserves non-ENOENT output-path errors instead of treating them as missing", async (t) => {
+// Making a directory unenterable is a POSIX permission act. Windows keeps its access control in ACLs that
+// Node exposes no API for, and `chmod` there moves one read-only attribute that says nothing about
+// traversal — so the mkdir below would succeed and the rejection this test is named for would never come.
+test("builder preserves non-ENOENT output-path errors instead of treating them as missing", { skip: PERMISSION_BITS_MEANINGFUL ? false : "POSIX directory permissions are the only way to make a path unenterable" }, async (t) => {
   const repoRoot = await writeFixture(t);
   const protectedParent = path.join(repoRoot, "guides/assets/use-cases");
   await mkdir(protectedParent, { recursive: true });

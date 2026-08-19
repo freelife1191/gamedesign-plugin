@@ -14,13 +14,14 @@ import { bindCutscenePromptPackage, planCutsceneVisualPreproduction } from "../.
 import { reviewCutsceneContinuity } from "../../../shared/scripts/review-cutscene-continuity.mjs";
 import { retryCutsceneFailedAssets, runApprovedCutsceneImageWave } from "../../../shared/scripts/run-approved-cutscene-image-stage.mjs";
 import { assertCutsceneContinuityGate, cutsceneDocumentSha256 } from "../../../shared/scripts/validate-cutscene-visual-preproduction.mjs";
+import { CHILD_ENVIRONMENT_KEYS, CHILD_DEADLINE_SCALE } from "../../lib/platform-support.mjs";
 
 const root = fileURLToPath(new URL("../../..", import.meta.url));
 const SHA = "3".repeat(64);
 const MAX_EVIDENCE_BYTES = 4 * 1024;
 const MAX_OUTPUT_BYTES = 64 * 1024;
-const TEST_TIMEOUT_MS = 4_000;
-const CLOSE_TIMEOUT_MS = 1_000;
+const TEST_TIMEOUT_MS = 4_000 * CHILD_DEADLINE_SCALE;
+const CLOSE_TIMEOUT_MS = 1_000 * CHILD_DEADLINE_SCALE;
 const compare = (left, right) => Buffer.compare(Buffer.from(left), Buffer.from(right));
 const digest = (value) => cutsceneDocumentSha256(value);
 
@@ -200,7 +201,7 @@ export async function runCutsceneMutationHarness({ name, fixture }) {
 }
 
 function harnessError(reason) { const error = new Error("cutscene mutation evidence failed"); error.reason = reason; return error; }
-function allowlistedEnvironment(extra = {}) { const env = {}; for (const key of ["PATH", "TMPDIR", "TEMP", "TMP", "LANG", "LC_ALL", "HOME"]) if (typeof process.env[key] === "string") env[key] = process.env[key]; return { ...env, ...extra }; }
+function allowlistedEnvironment(extra = {}) { const env = {}; for (const key of CHILD_ENVIRONMENT_KEYS) if (typeof process.env[key] === "string") env[key] = process.env[key]; return { ...env, ...extra }; }
 function terminateTree(child) { try { if (process.platform === "win32") spawnSync("taskkill", ["/pid", String(child.pid), "/T", "/F"], { stdio: "ignore" }); else process.kill(-child.pid, "SIGKILL"); } catch {} try { child.kill("SIGKILL"); } catch {} }
 
 function parseEvidence(text, name) {

@@ -188,7 +188,8 @@ plugin manifest에는 hook 필드를 추가하지 않고 기본 발견 경로 `h
 
 | 레인 | 내용 | 러너 | 인증 |
 | --- | --- | --- | --- |
-| 오프라인 게이트 | `node tooling/validate-suite.mjs`를 네 스테이지 `--skip`과 함께 실행 | `ubuntu-latest` | 불필요 |
+| 오프라인 게이트 | `node tooling/validate-suite.mjs`를 네 스테이지 `--skip`과 함께 실행 | `ubuntu-latest`, `windows-latest` | 불필요 |
+| Windows 하드닝 게이트 | `node --test tests/unit/platform-file-hardening.test.mjs` | `windows-latest` | 불필요 |
 | 설치 게이트 | `@openai/codex` 설치 후 `node tooling/install-roundtrip.mjs --require-codex` | `ubuntu-latest`, `windows-latest` | 불필요 |
 
 설치 게이트는 한글과 공백을 포함한 `CODEX_HOME`·workspace, `LANG=C`, `LC_ALL=C` 아래에서 두 제품을 실제 설치하고 재설치한 뒤 README, `plugin.json`, 대표 스킬을 source와 SHA-256으로 대조합니다. 경로는 NFC 정규화 후 비교하며, 명령 출력에 `U+FFFD`가 있으면 실패합니다. 모델을 호출하지 않으므로 인증이 필요 없습니다. 로컬에서는 `npm run verify:install-roundtrip`으로 같은 검증을 돌리며, `codex`가 없으면 `SKIPPED`를 보고하고 종료합니다.
@@ -197,17 +198,79 @@ CI에서 실행할 수 없는 스테이지는 네 개입니다. 공식 plugin �
 
 **릴리스 전에 이 네 스테이지는 로컬에서 반드시 실행합니다.** `npm run validate:release`는 `--skip`을 거부하므로 스킵한 채로 release gate를 통과할 수 없습니다. 인증이 필요한 라이브 스모크 `npm run smoke:marketplace`도 로컬 수동 실행으로 남습니다.
 
-#### 오프라인 게이트를 Linux로 한정한 이유
+#### 오프라인 게이트가 Windows로 돌아온 경로
 
-Windows 오프라인 레인은 만들어 돌려 보고 결과를 읽은 뒤 의도적으로 뺐습니다. 실패 272건은 한 가지 문제가 아니라 성격이 다른 세 부류이고, 그중 둘째·셋째는 CI 변경에 끼워 넣을 수 있는 성질이 아닙니다.
+Windows 오프라인 레인은 만들어 돌려 보고 결과를 읽은 뒤 한 번 뺐다가 다시 넣었습니다. 실패 272건은 한 가지 문제가 아니라 성격이 다른 세 부류였고, 셋 다 답을 받았습니다.
 
-| 부류 | 실패 수 | 내용 |
-| --- | --- | --- |
-| 출하 코드 결함 | 77 | `shared/scripts/lib/load-workspace-env.mjs`는 `O_NOFOLLOW`가 정수가 아니면 즉시 거부하는데 Node는 Windows에서 이 상수를 정의하지 않습니다(21건). `shared/scripts/lib/safe-memory-store.mjs`의 `syncDirectory`는 디렉터리를 열어 `fsync`하며 Windows는 `EPERM`을 돌려줍니다(56건). |
-| 테스트·도구의 POSIX 가정 | 약 65 | `/bin/sh`와 `/tmp` 하드코딩, 드라이브 문자가 겹쳐 `D:\D:\...`가 되는 경로 결합, `chmod`가 무의미한 곳에서 mode 비트 변화를 기대하는 단정, `0600` 가정. |
-| 위 둘의 파급 | 나머지 | 앞의 실패가 만든 상태를 뒤 단정이 다시 읽으며 생긴 연쇄. |
+| 부류 | 실패 수 | 내용 | 처리 |
+| --- | --- | --- | --- |
+| 출하 코드 결함 | 77 | `shared/scripts/lib/load-workspace-env.mjs`는 `O_NOFOLLOW`가 정수가 아니면 즉시 거부했고, Node는 Windows에서 이 상수를 정의하지 않습니다(21건). `shared/scripts/lib/safe-memory-store.mjs`의 `syncDirectory`는 디렉터리를 열어 `fsync`했고 Windows는 `EPERM`을 돌려줍니다(56건). | 아래 «플랫폼 파일 하드닝». 코드에서 제거. |
+| 테스트·도구의 POSIX 가정 | 약 65 | `/bin/sh`와 `/tmp` 하드코딩, shebang으로 만든 가짜 실행 파일, `chmod`가 무의미한 곳에서 mode 비트 변화를 기대하는 단정, `0600` 가정. | 아래 «테스트 쪽 플랫폼 가정». `tests/lib/platform-support.mjs` 한 자리로 모음. |
+| 위 둘의 파급 | 나머지 | 앞의 실패가 만든 상태를 뒤 단정이 다시 읽으며 생긴 연쇄. | 원인 둘이 사라지면 함께 사라집니다. |
 
-첫 부류는 두 하드닝 원시 함수를 Windows에서 성립하는 형태로 재설계해야 하고, `O_NOFOLLOW`에 대응하는 플래그를 Node가 노출하지 않으므로 `lstat` 후 열고 identity를 재확인하는 방식으로 바꿔야 합니다. 이는 자체 설계 판단이 필요한 별도 작업입니다. **design memory와 image config는 그때까지 Windows에서 동작하지 않습니다.**
+#### 테스트 쪽 플랫폼 가정
+
+출하 코드의 결함과 테스트의 가정은 성격이 다릅니다. 앞은 사용자 기계에서 제품이 깨지는 일이고, 뒤는 검증이 한 플랫폼에서만 돌아가는 일입니다. 그래서 처리 방식도 다릅니다 — 제품은 Windows에서 **동작해야** 하고, 테스트는 Windows에서 **거짓말하지 않아야** 합니다.
+
+`tests/lib/platform-support.mjs`가 그 판단을 하는 유일한 자리입니다. 규칙은 하나입니다. **단정을 약하게 만들어 통과시키지 않고, 이름 없는 스킵도 두지 않습니다.** 플랫폼이 표현할 수 없는 것은 이유를 붙여 건너뛰고, 그 단정이 원래 확인하던 것은 모든 플랫폼에서 그대로 돕니다.
+
+| 가정 | POSIX | Windows | 대신 하는 것 |
+| --- | --- | --- | --- |
+| `/bin/sh`를 오라클로 사용 | 그대로 실행 | 없음 | 오라클만 내려놓습니다. 적대적 shell word를 감사기가 거부하는지는 양쪽에서 그대로 확인합니다. |
+| README의 bash 레시피 실행 | 그대로 실행 | 없음 | README **본문** 단정은 양쪽에서 돌고, 실행만 bash가 있는 호스트로 한정합니다. |
+| shebang으로 만든 가짜 실행 파일 | `#!/usr/bin/env node` + `0o755` | 같은 JavaScript + `.cmd` 런처 | 본문이 한 벌이라 두 플랫폼이 갈라지지 않습니다. 스폰 이음매를 받는 코드에서는 `spawnProgramSync`가 그 JavaScript를 현재 Node에 넘깁니다 — realpath·lstat·X_OK·버전 파싱·심링크 별칭 해석은 전부 실제 파일에 대해 그대로 돕니다. |
+| 실행 불가 파일 | 실행 비트 해제 | 표현 불가 | `writeNonExecutableProgram`이 `null`을 돌려주고 그 케이스만 빠집니다. 나머지 두 거부 사유는 양쪽에서 돕니다. |
+| `/tmp` 임시 루트 | `os.tmpdir()`와 동일 | 경로 아님 | `temporaryDirectory()`. macOS에서 첫 경로 구성 요소가 심링크여야 하는 한 케이스만 `shortOnDarwin`으로 남깁니다. |
+| `chmod` 후 mode 비트 단정 | 그대로 | 무의미 | `PERMISSION_BITS_MEANINGFUL`로 감쌉니다. dev/ino 같은 플랫폼 중립 단정은 그대로 돕니다. |
+| FIFO 같은 특수 파일 | `mkfifo` | 만들 수 없음 | 케이스를 이름과 함께 스킵합니다. 픽스처를 바꾸지 않은 채 거부를 단정하는 것보다 낫습니다. |
+| npm 런처 스폰 | 실행 파일 | `.cmd` 심 — shell 없이는 스폰 거부 | 런처가 실행했을 스크립트를 `process.execPath`로 직접 돌리고, `package.json`의 해당 줄은 따로 단정합니다. |
+| isolation smoke의 최소 환경 | Node + `/usr/bin` + `/bin`, `$TMPDIR` | System32 없이는 프로세스가 시작조차 못 함 | `minimalEnvironment`가 플랫폼을 인자로 받습니다. Windows에서는 `%USERPROFILE%`·`SystemRoot`·`%TMP%`·`PATHEXT`와 System32를 넣습니다. |
+| 파일 URL을 경로로 읽기 | `.pathname`이 곧 경로 | `/D:/a/repo` — `path.resolve`가 `D:\D:\a\repo`로 만듦 | `fileURLToPath`. 게이트에 규칙이 있습니다. |
+| `--import`·`--experimental-loader`에 경로 전달 | 모듈 지정자로 해석됨 | `c:` 스킴으로 읽혀 거부됨 | `pathToFileURL(target).href`. 게이트에 규칙이 있습니다. |
+| `path.relative` 결과를 슬래시 리터럴과 비교 | 일치 | 역슬래시 | 저장소 상대 경로는 항상 `/`로 적으므로 비교 직전에 구분자를 정규화합니다. |
+| 자식에게 넘기는 최소 환경 변수 | `PATH`·`HOME`·`TMPDIR`면 충분 | 시스템 루트 없이는 node.exe가 자기 DLL조차 못 찾음 | `CHILD_ENVIRONMENT_KEYS` 하나로 모읍니다. |
+| 자식 프로세스 마감 시간 | Linux 기준 값 | 프로세스 시작이 몇 배 느림 | `CHILD_DEADLINE_SCALE`이 자식 마감과 그것을 감싸는 테스트 타임아웃을 함께 늘립니다. 단정은 "유한하다"이지 "15초"가 아닙니다. |
+| Python 오라클에 한글 전달 | 로케일이 UTF-8 | 아님 — 입력이 깨져 다른 답이 나옴 | `PYTHONUTF8=1`. 틀린 쪽은 오라클이었습니다. |
+| 열린 핸들이 있는 디렉터리 이름 바꾸기 | 됨 | `EBUSY` | 실행 중인 빌드 밑에서 루트를 바꿔치기하는 4개 시나리오는 파일시스템을 직접 탐지해 이름과 함께 거절합니다. |
+| 번호로 상속되는 여분 디스크립터 | fd 3이 그대로 fd 3 | 핸들 상속이라 번호가 없음 | 증거 디스크립터를 손자에게 흘리는 tamper만 이름과 함께 거절합니다. 짝인 `timeout-orphan`은 양쪽에서 돕니다. |
+| 8.3 단축 이름 임시 경로 | 해당 없음 | `C:\Users\RUNNER~1\...`와 realpath 결과가 다름 | 픽스처 루트를 생성 시점에 한 번 realpath합니다. |
+
+`tests/unit/platform-assumptions.test.mjs`가 이 가정들이 다시 들어오는 것을 막습니다. `tests/`와 `tooling/` 전체를 훑어 하드코딩된 shell 경로, `/tmp` 임시 루트, 맨 `O_NOFOLLOW`·`O_DIRECTORY`를 찾고, 면제는 glob이 아니라 정확한 파일 경로 목록입니다 — 면제를 추가하는 diff가 곧 이유를 적는 자리입니다. 유효하지 않게 된 면제도 같은 파일이 잡습니다.
+
+**이 레인이 덮지 않는 것.** `tests/formats/`는 macOS Quick Look과 headless Chromium을 구동하므로 모든 CI 플랫폼에서 `SKIPPED`이고, 위 게이트의 탐색 대상에서도 빠져 있습니다. 그래서 `npm test`(트리 전체 순회)는 여전히 Windows에서 끝까지 돌지 않고, 오프라인 게이트가 실행하는 네 shard만 돕니다.
+
+**Windows 판정.** 레인이 Windows에서 돌았고, 여섯 번의 실행이 걸렸습니다. 첫 실행은 약 160건을 보고했고 마지막 실행은 Windows 여섯 잡 전부 통과입니다. 예고한 대로 보고된 것은 되돌아온 결함이 아니라 목록에 없던 부류였고, 처리 방식도 예고한 대로 위 표에 줄을 추가하는 것이었습니다.
+
+그 과정에서 나온 것 중 **테스트가 아니라 제품이 틀린** 항목이 다섯 개입니다. 스냅숏 스테이징이 Windows의 OS 임시 디렉터리를 사용자 홈으로 판정해 모든 빌드를 거부한 것, 존재하지 않는 `C:\tmp` 후보를 `realpath`해 죽은 것, 업데이트 캐시 경로가 인자로 받은 플랫폼이 아니라 호스트의 구분자로 조립된 것, SessionStart 능력 탐지가 Windows 브라우저를 영원히 찾지 못한 것(`--version`이 stdout에 답하지 않고, 문서화된 설치 경로 비교가 대소문자를 구분했습니다), 그리고 예약 슬롯이 심링크가 선점한 이름에 배타적 생성을 시도한 것입니다. 마지막 것은 Windows에서 링크를 따라가 **링크의 대상**을 만들기 때문에, 저장소 바깥의 남이 고른 경로에 이 저장소의 바이트를 쓰는 결함이었습니다. 다섯 건 모두 고쳤고, 각각 두 플랫폼 형태를 한 호스트에서 확인하는 테스트가 붙어 있습니다.
+
+`tests/formats/`는 여전히 이 판정 밖입니다(바로 위 문단).
+
+#### 플랫폼 파일 하드닝
+
+`shared/scripts/lib/platform-file-hardening.mjs`가 플랫폼별 판단을 하는 유일한 자리입니다. 이전에는 같은 질문에 두 가지 잘못된 답이 있었습니다. `load-workspace-env`는 상수가 없으면 실행 자체를 거부했고, 나머지 출하 모듈들은 `constants.O_NOFOLLOW ?? 0`이나 맨 상수를 그대로 썼습니다. 후자는 Windows에서 `flags | undefined`가 조용히 `flags`가 되므로 실패하지 않고 보증만 사라집니다 — 어느 플랫폼에서도 아무 말을 하지 않는 열화입니다.
+
+| 보증 | POSIX | Windows | Windows에서 대신 성립하는 것 |
+| --- | --- | --- | --- |
+| `O_NOFOLLOW` | 상수 그대로 | `0` | 여는 쪽이 이미 수행하는 `lstat` → open → identity 재확인 |
+| 디렉터리 `fsync` | 필수, 실패는 실패 | 건너뜀 | NTFS가 `$LogFile`에 메타데이터 연산을 저널링하고 마운트 시 재생 |
+| `O_DIRECTORY` 디렉터리 핸들 | 상수 그대로 | 핸들 없음(`null`) | 읽기 앞뒤의 `lstat` 쌍 대조 |
+| `Stats.mode` 권한 비트 | POSIX 권한 그대로 | 읽기 전용 속성으로 합성된 값 | 없음 — 검사를 하지 않습니다 |
+
+이 예외들은 모두 **허용목록**입니다. 상수를 정의해야 마땅한 POSIX 호스트에서 상수가 없으면 예전처럼 즉시 실패합니다. `win32`만 면제됩니다.
+
+`O_NOFOLLOW`가 하는 일은 마지막 경로 구성 요소가 심링크일 때 `open`을 실패시키는 것 하나뿐이고, Node는 Windows에서 대응 플래그를 노출하지 않습니다(`FILE_FLAG_OPEN_REPARSE_POINT`는 `fs.open`에서 닿을 수 없습니다). 이 스위트의 모든 open은 앞의 `lstat`과 뒤의 `handle.stat()` ↔ 재`lstat` 대조로 감싸여 있습니다. 심링크로 바뀐 경로는 두 번째 `lstat`이 심링크라고 보고해서 걸리고, 다른 정규 파일로 바뀐 경로는 dev/ino 대조로 걸립니다 — POSIX에서도 `O_NOFOLLOW`가 막아 준 적 없는 경우입니다. 둘 다 호출자가 한 바이트를 읽기 전에 돌아갑니다. 그래서 Windows가 잃는 것은 탐지가 아니라 원자성입니다. 바꿔치기된 심링크는 열리지 않는 대신 열렸다가 거부되고, 공격자가 지정한 대상의 바이트는 호출자에게 도달하지 않습니다. 남는 잔여 위험은 공격자가 고른 경로에 대한 일시적 핸들이며, 그래서 이것이 일반적 완화가 아니라 이름 붙은 한 플랫폼의 면제입니다.
+
+디렉터리 `fsync`는 POSIX에서 rename이나 link를 내구화하는 수단입니다. Windows에는 사용자 모드 대응물이 없습니다. `fs.open`은 디렉터리 핸들을 돌려주지 못하고, 볼륨 핸들에 대한 `FlushFileBuffers`는 관리자 권한을 요구합니다. 이를 시도하는 것이 `EPERM`이고 design memory store를 Windows에서 무너뜨린 원인입니다. 건너뛴다고 보증이 사라지지는 않고 제공자가 바뀝니다. 커밋된 바이트는 디렉터리 항목이 생기기 전에 이미 내구화되어 있습니다 — 호출자가 claim 파일 자체를 `fsync`한 뒤에야 link로 제자리에 넣습니다.
+
+`Stats.mode`는 Windows에서 읽기 전용 속성 하나로 합성됩니다. ACL이 무엇이든 읽을 수 있는 파일은 같은 mode를 보고하므로, group·other 비트를 검사하는 것은 그 숫자가 답할 수 없는 질문을 묻는 일입니다. 모든 파일에서 켜지고, 사용자가 취할 수 있는 조치도 없습니다 — `chmod`는 무의미하고 Node는 ACL API를 노출하지 않습니다. 그래서 추측하는 대신 검사를 포기합니다. **Windows 사용자는 `.env` 권한 경고를 아예 받지 않습니다.** 대안은 나타날 때마다 틀린 경고였습니다.
+
+같은 계열의 세 번째 결함도 함께 고쳤습니다. design memory 진입점 셋은 `process.env.HOME`을 읽었는데 Windows는 이 변수를 정의하지 않습니다. `resolveMemoryStore`에는 `win32: ["AppData", "Local"]` 분기가 이미 있었지만 home이 workspace로 대체되면서 global scope 저장소가 엉뚱한 자리에 만들어졌습니다. 이제 셋 다 `os.homedir()`를 씁니다 — POSIX에서는 `$HOME`을, Windows에서는 `%USERPROFILE%`을 읽으므로 기존 동작의 상위집합입니다. 이 저장소의 다른 모듈들이 이미 쓰던 방식이고, `process.env.HOME`이 예외였습니다.
+
+검증은 POSIX 호스트에서 실제 원시 함수를 Windows 입력으로 구동하고 그 결과를 실제 소비자에게 물려서 합니다. `tests/unit/platform-file-hardening.test.mjs`는 `noFollowOpenFlag`가 `0`을 돌려주고 `syncDirectory`가 아무것도 열지 않는 상태로 `load-workspace-env`와 `safe-memory-store`를 재배치해 실행합니다. dotenv는 그대로 읽히고 심링크는 그대로 거부되며, 봉인된 memory event는 커밋되고 스토어 자신의 identity 고정 리더로 되읽힙니다. 원시 함수를 우회해 맨 상수를 쓰는 출하 모듈이 하나라도 생기면 같은 파일의 소스 게이트가 잡습니다.
+
+이 파일 자체는 이제 **Windows에서 실제로 돕니다.** 전용 레인 하나가 `windows-latest`에서 이 파일만 `node --test`로 실행합니다 — shard도 스테이지 회계도 없으므로 스킵이 숨을 자리가 없습니다. 오프라인 게이트의 Windows 절반도 같은 파일을 `unit` shard 안에서 돌리지만, 좁은 레인은 따로 남깁니다. 이것은 넓은 레인이 무슨 상태이든 성립해야 하는 바닥이고, 넓은 레인 안에 들어가는 순간 그 성질을 잃습니다.
+
+`O_DIRECTORY`도 같은 계열이라 같은 자리로 옮겼습니다. POSIX에서 디렉터리 핸들은 `readdir` 한 번 동안 inode를 고정하는 수단이고, Windows에는 그 상수도 그 핸들도 없습니다(libuv가 `FILE_FLAG_BACKUP_SEMANTICS` 없이 열기 때문에 `fs.open`이 디렉터리에서 실패합니다). `openDirectoryHandle`은 그런 호스트에서 `null`을 돌려주고, 호출자는 이미 앞뒤로 걸어 둔 `lstat` 쌍으로 같은 대조를 합니다. 여기서도 잃는 것은 탐지가 아니라 원자성입니다.
 
 Windows에서 실제로 성립해야 하는 계약은 Windows checkout과 설치가 다른 플랫폼과 같은 바이트를 만든다는 것이고, 이는 설치 게이트가 매 실행마다 Windows에서 직접 증명합니다.
 
@@ -239,8 +302,30 @@ Windows에서 실제로 성립해야 하는 계약은 Windows checkout과 설치
 | `.gitattributes`의 벤더 경로 | 버전 자리를 `*` glob으로 둠 |
 | `shared/updates/installed-components.json` | `tooling/generate-update-manifest.mjs`가 락에서 생성 |
 | `plugins/**` | `npm run build`가 락에서 벤더 트리를 골라 담음(`tooling/lib/vendor-components.mjs`) |
+| `shared/vendor/description-overlays/<id>.json`의 `upstream.sha256` | 상류 SKILL.md의 `description` 문구를 그대로 해싱한 값. 상류가 문구를 바꾸면 빌드가 멈추고 다시 쓴 요약과 새 해시를 요구함 |
 | `README.md`·`shared/contracts/README.md`·`guides/assets/diagram-manifest.json` | 같은 `sync-vendor-references.mjs` 규칙 22개에 포함 |
 | `guides/archify-diagrams/catalog.json`의 벤더 mirror 항목과 digest | `tooling/sync-vendor-catalog-entries.mjs`가 패키지와 락에서 씀. `validate-suite`의 `vendor catalog entries` 스테이지가 drift를 막음 |
+
+### 벤더 description overlay
+
+라우팅은 카탈로그에서 결정됩니다. codex는 설치된 스킬 전체에 카탈로그 예산 하나를 나눠 쓰므로 description마다 몫이 있고, 65개 스킬 기준으로 그 몫은 119자입니다. 그 뒤는 잘립니다 — 말줄임표도 없고, 모델이 잘렸다는 사실을 알 방법도 없습니다.
+
+벤더 3종의 상류 description은 각각 652자, 596자, 289자입니다. 잘려나가는 건 장식이 아닙니다. archify는 `Use when the user asks to visualize…` 트리거 절 전체를, svg-infographic은 `Not for photo-heavy… statistical charts` 제외 범위를, humanize-korean은 트리거 목록과 `단순 맞춤법 교정·번역은 대상 아님`을 잃습니다. 트리거를 잃으면 와야 할 일이 안 오고, 제외 범위를 잃으면 오지 말아야 할 일이 옵니다. 후자가 더 나쁩니다.
+
+벤더 파일은 고칠 수 없습니다. 락이 상류 byte를 전부 고정하고, 패키징 게이트가 수정된 벤더 파일을 거부합니다. 그래서 소스 트리는 상류와 byte 단위로 같게 두고, 빌드가 패키지로 투영하는 순간에 frontmatter 한 필드만 다시 씁니다.
+
+| 부분 | 어디 |
+| --- | --- |
+| 선언 | `shared/vendor/description-overlays/<id>.json` — 대상 경로, 상류 문구의 sha256, 저장소가 쓴 119자 이하 대체 문구 |
+| 적용 | `tooling/lib/vendor-description-overlay.mjs`, `buildProduct`가 벤더 모듈 엔트리마다 호출 |
+| 예산 상수 | `tooling/lib/skill-description-budget.mjs` — 라우팅 측정과 overlay가 같은 값을 봄 |
+| 게이트 | `tooling/isolation-smoke.mjs`의 `verifyVendor`. overlay가 지정한 경로만 상류 소스에 overlay를 적용한 결과와 대조하고, 나머지는 종전대로 락과 byte 대조 |
+
+overlay가 정직한 이유는 상류 문구의 해시를 함께 고정하기 때문입니다. 상류가 description을 다시 쓰면 해시가 어긋나고 빌드가 멈추면서 새 해시를 알려줍니다. 요약이 존재하지 않는 문장을 조용히 대변하는 상태로 남지 않습니다. 대체 문구는 plain YAML scalar여야 합니다 — 따옴표로 열 수 없고 `: `를 담을 수 없습니다. 인용 부호에 예산 두 자를 쓰는 것도 손해입니다.
+
+오버레이는 벤더 루트 **밖**에 둡니다. 락 옆이 읽기는 좋지만, 벤더 루트는 패키징 게이트가 검증하는 닫힌 집합이고 im-not-ai 업그레이드는 루트를 통째로 rename으로 갈아끼웁니다. 안에 두면 저장소 소유 파일이 업그레이드에 조용히 삭제되고, 존재하기 위해 허용목록 두 곳을 넓혀야 합니다.
+
+`tests/unit/probe-skill-routing.test.mjs`의 예산 검사에는 이제 예외가 없습니다. 예전에는 벤더 3종이 이름으로 면제돼 있었습니다.
 
 im-not-ai만 두 번째 증인을 둡니다. `tooling/vendor-pins/im-not-ai.json`이 태그·커밋·라이선스 해시와 파일 15개의 sha256을 들고 있고, `--check`는 벤더 락을 이 핀과 대조합니다. 락이 스스로를 승인하지 못하게 하는 장치입니다. 예전에는 이 표가 `tooling/sync-im-not-ai.mjs` 소스 안에 있어서, 업그레이드를 하려면 그 업그레이드를 지키는 검사를 통과시키기 위해 해시 15개를 손으로 옮겨 적어야 했습니다. 지금은 `--update`가 핀도 함께 씁니다. 사람이 PR diff에서 해시 변화를 읽는다는 성질은 그대로입니다.
 

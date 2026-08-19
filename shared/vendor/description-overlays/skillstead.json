@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "path": "SKILL.md",
+  "upstream": {
+    "sha256": "b982d09d6241726a32c8fd5a37beb7a5f49864c56fd3dfe0e7844f3553a59afe"
+  },
+  "description": "Use for SVG infographics, topology maps, flows, comparisons, roadmaps rendered to PNG. Not charts or illustration."
+}

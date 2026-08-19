@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "b26239c69b8f09592dfa8a541678993a0372295553cda11706bc3bcdf198a591",
+  "treeSha256": "794d67dafc0bca7d6629af96e50208ef8bc16fe30a79bd51cde8509a183d6ca9",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -26,8 +26,8 @@
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
-      "sha256": "47d6cf00c24333650a9200e38ce2311d17af472d492f1a9464b963a461d36b71",
-      "size": 2818
+      "sha256": "441b78d305c7e6ba18b61ca6e8658f06fa7bb0e1713b5e43322abf7d1385d6a6",
+      "size": 4651
     },
     {
       "path": "agents/art-brief-director.md",
@@ -1291,12 +1291,12 @@
     },
     {
       "path": "references/shared/updates/installed-components.json",
-      "sha256": "11c6556f7ac56574afedc365c5ad256ee6bb4988f3d339f120bcc6b72026f5b0",
+      "sha256": "92ec24d94c8f607cd696813e9acb82d24ff7ae153fd975025e0fb551fc425d8e",
       "size": 843
     },
     {
       "path": "references/shared/updates/suite-release.lock.json",
-      "sha256": "a269605c00249f7f9f19e508370f07072db0f1237a271352a401bcb31e120391",
+      "sha256": "f861dda0218c9ee6547dd5188adc0d9b62c5a72de2784ca824ff2229c8a315de",
       "size": 207
     },
     {
@@ -1591,18 +1591,18 @@
     },
     {
       "path": "scripts/capability-probe.mjs",
-      "sha256": "6afeded93a2371f14e284482ce74d6d70dedaac37fa4ce54c99568c51a1a9064",
-      "size": 20525
+      "sha256": "45b629fe3a3436bf11a5cc65a5a5ce190b3407ea5a21e01a6d59c8e13ed451ad",
+      "size": 21607
     },
     {
       "path": "scripts/capture-design-memory.mjs",
-      "sha256": "92f1dfa9df033e252d15afa8bc78c720d0381cde8b197f893a303cf58c51085e",
-      "size": 8250
+      "sha256": "99bf873782abd7c9604e49cd11364b5e6b38c10eabe237db5a10048edf7be8d8",
+      "size": 8278
     },
     {
       "path": "scripts/check-game-design-updates.mjs",
-      "sha256": "397d331d61b740a47079a61352a2a75da25bafcdb8cb2f6839d80959267ddd5a",
-      "size": 47421
+      "sha256": "fbcc6d999ee41ab14e9d700c16b90c8bdfcc2301e964a77e2df26481ff14d17a",
+      "size": 47745
     },
     {
       "path": "scripts/compile-image-prompts.mjs",
@@ -1671,18 +1671,23 @@
     },
     {
       "path": "scripts/lib/image-reference-loader.mjs",
-      "sha256": "6e4c98ddd04128b8bc0fb2aefcd683d744a3df264213442e67db1ce32fbca3cb",
-      "size": 7420
+      "sha256": "6d437d2da788f95dc66e5c4fcb782458fe6ec39c10bead8f68a07d420d7bd4ba",
+      "size": 7482
     },
     {
       "path": "scripts/lib/load-workspace-env.mjs",
-      "sha256": "94dfc8d3156ef6f106903471207a91785f1dfd10efa979f2d421823e23e2d7d4",
-      "size": 8054
+      "sha256": "6cd54cb599c56d8a8604042564bea6cb75060e84af1247fe4bf63f59b3203e88",
+      "size": 8448
     },
     {
       "path": "scripts/lib/memory-schema-evaluator.mjs",
       "sha256": "6dfb89f282d4a5258a23b87fcf529cb3055df7604c435aeb9b97f01299b52734",
       "size": 6755
+    },
+    {
+      "path": "scripts/lib/platform-file-hardening.mjs",
+      "sha256": "6dabb4b1869bf1360da536bd0d47e26db394e581ac1dca9d20c9aec5c288d3b1",
+      "size": 6555
     },
     {
       "path": "scripts/lib/reference-analysis-derivations.mjs",
@@ -1716,13 +1721,13 @@
     },
     {
       "path": "scripts/lib/safe-artifact-write.mjs",
-      "sha256": "a9f45996403c2366c9efde31c94d880d043776a92ded0d5e19da2875814a3443",
-      "size": 6057
+      "sha256": "162f3be1bbe9294d2e40f1398b200fed869d7958cb5029c105ebcd69ba2c1a2f",
+      "size": 6114
     },
     {
       "path": "scripts/lib/safe-memory-store.mjs",
-      "sha256": "08f0d33dbbbd73da4ad8dad6f71f948cc00e1564074be7d604973a2afc38f3bc",
-      "size": 40421
+      "sha256": "1dc9a44edbf4ff5addad403bcea55224a302778244a122cdcba2194a09f7c844",
+      "size": 40253
     },
     {
       "path": "scripts/lib/skillstead-svg-evidence.mjs",
@@ -1746,8 +1751,8 @@
     },
     {
       "path": "scripts/maintain-design-memory.mjs",
-      "sha256": "f114b6f98b9629bd8c9fdaacbd1e3c2427dae29b1ae7dfcd96301a28a767995c",
-      "size": 13282
+      "sha256": "d1c4b6935bd298179b9df15c3edeff1a8e2646f7812fc3919ca18f3604817a56",
+      "size": 13310
     },
     {
       "path": "scripts/manage-game-design-glossary.mjs",
@@ -1766,13 +1771,13 @@
     },
     {
       "path": "scripts/resolve-quality-profile.mjs",
-      "sha256": "0e8490f621378ac6057ed310aba51b6d22f18c979b6cf5873f7d80f2f96f2614",
-      "size": 72021
+      "sha256": "55a0f6c78af0ad5b7d7eec8da908976c25dc13f17aaa4eec52075032cfe421e4",
+      "size": 72089
     },
     {
       "path": "scripts/retrieve-design-memory.mjs",
-      "sha256": "24ee84698d985446175a93fabdc90ec13ab3ff1b73b26125c3b3a72b8a6b2743",
-      "size": 49463
+      "sha256": "7e8643d5bea5a98643867a5b902358d69568714ae468001b35b4694bb251a1ed",
+      "size": 50643
     },
     {
       "path": "scripts/review-cutscene-continuity.mjs",
@@ -1811,8 +1816,8 @@
     },
     {
       "path": "scripts/validate-design-memory.mjs",
-      "sha256": "5055806760cc4af8eed7cf188763b5ee8509097aade04651d09799913d687159",
-      "size": 33458
+      "sha256": "8dded0c4421d55d6eaf85bc386f82765e06788f87bc99149c27d45b6b0771166",
+      "size": 33474
     },
     {
       "path": "scripts/validate-game-design-writing-language.mjs",
@@ -1876,8 +1881,8 @@
     },
     {
       "path": "skills/archify/SKILL.md",
-      "sha256": "258c8b332f7a6cef15acd8c3a1c29ec5405d52897a55cd358b0baf623c9810f2",
-      "size": 13737
+      "sha256": "42e579c8135950f7493623cf58d720923ec3fc94c33d005547f5f9084a4eaae7",
+      "size": 13202
     },
     {
       "path": "skills/archify/assets/template.html",
@@ -2321,8 +2326,8 @@
     },
     {
       "path": "skills/humanize-korean/SKILL.md",
-      "sha256": "7a60c8240218ac7a3cb15f26f0824a682958cdc0475ba2d828c8375edc870569",
-      "size": 4397
+      "sha256": "52dd0a46675366e7d1c137fc75ca1803832b2e1ac4933d57b755d11f8cc12aa8",
+      "size": 4015
     },
     {
       "path": "skills/humanize-korean/references/ai-tell-taxonomy.md",
@@ -2536,8 +2541,8 @@
     },
     {
       "path": "skills/svg-infographic/SKILL.md",
-      "sha256": "ba02d911917611e25b08dd06c7b26a197f3e62c0f5591b0a2627e6aca60fd6ca",
-      "size": 29915
+      "sha256": "34e4ce896ae8782c0da4f8b11b14deed08272bc85aba0a7598dcb5a448de23cd",
+      "size": 29433
     },
     {
       "path": "skills/svg-infographic/assets/fonts/HiMelody-OFL.txt",

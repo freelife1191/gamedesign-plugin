@@ -2,10 +2,11 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
 import { discoverSourceFiles } from "../../tooling/index-references.mjs";
 
-const repoRoot = path.resolve(new URL("../..", import.meta.url).pathname);
+const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 
 test("the canonical reference index covers every one of the 49 source documents", async () => {
   const sourcePaths = (await discoverSourceFiles({ repoRoot })).map(({ sourcePath }) => sourcePath);

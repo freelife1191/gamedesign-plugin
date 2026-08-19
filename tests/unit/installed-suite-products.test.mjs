@@ -1,9 +1,19 @@
 import assert from "node:assert/strict";
+import path from "node:path";
 import test from "node:test";
 
 import { inspectInstalledSuiteProducts } from "../../shared/scripts/inspect-game-design-plugin-updates.mjs";
 
 const MARKETPLACE = "game-design-suite";
+const MARKETPLACE_ROOT = "/private/tmp/marketplace";
+
+// snapshotVersion joins the manifest onto the source path the host reported, with the host's own path
+// module — which is correct, because on a real host both come from that host. The subject here is that
+// one manifest read happens per product and where it points, not which separator the host writes, so
+// the expectation is built the same way the code builds it.
+function manifestPath(plugin) {
+  return path.join(`${MARKETPLACE_ROOT}/plugins/${plugin}`, ".codex-plugin", "plugin.json");
+}
 
 function pluginEntry({ plugin, installed, enabled = installed }) {
   return {
@@ -13,8 +23,8 @@ function pluginEntry({ plugin, installed, enabled = installed }) {
     version: "0.1.1",
     installed,
     enabled,
-    source: { source: "local", path: `/private/tmp/marketplace/plugins/${plugin}` },
-    marketplaceSource: { sourceType: "local", source: "/private/tmp/marketplace" },
+    source: { source: "local", path: `${MARKETPLACE_ROOT}/plugins/${plugin}` },
+    marketplaceSource: { sourceType: "local", source: MARKETPLACE_ROOT },
     installPolicy: "AVAILABLE",
     authPolicy: "ON_USE",
   };
@@ -62,8 +72,8 @@ test("both installed products are reported in a stable order", () => {
 
   assert.deepEqual(result, { status: "known", products: ["game-design-career", "game-design-studio"] });
   assert.deepEqual(readPaths, [
-    "/private/tmp/marketplace/plugins/game-design-studio/.codex-plugin/plugin.json",
-    "/private/tmp/marketplace/plugins/game-design-career/.codex-plugin/plugin.json",
+    manifestPath("game-design-studio"),
+    manifestPath("game-design-career"),
   ]);
 });
 
@@ -80,7 +90,7 @@ test("a product missing from a successful listing is absent, not unknown", () =>
 
   assert.equal(result.status, "known");
   assert.deepEqual(result.products, ["game-design-career"]);
-  assert.deepEqual(readPaths, ["/private/tmp/marketplace/plugins/game-design-career/.codex-plugin/plugin.json"]);
+  assert.deepEqual(readPaths, [manifestPath("game-design-career")]);
 });
 
 // 비활성 제품은 파일만 디스크에 있고 호스트가 그 스킬을 싣지 않는다. 인계를 보내면 조용한 막다른
@@ -102,8 +112,8 @@ test("a disabled product is absent from the handoff list while the status stays 
   // 호스트는 비활성 제품도 installed로 돌려줬다. 걸러낸 근거가 목록에 없어서가 아니라 enabled가
   // false여서라는 것을, 그 제품의 스냅샷을 실제로 읽었다는 사실로 고정한다.
   assert.deepEqual(readPaths, [
-    "/private/tmp/marketplace/plugins/game-design-studio/.codex-plugin/plugin.json",
-    "/private/tmp/marketplace/plugins/game-design-career/.codex-plugin/plugin.json",
+    manifestPath("game-design-studio"),
+    manifestPath("game-design-career"),
   ]);
 });
 

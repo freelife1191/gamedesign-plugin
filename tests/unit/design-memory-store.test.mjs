@@ -9,6 +9,7 @@ import test from "node:test";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { canonicalMemoryEventDocument, canonicalQuarantineMarkerDocument, memoryOperationId } from "../../shared/scripts/validate-design-memory.mjs";
+import { relocateModuleImports } from "../lib/relocated-module-source.mjs";
 
 const storeModuleUrl = process.env.DESIGN_MEMORY_STORE_MODULE_URL ?? new URL("../../shared/scripts/lib/safe-memory-store.mjs", import.meta.url).href;
 // The mutation harness runs a tampered copy of this file out of a temp directory, so every path the
@@ -488,10 +489,10 @@ test("a stale store root cannot resurrect an older approved snapshot or append s
 });
 
 test("the stale-root authority regression fails when all root identity checks are removed", async (t) => {
-  const source = await readFile(storeSourcePath, "utf8"); const validatorUrl = pathToFileURL(path.join(path.dirname(path.dirname(storeSourcePath)), "validate-design-memory.mjs")).href;
+  const source = relocateModuleImports(await readFile(storeSourcePath, "utf8"), path.dirname(storeSourcePath));
   const initialCheck = 'if (!await matchesStoreIdentity(store)) { state.complete = false; state.diagnostics.push({ code: "memory.unbound_seal" }); return closed(); }'; const laterCheck = 'if (!await matchesStoreIdentity(store)) { state.diagnostics.push({ code: "memory.unbound_seal" }); return closed(); }';
   assert.equal(source.split(initialCheck).length - 1, 1); assert.equal(source.split(laterCheck).length - 1, 2);
-  const mutated = source.replace('"../validate-design-memory.mjs"', JSON.stringify(validatorUrl)).replace(initialCheck, "").split(laterCheck).join(""); const temporaryRoot = await mkdtemp(path.join(tmpdir(), "memory-root-identity-mutation-")); t.after(() => rm(temporaryRoot, { recursive: true, force: true })); const modulePath = path.join(temporaryRoot, "safe-memory-store.mjs"); await writeFile(modulePath, mutated);
+  const mutated = source.replace(initialCheck, "").split(laterCheck).join(""); const temporaryRoot = await mkdtemp(path.join(tmpdir(), "memory-root-identity-mutation-")); t.after(() => rm(temporaryRoot, { recursive: true, force: true })); const modulePath = path.join(temporaryRoot, "safe-memory-store.mjs"); await writeFile(modulePath, mutated);
   const api = await import(`${pathToFileURL(modulePath).href}?root-identity-mutation=${Date.now()}`);
   await assert.rejects(
     () => assertStaleRootAuthorityClosed(t, api),
@@ -552,13 +553,28 @@ test("sealed claims require an exact canonical envelope", async (t) => {
   }
 });
 
+// The redaction under test is one code path and every name goes through it, but not every name can be
+// put on disk everywhere: Windows refuses control characters and lone surrogates in a path component
+// and cannot hold the long one within its path limit. A name this filesystem will not create is
+// recorded as uncreatable rather than skipped in silence, and the run still fails if that leaves
+// nothing to test.
 test("scan diagnostics do not expose untrusted physical path components", async (t) => {
   const attackers = ["sk-live-DO-NOT-EXPOSE", "line\ncontrol-\u0001", "x".repeat(240), "invalid-\uD800-component"];
+  const uncreatable = [];
   for (const attacker of attackers) {
     const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const appended = await appendMemoryEvent({ store, eventDocument: document() }); const moved = path.join(store.root, "v1", "events", attacker, "wrong-memory", appended.eventId);
-    await mkdir(path.dirname(moved), { recursive: true }); await rename(path.join(store.root, appended.relativePath), moved); const scan = await scanMemoryEvents({ store }); assertClosedScan(scan, record.memory_id, "memory.path_binding"); const diagnostics = JSON.stringify(scan.diagnostics);
+    const created = await mkdir(path.dirname(moved), { recursive: true }).then(() => true, (error) => {
+      // With recursive: true every ancestor is created, so these can only mean the filesystem will
+      // not accept this component at all.
+      if (["EINVAL", "ENAMETOOLONG", "ENOENT", "ERR_INVALID_ARG_VALUE"].includes(error.code)) return false;
+      throw error;
+    });
+    if (!created) { uncreatable.push(attacker); continue; }
+    await rename(path.join(store.root, appended.relativePath), moved); const scan = await scanMemoryEvents({ store }); assertClosedScan(scan, record.memory_id, "memory.path_binding"); const diagnostics = JSON.stringify(scan.diagnostics);
     assert.equal(diagnostics.includes(attacker), false); assert.equal(diagnostics.includes(root), false);
   }
+  assert.ok(uncreatable.length < attackers.length, "no hostile path component was creatable on this filesystem, so the redaction went untested");
+  if (uncreatable.length > 0) t.diagnostic(`${uncreatable.length} of ${attackers.length} hostile components are not creatable on this filesystem`);
 });
 
 test("public scans do not accept traversal adapters and special entries close scans without leaking filesystem errors", async (t) => {

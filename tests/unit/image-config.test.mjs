@@ -1,15 +1,18 @@
 import assert from "node:assert/strict";
-import { constants } from "node:fs";
 import { chmod, mkdir, mkdtemp, open, realpath, rename, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 
+import { noFollowOpenFlag } from "../../shared/scripts/lib/platform-file-hardening.mjs";
 import {
   loadImageConfig,
   toPublicImageConfig,
   validateImageConfig,
 } from "../../shared/scripts/validate-image-config.mjs";
+import { PERMISSION_BITS_MEANINGFUL } from "../lib/platform-support.mjs";
+
+const expectedNoFollowFlag = noFollowOpenFlag();
 
 async function workspace(t) {
   const root = await mkdtemp(path.join(tmpdir(), "image-config-test-"));
@@ -244,7 +247,9 @@ test("a symlink swapped in after lstat is rejected before outside bytes can be p
     env: {},
     openFileFn: async (filePath, flags) => {
       assert.equal(filePath, envPath);
-      assert.equal((flags & constants.O_NOFOLLOW) !== 0, true);
+      // Same as the workspace dotenv reader: assert the flag the primitive yields for this platform,
+      // not a constant Windows never defines. The rejection below is the subject and runs everywhere.
+      assert.equal(flags & expectedNoFollowFlag, expectedNoFollowFlag);
       await rename(filePath, originalPath);
       await symlink(outsidePath, filePath);
       return open(filePath, flags);
@@ -302,7 +307,12 @@ test("non-regular .env files are rejected and group/other-readable files warn", 
   await assert.rejects(() => loadImageConfig({ workspaceRoot: root, env: {} }), /regular file/i);
   await rm(path.join(root, ".env"), { recursive: true });
 
-  await writeEnv(root, "IMAGE_GEN_MODE=all\n", 0o644);
-  const config = await loadImageConfig({ workspaceRoot: root, env: {} });
-  assert.ok(config.warnings.some((warning) => /group|other|permission/i.test(warning)));
+  // The rejection above runs on every platform. The warning below cannot: Windows synthesises
+  // Stats.mode from one read-only attribute, so 0o644 and 0o600 are the same number there, chmod is a
+  // no-op, and a permission warning would be either always or never emitted regardless of the file.
+  if (PERMISSION_BITS_MEANINGFUL) {
+    await writeEnv(root, "IMAGE_GEN_MODE=all\n", 0o644);
+    const config = await loadImageConfig({ workspaceRoot: root, env: {} });
+    assert.ok(config.warnings.some((warning) => /group|other|permission/i.test(warning)));
+  }
 });

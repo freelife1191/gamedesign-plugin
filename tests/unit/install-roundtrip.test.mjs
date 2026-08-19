@@ -13,6 +13,7 @@ import {
   samePathAfterNfc,
   treeFingerprint,
 } from "../../tooling/install-roundtrip.mjs";
+import { PERMISSION_BITS_MEANINGFUL } from "../lib/platform-support.mjs";
 
 test("path comparison normalizes to NFC before deciding two paths differ", () => {
   // macOS readdir can hand back the decomposed form; the bytes differ, the path does not.
@@ -43,8 +44,13 @@ test("the tree fingerprint covers content and mode, and misses neither", async (
     await writeFile(target, "원본\n", "utf8");
     assert.equal(await treeFingerprint(root), before, "restoring the content must restore the fingerprint");
 
-    await chmod(target, 0o600);
-    assert.notEqual(await treeFingerprint(root), before, "mode change must move the fingerprint");
+    // The content half above runs everywhere. The mode half needs a mode the platform actually stores:
+    // 0o644 and 0o600 differ only in bits Windows does not keep, so the fingerprint there is unchanged and
+    // rightly so — there was no mode change to detect.
+    if (PERMISSION_BITS_MEANINGFUL) {
+      await chmod(target, 0o600);
+      assert.notEqual(await treeFingerprint(root), before, "mode change must move the fingerprint");
+    }
   } finally {
     await rm(root, { recursive: true, force: true });
   }

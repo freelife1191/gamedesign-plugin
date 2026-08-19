@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 
 import { buildProduct } from "../../../tooling/lib/build-product.mjs";
 import { importVendored } from "../../lib/vendored.mjs";
+import { CHILD_DEADLINE_SCALE } from "../../lib/platform-support.mjs";
 
 const { resolveBrowser } = await importVendored("skillstead", "scripts/render.mjs");
 
@@ -39,7 +40,9 @@ test("clean-built SessionStart probe and Skillstead renderer report the same rea
   const output = JSON.parse(probe.stdout);
   assert.equal(output.updates.cache, "disabled");
   assert.equal(output.updates.status, "disabled");
-  assert.equal(output.capabilities.chromium.available, true);
+  // resolveBrowser() already found one, so a disagreement here is the probe's, and the probe's own
+  // answer is the only thing that can say why.
+  assert.equal(output.capabilities.chromium.available, true, `probe disagrees with the renderer: ${JSON.stringify(output.capabilities.chromium)}`);
   assert.deepEqual(Object.keys(output.capabilities.chromium), ["available", "command", "version", "via"]);
 
   const scripts = path.join(pluginRoot, "skills/svg-infographic/scripts");
@@ -48,7 +51,9 @@ test("clean-built SessionStart probe and Skillstead renderer report the same rea
     cwd: pluginRoot,
     env: { ...process.env },
     encoding: "utf8",
-    timeout: 30000,
+    // A headless Chromium render is several times slower on Windows, and the identity line this test
+    // reads had already been printed when the thirty-second bound killed the process.
+    timeout: 30000 * CHILD_DEADLINE_SCALE,
   });
   assert.equal(render.status, 0, `${render.stdout}\n${render.stderr}`);
   const identity = render.stdout.match(/^renderer: (.+) \((.+)\) \[via (.+)\]$/mu);

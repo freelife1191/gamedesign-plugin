@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 
 import { checkGameDesignUpdates } from './check-game-design-updates.mjs';
 import { loadImageConfig, toPublicImageConfig } from './validate-image-config.mjs';
+import { noFollowOpenFlag } from './lib/platform-file-hardening.mjs';
 
 const MAX_STDIN_BYTES = 64 * 1024;
 const MAX_PATH_ENTRIES = 64;
@@ -132,7 +133,11 @@ export function verifyChromiumIdentity(executablePath, versionOutput, {
   const version = (versionOutput ?? '').trim();
   if (version && CHROMIUM_VERSION_RE.test(version)) return { ok: true, version };
   const base = executablePath.split(/[\\/]/u).pop() ?? '';
-  if (platform === 'win32' && /^(chrome|msedge)\.exe$/iu.test(base) && documentedPaths.includes(executablePath)) {
+  // Windows paths are case-insensitive and may differ only in separators or casing between what PATH
+  // hands back and what the documented list spells, so an exact string comparison rejected the same
+  // file it was meant to recognise.
+  const samePath = (left, right) => pathWin32.normalize(left).toLowerCase() === pathWin32.normalize(right).toLowerCase();
+  if (platform === 'win32' && /^(chrome|msedge)\.exe$/iu.test(base) && documentedPaths.some((documented) => samePath(documented, executablePath))) {
     return {
       ok: true,
       version: version
@@ -156,14 +161,21 @@ async function inspectChromiumCandidate(candidate, via, { platform, env, spawnSy
   } catch {
     return { available: false };
   }
-  let versionProbe;
+  let versionProbe = null;
   try {
     versionProbe = spawnSyncFn(canonical, ['--version'], { encoding: 'utf8', timeout: 15000 });
   } catch {
-    return { available: false };
+    versionProbe = null;
   }
-  if (versionProbe.error || (versionProbe.status !== 0 && !versionProbe.stdout)) return { available: false };
-  const identity = verifyChromiumIdentity(candidate, versionProbe.stdout, {
+  const versionFailed = versionProbe === null || Boolean(versionProbe.error)
+    || (versionProbe.status !== 0 && !versionProbe.stdout);
+  // A Windows Chromium does not answer --version on stdout: the launcher hands the arguments to a
+  // browser process and returns nothing, often without exiting inside the timeout. That is precisely
+  // what the identity fallbacks below are for, and treating the probe's own failure as "no version
+  // output" is what lets them run instead of the whole candidate being discarded. Everywhere else
+  // --version does answer, so a failed probe still means the candidate could not be identified.
+  if (versionFailed && platform !== 'win32') return { available: false };
+  const identity = verifyChromiumIdentity(canonical, versionFailed ? '' : versionProbe.stdout, {
     platform,
     documentedPaths: browserCandidates(platform, env).paths,
   });
@@ -414,7 +426,7 @@ export async function resolveArchifyInstallation(env = process.env, options = {}
   let canonical;
   let failure;
   try {
-    handle = await openFn(result.cliPath, constants.O_RDONLY | constants.O_NOFOLLOW);
+    handle = await openFn(result.cliPath, constants.O_RDONLY | noFollowOpenFlag());
     beforeStats = await handle.stat({ bigint: true });
     bytes = await handle.readFile();
     afterStats = await handle.stat({ bigint: true });

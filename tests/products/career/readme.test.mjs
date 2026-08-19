@@ -2,13 +2,13 @@ import assert from "node:assert/strict";
 import { access, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { buildProduct } from "../../../tooling/lib/build-product.mjs";
 import { vendorVersion } from "../../lib/vendored.mjs";
 import { collectProductInventory } from "../../../tooling/lib/user-guides.mjs";
+import { POSIX_BASH, runBash } from "../../lib/platform-support.mjs";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const pluginRoot = path.join(repoRoot, "products/game-design-career/plugin");
@@ -750,6 +750,12 @@ test("README validation commands honor a CODEX_HOME override containing spaces",
   assert.ok(skillCommand, "missing portable skill validation command");
   assert.ok(pluginCommand, "missing portable plugin validation command");
 
+  // Finding the two documented commands is the part every platform can check, and it runs above. Running
+  // them needs bash and python3, which is what the README tells the reader to have; a host with no bash
+  // cannot execute the recipe, and rewriting it into something that host can run would be testing the
+  // rewrite instead of the documented command.
+  if (POSIX_BASH === null) return;
+
   const scratch = await mkdtemp(path.join(os.tmpdir(), "career readme commands-"));
   const codexHome = path.join(scratch, "Codex Home With Spaces");
   try {
@@ -761,11 +767,11 @@ test("README validation commands honor a CODEX_HOME override containing spaces",
     await writeFile(pluginScript, "import sys\nprint('override-plugin:' + sys.argv[1])\n", "utf8");
 
     const environment = { ...process.env, CODEX_HOME: codexHome };
-    const skillRun = spawnSync("/bin/bash", ["-c", skillCommand], { cwd: repoRoot, env: environment, encoding: "utf8" });
+    const skillRun = runBash(["-c", skillCommand], { cwd: repoRoot, env: environment });
     assert.equal(skillRun.status, 0, skillRun.stderr);
     assert.equal((skillRun.stdout.match(/^override-skill:/gm) ?? []).length, skillIds.length);
 
-    const pluginRun = spawnSync("/bin/bash", ["-c", pluginCommand], { cwd: repoRoot, env: environment, encoding: "utf8" });
+    const pluginRun = runBash(["-c", pluginCommand], { cwd: repoRoot, env: environment });
     assert.equal(pluginRun.status, 0, pluginRun.stderr);
     assert.match(pluginRun.stdout, /^override-plugin:products\/game-design-career\/plugin$/m);
   } finally {

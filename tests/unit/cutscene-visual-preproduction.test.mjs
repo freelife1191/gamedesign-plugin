@@ -35,6 +35,7 @@ import {
 } from "../../shared/scripts/plan-cutscene-visual-preproduction.mjs";
 import { planImageAssetWorkflow } from "../../shared/scripts/run-image-asset-workflow.mjs";
 import { readSecureReferenceFile } from "../../shared/scripts/lib/image-reference-loader.mjs";
+import { noFollowOpenFlag } from "../../shared/scripts/lib/platform-file-hardening.mjs";
 import { buildProduct } from "../../tooling/lib/build-product.mjs";
 
 const SHA = "a".repeat(64);
@@ -326,7 +327,13 @@ test("binding rejects symlink input and the secure loader detects an identity sw
   await mkdir(path.dirname(destination), { recursive: true });
   await writeFile(outside, validPng());
   await symlink(outside, destination);
-  await assert.rejects(() => bindCutscenePromptPackage({ artifactRoot: root, plan: planned.plan, manifest }), /unsafe reference/i);
+  // The symlink is refused on both platforms; which sentence says so depends on where it is caught.
+  // Where the platform has a no-follow flag the open itself fails and the binder reports unsafe input.
+  // On Windows the open follows the link and the loader's own lstat/realpath pair catches it one step
+  // later, and the binder rethrows that verbatim. The rejection is the subject; the wording is the
+  // platform's.
+  const symlinkRejection = noFollowOpenFlag() === 0 ? /reference identity changed/iu : /unsafe reference/iu;
+  await assert.rejects(() => bindCutscenePromptPackage({ artifactRoot: root, plan: planned.plan, manifest }), symlinkRejection);
   await rm(destination);
   await writeFile(destination, validPng());
   const pinned = await readSecureReferenceFile({ artifactRoot: root, path: asset.output.path });

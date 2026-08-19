@@ -4,7 +4,7 @@ import { homedir, tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { buildProduct } from "../../tooling/lib/build-product.mjs";
+import { buildProduct, stagingRootOverlapsHome } from "../../tooling/lib/build-product.mjs";
 import * as copyTree from "../../tooling/lib/copy-tree.mjs";
 import { vendorMappings } from "../../tooling/lib/vendor-components.mjs";
 
@@ -565,4 +565,41 @@ test("destructive or overlapping staging destinations are rejected before source
       );
     });
   }
+});
+
+// The home-overlap guard has two shapes and one host can only exercise one of them. On POSIX the OS
+// temporary root is outside the home directory; on Windows it is `%USERPROFILE%\AppData\Local\Temp`,
+// which is inside it. Both shapes are asserted here from either host, so the exemption cannot quietly
+// widen into "anything under home is fine" and cannot quietly disappear either.
+test("the staging home guard refuses the user's files and allows the OS scratch directory on both platform shapes", () => {
+  const posix = {
+    canonicalHome: "/home/designer",
+    canonicalTemporaryRoot: "/tmp",
+  };
+  assert.equal(stagingRootOverlapsHome({ ...posix, canonicalCandidate: "/tmp/snapshot-build-abc" }), false);
+  assert.equal(stagingRootOverlapsHome({ ...posix, canonicalCandidate: "/home/designer" }), true);
+  assert.equal(stagingRootOverlapsHome({ ...posix, canonicalCandidate: "/home/designer/projects/out" }), true);
+  assert.equal(stagingRootOverlapsHome({ ...posix, canonicalCandidate: "/home" }), true, "a candidate above the home directory must stay refused");
+
+  // The Windows shape: the temporary root is inside the home directory, so the two tests overlap.
+  // Windows paths only compare correctly under the win32 path implementation, so the guard takes it
+  // as an argument. That is also what lets a POSIX host assert the Windows shape at all.
+  const windows = {
+    paths: path.win32,
+    canonicalHome: "C:\\Users\\designer",
+    canonicalTemporaryRoot: "C:\\Users\\designer\\AppData\\Local\\Temp",
+  };
+  assert.equal(
+    stagingRootOverlapsHome({ ...windows, canonicalCandidate: "C:\\Users\\designer\\AppData\\Local\\Temp\\snapshot-build-abc" }),
+    false,
+    "the OS scratch directory is the sanctioned staging area even when it lives inside the profile",
+  );
+  assert.equal(stagingRootOverlapsHome({ ...windows, canonicalCandidate: windows.canonicalTemporaryRoot }), true, "the temporary root itself is not a staging root");
+  assert.equal(stagingRootOverlapsHome({ ...windows, canonicalCandidate: "C:\\Users\\designer\\Documents\\out" }), true, "the user's own files stay refused on Windows too");
+  assert.equal(stagingRootOverlapsHome({ ...windows, canonicalCandidate: windows.canonicalHome }), true);
+  assert.equal(stagingRootOverlapsHome({ ...windows, canonicalCandidate: "C:\\Users" }), true);
+
+  // No temporary root at all means an explicit stagingRoot the caller chose. Nothing is exempt then.
+  assert.equal(stagingRootOverlapsHome({ canonicalHome: "/home/designer", canonicalCandidate: "/home/designer/scratch", canonicalTemporaryRoot: undefined }), true);
+  assert.equal(stagingRootOverlapsHome({ canonicalHome: "/home/designer", canonicalCandidate: "/var/scratch", canonicalTemporaryRoot: undefined }), false);
 });

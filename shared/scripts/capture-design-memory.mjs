@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { lstat, realpath } from "node:fs/promises";
+import { homedir } from "node:os";
 import path from "node:path";
 
 import { appendMemoryEvent, ensureMemoryGitExclusion, resolveMemoryStore } from "./lib/safe-memory-store.mjs";
@@ -70,7 +71,7 @@ export async function captureDesignMemory({ workspaceRoot, config, projectId, la
   try { eventDocument = canonicalMemoryEventDocument(envelope, sectionsFor(event)); } catch { return { status: "skipped" }; }
   if (!explicit && (!(await artifactDirectoriesExist(workspaceRoot, record.sources)) || !(await validateMemorySourceBindings(record, { workspaceRoot })).ok)) return { status: "skipped" };
   let store;
-  try { store = await resolveMemoryStore({ workspaceRoot, config, platform: process.platform, home: process.env.HOME ?? workspaceRoot, initialize: true }); } catch { return { status: "skipped" }; }
+  try { store = await resolveMemoryStore({ workspaceRoot, config, platform: process.platform, home: homedir() || workspaceRoot, initialize: true }); } catch { return { status: "skipped" }; }
   try {
     const appended = await appendMemoryEvent({ store, eventDocument });
     let warnings = [];

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { lstat, mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
+import { lstat, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
@@ -38,7 +38,14 @@ test("npm test runs only canonical nested tests and excludes copied plugin tests
   await writeTest(fixture, "tests/nested/deep.test.mjs", "CANONICAL_NESTED");
   await writeTest(fixture, "plugins/game-design-career/skills/vendor/scripts/copied.test.mjs", "COPIED_PLUGIN");
 
-  const result = spawnSync("npm", ["test", "--", "--repo-root", fixture], {
+  // `npm test` is the command a person types, and what it resolves to is a line in package.json — so that
+  // line is asserted directly and then the runner it names is spawned directly. Going through the npm
+  // launcher would add nothing to the claim and would make the test unrunnable on Windows, where npm is a
+  // .cmd shim that Node refuses to spawn without a shell.
+  const scripts = JSON.parse(await readFile(path.join(repoRoot, "package.json"), "utf8")).scripts;
+  assert.equal(scripts.test, "node tooling/run-repo-tests.mjs", "npm test must be exactly the runner this test then runs");
+
+  const result = spawnSync(process.execPath, [path.join(repoRoot, "tooling/run-repo-tests.mjs"), "--repo-root", fixture], {
     cwd: repoRoot,
     encoding: "utf8",
   });
