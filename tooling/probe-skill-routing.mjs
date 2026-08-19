@@ -57,6 +57,15 @@ export function parseSkillCatalog(payload) {
 // The packaged tree, not products/*/plugin/skills: shared skills are projected into the package at build
 // time, so the source tree holds 33 of the 51 skills a user actually installs. Measuring the 33 would
 // have reported a clean catalog for eighteen skills nobody checked.
+
+// Five of the descriptions are quoted YAML scalars. Comparing the raw line against the value codex
+// delivered charges those five for their own quote characters: the source reads two characters longer
+// than the delivered text, which this probe would otherwise report as two characters of lost trigger.
+export function unquoteScalar(value) {
+  if (!value.startsWith('"') || !value.endsWith('"') || value.length < 2) return value;
+  return JSON.parse(value);
+}
+
 export async function skillDescriptions(root) {
   const sources = new Map();
   for (const product of PRODUCTS) {
@@ -66,7 +75,7 @@ export async function skillDescriptions(root) {
       if (!existsSync(file)) continue;
       const match = /^description:\s*(?<description>.*)$/mu.exec(await readFile(file, "utf8"));
       if (!match) throw new Error(`${product}/${name.name}: SKILL.md declares no description`);
-      sources.set(`${product}:${name.name}`, match.groups.description.trim());
+      sources.set(`${product}:${name.name}`, unquoteScalar(match.groups.description.trim()));
     }
   }
   return sources;

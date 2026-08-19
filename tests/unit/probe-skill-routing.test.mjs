@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { PRODUCTS, REQUIRED_SKILLS, catalogFindings, parseProbeArgs, parseSkillCatalog, skillDescriptions } from "../../tooling/probe-skill-routing.mjs";
+import { PRODUCTS, REQUIRED_SKILLS, catalogFindings, parseProbeArgs, parseSkillCatalog, skillDescriptions, unquoteScalar } from "../../tooling/probe-skill-routing.mjs";
 
 const repoRoot = new URL("../..", import.meta.url).pathname;
 
@@ -82,4 +82,21 @@ test("descriptions are read from the packaged tree, which is what a user install
   // The projected skills are the point: the packaged tree carries strictly more than the source tree.
   assert.ok(sources.size >= 50, `expected the packaged skill set, got ${sources.size}`);
   for (const [id, description] of sources) assert.ok(description.length > 0, `${id} declares an empty description`);
+});
+
+// Five SKILL.md files quote their description. Charging those five for their own quote characters
+// reported two characters of lost trigger on descriptions the catalog carried in full — a false
+// positive precisely on the skills that had nothing wrong with them.
+test("a quoted description is measured by its value, not by its YAML punctuation", () => {
+  assert.equal(unquoteScalar('"Use when 요청이 \\"인용\\"을 포함한다."'), 'Use when 요청이 "인용"을 포함한다.');
+  assert.equal(unquoteScalar("Use when the value is a bare scalar."), "Use when the value is a bare scalar.");
+  // A description that merely ends with a quotation mark is not a quoted scalar.
+  assert.equal(unquoteScalar('Use when the user says "ship it"'), 'Use when the user says "ship it"');
+});
+
+test("no packaged description reaches the measurement still wearing its quotes", async () => {
+  const sources = await skillDescriptions(repoRoot);
+  for (const [id, description] of sources) {
+    assert.ok(!(description.startsWith('"') && description.endsWith('"')), `${id} is measured as a quoted scalar`);
+  }
 });
