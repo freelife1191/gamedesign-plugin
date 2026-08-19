@@ -738,3 +738,31 @@ test("the official tree cross-check reads through directory entries and still re
     );
   }
 });
+
+// The main-module guard decides whether this CLI runs at all. Written as `file://${process.argv[1]}` it
+// looked equivalent to the resolved-path comparison every other tool in this repo uses, but
+// import.meta.url percent-encodes whatever a URL must escape. Under a checkout path holding a space or a
+// non-ASCII character the two strings never match: main never runs, nothing is written, and the process
+// still exits 0. A caller reads that as success — update-vendors' apply branch would report a vendor
+// upgrade it never performed. This repo's own QA installs under Korean paths with spaces, so the broken
+// form fails exactly where the suite is exercised hardest.
+test("the updater CLI runs from a checkout path that a URL has to escape", async (t) => {
+  const parent = await mkdtemp(path.join(tmpdir(), "diagram-vendor-cli-"));
+  t.after(() => rm(parent, { recursive: true, force: true }));
+  const runFrom = async (directoryName) => {
+    const root = path.join(parent, directoryName);
+    await mkdir(path.join(root, "tooling"), { recursive: true });
+    await cp(fileURLToPath(updaterUrl), path.join(root, "tooling/sync-diagram-skills.mjs"));
+    // A rejected flag proves main ran without needing a vendor tree, a network, or a clock.
+    return spawnSync(process.execPath, ["tooling/sync-diagram-skills.mjs", "--not-a-flag"], {
+      cwd: root,
+      encoding: "utf8",
+      shell: false,
+    });
+  };
+  for (const directoryName of ["ascii", "공백 있는 한글"]) {
+    const result = await runFrom(directoryName);
+    assert.equal(result.status, 1, `${directoryName}: the CLI has to reach its argument parser`);
+    assert.match(result.stderr, /Usage: sync-diagram-skills\.mjs/u, directoryName);
+  }
+});

@@ -715,7 +715,10 @@ async function main() {
   process.stdout.write(`${JSON.stringify(await updateDiagramSkill({ name: options.skill }))}\n`);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Compare resolved paths, not a hand-built file:// string: import.meta.url percent-encodes anything a
+// URL must escape, so a checkout under a path with a space or a non-ASCII character never matches the
+// concatenated form. The guard then silently declines to run main, and the caller reads exit 0 as done.
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main().catch((error) => {
     process.stderr.write(`${error.stack ?? error.message}\n`);
     process.exitCode = 1;
