@@ -1,6 +1,6 @@
 ---
 name: orchestrate-game-design-career
-description: Use when a game-design entrant, new graduate, junior, or transitioning designer needs career-stage diagnosis, workflow routing, portfolio or interview review coordination, or current job and employer research.
+description: Use when a career request needs stage diagnosis, workflow routing, portfolio or interview review, or job research.
 ---
 
 # Orchestrate Game Design Career

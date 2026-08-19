@@ -1,6 +1,6 @@
 ---
 name: review-game-design
-description: Use when a canonical game design artifact needs critique, launch-readiness review, risk review, evidence audit, blocker triage, or a decision-ready set of minimal fixes.
+description: Use when a canonical game design artifact needs critique, launch-readiness review, risk review, or blocker triage.
 ---
 
 # Review Game Design

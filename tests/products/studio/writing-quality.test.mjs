@@ -135,7 +135,7 @@ test("Studio writing-polish skill is directly discoverable through parsed skill 
 
   assert.deepEqual(parseFrontmatter(skill), {
     name: skillId,
-    description: "Use when a Korean game design document needs a minimal readability revision that preserves protected content and approval state.",
+    description: "Use when a Korean game design document needs a minimal readability revision that preserves protected content.",
   });
   assert.match(openai, /^interface:\n  display_name: "Polish Game Design Writing"\n  short_description: "[^"]{25,64}"\n  default_prompt: "Use \$polish-game-design-writing [^"]+"\n$/u);
 });

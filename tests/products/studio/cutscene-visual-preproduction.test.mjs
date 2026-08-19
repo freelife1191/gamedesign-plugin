@@ -59,7 +59,7 @@ test("cutscene skill makes each mode and paid-wave gate explicit under pressure"
   assert.ok(frontmatter);
   assert.deepEqual(frontmatter.split("\n").map((line) => line.split(":", 1)[0]), ["name", "description"]);
   assert.match(frontmatter, /^name: design-cutscene-visual-preproduction$/mu);
-  assert.match(frontmatter, /^description: "Use when a Studio request needs 컷씬 or 시네마틱 visual preproduction: storyboard shots, master-image prompts, or cutscene continuity\."$/mu);
+  assert.match(frontmatter, /^description: "Use when a Studio request needs 컷씬 or 시네마틱 visual preproduction: storyboard shots, master-image prompts, or continuity\."$/mu);
   assert.match(openai, /^interface:\n  display_name: "[^"]+"\n  short_description: "[^"]{25,64}"\n  default_prompt: "Use \$design-cutscene-visual-preproduction [^"]+"\n$/u);
   for (const phrase of [
     "Prompt Only", "Estimate Only", "Generate After Approval", "provider calls: 0", "USD 0",
@@ -84,7 +84,7 @@ test("cutscene discovery corpus requires qualified cinematic visual-preproductio
   ]);
   const cutsceneDescription = cutsceneSkill.match(/^description: "(.+)"$/mu)?.[1];
   const contentDescription = contentSkill.match(/^description: (.+)$/mu)?.[1];
-  assert.equal(cutsceneDescription, "Use when a Studio request needs 컷씬 or 시네마틱 visual preproduction: storyboard shots, master-image prompts, or cutscene continuity.");
+  assert.equal(cutsceneDescription, "Use when a Studio request needs 컷씬 or 시네마틱 visual preproduction: storyboard shots, master-image prompts, or continuity.");
   assert.equal(contentDescription, "Use when a non-cutscene narrative or game-content request needs a playable and production-aware specification.");
   const corpus = [
     ["컷씬 마스터 이미지 프롬프트 패키지를 만들어줘", true],

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "4c2b1bf002980c27800ab57f301017782b09c63d093ed511d4b8866fde45b33a",
+  "treeSha256": "b26239c69b8f09592dfa8a541678993a0372295553cda11706bc3bcdf198a591",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -1861,8 +1861,8 @@
     },
     {
       "path": "skills/apply-document-quality-profile/SKILL.md",
-      "sha256": "c5bdd96bd9d7a76dc194e88ffb507288d07d18101a74f732cb12cb526f1fb777",
-      "size": 8911
+      "sha256": "200b6d1f30151befde967b0ffad2559e92107e1ccd33e765e2f67571feca4733",
+      "size": 8864
     },
     {
       "path": "skills/apply-document-quality-profile/agents/openai.yaml",
@@ -2216,8 +2216,8 @@
     },
     {
       "path": "skills/define-game-vision/SKILL.md",
-      "sha256": "97755be3cd92a56d8f95559d3b11324d8f3b2a7ef68bea3e0467fa0995d3a28a",
-      "size": 3502
+      "sha256": "32bc60edc7d800ce26d9ef0d4d793da0781274fcca40cc4ccba40075072f4ea5",
+      "size": 3462
     },
     {
       "path": "skills/define-game-vision/agents/openai.yaml",
@@ -2226,8 +2226,8 @@
     },
     {
       "path": "skills/design-cutscene-visual-preproduction/SKILL.md",
-      "sha256": "aba2c91b8f75d4fd4326a7d84229cc6b804a129598df2c32fae51b980e1d5fbe",
-      "size": 4966
+      "sha256": "f26fbc3bcdf69e3dca4f80091a5b4b42fc8806d63ce3524da20f545a3bd50bf3",
+      "size": 4957
     },
     {
       "path": "skills/design-cutscene-visual-preproduction/agents/openai.yaml",
@@ -2246,8 +2246,8 @@
     },
     {
       "path": "skills/design-game-economy-and-liveops/SKILL.md",
-      "sha256": "7a59d73e2d17e0131ccad3da8038711ef025d6a2f7667618d7826f366f6343eb",
-      "size": 4284
+      "sha256": "0772ec36bd1e3c191f381c9903fd3e3808df19b711f8b9c75a1f8e3ad54c7795",
+      "size": 4218
     },
     {
       "path": "skills/design-game-economy-and-liveops/agents/openai.yaml",
@@ -2256,8 +2256,8 @@
     },
     {
       "path": "skills/design-game-systems/SKILL.md",
-      "sha256": "44680e3038e54fa472e9188a6850b96b692ff8eedcd095a92c75490c8ce03873",
-      "size": 3911
+      "sha256": "81592d7a52c0cd999c548c9addccacf77f9549456abae5cc2436657dff7b6979",
+      "size": 3879
     },
     {
       "path": "skills/design-game-systems/agents/openai.yaml",
@@ -2266,8 +2266,8 @@
     },
     {
       "path": "skills/design-player-experience/SKILL.md",
-      "sha256": "5ea406fc53ecaf2973f890e817a8baec74e186ed0484e75cd15257742053540a",
-      "size": 3759
+      "sha256": "0dac7d5e8e91df1cd9b32e84f8055504dda636cf2e221c28cd58a2e51886ceac",
+      "size": 3670
     },
     {
       "path": "skills/design-player-experience/agents/openai.yaml",
@@ -2276,8 +2276,8 @@
     },
     {
       "path": "skills/export-game-design-documents/SKILL.md",
-      "sha256": "cfdbca49c69ce35f237bfc2ae7ced797ad00c854cc598f5c691c7d8533a13042",
-      "size": 4958
+      "sha256": "4cf7dc327a859992e8c8b4d6ecceb01d2e7214ff6a5535748f1c4ec65038af43",
+      "size": 4889
     },
     {
       "path": "skills/export-game-design-documents/agents/openai.yaml",
@@ -2301,8 +2301,8 @@
     },
     {
       "path": "skills/game-design-studio/SKILL.md",
-      "sha256": "d4ae5fda0515adc4e04be9de11b4a269116e65e21791bcd333cacbb66f093090",
-      "size": 5027
+      "sha256": "00978d798af25eeb95578224bcaefeaa2e530e338f31aa1bff49690cc5b83c2a",
+      "size": 4913
     },
     {
       "path": "skills/game-design-studio/references/handoff.md",
@@ -2311,8 +2311,8 @@
     },
     {
       "path": "skills/generate-image-assets/SKILL.md",
-      "sha256": "7d236749597536a752e197240e4873d865f6827c8796452705b0701f5ef3a52b",
-      "size": 5293
+      "sha256": "9c156d08c37b3e01377376296981195c841c35c7b8409a16cf236158f9975e74",
+      "size": 5252
     },
     {
       "path": "skills/generate-image-assets/agents/openai.yaml",
@@ -2406,13 +2406,13 @@
     },
     {
       "path": "skills/maintain-game-design-memory/SKILL.md",
-      "sha256": "dd853dbebd860c0c7d86d5a174f934e7050b5450aaae8b78b50fb9271d4915c5",
-      "size": 1114
+      "sha256": "af528b2d8881b91ad9de5b34c602a1f5551535eea81dc1e85dfa071a1e6bdb52",
+      "size": 1100
     },
     {
       "path": "skills/orchestrate-game-design-project/SKILL.md",
-      "sha256": "51ae70d0499219926a2acf570f25c89487aac4892f2a99419fc56b72503dac22",
-      "size": 4054
+      "sha256": "8d073a4d3eb988aa02c3fec118c7d440fe170005a2ccf341430176a83f4670a2",
+      "size": 4037
     },
     {
       "path": "skills/orchestrate-game-design-project/agents/openai.yaml",
@@ -2456,8 +2456,8 @@
     },
     {
       "path": "skills/plan-game-production/SKILL.md",
-      "sha256": "c9e8cc7e0fe42cf63545c4d92ff3a83267c6553dacfef1a93569fc1538083d61",
-      "size": 3996
+      "sha256": "c7fd634dd6149ac72f096ca05ac559783b07bcd3ec1486680211a58408b36ed1",
+      "size": 3910
     },
     {
       "path": "skills/plan-game-production/agents/openai.yaml",
@@ -2466,8 +2466,8 @@
     },
     {
       "path": "skills/plan-image-assets/SKILL.md",
-      "sha256": "e721171b97b232b4a9f0b4ae3b7207209adbca8a711569ac3664d41f3c984027",
-      "size": 4416
+      "sha256": "b31ce7bcfe870e37e9e068c0b44e2fb8d859680038baa491c105559030f3b63d",
+      "size": 4345
     },
     {
       "path": "skills/plan-image-assets/agents/openai.yaml",
@@ -2476,8 +2476,8 @@
     },
     {
       "path": "skills/polish-game-design-writing/SKILL.md",
-      "sha256": "ead02983bf6213428bc2cc1950bf6ef7903a69316d3d9d956caa18c2bbd29885",
-      "size": 4301
+      "sha256": "a2f114bf1f409e68d11e78bf2535af479ce6a1fa7bca57c633bb12be66b2a44b",
+      "size": 4282
     },
     {
       "path": "skills/polish-game-design-writing/agents/openai.yaml",
@@ -2491,8 +2491,8 @@
     },
     {
       "path": "skills/review-game-design/SKILL.md",
-      "sha256": "e7ddf23d9759c753e0053cca7040292c769494d17f6714c8f676e10df859de53",
-      "size": 4306
+      "sha256": "d343a0553b69266eef6a73c0012be7c301e4c7734b09d89e5c4375b41c13f925",
+      "size": 4251
     },
     {
       "path": "skills/review-game-design/agents/openai.yaml",
@@ -2506,8 +2506,8 @@
     },
     {
       "path": "skills/review-image-assets/SKILL.md",
-      "sha256": "a3ee3140f2adcf922064ee3400b4e2b46990ea1a956a21dc43ba6c8a1fc6bceb",
-      "size": 3532
+      "sha256": "d8d834315441c9441768c92f490412032e9aa4ebc0ad50a4307c993956854b71",
+      "size": 3501
     },
     {
       "path": "skills/review-image-assets/agents/openai.yaml",
@@ -4111,8 +4111,8 @@
     },
     {
       "path": "skills/upgrade-game-design-suite/SKILL.md",
-      "sha256": "c958db43df7dc5aec83c8653c3b1c9cf2120ec24d044dafc1ae11446c062a9ab",
-      "size": 3574
+      "sha256": "e0a54534dd0315f7a006dedc899f8ecc92165fccd329c2bef8e6f01227bc14c7",
+      "size": 3510
     },
     {
       "path": "skills/upgrade-game-design-suite/references/codex-commands.md",
@@ -4121,8 +4121,8 @@
     },
     {
       "path": "skills/visualize-game-design/SKILL.md",
-      "sha256": "1aaf86284825b6b63347cf1cb73e6cd43c3da679d0322ce13ec7510114188d2c",
-      "size": 6174
+      "sha256": "e8e2410cb2934725af9827f0d2cbf02630b354c447ffef4269812de44403892e",
+      "size": 6082
     },
     {
       "path": "skills/visualize-game-design/agents/openai.yaml",

@@ -1,6 +1,6 @@
 ---
 name: review-game-design-portfolio
-description: Use when a game design portfolio, case study, or evidence package needs a hiring, mentorship, readiness, or revision review.
+description: Use when a portfolio, case study, or evidence package needs a hiring, mentorship, readiness, or revision review.
 ---
 
 # Review Game Design Portfolio

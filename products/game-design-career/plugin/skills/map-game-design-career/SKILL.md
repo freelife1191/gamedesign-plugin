@@ -1,6 +1,6 @@
 ---
 name: map-game-design-career
-description: Use when an entrant, graduate, junior, or transitioning game designer needs to compare role families, choose a target level, expose competency gaps, or plan evidence-building work without a predetermined career answer.
+description: Use when a game designer compares role families, picks a target level, or maps competency gaps for a career move.
 ---
 
 # Map Game Design Career

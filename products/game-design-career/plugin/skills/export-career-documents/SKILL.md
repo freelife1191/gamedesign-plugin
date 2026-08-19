@@ -1,6 +1,6 @@
 ---
 name: export-career-documents
-description: Use when a game-design career artifact, learning plan, portfolio, reverse-design study, review, interview report, or transition report needs MD, PDF, DOCX, or PPTX preparation and verification.
+description: Use when a game-design career artifact, portfolio, review, or interview report needs MD, PDF, DOCX, or PPTX export.
 ---
 
 # Export Career Documents

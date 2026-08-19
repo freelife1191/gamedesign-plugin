@@ -1,6 +1,6 @@
 ---
 name: build-game-design-portfolio
-description: Use when a game designer needs to turn project work, decisions, tests, collaboration, or incomplete evidence into an inspectable portfolio case study for recruiters, reviewers, or mentors.
+description: Use when a game designer turns project work, decisions, tests, or partial evidence into a portfolio case study.
 ---
 
 # Build Game Design Portfolio

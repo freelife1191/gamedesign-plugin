@@ -1,6 +1,6 @@
 ---
 name: polish-game-design-writing
-description: Use when a Korean game design document needs a minimal readability revision that preserves protected content and approval state.
+description: Use when a Korean game design document needs a minimal readability revision that preserves protected content.
 ---
 
 # Polish Game Design Writing

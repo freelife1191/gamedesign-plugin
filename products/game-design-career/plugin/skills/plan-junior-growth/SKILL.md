@@ -1,6 +1,6 @@
 ---
 name: plan-junior-growth
-description: Use when a junior or transitioning game designer needs quarterly growth goals, evidence projects, feedback cycles, or readiness decisions for a target role.
+description: Use when a junior or transitioning game designer needs quarterly growth goals, evidence projects, or readiness calls.
 ---
 
 # Plan Junior Growth

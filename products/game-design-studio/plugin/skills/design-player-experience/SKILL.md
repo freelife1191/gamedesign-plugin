@@ -1,6 +1,6 @@
 ---
 name: design-player-experience
-description: Use when a game needs information hierarchy, interaction states, first-session learning, tutorial behavior, input design, cross-platform adaptation, performance targets, or accessibility decisions.
+description: Use when a game needs UX hierarchy, interaction states, tutorial and first session, input, or accessibility.
 ---
 
 # Design Player Experience

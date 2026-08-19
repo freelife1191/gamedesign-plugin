@@ -1,6 +1,6 @@
 ---
 name: visualize-career-roadmap
-description: Use when game-design roles, competencies, learning dependencies, portfolio structure, development processes, or career growth paths need a spatial explanation or an accessible SVG/PNG diagram.
+description: Use when game-design roles, competencies, learning dependencies, or growth paths need an accessible SVG/PNG diagram.
 ---
 
 # Visualize Career Roadmap

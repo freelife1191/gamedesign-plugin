@@ -1,6 +1,6 @@
 ---
 name: define-game-vision
-description: Use when a game concept needs a target-player definition, experience intent, core fun, design pillars, motivation loops, or measurable vision criteria.
+description: Use when a game concept needs a target player, experience intent, core fun, design pillars, or vision criteria.
 ---
 
 # Define Game Vision

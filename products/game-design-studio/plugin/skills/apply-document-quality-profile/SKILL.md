@@ -1,6 +1,6 @@
 ---
 name: apply-document-quality-profile
-description: Use when a Studio game-design artifact, GDD, review report, presentation, PDF, DOCX, or PPTX needs a deterministic quality profile before content or asset planning.
+description: Use when a Studio game-design artifact, GDD, review report, PDF, DOCX, or PPTX needs a deterministic quality profile.
 ---
 
 # Apply Document Quality Profile

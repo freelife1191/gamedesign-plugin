@@ -1,6 +1,6 @@
 ---
 name: design-game-systems
-description: Use when a game mechanic needs executable rules, state transitions, precedence, failure behavior, UI states, data schemas, or runtime mappings.
+description: Use when a game mechanic needs executable rules, state transitions, precedence, failure behavior, or UI states.
 ---
 
 # Design Game Systems

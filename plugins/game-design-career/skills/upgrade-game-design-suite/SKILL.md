@@ -1,6 +1,6 @@
 ---
 name: upgrade-game-design-suite
-description: Use when the user asks to check for a Game Design Suite update, install a newer version, or stop update notices, and when a session start notice reported an available release.
+description: Use when a Game Design Suite update notice appears, or the user asks to check, install, or stop update notices.
 ---
 
 # Upgrade Game Design Suite

@@ -1,6 +1,6 @@
 ---
 name: reverse-engineer-game-design
-description: Use when a game designer needs to analyze an existing game's UI, rules, exceptions, data behavior, operations, economy, or production-facing system assumptions without access to authoritative internal design records.
+description: Use when analyzing a shipped game's UI, rules, data behavior, operations, or economy without internal design records.
 ---
 
 # Reverse Engineer Game Design

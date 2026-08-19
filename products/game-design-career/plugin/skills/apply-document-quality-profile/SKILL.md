@@ -1,6 +1,6 @@
 ---
 name: apply-document-quality-profile
-description: Use when a career portfolio, reverse-design document, evidence review, presentation, PDF, DOCX, or PPTX needs a deterministic quality profile before content or asset planning.
+description: Use when a career portfolio, reverse-design study, review, PDF, DOCX, or PPTX needs a deterministic quality profile.
 ---
 
 # Apply Document Quality Profile

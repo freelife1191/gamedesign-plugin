@@ -100,3 +100,25 @@ test("no packaged description reaches the measurement still wearing its quotes",
     assert.ok(!(description.startsWith('"') && description.endsWith('"')), `${id} is measured as a quoted scalar`);
   }
 });
+
+// codex spends one catalog allowance across every skill a user has installed, so each description's
+// share shrinks as more skills arrive. Measured against a 65-skill catalog, the cut landed between 120
+// and 123 characters — mid-word, with no ellipsis, and with no way for the model to know text was lost.
+// Everything past the cut is trigger vocabulary the router never sees, so this suite keeps its own
+// descriptions inside that budget. The three vendored skills carry upstream text this repo cannot edit
+// without failing the vendor digest gate; they are named here so a fourth exception cannot appear
+// silently.
+const VENDORED_DESCRIPTIONS = new Set(["archify", "svg-infographic", "humanize-korean"]);
+const CATALOG_BUDGET = 119;
+
+test("every description this suite owns fits the catalog budget the router reads", async () => {
+  const sources = await skillDescriptions(repoRoot);
+  const over = [...sources]
+    .filter(([id]) => !VENDORED_DESCRIPTIONS.has(id.split(":")[1]))
+    .filter(([, description]) => description.length > CATALOG_BUDGET)
+    .map(([id, description]) => `${id} (${description.length})`);
+  assert.deepEqual(over, [], `these descriptions lose their tail before the model reads it: ${over.join(", ")}`);
+  for (const name of VENDORED_DESCRIPTIONS) {
+    assert.ok([...sources.keys()].some((id) => id.endsWith(`:${name}`)), `${name} is exempted but no longer installed`);
+  }
+});

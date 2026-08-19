@@ -1,6 +1,6 @@
 ---
 name: generate-image-assets
-description: Use when a Studio image asset manifest and prompt package need bounded generation routing, stable-ID selection, or an honest unavailable-provider handoff.
+description: Use when a Studio image asset manifest and prompt package need bounded generation routing or stable-ID selection.
 ---
 
 # Generate Image Assets
