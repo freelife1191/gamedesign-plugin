@@ -28,16 +28,25 @@ jobs:
   # other platform, and the install gate below proves exactly that, on Windows, every run. See
   # architecture/plugin-suite.md for the full finding list and what is owed.
   offline-gate:
-    name: Offline gate (${{ matrix.os }})
+    name: Offline gate (${{ matrix.shard }}, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    # The full suite takes roughly ten minutes locally, so this is loose enough for an honest run and tight
-    # enough that a hang fails within the hour instead of after six.
-    timeout-minutes: 60
+    # One shard, not the whole suite, so the ceiling is a third of what a single-queue run needed. Loose
+    # enough for an honest run on a shared runner, tight enough that a hang fails in minutes not hours.
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
         os:
           - ubuntu-latest
+        # Four jobs instead of one queue. The three test stages are three quarters of the run and have
+        # nothing to say to each other, so serialising them only spent wall clock. `validate-suite.mjs`
+        # owns the partition and a unit test holds it to covering every stage exactly once, which is what
+        # keeps a shard split from quietly becoming a stage nobody runs.
+        shard:
+          - checks
+          - unit
+          - contracts
+          - products
     steps:
       - uses: actions/checkout@v4
         with:
@@ -58,6 +67,7 @@ jobs:
       - name: Validate suite
         run: >-
           node tooling/validate-suite.mjs
+          --shard ${{ matrix.shard }}
           --skip "official plugin validators"
           --skip "skill quick validators"
           --skip "diagram render drift"

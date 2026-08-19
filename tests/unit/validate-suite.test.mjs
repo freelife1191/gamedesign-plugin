@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { FORMAT_RESULT_FILES, SKIPPABLE_STAGES, runSuite } from "../../tooling/validate-suite.mjs";
+import { FORMAT_RESULT_FILES, SKIPPABLE_STAGES, STAGE_SHARDS, runSuite } from "../../tooling/validate-suite.mjs";
 
 const expectedStages = [
   "reference drift",
@@ -231,6 +231,47 @@ test("the isolation smoke inherits the official validator's skip rather than fai
       false,
       "a run that validates for real must not be told the validator may be missing",
     );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// CI runs the shards as separate jobs and reads four green checks as one green suite. That reading is only
+// true while the shards partition the stages: a stage in no shard runs nowhere and still shows green, and a
+// stage in two burns a runner twice for the same answer.
+test("the shards partition every stage exactly once", () => {
+  const assigned = Object.values(STAGE_SHARDS).flat();
+  assert.deepEqual([...assigned].sort(), [...expectedStages].sort(), "every stage belongs to exactly one shard");
+  assert.equal(new Set(assigned).size, assigned.length, "no stage is claimed by two shards");
+});
+
+test("a shard runs its own stages and never claims the whole suite passed", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "validate-suite-"));
+  try {
+    const ran = [];
+    const result = await runSuite({
+      repoRoot: root,
+      shard: "unit",
+      runCommand: async (stage) => {
+        ran.push(stage.name);
+        return { status: 0, signal: null };
+      },
+    });
+    assert.deepEqual(ran, [...STAGE_SHARDS.unit]);
+    assert.equal(result.ok, true);
+    assert.equal(result.shard, "unit");
+    assert.equal(result.releaseReady, false, "one shard is not the run");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("an unknown shard and a sharded release are both refused", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "validate-suite-"));
+  try {
+    const runCommand = async () => ({ status: 0, signal: null });
+    await assert.rejects(() => runSuite({ repoRoot: root, shard: "nope", runCommand }), /unknown shard: nope/u);
+    await assert.rejects(() => runSuite({ repoRoot: root, release: true, shard: "unit", runCommand }), /--shard is refused/u);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

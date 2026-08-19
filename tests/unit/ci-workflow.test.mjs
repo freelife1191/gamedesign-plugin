@@ -4,7 +4,7 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { SKIPPABLE_STAGES } from "../../tooling/validate-suite.mjs";
+import { SKIPPABLE_STAGES, STAGE_SHARDS } from "../../tooling/validate-suite.mjs";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const workflowPath = path.join(repoRoot, ".github/workflows/ci.yml");
@@ -36,24 +36,38 @@ test("CI runs both lanes on read-only credentials it does not leave behind", asy
 // Each lane runs on the operating systems where its result means something, and the two lanes do not agree
 // on what that set is. Asserting a single global runner count would hide exactly the distinction this
 // section of CI exists to make, so the assertions below read each lane's own matrix.
-function laneMatrix(workflow, lane) {
+function laneBody(workflow, lane) {
   const start = workflow.indexOf(`  ${lane}:\n`);
   assert.notEqual(start, -1, `the ${lane} lane must exist`);
   const rest = workflow.slice(start + lane.length + 4);
   const end = rest.search(/^  [a-z][a-z-]*:$/mu);
-  const body = end === -1 ? rest : rest.slice(0, end);
-  return [...body.matchAll(/^ {10}- (\S+)$/gmu)].map((match) => match[1]);
+  return end === -1 ? rest : rest.slice(0, end);
+}
+
+// Reads one matrix axis by name. The offline lane now matrices over two of them at the same indent, so a
+// helper that collected every ten-space list item would silently merge the runners with the shard names.
+function matrixAxis(workflow, lane, axis) {
+  const lines = laneBody(workflow, lane).split("\n");
+  const first = lines.findIndex((line) => line === `        ${axis}:`);
+  assert.notEqual(first, -1, `the ${lane} lane must matrix over ${axis}`);
+  const values = [];
+  for (const line of lines.slice(first + 1)) {
+    const match = /^ {10}- (\S+)$/u.exec(line);
+    if (!match) break;
+    values.push(match[1]);
+  }
+  return values;
 }
 
 test("the install lane covers Windows, because proving the Windows byte contract is what it is for", async () => {
   const workflow = await readFile(workflowPath, "utf8");
-  assert.deepEqual(laneMatrix(workflow, "install-gate"), ["ubuntu-latest", "windows-latest"]);
+  assert.deepEqual(matrixAxis(workflow, "install-gate", "os"), ["ubuntu-latest", "windows-latest"]);
 });
 
 test("the offline lane is scoped to Linux on purpose, and says why in the file", async () => {
   const workflow = await readFile(workflowPath, "utf8");
   assert.deepEqual(
-    laneMatrix(workflow, "offline-gate"),
+    matrixAxis(workflow, "offline-gate", "os"),
     ["ubuntu-latest"],
     "adding Windows back here is a real decision: the suite has known Windows failures, two of them in "
       + "shipped code, so a runner added without fixing them turns this lane permanently red",
@@ -61,6 +75,12 @@ test("the offline lane is scoped to Linux on purpose, and says why in the file",
   // A scoping decision with no reason attached is indistinguishable from an accident six months later.
   assert.match(workflow, /O_NOFOLLOW/u, "the file must name the shipped defect that keeps Windows out of this lane");
   assert.match(workflow, /architecture\/plugin-suite\.md/u, "and must point at where the full finding list lives");
+});
+
+test("the offline lane's shards are the tool's partition, so no stage falls between two jobs", async () => {
+  const workflow = await readFile(workflowPath, "utf8");
+  assert.deepEqual(matrixAxis(workflow, "offline-gate", "shard"), Object.keys(STAGE_SHARDS));
+  assert.match(workflow, /--shard \$\{\{ matrix\.shard \}\}/u, "the lane has to pass the shard it was given");
 });
 
 test("the offline lane names every stage it skips, and skips only what CI genuinely cannot run", async () => {
@@ -95,7 +115,7 @@ test("the offline lane stages the vendored Archify rather than weakening the con
   assert.match(workflow, /node tooling\/stage-host-archify\.mjs/u);
   // Staging must come before the suite, or the contracts run against a resolver that still sees nothing.
   assert.ok(
-    workflow.indexOf("stage-host-archify.mjs") < workflow.indexOf("validate-suite.mjs"),
+    workflow.indexOf("stage-host-archify.mjs") < workflow.indexOf("node tooling/validate-suite.mjs"),
     "the CLI has to be in place before the stage that resolves it",
   );
 });
