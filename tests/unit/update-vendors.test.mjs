@@ -162,3 +162,75 @@ test("regeneration rewrites the documents, then the packages, then the catalog",
     "tooling/sync-vendor-catalog-entries.mjs",
   ]);
 });
+
+// Everything above stops before apply. These exercise the branch itself: which updater runs for which
+// component, that regeneration follows the vendor trees rather than racing them, and that a lock which
+// did not move is treated as a failed upgrade instead of a finished one.
+function applyRecorder({ landing = (id, expected) => expected } = {}) {
+  const commands = [];
+  return {
+    commands,
+    runCommand: (argv) => commands.push(argv.join(" ")),
+    readInstalledTag: async (_root, id) => landing(id, OUTDATED.components.find((component) => component.id === id).latestTag),
+  };
+}
+
+test("an approved apply upgrades each outdated component, then regenerates in dependency order", async () => {
+  const stdout = recorder();
+  const { commands, runCommand, readInstalledTag } = applyRecorder();
+  const result = await updateVendors({
+    check: async () => OUTDATED,
+    writeStdout: stdout.write,
+    interactive: true,
+    ask: async () => true,
+    runCommand,
+    readInstalledTag,
+  });
+  assert.deepEqual(result, { status: "applied", applied: ["archify", "im-not-ai"] });
+  assert.deepEqual(commands, [
+    "tooling/sync-diagram-skills.mjs --update archify",
+    "tooling/sync-im-not-ai.mjs --update",
+    ...REGENERATION.map(({ argv }) => argv.join(" ")),
+  ]);
+  // skillstead was current, so nothing may have touched it.
+  assert.ok(!commands.some((command) => command.includes("skillstead")), commands.join("\n"));
+  assert.match(stdout.text(), /적용 완료: archify, im-not-ai/u);
+  assert.match(stdout.text(), /npm run validate:release/u);
+});
+
+test("--validate runs the release gate last, and only then", async () => {
+  const { commands, runCommand, readInstalledTag } = applyRecorder();
+  await updateVendors({
+    check: async () => OUTDATED,
+    validate: true,
+    writeStdout: () => undefined,
+    interactive: true,
+    ask: async () => true,
+    runCommand,
+    readInstalledTag,
+  });
+  assert.equal(commands.at(-1), "tooling/validate-suite.mjs --release");
+  assert.equal(commands.filter((command) => command.includes("validate-suite")).length, 1);
+});
+
+// The concrete failure this guards: a main-module guard that declines to run, leaving the CLI to exit 0
+// having written nothing. Regenerating on top of that produces a self-consistent tree one release
+// behind, which every later gate reports as clean.
+test("an updater that exits clean without moving the lock fails the apply before regeneration", async () => {
+  const { commands, runCommand, readInstalledTag } = applyRecorder({
+    landing: (id, expected) => (id === "archify" ? "v2.14.0" : expected),
+  });
+  await assert.rejects(
+    () => updateVendors({
+      check: async () => OUTDATED,
+      writeStdout: () => undefined,
+      interactive: true,
+      ask: async () => true,
+      runCommand,
+      readInstalledTag,
+    }),
+    /archify: the updater reported success but the lock still reads v2\.14\.0, not v2\.15\.0/u,
+  );
+  // It stops at the component that failed: no second updater, and nothing regenerated on top of it.
+  assert.deepEqual(commands, ["tooling/sync-diagram-skills.mjs --update archify"]);
+});

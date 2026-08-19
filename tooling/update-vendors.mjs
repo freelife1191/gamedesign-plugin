@@ -57,6 +57,19 @@ export function outdatedIds(report) {
   return report.components.filter(({ status }) => status === "outdated").map(({ id }) => id);
 }
 
+// An updater that exits 0 has not necessarily done anything. A guard that declines to run main, a
+// no-op branch, a future updater that quietly skips a component — all of them look identical to a
+// caller reading only the exit status, and the difference matters here: apply goes on to regenerate the
+// documents, the manifest, and the snapshots from whatever the lock says. Regenerating from an
+// unchanged lock produces a tree that is internally consistent and one release behind, which every
+// later gate reports as clean. So apply asks the lock, not the exit code, whether the upgrade happened.
+async function installedTag(root, id) {
+  const lock = JSON.parse(await readFile(path.join(root, "shared/vendor", id, "vendor.lock.json"), "utf8"));
+  const tag = lock?.upstream?.tag;
+  if (typeof tag !== "string" || tag === "") throw new Error(`${id}: vendor.lock.json carries no upstream tag`);
+  return tag;
+}
+
 function run(argv, { root, writeStdout }) {
   writeStdout(`$ node ${argv.join(" ")}\n`);
   const result = spawnSync(process.execPath, argv, { cwd: root, encoding: "utf8", shell: false });
@@ -88,6 +101,8 @@ export async function updateVendors({
   output = process.stdout,
   interactive = Boolean(process.stdin.isTTY),
   ask = confirm,
+  runCommand = run,
+  readInstalledTag = installedTag,
 } = {}) {
   const report = await check({ root });
   writeStdout(`${advisoryLines(report).join("\n")}\n`);
@@ -110,16 +125,23 @@ export async function updateVendors({
 
   const applied = [];
   for (const id of outdatedIds(report)) {
-    run([...UPDATERS[id]], { root, writeStdout });
+    const expected = report.components.find((component) => component.id === id).latestTag;
+    runCommand([...UPDATERS[id]], { root, writeStdout });
+    const landed = await readInstalledTag(root, id);
+    // Stop before regeneration: the vendor trees written so far are complete and verified, and leaving
+    // the generated documents describing the previous state keeps the checkout honest about it.
+    if (landed !== expected) {
+      throw new Error(`${id}: the updater reported success but the lock still reads ${landed}, not ${expected}`);
+    }
     applied.push(id);
   }
   for (const { label, argv } of REGENERATION) {
     writeStdout(`\n[${label}]\n`);
-    run(argv, { root, writeStdout });
+    runCommand(argv, { root, writeStdout });
   }
   if (validate) {
     writeStdout("\n[release validation]\n");
-    run(["tooling/validate-suite.mjs", "--release"], { root, writeStdout });
+    runCommand(["tooling/validate-suite.mjs", "--release"], { root, writeStdout });
   }
   writeStdout(`\n적용 완료: ${applied.join(", ")}\n`);
   if (!validate) writeStdout("다음: `npm run validate:release`로 검증하고, 변경을 커밋하세요.\n");
