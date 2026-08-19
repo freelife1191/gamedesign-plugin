@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { writeSync } from "node:fs";
-import { link, lstat, mkdtemp, mkdir, opendir, readFile, realpath, rename, rm, symlink, utimes, writeFile } from "node:fs/promises";
+import { link, lstat, mkdtemp, mkdir, opendir, readFile, readdir, realpath, rename, rm, symlink, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -11,6 +11,12 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { canonicalMemoryEventDocument, canonicalQuarantineMarkerDocument, memoryOperationId } from "../../shared/scripts/validate-design-memory.mjs";
 
 const storeModuleUrl = process.env.DESIGN_MEMORY_STORE_MODULE_URL ?? new URL("../../shared/scripts/lib/safe-memory-store.mjs", import.meta.url).href;
+// The mutation harness runs a tampered copy of this file out of a temp directory, so every path the
+// file resolves against its own location needs a seam the harness can set. Without one the copy
+// reads a store source that is not there, that unrelated failure holds the run's exit code at 1 no
+// matter what the mutation did, and the harness reads the resulting silence on the evidence channel
+// as the tamper working.
+const storeSourcePath = process.env.DESIGN_MEMORY_STORE_SOURCE_PATH ?? fileURLToPath(new URL("../../shared/scripts/lib/safe-memory-store.mjs", import.meta.url));
 const { appendMemoryEvent, appendQuarantineMarker, ensureMemoryGitExclusion, foldMemoryEvents, memoryEventRelativePath, readMemoryFile, resolveMemoryStore, scanMemoryEvents, stageImmutableMemoryFile } = await import(storeModuleUrl);
 
 function mutationEvidenceMatches(error, { mutation, testId, sentinel }, operator) {
@@ -228,11 +234,36 @@ test("multiprocess same-event append commits one logical event with created and 
     const value = JSON.parse(output); assert.deepEqual(Object.keys(value).sort(), ["eventId", "relativePath", "status"]); assert.equal(output, `${JSON.stringify(value)}\n`); return value;
   });
   const actualStatuses = results.map((_, index) => parsed[index].status).sort();
-  mutationDeepEqual({ mutation: "same-event-loser-created", testId: "same-event-status", sentinel: "MEM-MUT-SAME-EVENT-STATUS" }, actualStatuses, ["created", "present"]);
+  assert.deepEqual(actualStatuses, ["created", "present"]);
   const expectedEventId = `mev1-${digest(Buffer.from(eventDocument))}`; const expectedRelativePath = eventRelativePathForTest(record.memory_id, expectedEventId);
   assert.equal(parsed.every((value) => value.eventId === expectedEventId && value.relativePath === expectedRelativePath), true);
   const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: process.platform, home: root }); const scan = await scanMemoryEvents({ store });
   assert.equal(scan.events.filter((item) => item.eventId === expectedEventId).length, 1);
+});
+
+// The loser of a same-event append answers "present" from two different places: the fast path, when
+// it starts after the winner has already committed, and the EEXIST branch, when the two genuinely
+// collide on the commit link. Only the second is what the same-event-loser-created mutation changes,
+// and which one runs is a scheduling outcome — a starved runner boots the two appender processes
+// seconds apart, the fast path answers, and the mutation goes unobserved while the assertion above
+// still passes. So the mutation's detector races two appends inside one event loop, where both are
+// past their first await before either can commit, and refuses to judge an attempt that left no
+// collision behind: a real collision orphans the loser's staged claim beside the winner's, so the
+// claim count is the proof that the branch under mutation actually ran.
+test("concurrent same-event appends inside one process collide on the commit and report created and present", async (t) => {
+  const expectedEventId = `mev1-${digest(Buffer.from(document()))}`; const expectedRelativePath = eventRelativePathForTest(record.memory_id, expectedEventId);
+  let statuses; let claimCount = 0;
+  for (let attempt = 0; attempt < 5 && claimCount !== 2; attempt += 1) {
+    const root = await workspace(t); const eventDocument = document();
+    const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: process.platform, home: root, initialize: true });
+    const results = await Promise.all([appendMemoryEvent({ store, eventDocument }), appendMemoryEvent({ store, eventDocument })]);
+    assert.equal(results.every((value) => value.eventId === expectedEventId && value.relativePath === expectedRelativePath), true);
+    claimCount = (await readdir(path.join(store.root, expectedRelativePath, "claims"))).length;
+    statuses = results.map((value) => value.status).sort();
+    assert.equal((await scanMemoryEvents({ store })).events.filter((item) => item.eventId === expectedEventId).length, 1);
+  }
+  assert.equal(claimCount, 2, "the two appends never collided on the commit, so the loser branch this mutation targets never ran");
+  mutationDeepEqual({ mutation: "same-event-loser-created", testId: "same-event-status", sentinel: "MEM-MUT-SAME-EVENT-STATUS" }, statuses, ["created", "present"]);
 });
 
 test("child output rejects an extra blank line", async () => {
@@ -457,7 +488,7 @@ test("a stale store root cannot resurrect an older approved snapshot or append s
 });
 
 test("the stale-root authority regression fails when all root identity checks are removed", async (t) => {
-  const sourcePath = fileURLToPath(new URL("../../shared/scripts/lib/safe-memory-store.mjs", import.meta.url)); const source = await readFile(sourcePath, "utf8"); const validatorUrl = pathToFileURL(path.join(path.dirname(path.dirname(sourcePath)), "validate-design-memory.mjs")).href;
+  const source = await readFile(storeSourcePath, "utf8"); const validatorUrl = pathToFileURL(path.join(path.dirname(path.dirname(storeSourcePath)), "validate-design-memory.mjs")).href;
   const initialCheck = 'if (!await matchesStoreIdentity(store)) { state.complete = false; state.diagnostics.push({ code: "memory.unbound_seal" }); return closed(); }'; const laterCheck = 'if (!await matchesStoreIdentity(store)) { state.diagnostics.push({ code: "memory.unbound_seal" }); return closed(); }';
   assert.equal(source.split(initialCheck).length - 1, 1); assert.equal(source.split(laterCheck).length - 1, 2);
   const mutated = source.replace('"../validate-design-memory.mjs"', JSON.stringify(validatorUrl)).replace(initialCheck, "").split(laterCheck).join(""); const temporaryRoot = await mkdtemp(path.join(tmpdir(), "memory-root-identity-mutation-")); t.after(() => rm(temporaryRoot, { recursive: true, force: true })); const modulePath = path.join(temporaryRoot, "safe-memory-store.mjs"); await writeFile(modulePath, mutated);
