@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { chmod, lstat, mkdir, mkdtemp, open, readFile, readdir, realpath, rename, rm, symlink, writeFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -18,12 +19,12 @@ const script = fileURLToPath(new URL('../../shared/scripts/capability-probe.mjs'
 const repoRoot = fileURLToPath(new URL('../../', import.meta.url));
 const temporaryDirs = [];
 const UPDATE_CHECKED_AT = Date.parse('2026-08-15T00:00:00.000Z');
-const UPDATE_COMPONENTS = [
-  { id: 'skillstead', repository: 'https://github.com/kyungseo/skillstead', installedTag: 'svg-infographic/v0.9.0' },
-  { id: 'archify', repository: 'https://github.com/tt-a1i/archify', installedTag: 'v2.14.0' },
-  { id: 'im-not-ai', repository: 'https://github.com/epoko77-ai/im-not-ai', installedTag: 'v2.3.0' },
-  { id: 'game-design-suite', repository: 'https://github.com/freelife1191/gamedesign-plugin', installedTag: 'v0.1.1' },
-];
+// The probe under test reads the repository's real installed-components manifest, so the stubbed
+// release feed has to answer with the tags that manifest actually carries. Copying them here meant every
+// vendor upgrade broke this test for a reason unrelated to what it covers.
+const UPDATE_COMPONENTS = JSON.parse(readFileSync(join(repoRoot, 'shared/updates/installed-components.json'), 'utf8')).components;
+const INSTALLED_ARCHIFY_TAG = UPDATE_COMPONENTS.find(({ id }) => id === 'archify').installedTag;
+const NEWER_ARCHIFY_TAG = `v${INSTALLED_ARCHIFY_TAG.slice(1).split('.').map((part, index) => (index === 1 ? Number(part) + 1 : part)).join('.')}`;
 
 afterEach(async () => {
   await Promise.all(temporaryDirs.splice(0).map((dir) => rm(dir, { recursive: true, force: true })));
@@ -84,7 +85,7 @@ function runInjectedProbe({
   home,
   workspace,
   now = UPDATE_CHECKED_AT,
-  archifyTag = 'v2.15.0',
+  archifyTag = NEWER_ARCHIFY_TAG,
   offline = false,
   neverResolving = false,
   optOut = false,
@@ -201,7 +202,7 @@ test('SessionStart surfaces injected update advisories without changing capabili
   const current = runInjectedProbe({
     home: currentHome,
     workspace,
-    archifyTag: 'v2.14.0',
+    archifyTag: INSTALLED_ARCHIFY_TAG,
   });
   assert.equal(current.updates.status, 'current');
   assert.equal(current.updates.notification, null);
@@ -210,7 +211,7 @@ test('SessionStart surfaces injected update advisories without changing capabili
     home: currentHome,
     workspace,
     now: UPDATE_CHECKED_AT + (7 * 24 * 60 * 60 * 1000),
-    archifyTag: 'v2.15.0',
+    archifyTag: NEWER_ARCHIFY_TAG,
   });
   assert.deepEqual(newer.updates.notification, {
     kind: 'update-available',

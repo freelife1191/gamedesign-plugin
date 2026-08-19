@@ -96,7 +96,7 @@ plugins/game-design-studio/
 │   ├── <17개 Studio 제품 스킬>/
 │   │   └── scripts/                 # 필요한 스킬에만 있는 product helper
 │   ├── analyze-game-design-references/ # 근거를 분리해 레퍼런스를 분석
-│   ├── archify/                      # vendored Archify 2.14.0
+│   ├── archify/                      # vendored Archify 2.15.0
 │   ├── capture-game-design-memory/   # 검증한 교훈을 후보로 기록
 │   ├── humanize-korean/              # vendored im-not-ai
 │   ├── maintain-game-design-glossary/ # 용어 후보와 사람 검토 결정 관리

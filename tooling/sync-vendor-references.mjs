@@ -39,6 +39,7 @@ async function readLock(root, name) {
   return { tag, commit, version: versionOf(tag) };
 }
 
+const ARCHIFY_CATALOG = "guides/archify-diagrams/catalog.json";
 const STUDIO_VALIDATOR = "products/game-design-studio/plugin/skills/visualize-game-design/scripts/validate-visualization-evidence.mjs";
 const STUDIO_WRAPPER = Object.freeze({
   product: "game-design-studio",
@@ -112,6 +113,20 @@ function rulesFor(state) {
       },
     );
   }
+  // The Archify diagram catalog cites the vendored trees by path, and those paths carry the version. One
+  // prefix rule rewrites every citation at once rather than naming each of the thirty-odd lines, and it
+  // covers all three vendors so a citation that appears later is corrected without a new rule.
+  const treeRoots = {
+    skillstead: `svg-infographic/${state.skillstead.version}`,
+    archify: `archify/${state.archify.version}`,
+    "im-not-ai": `humanize-korean/${state.imNotAi.tag}`,
+  };
+  rules.push({
+    file: ARCHIFY_CATALOG,
+    all: true,
+    find: /shared\/vendor\/(skillstead|archify|im-not-ai)\/[^"/]+\/v?\d+\.\d+\.\d+\//gu,
+    writeFor: (match) => `shared/vendor/${match[1]}/${treeRoots[match[1]]}/`,
+  });
   for (const [name, digest] of Object.entries(state.runtime)) {
     rules.push({
       file: STUDIO_VALIDATOR,
@@ -131,6 +146,18 @@ export async function syncVendorReferences({ root = repoRoot, check = false, sta
     const absolute = path.join(root, rule.file);
     if (!contents.has(rule.file)) contents.set(rule.file, await readFile(absolute, "utf8"));
     const before = contents.get(rule.file);
+    if (rule.all) {
+      const matches = [...before.matchAll(rule.find)];
+      if (matches.length === 0) throw referenceError("VENDOR_REFERENCE_ANCHOR_MISSING", `${rule.file}: ${rule.find.source}`);
+      const stale = [...new Set(matches.filter((match) => match[0] !== rule.writeFor(match)).map((match) => `${match[0]}\u0000${rule.writeFor(match)}`))];
+      if (stale.length === 0) continue;
+      for (const pair of stale) {
+        const [from, to] = pair.split("\u0000");
+        drifted.push({ file: rule.file, from, to });
+      }
+      contents.set(rule.file, before.replace(rule.find, (...args) => rule.writeFor(args.slice(0, -2))));
+      continue;
+    }
     const match = rule.find.exec(before);
     if (!match) throw referenceError("VENDOR_REFERENCE_ANCHOR_MISSING", `${rule.file}: ${rule.find.source}`);
     if (match[0] === rule.write) continue;

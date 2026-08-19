@@ -3562,7 +3562,7 @@
       "product": "career",
       "source_document": "plugins/game-design-career/README.md",
       "source_section": "Game Design Career",
-      "source_digest": "96c2afe1bf178950ffefc55cb1827da48c042d0ab17750a0e30fbd7f522d57f8",
+      "source_digest": "2d281eba37c97cae252f7803268425bbb9c28185f283c33272508dec93f8a3da",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "이 문서는 products/game-design-career의 배포 mirror이므로 패키지 외부 링크를 만들지 않는다.",
@@ -5189,7 +5189,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.14.0/references/authoring-contract.md",
+        "source_document": "shared/vendor/archify/archify/2.15.0/references/authoring-contract.md",
         "build_mapping": "archify"
       }
     },
@@ -5209,7 +5209,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.14.0/references/delivery-contract.md",
+        "source_document": "shared/vendor/archify/archify/2.15.0/references/delivery-contract.md",
         "build_mapping": "archify"
       }
     },
@@ -5229,7 +5229,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.14.0/references/viewer-runtime.md",
+        "source_document": "shared/vendor/archify/archify/2.15.0/references/viewer-runtime.md",
         "build_mapping": "archify"
       }
     },
@@ -5249,7 +5249,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.14.0/renderers/dataflow/README.md",
+        "source_document": "shared/vendor/archify/archify/2.15.0/renderers/dataflow/README.md",
         "build_mapping": "archify"
       }
     },
@@ -5269,7 +5269,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.14.0/renderers/lifecycle/README.md",
+        "source_document": "shared/vendor/archify/archify/2.15.0/renderers/lifecycle/README.md",
         "build_mapping": "archify"
       }
     },
@@ -5278,7 +5278,7 @@
       "product": "career",
       "source_document": "plugins/game-design-career/skills/archify/renderers/sequence/README.md",
       "source_section": "Sequence Renderer",
-      "source_digest": "c18894766441faa0d1c88fe02a96f0eabe05e1d477463f8ec52b94728cec3b88",
+      "source_digest": "a442335dcf44b1587d3ad88809e31b001a4fafdf7a134040e8b1927455af4206",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "“Sequence Renderer”은 plugins/game-design-career/skills/archify/renderers/sequence/README.md에 설치되는 package mirror이며 공유 build mapping 원본은 구조화된 origin_source에 고정한다. node archify/renderers/sequence/render-sequence.mjs input.sequence.json output.html라는 현재 배포 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
@@ -5289,7 +5289,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.14.0/renderers/sequence/README.md",
+        "source_document": "shared/vendor/archify/archify/2.15.0/renderers/sequence/README.md",
         "build_mapping": "archify"
       }
     },
@@ -5309,7 +5309,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.14.0/renderers/workflow/README.md",
+        "source_document": "shared/vendor/archify/archify/2.15.0/renderers/workflow/README.md",
         "build_mapping": "archify"
       }
     },
@@ -5318,7 +5318,7 @@
       "product": "career",
       "source_document": "plugins/game-design-career/skills/archify/schemas/README.md",
       "source_section": "Archify JSON IR Schemas",
-      "source_digest": "a280d6f9fee20ad7f0e75e43b82675d85f89578d6743519e1e19888d307a4d73",
+      "source_digest": "0bc4190034b27dcf074566decf828b25007a2f5e0b77a47525beca9793e395d3",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "“Archify JSON IR Schemas”은 plugins/game-design-career/skills/archify/schemas/README.md에 설치되는 package mirror이며 공유 build mapping 원본은 구조화된 origin_source에 고정한다. Each typed renderer consumes a JSON intermediate representation (IR) validated라는 현재 배포 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
@@ -5329,7 +5329,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.14.0/schemas/README.md",
+        "source_document": "shared/vendor/archify/archify/2.15.0/schemas/README.md",
         "build_mapping": "archify"
       }
     },
@@ -5338,7 +5338,7 @@
       "product": "career",
       "source_document": "plugins/game-design-career/skills/archify/SKILL.md",
       "source_section": "Archify",
-      "source_digest": "fe4445b1c33706e8dc70c805cd1609272c1194a6dff1c5c8251abda3ca88cf4b",
+      "source_digest": "258c8b332f7a6cef15acd8c3a1c29ec5405d52897a55cd358b0baf623c9810f2",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "“Archify”은 plugins/game-design-career/skills/archify/SKILL.md에 설치되는 package mirror이며 공유 build mapping 원본은 구조화된 origin_source에 고정한다. Create a self-contained, interactive HTML diagram from a small typed JSON specification. Static output is the default; enable motion only when the user asks for a demo or presentation.라는 현재 배포 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
@@ -5349,7 +5349,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.14.0/SKILL.md",
+        "source_document": "shared/vendor/archify/archify/2.15.0/SKILL.md",
         "build_mapping": "archify"
       }
     },
@@ -5437,7 +5437,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.0/references/ai-tell-taxonomy.md",
+        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.2/references/ai-tell-taxonomy.md",
         "build_mapping": "im-not-ai"
       }
     },
@@ -5457,7 +5457,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.0/references/design-notes.md",
+        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.2/references/design-notes.md",
         "build_mapping": "im-not-ai"
       }
     },
@@ -5477,7 +5477,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.0/references/diagnosis-rules.md",
+        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.2/references/diagnosis-rules.md",
         "build_mapping": "im-not-ai"
       }
     },
@@ -5497,7 +5497,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.0/references/empirical-validation.md",
+        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.2/references/empirical-validation.md",
         "build_mapping": "im-not-ai"
       }
     },
@@ -5506,7 +5506,7 @@
       "product": "career",
       "source_document": "plugins/game-design-career/skills/humanize-korean/references/quick-rules.footer.md",
       "source_section": "자체검증 체크리스트 (monolith 윤문 후 자가 점검)",
-      "source_digest": "933c5300b71fdf6eecc0ec0788910afd9a166ce7969ba129e2029ced000f2335",
+      "source_digest": "6101e6ca4da121bc73163207067d0eb3407b9cd0694b51187c7a8b56b4aaf6f2",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "“자체검증 체크리스트 (monolith 윤문 후 자가 점검)”은 plugins/game-design-career/skills/humanize-korean/references/quick-rules.footer.md에 설치되는 package mirror이며 공유 build mapping 원본은 구조화된 origin_source에 고정한다. 윤문 직후 5초 내에 다음을 자체 점검한다. 한 항목이라도 위반이면 해당 edit 롤백.라는 현재 배포 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
@@ -5517,7 +5517,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.0/references/quick-rules.footer.md",
+        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.2/references/quick-rules.footer.md",
         "build_mapping": "im-not-ai"
       }
     },
@@ -5526,7 +5526,7 @@
       "product": "career",
       "source_document": "plugins/game-design-career/skills/humanize-korean/references/quick-rules.header.md",
       "source_section": "Quick Rules — Monolith Fast Path 전용 (v2.0)",
-      "source_digest": "e129aa91bfe74433d81ff6817e934a233a9a7febd85f1f9484eca1ced33c1c13",
+      "source_digest": "592781fededf8cddfa86820cc1fb4b96599580f350c3729958dde0687fd3c614",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "“Quick Rules — Monolith Fast Path 전용 (v2.0)”은 plugins/game-design-career/skills/humanize-korean/references/quick-rules.header.md에 설치되는 package mirror이며 공유 build mapping 원본은 구조화된 origin_source에 고정한다. <!-- 이 파일은 build_quick_rules.py가 quick-rules.md를 생성할 때 앞부분에 그대로 붙이는 고정 템플릿이다. quick-rules.md를 직접 고치지 말 것 — 규칙 본문은 ai-tell-taxonomy.md(SSOT)에서 생성된다. 이 헤더·꼬리 고정부만 여기서 관리한다. -->라는 현재 배포 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
@@ -5537,7 +5537,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.0/references/quick-rules.header.md",
+        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.2/references/quick-rules.header.md",
         "build_mapping": "im-not-ai"
       }
     },
@@ -5546,7 +5546,7 @@
       "product": "career",
       "source_document": "plugins/game-design-career/skills/humanize-korean/references/quick-rules.md",
       "source_section": "Quick Rules — Monolith Fast Path 전용 (v2.0)",
-      "source_digest": "cc8947e145a34af000b3684ef09ed62c51c0b35080f43b96bcd38e2ff98d28ef",
+      "source_digest": "258bd9f755fc04a5894f42e5e0a0dcf3c66ee7cf20854d91b4fbac0becf2c08e",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "“Quick Rules — Monolith Fast Path 전용 (v2.0)”은 plugins/game-design-career/skills/humanize-korean/references/quick-rules.md에 설치되는 package mirror이며 공유 build mapping 원본은 구조화된 origin_source에 고정한다. <!-- 이 파일은 build_quick_rules.py가 quick-rules.md를 생성할 때 앞부분에 그대로 붙이는 고정 템플릿이다. quick-rules.md를 직접 고치지 말 것 — 규칙 본문은 ai-tell-taxonomy.md(SSOT)에서 생성된다. 이 헤더·꼬리 고정부만 여기서 관리한다. -->라는 현재 배포 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
@@ -5557,7 +5557,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.0/references/quick-rules.md",
+        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.2/references/quick-rules.md",
         "build_mapping": "im-not-ai"
       }
     },
@@ -5577,7 +5577,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.0/references/rewriting-playbook.md",
+        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.2/references/rewriting-playbook.md",
         "build_mapping": "im-not-ai"
       }
     },
@@ -5597,7 +5597,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.0/references/scholarship.md",
+        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.2/references/scholarship.md",
         "build_mapping": "im-not-ai"
       }
     },
@@ -5617,7 +5617,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.0/references/web-service-spec.md",
+        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.2/references/web-service-spec.md",
         "build_mapping": "im-not-ai"
       }
     },
@@ -5625,8 +5625,8 @@
       "id": "excluded-d6915f63c245",
       "product": "career",
       "source_document": "plugins/game-design-career/skills/humanize-korean/SKILL.md",
-      "source_section": "Humanize Korean — Fast Path (Codex)",
-      "source_digest": "6c34dbf00c23ee52e5cb374273952dab9bb5d38552cf1fb7a90ed42854ee304f",
+      "source_section": "Humanize Korean — Single-call Path (Codex · GitHub Copilot CLI)",
+      "source_digest": "7a60c8240218ac7a3cb15f26f0824a682958cdc0475ba2d828c8375edc870569",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "“Humanize Korean — Fast Path (Codex)”은 plugins/game-design-career/skills/humanize-korean/SKILL.md에 설치되는 package mirror이며 공유 build mapping 원본은 구조화된 origin_source에 고정한다. 5,000자 이하 한글 텍스트의 \"AI 티\"를 한 번에 탐지·윤문·자체검증한다. Codex는 Fast(monolith) 모드만 제공한다 — 정밀 3콜(strict — 진단→겨냥 윤문→finalize)은 Claude Code 전용이다.라는 현재 배포 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
@@ -5637,7 +5637,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.0/SKILL.md",
+        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.2/SKILL.md",
         "build_mapping": "im-not-ai"
       }
     },
@@ -5750,7 +5750,7 @@
       "product": "career",
       "source_document": "plugins/game-design-career/skills/polish-game-design-writing/SKILL.md",
       "source_section": "Polish Game Design Writing",
-      "source_digest": "26a0bff643803edbcbce330eb0dea2047e17c2815a516ccda494cca6c63ef973",
+      "source_digest": "cfd77bec07dff36b1a3e05d06e88ae03ecc599594024c3919be802b7e90d0b5c",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "“Polish Game Design Writing”은 plugins/game-design-career/skills/polish-game-design-writing/SKILL.md에 설치되는 package mirror이며 원본은 products/game-design-career/plugin/skills/polish-game-design-writing/SKILL.md이다. 게임 기획 학습·포트폴리오·면접 문서를 자연스러운 한국어로 다듬는다. 이 작업은 증거의 사실성이나 지원 결과를 판단하지 않는 문체 검수다. 원문을 덮어쓰지 않는다.라는 현재 배포 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
@@ -6034,7 +6034,7 @@
       "product": "career",
       "source_document": "plugins/game-design-career/THIRD_PARTY_NOTICES.md",
       "source_section": "Third-Party Notices and Source Provenance",
-      "source_digest": "1c2b6dac3f8230785c1f5f3317055e88648bdc9643cb3311eb38b14b66878e0f",
+      "source_digest": "d143d7182a662d39df3a3255d1274733f921286fce8643c1f486060b982ce474",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "이 문서는 products/game-design-career의 배포 mirror이므로 패키지 외부 링크를 만들지 않는다.",
@@ -7090,7 +7090,7 @@
       "product": "studio",
       "source_document": "plugins/game-design-studio/README.md",
       "source_section": "Game Design Studio",
-      "source_digest": "9efeb0d20efd32e7d1c5fc3406c3f32105d9290733128fccb8cf9692a0203346",
+      "source_digest": "034602bf546fba77e9cdf6662e082e875b62e0fd3b7089f273757737ce95aadc",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "이 문서는 products/game-design-studio의 배포 mirror이므로 패키지 외부 링크를 만들지 않는다.",
@@ -8669,7 +8669,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.14.0/references/authoring-contract.md",
+        "source_document": "shared/vendor/archify/archify/2.15.0/references/authoring-contract.md",
         "build_mapping": "archify"
       }
     },
@@ -8689,7 +8689,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.14.0/references/delivery-contract.md",
+        "source_document": "shared/vendor/archify/archify/2.15.0/references/delivery-contract.md",
         "build_mapping": "archify"
       }
     },
@@ -8709,7 +8709,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.14.0/references/viewer-runtime.md",
+        "source_document": "shared/vendor/archify/archify/2.15.0/references/viewer-runtime.md",
         "build_mapping": "archify"
       }
     },
@@ -8729,7 +8729,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.14.0/renderers/dataflow/README.md",
+        "source_document": "shared/vendor/archify/archify/2.15.0/renderers/dataflow/README.md",
         "build_mapping": "archify"
       }
     },
@@ -8749,7 +8749,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.14.0/renderers/lifecycle/README.md",
+        "source_document": "shared/vendor/archify/archify/2.15.0/renderers/lifecycle/README.md",
         "build_mapping": "archify"
       }
     },
@@ -8758,7 +8758,7 @@
       "product": "studio",
       "source_document": "plugins/game-design-studio/skills/archify/renderers/sequence/README.md",
       "source_section": "Sequence Renderer",
-      "source_digest": "c18894766441faa0d1c88fe02a96f0eabe05e1d477463f8ec52b94728cec3b88",
+      "source_digest": "a442335dcf44b1587d3ad88809e31b001a4fafdf7a134040e8b1927455af4206",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "“Sequence Renderer”은 plugins/game-design-studio/skills/archify/renderers/sequence/README.md에 설치되는 package mirror이며 공유 build mapping 원본은 구조화된 origin_source에 고정한다. node archify/renderers/sequence/render-sequence.mjs input.sequence.json output.html라는 현재 배포 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
@@ -8769,7 +8769,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.14.0/renderers/sequence/README.md",
+        "source_document": "shared/vendor/archify/archify/2.15.0/renderers/sequence/README.md",
         "build_mapping": "archify"
       }
     },
@@ -8789,7 +8789,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.14.0/renderers/workflow/README.md",
+        "source_document": "shared/vendor/archify/archify/2.15.0/renderers/workflow/README.md",
         "build_mapping": "archify"
       }
     },
@@ -8798,7 +8798,7 @@
       "product": "studio",
       "source_document": "plugins/game-design-studio/skills/archify/schemas/README.md",
       "source_section": "Archify JSON IR Schemas",
-      "source_digest": "a280d6f9fee20ad7f0e75e43b82675d85f89578d6743519e1e19888d307a4d73",
+      "source_digest": "0bc4190034b27dcf074566decf828b25007a2f5e0b77a47525beca9793e395d3",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "“Archify JSON IR Schemas”은 plugins/game-design-studio/skills/archify/schemas/README.md에 설치되는 package mirror이며 공유 build mapping 원본은 구조화된 origin_source에 고정한다. Each typed renderer consumes a JSON intermediate representation (IR) validated라는 현재 배포 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
@@ -8809,7 +8809,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.14.0/schemas/README.md",
+        "source_document": "shared/vendor/archify/archify/2.15.0/schemas/README.md",
         "build_mapping": "archify"
       }
     },
@@ -8818,7 +8818,7 @@
       "product": "studio",
       "source_document": "plugins/game-design-studio/skills/archify/SKILL.md",
       "source_section": "Archify",
-      "source_digest": "fe4445b1c33706e8dc70c805cd1609272c1194a6dff1c5c8251abda3ca88cf4b",
+      "source_digest": "258c8b332f7a6cef15acd8c3a1c29ec5405d52897a55cd358b0baf623c9810f2",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "“Archify”은 plugins/game-design-studio/skills/archify/SKILL.md에 설치되는 package mirror이며 공유 build mapping 원본은 구조화된 origin_source에 고정한다. Create a self-contained, interactive HTML diagram from a small typed JSON specification. Static output is the default; enable motion only when the user asks for a demo or presentation.라는 현재 배포 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
@@ -8829,7 +8829,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/archify/archify/2.14.0/SKILL.md",
+        "source_document": "shared/vendor/archify/archify/2.15.0/SKILL.md",
         "build_mapping": "archify"
       }
     },
@@ -9017,7 +9017,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.0/references/ai-tell-taxonomy.md",
+        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.2/references/ai-tell-taxonomy.md",
         "build_mapping": "im-not-ai"
       }
     },
@@ -9037,7 +9037,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.0/references/design-notes.md",
+        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.2/references/design-notes.md",
         "build_mapping": "im-not-ai"
       }
     },
@@ -9057,7 +9057,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.0/references/diagnosis-rules.md",
+        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.2/references/diagnosis-rules.md",
         "build_mapping": "im-not-ai"
       }
     },
@@ -9077,7 +9077,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.0/references/empirical-validation.md",
+        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.2/references/empirical-validation.md",
         "build_mapping": "im-not-ai"
       }
     },
@@ -9086,7 +9086,7 @@
       "product": "studio",
       "source_document": "plugins/game-design-studio/skills/humanize-korean/references/quick-rules.footer.md",
       "source_section": "자체검증 체크리스트 (monolith 윤문 후 자가 점검)",
-      "source_digest": "933c5300b71fdf6eecc0ec0788910afd9a166ce7969ba129e2029ced000f2335",
+      "source_digest": "6101e6ca4da121bc73163207067d0eb3407b9cd0694b51187c7a8b56b4aaf6f2",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "“자체검증 체크리스트 (monolith 윤문 후 자가 점검)”은 plugins/game-design-studio/skills/humanize-korean/references/quick-rules.footer.md에 설치되는 package mirror이며 공유 build mapping 원본은 구조화된 origin_source에 고정한다. 윤문 직후 5초 내에 다음을 자체 점검한다. 한 항목이라도 위반이면 해당 edit 롤백.라는 현재 배포 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
@@ -9097,7 +9097,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.0/references/quick-rules.footer.md",
+        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.2/references/quick-rules.footer.md",
         "build_mapping": "im-not-ai"
       }
     },
@@ -9106,7 +9106,7 @@
       "product": "studio",
       "source_document": "plugins/game-design-studio/skills/humanize-korean/references/quick-rules.header.md",
       "source_section": "Quick Rules — Monolith Fast Path 전용 (v2.0)",
-      "source_digest": "e129aa91bfe74433d81ff6817e934a233a9a7febd85f1f9484eca1ced33c1c13",
+      "source_digest": "592781fededf8cddfa86820cc1fb4b96599580f350c3729958dde0687fd3c614",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "“Quick Rules — Monolith Fast Path 전용 (v2.0)”은 plugins/game-design-studio/skills/humanize-korean/references/quick-rules.header.md에 설치되는 package mirror이며 공유 build mapping 원본은 구조화된 origin_source에 고정한다. <!-- 이 파일은 build_quick_rules.py가 quick-rules.md를 생성할 때 앞부분에 그대로 붙이는 고정 템플릿이다. quick-rules.md를 직접 고치지 말 것 — 규칙 본문은 ai-tell-taxonomy.md(SSOT)에서 생성된다. 이 헤더·꼬리 고정부만 여기서 관리한다. -->라는 현재 배포 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
@@ -9117,7 +9117,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.0/references/quick-rules.header.md",
+        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.2/references/quick-rules.header.md",
         "build_mapping": "im-not-ai"
       }
     },
@@ -9126,7 +9126,7 @@
       "product": "studio",
       "source_document": "plugins/game-design-studio/skills/humanize-korean/references/quick-rules.md",
       "source_section": "Quick Rules — Monolith Fast Path 전용 (v2.0)",
-      "source_digest": "cc8947e145a34af000b3684ef09ed62c51c0b35080f43b96bcd38e2ff98d28ef",
+      "source_digest": "258bd9f755fc04a5894f42e5e0a0dcf3c66ee7cf20854d91b4fbac0becf2c08e",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "“Quick Rules — Monolith Fast Path 전용 (v2.0)”은 plugins/game-design-studio/skills/humanize-korean/references/quick-rules.md에 설치되는 package mirror이며 공유 build mapping 원본은 구조화된 origin_source에 고정한다. <!-- 이 파일은 build_quick_rules.py가 quick-rules.md를 생성할 때 앞부분에 그대로 붙이는 고정 템플릿이다. quick-rules.md를 직접 고치지 말 것 — 규칙 본문은 ai-tell-taxonomy.md(SSOT)에서 생성된다. 이 헤더·꼬리 고정부만 여기서 관리한다. -->라는 현재 배포 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
@@ -9137,7 +9137,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.0/references/quick-rules.md",
+        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.2/references/quick-rules.md",
         "build_mapping": "im-not-ai"
       }
     },
@@ -9157,7 +9157,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.0/references/rewriting-playbook.md",
+        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.2/references/rewriting-playbook.md",
         "build_mapping": "im-not-ai"
       }
     },
@@ -9177,7 +9177,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.0/references/scholarship.md",
+        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.2/references/scholarship.md",
         "build_mapping": "im-not-ai"
       }
     },
@@ -9197,7 +9197,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.0/references/web-service-spec.md",
+        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.2/references/web-service-spec.md",
         "build_mapping": "im-not-ai"
       }
     },
@@ -9205,8 +9205,8 @@
       "id": "excluded-4fde964b6364",
       "product": "studio",
       "source_document": "plugins/game-design-studio/skills/humanize-korean/SKILL.md",
-      "source_section": "Humanize Korean — Fast Path (Codex)",
-      "source_digest": "6c34dbf00c23ee52e5cb374273952dab9bb5d38552cf1fb7a90ed42854ee304f",
+      "source_section": "Humanize Korean — Single-call Path (Codex · GitHub Copilot CLI)",
+      "source_digest": "7a60c8240218ac7a3cb15f26f0824a682958cdc0475ba2d828c8375edc870569",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "“Humanize Korean — Fast Path (Codex)”은 plugins/game-design-studio/skills/humanize-korean/SKILL.md에 설치되는 package mirror이며 공유 build mapping 원본은 구조화된 origin_source에 고정한다. 5,000자 이하 한글 텍스트의 \"AI 티\"를 한 번에 탐지·윤문·자체검증한다. Codex는 Fast(monolith) 모드만 제공한다 — 정밀 3콜(strict — 진단→겨냥 윤문→finalize)은 Claude Code 전용이다.라는 현재 배포 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
@@ -9217,7 +9217,7 @@
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable",
       "origin_source": {
-        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.0/SKILL.md",
+        "source_document": "shared/vendor/im-not-ai/humanize-korean/v2.3.2/SKILL.md",
         "build_mapping": "im-not-ai"
       }
     },
@@ -9362,7 +9362,7 @@
       "product": "studio",
       "source_document": "plugins/game-design-studio/skills/polish-game-design-writing/SKILL.md",
       "source_section": "Polish Game Design Writing",
-      "source_digest": "41783c75a9b3ac14d4135a040f433d7776f6becb57b88e8a4fca23f46ace7012",
+      "source_digest": "ead02983bf6213428bc2cc1950bf6ef7903a69316d3d9d956caa18c2bbd29885",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "“Polish Game Design Writing”은 plugins/game-design-studio/skills/polish-game-design-writing/SKILL.md에 설치되는 package mirror이며 원본은 products/game-design-studio/plugin/skills/polish-game-design-writing/SKILL.md이다. 게임 기획 문서를 사람이 읽기 쉬운 한국어로 다듬는다. 이 작업은 사실 확인이나 설계 변경이 아니라 문체 검수다. 원문을 덮어쓰지 않는다.라는 현재 배포 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
@@ -9614,7 +9614,7 @@
       "product": "studio",
       "source_document": "plugins/game-design-studio/THIRD_PARTY_NOTICES.md",
       "source_section": "Third-Party Notices and Source Provenance",
-      "source_digest": "f7b519a3a0053ac67df97b5569459ec59d37adcbb834bc3a3a1d55f51455550e",
+      "source_digest": "cb65de6892ce034f17d118debed2e5dfaefa74134baa1e0c3ca82d6cf84eb92e",
       "decision": "excluded",
       "exclusion_code": "excluded-package-mirror",
       "decision_reason": "이 문서는 products/game-design-studio의 배포 mirror이므로 패키지 외부 링크를 만들지 않는다.",
@@ -10510,7 +10510,7 @@
       "product": "career",
       "source_document": "products/game-design-career/plugin/README.md",
       "source_section": "Game Design Career",
-      "source_digest": "02fc3e4ef94061b716f5882bb1f1814d7031c705cb0dd460687c0e7c81864606",
+      "source_digest": "0cafc98ab0184d2e09f0a9772441932ed7cdb6d7f444c6fc94fbfafdd212867f",
       "decision": "excluded",
       "exclusion_code": "excluded-package-surface",
       "decision_reason": "이 package surface는 배포 경계이므로 패키지 외부 링크를 만들지 않고 분석 기록만 유지한다.",
@@ -10830,7 +10830,7 @@
       "product": "career",
       "source_document": "products/game-design-career/plugin/skills/polish-game-design-writing/SKILL.md",
       "source_section": "Polish Game Design Writing",
-      "source_digest": "26a0bff643803edbcbce330eb0dea2047e17c2815a516ccda494cca6c63ef973",
+      "source_digest": "cfd77bec07dff36b1a3e05d06e88ae03ecc599594024c3919be802b7e90d0b5c",
       "decision": "excluded",
       "exclusion_code": "excluded-package-surface",
       "decision_reason": "“Polish Game Design Writing”은 products/game-design-career/plugin/skills/polish-game-design-writing/SKILL.md의 package surface다. 게임 기획 학습·포트폴리오·면접 문서를 자연스러운 한국어로 다듬는다. 이 작업은 증거의 사실성이나 지원 결과를 판단하지 않는 문체 검수다. 원문을 덮어쓰지 않는다.처럼 설치 산출물의 역할을 설명하는 원문은 제품 외부 링크로 제공되므로 별도 관계도에서 제외한다.",
@@ -10942,7 +10942,7 @@
       "product": "career",
       "source_document": "products/game-design-career/plugin/THIRD_PARTY_NOTICES.md",
       "source_section": "Third-Party Notices and Source Provenance",
-      "source_digest": "1c2b6dac3f8230785c1f5f3317055e88648bdc9643cb3311eb38b14b66878e0f",
+      "source_digest": "d143d7182a662d39df3a3255d1274733f921286fce8643c1f486060b982ce474",
       "decision": "excluded",
       "exclusion_code": "excluded-package-surface",
       "decision_reason": "이 package surface는 배포 경계이므로 패키지 외부 링크를 만들지 않고 분석 기록만 유지한다.",
@@ -11902,7 +11902,7 @@
       "product": "studio",
       "source_document": "products/game-design-studio/plugin/README.md",
       "source_section": "Game Design Studio",
-      "source_digest": "df055442c25e5db3066c087a51e8620ed953876452efebdcf46923d0a5ccc6c4",
+      "source_digest": "aa1b9f9ffaf27d43d5c43aae49cec8cb53771abea0cf03f08b60cd7a982b7dff",
       "decision": "excluded",
       "exclusion_code": "excluded-package-surface",
       "decision_reason": "이 package surface는 배포 경계이므로 패키지 외부 링크를 만들지 않고 분석 기록만 유지한다.",
@@ -12302,7 +12302,7 @@
       "product": "studio",
       "source_document": "products/game-design-studio/plugin/skills/polish-game-design-writing/SKILL.md",
       "source_section": "Polish Game Design Writing",
-      "source_digest": "41783c75a9b3ac14d4135a040f433d7776f6becb57b88e8a4fca23f46ace7012",
+      "source_digest": "ead02983bf6213428bc2cc1950bf6ef7903a69316d3d9d956caa18c2bbd29885",
       "decision": "excluded",
       "exclusion_code": "excluded-package-surface",
       "decision_reason": "“Polish Game Design Writing”은 products/game-design-studio/plugin/skills/polish-game-design-writing/SKILL.md의 package surface다. 게임 기획 문서를 사람이 읽기 쉬운 한국어로 다듬는다. 이 작업은 사실 확인이나 설계 변경이 아니라 문체 검수다. 원문을 덮어쓰지 않는다.처럼 설치 산출물의 역할을 설명하는 원문은 제품 외부 링크로 제공되므로 별도 관계도에서 제외한다.",
@@ -12382,7 +12382,7 @@
       "product": "studio",
       "source_document": "products/game-design-studio/plugin/THIRD_PARTY_NOTICES.md",
       "source_section": "Third-Party Notices and Source Provenance",
-      "source_digest": "f7b519a3a0053ac67df97b5569459ec59d37adcbb834bc3a3a1d55f51455550e",
+      "source_digest": "cb65de6892ce034f17d118debed2e5dfaefa74134baa1e0c3ca82d6cf84eb92e",
       "decision": "excluded",
       "exclusion_code": "excluded-package-surface",
       "decision_reason": "이 package surface는 배포 경계이므로 패키지 외부 링크를 만들지 않고 분석 기록만 유지한다.",
@@ -12585,6 +12585,86 @@
       "receipt": null,
       "delivery_status": "not-applicable",
       "visual_review": "not-applicable"
+    },
+    {
+      "id": "excluded-0dc3b9703da7",
+      "product": "career",
+      "source_document": "plugins/game-design-career/skills/archify/brand-marks/README.md",
+      "source_section": "Built-in brand marks",
+      "source_digest": "8b771a16322ce9ea47fdc00b9935e33adf0f3af608f2d735235443e15ef622e2",
+      "decision": "excluded",
+      "exclusion_code": "excluded-package-mirror",
+      "decision_reason": "“Built-in brand marks”은 plugins/game-design-career/skills/archify/brand-marks/README.md에 설치되는 package mirror이며 공유 build mapping 원본은 구조화된 origin_source에 고정한다. Archify는 architecture·workflow·sequence·data-flow·lifecycle 노드에 쓰는 107개 브랜드 목록을 함께 배포한다. 브랜드 표시는 노드의 의미론적 `type`·색·라벨·관계를 대체하지 않는 선택적 정체성이며, 목록에 없는 사이트는 `brands capture` 2단계 절차로만 고정한다. 이 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
+      "diagnostics": [],
+      "spec": null,
+      "html": null,
+      "receipt": null,
+      "delivery_status": "not-applicable",
+      "visual_review": "not-applicable",
+      "origin_source": {
+        "source_document": "shared/vendor/archify/archify/2.15.0/brand-marks/README.md",
+        "build_mapping": "archify"
+      }
+    },
+    {
+      "id": "excluded-2ca56d9470cc",
+      "product": "career",
+      "source_document": "plugins/game-design-career/skills/archify/references/brand-marks.md",
+      "source_section": "Brand marks",
+      "source_digest": "8010869da70677e686ecb312d9c3eec2d20723a44f817ab2bbf5525361c8a136",
+      "decision": "excluded",
+      "exclusion_code": "excluded-package-mirror",
+      "decision_reason": "“Brand marks”은 plugins/game-design-career/skills/archify/references/brand-marks.md에 설치되는 package mirror이며 공유 build mapping 원본은 구조화된 origin_source에 고정한다. 브랜드 표시는 실제 제품·제공자·모델 계열·채널·서비스 정체성이 독자에게 도움이 될 때만 쓴다. 의미론적 `type`은 노드가 무엇을 하는지 설명하고 `brand`는 그것이 누구의 제품인지 설명한다. 이 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
+      "diagnostics": [],
+      "spec": null,
+      "html": null,
+      "receipt": null,
+      "delivery_status": "not-applicable",
+      "visual_review": "not-applicable",
+      "origin_source": {
+        "source_document": "shared/vendor/archify/archify/2.15.0/references/brand-marks.md",
+        "build_mapping": "archify"
+      }
+    },
+    {
+      "id": "excluded-c883d1ca234c",
+      "product": "studio",
+      "source_document": "plugins/game-design-studio/skills/archify/brand-marks/README.md",
+      "source_section": "Built-in brand marks",
+      "source_digest": "8b771a16322ce9ea47fdc00b9935e33adf0f3af608f2d735235443e15ef622e2",
+      "decision": "excluded",
+      "exclusion_code": "excluded-package-mirror",
+      "decision_reason": "“Built-in brand marks”은 plugins/game-design-studio/skills/archify/brand-marks/README.md에 설치되는 package mirror이며 공유 build mapping 원본은 구조화된 origin_source에 고정한다. Archify는 architecture·workflow·sequence·data-flow·lifecycle 노드에 쓰는 107개 브랜드 목록을 함께 배포한다. 브랜드 표시는 노드의 의미론적 `type`·색·라벨·관계를 대체하지 않는 선택적 정체성이며, 목록에 없는 사이트는 `brands capture` 2단계 절차로만 고정한다. 이 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
+      "diagnostics": [],
+      "spec": null,
+      "html": null,
+      "receipt": null,
+      "delivery_status": "not-applicable",
+      "visual_review": "not-applicable",
+      "origin_source": {
+        "source_document": "shared/vendor/archify/archify/2.15.0/brand-marks/README.md",
+        "build_mapping": "archify"
+      }
+    },
+    {
+      "id": "excluded-4c3016a6d5ed",
+      "product": "studio",
+      "source_document": "plugins/game-design-studio/skills/archify/references/brand-marks.md",
+      "source_section": "Brand marks",
+      "source_digest": "8010869da70677e686ecb312d9c3eec2d20723a44f817ab2bbf5525361c8a136",
+      "decision": "excluded",
+      "exclusion_code": "excluded-package-mirror",
+      "decision_reason": "“Brand marks”은 plugins/game-design-studio/skills/archify/references/brand-marks.md에 설치되는 package mirror이며 공유 build mapping 원본은 구조화된 origin_source에 고정한다. 브랜드 표시는 실제 제품·제공자·모델 계열·채널·서비스 정체성이 독자에게 도움이 될 때만 쓴다. 의미론적 `type`은 노드가 무엇을 하는지 설명하고 `brand`는 그것이 누구의 제품인지 설명한다. 이 설명은 원본의 설치 계약을 따라야 하므로 중복 도식 대신 원본 경로를 유지한다.",
+      "diagnostics": [],
+      "spec": null,
+      "html": null,
+      "receipt": null,
+      "delivery_status": "not-applicable",
+      "visual_review": "not-applicable",
+      "origin_source": {
+        "source_document": "shared/vendor/archify/archify/2.15.0/references/brand-marks.md",
+        "build_mapping": "archify"
+      }
     }
   ]
 }

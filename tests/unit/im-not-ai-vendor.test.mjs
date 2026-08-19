@@ -11,36 +11,36 @@ const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const vendorRoot = path.join(repoRoot, "shared/vendor/im-not-ai");
 const updaterUrl = new URL("../../tooling/sync-im-not-ai.mjs", import.meta.url);
 
-const expectedFiles = [
-  { path: "SKILL.md", sha256: "6c34dbf00c23ee52e5cb374273952dab9bb5d38552cf1fb7a90ed42854ee304f", size: 4352 },
-  { path: "references/ai-tell-taxonomy.md", sha256: "57b7b40bc90d927d1b76cd4325ae5a58c92d18a20615339b19bc5eac776a6940", size: 77157 },
-  { path: "references/baseline.json", sha256: "3880335a2b760fd505531e303ff9fff7f0725f8f2e98dc965a7808c21616d958", size: 6139 },
-  { path: "references/baseline_v2.json", sha256: "b5f1725bd02fb4cc40eece68c5b8f1d7c7655775743196d8fd0bc5978f2ed916", size: 13487 },
-  { path: "references/design-notes.md", sha256: "e350884ca1cb10c248d247b7fc2b5236211489757bf65a72360434f0254ae293", size: 5940 },
-  { path: "references/diagnosis-rules.md", sha256: "0a8d2c1ddf4b7294b66ddc549d0600fd74c41a187d6501869cb8c9c4d7d0456a", size: 13082 },
-  { path: "references/empirical-validation.md", sha256: "d23302029934de04baecb48759ca7d804d98e861341edec315ac4a1fc40ce31f", size: 8339 },
-  { path: "references/metrics.py", sha256: "a665faef60c88a045e232ac633fe19335d123a58a5dd8e493708c7c5954a5f60", size: 14550 },
-  { path: "references/metrics_v2.py", sha256: "97343e74d16d71eeaae773cfb2e3b5970bd395239b1457b9ca6e8bebae2740bd", size: 31314 },
-  { path: "references/quick-rules.footer.md", sha256: "933c5300b71fdf6eecc0ec0788910afd9a166ce7969ba129e2029ced000f2335", size: 1920 },
-  { path: "references/quick-rules.header.md", sha256: "e129aa91bfe74433d81ff6817e934a233a9a7febd85f1f9484eca1ced33c1c13", size: 1156 },
-  { path: "references/quick-rules.md", sha256: "cc8947e145a34af000b3684ef09ed62c51c0b35080f43b96bcd38e2ff98d28ef", size: 10040 },
-  { path: "references/rewriting-playbook.md", sha256: "854b9e8fa552747972c319d6b409a00a74ed5afcb69eed019dfc5092238be721", size: 12133 },
-  { path: "references/scholarship.md", sha256: "e83346a5b0147a923b725295cbee6b7fa3b22020840b5eee95c35f615b182e64", size: 35541 },
-  { path: "references/web-service-spec.md", sha256: "be887c5e60b9a37e63a4aa8156ada0da4298098a51451925a3a22b9a37e25f6a", size: 8010 },
-];
+// Everything the vendored tree is expected to be comes from the pin, not from literals copied beside it.
+// A copied table means every upgrade edits this file too, and an upgrade that forgets it fails here for
+// a reason that has nothing to do with the upgrade.
+const pin = JSON.parse(await readFile(path.join(repoRoot, "tooling/vendor-pins/im-not-ai.json"), "utf8"));
+const expectedFiles = pin.files.map(({ path: file, sha256: hash, size }) => ({ path: file, sha256: hash, size }));
+const treeRoot = `humanize-korean/${pin.tag}`;
 
 const expectedLock = {
   schemaVersion: 1,
-  upstream: { repository: "https://github.com/epoko77-ai/im-not-ai", tag: "v2.3.0", commit: "82137e858763dadb99561f194c5c00465735017b", releasedAt: "2026-07-22T06:28:52Z", skillPath: "codex/skills/humanize-korean", referencesSource: ".claude/skills/humanize-korean/references" },
-  license: { spdx: "MIT", path: "LICENSE", sha256: "4cc7e8c439fe42f09d98457599c129ea6df9e5d0e622750d75952b441a38343f" },
-  tree: { root: "humanize-korean/v2.3.0", files: expectedFiles },
+  upstream: {
+    repository: pin.repository,
+    tag: pin.tag,
+    commit: pin.commit,
+    releasedAt: pin.releasedAt,
+    skillPath: pin.skillPath,
+    referencesSource: pin.referencesSource,
+  },
+  license: { spdx: "MIT", path: "LICENSE", sha256: pin.licenseSha256 },
+  tree: { root: treeRoot, files: expectedFiles },
 };
+
+// A release strictly newer than whatever is pinned, so these fixtures stay valid across upgrades.
+const futureTag = `v${pin.tag.slice(1).split(".").map((part, index) => (index === 2 ? Number(part) + 1 : part)).join(".")}`;
+const sourcePathOf = (file) => (file.path === "SKILL.md" ? `${pin.skillPath}/SKILL.md` : `${pin.referencesSource}/${file.path.slice("references/".length)}`);
 const futureClosureFiles = [
-  { path: "LICENSE", sha256: "4cc7e8c439fe42f09d98457599c129ea6df9e5d0e622750d75952b441a38343f", size: 1066 },
-  ...expectedFiles.map((file) => ({ path: file.path === "SKILL.md" ? "codex/skills/humanize-korean/SKILL.md" : `.claude/skills/humanize-korean/references/${file.path.slice("references/".length)}`, sha256: file.sha256, size: file.size })),
+  { path: "LICENSE", sha256: pin.licenseSha256, size: 1066 },
+  ...expectedFiles.map((file) => ({ path: sourcePathOf(file), sha256: file.sha256, size: file.size })),
 ];
-const futureClosure = { files: futureClosureFiles, licenseSha256: "4cc7e8c439fe42f09d98457599c129ea6df9e5d0e622750d75952b441a38343f", digest: createHash("sha256").update(Buffer.from(JSON.stringify(futureClosureFiles.map(({ path: filePath, sha256: hash, size }) => ({ path: filePath, sha256: hash, size })).sort((a, b) => a.path.localeCompare(b.path))))).digest("hex") };
-const futureRelease = { repository: "https://github.com/epoko77-ai/im-not-ai", tag: "v2.3.1", commit: "1111111111111111111111111111111111111111", releasedAt: "2026-08-12T00:00:00Z", closure: futureClosure };
+const futureClosure = { files: futureClosureFiles, licenseSha256: pin.licenseSha256, digest: createHash("sha256").update(Buffer.from(JSON.stringify(futureClosureFiles.map(({ path: filePath, sha256: hash, size }) => ({ path: filePath, sha256: hash, size })).sort((a, b) => a.path.localeCompare(b.path))))).digest("hex") };
+const futureRelease = { repository: pin.repository, tag: futureTag, commit: "1111111111111111111111111111111111111111", releasedAt: "2026-08-12T00:00:00Z", closure: futureClosure };
 
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 
@@ -82,7 +82,7 @@ async function assertLiteralVendorTree(root = vendorRoot) {
   assert.deepEqual(actual.filter((entry) => entry.path.startsWith(expectedLock.tree.root)).map((entry) => ({ ...entry, path: entry.path.slice(`${expectedLock.tree.root}/`.length) })), expectedFiles, "bundle path set, sizes, and hashes are exact");
   assert.deepEqual(actual.find((entry) => entry.path === "LICENSE"), { path: "LICENSE", sha256: expectedLock.license.sha256, size: 1067 });
   const notices = await readFile(path.join(root, "THIRD_PARTY_NOTICES.md"), "utf8");
-  for (const literal of ["https://github.com/epoko77-ai/im-not-ai", "v2.3.0", "MIT", expectedLock.license.sha256]) assert.ok(notices.includes(literal), `MIT notice retains ${literal}`);
+  for (const literal of [pin.repository, pin.tag, "MIT", expectedLock.license.sha256]) assert.ok(notices.includes(literal), `MIT notice retains ${literal}`);
   assert.equal(parseFrontmatter(await readFile(path.join(root, expectedLock.tree.root, "SKILL.md"), "utf8")).name, "humanize-korean");
 }
 
@@ -118,7 +118,7 @@ async function trustedFutureArchive(root) {
     files: [
       await completeFile("LICENSE", "LICENSE"),
       await completeFile(`${expectedLock.tree.root}/SKILL.md`, "codex/skills/humanize-korean/SKILL.md"),
-      ...await Promise.all(expectedFiles.filter((file) => file.path.startsWith("references/")).map((file) => completeFile(`${expectedLock.tree.root}/${file.path}`, `.claude/skills/humanize-korean/references/${file.path.slice("references/".length)}`))),
+      ...await Promise.all(expectedFiles.filter((file) => file.path.startsWith("references/")).map((file) => completeFile(`${expectedLock.tree.root}/${file.path}`, sourcePathOf(file)))),
     ],
   };
 }
@@ -190,7 +190,7 @@ test("pure offline verifier accepts the pinned vendor without a network capabili
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async () => { throw new Error("pure verifier must not call global fetch"); };
   try {
-    assert.deepEqual(await verifyVendoredImNotAi({ root: vendorRoot }), { verifiedFiles: 15, tag: "v2.3.0" });
+    assert.deepEqual(await verifyVendoredImNotAi({ root: vendorRoot }), { verifiedFiles: expectedFiles.length, tag: pin.tag });
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -206,32 +206,45 @@ test("im-not-ai verifier rejects an altered registered hash with its exact lock 
   await assertVerifierRejects(t, async (root) => { const lock = JSON.parse(await readFile(path.join(root, "vendor.lock.json"), "utf8")); lock.tree.files[0].sha256 = "0".repeat(64); await writeFile(path.join(root, "vendor.lock.json"), `${JSON.stringify(lock, null, 2)}\n`); }, { code: "IM_NOT_AI_LOCK_FILE_HASH_MISMATCH", path: "tree.files[0].sha256" });
 });
 test("im-not-ai verifier rejects tampered quick-rules bytes while the lock stays intact", async (t) => {
-  await assertVerifierRejects(t, (root) => writeFile(path.join(root, expectedLock.tree.root, "references/quick-rules.md"), "tampered quick rules\n"), { code: "IM_NOT_AI_FILE_HASH_MISMATCH", path: "humanize-korean/v2.3.0/references/quick-rules.md" });
+  await assertVerifierRejects(t, (root) => writeFile(path.join(root, expectedLock.tree.root, "references/quick-rules.md"), "tampered quick rules\n"), { code: "IM_NOT_AI_FILE_HASH_MISMATCH", path: `${treeRoot}/references/quick-rules.md` });
 });
 test("im-not-ai verifier rejects a tampered MIT license with its exact target", async (t) => {
   await assertVerifierRejects(t, (root) => writeFile(path.join(root, "LICENSE"), "tampered license\n"), { code: "IM_NOT_AI_LICENSE_HASH_MISMATCH", path: "LICENSE" });
 });
 test("im-not-ai verifier rejects a symlinked reference with its exact target", async (t) => {
-  await assertVerifierRejects(t, async (root) => { const target = path.join(root, expectedLock.tree.root, "references/quick-rules.md"); await rm(target); await symlink("rewriting-playbook.md", target); }, { code: "IM_NOT_AI_SYMLINK", path: "humanize-korean/v2.3.0/references/quick-rules.md" });
+  await assertVerifierRejects(t, async (root) => { const target = path.join(root, expectedLock.tree.root, "references/quick-rules.md"); await rm(target); await symlink("rewriting-playbook.md", target); }, { code: "IM_NOT_AI_SYMLINK", path: `${treeRoot}/references/quick-rules.md` });
 });
 test("im-not-ai verifier rejects a missing reference with its exact target", async (t) => {
-  await assertVerifierRejects(t, (root) => rm(path.join(root, expectedLock.tree.root, "references/rewriting-playbook.md")), { code: "IM_NOT_AI_FILE_MISSING", path: "humanize-korean/v2.3.0/references/rewriting-playbook.md" });
+  await assertVerifierRejects(t, (root) => rm(path.join(root, expectedLock.tree.root, "references/rewriting-playbook.md")), { code: "IM_NOT_AI_FILE_MISSING", path: `${treeRoot}/references/rewriting-playbook.md` });
 });
 test("im-not-ai verifier rejects an untrusted repository with its exact target", async (t) => {
   await assertVerifierRejects(t, async (root) => { const lock = JSON.parse(await readFile(path.join(root, "vendor.lock.json"), "utf8")); lock.upstream.repository = "https://example.invalid/untrusted/im-not-ai"; await writeFile(path.join(root, "vendor.lock.json"), `${JSON.stringify(lock, null, 2)}\n`); }, { code: "IM_NOT_AI_UNTRUSTED_REPOSITORY", path: "upstream.repository" });
 });
 test("im-not-ai verifier rejects an unregistered extra reference with its exact target", async (t) => {
-  await assertVerifierRejects(t, (root) => writeFile(path.join(root, expectedLock.tree.root, "references/unreviewed.md"), "unreviewed\n"), { code: "IM_NOT_AI_UNREGISTERED_FILE", path: "humanize-korean/v2.3.0/references/unreviewed.md" });
+  await assertVerifierRejects(t, (root) => writeFile(path.join(root, expectedLock.tree.root, "references/unreviewed.md"), "unreviewed\n"), { code: "IM_NOT_AI_UNREGISTERED_FILE", path: `${treeRoot}/references/unreviewed.md` });
 });
 test("im-not-ai verifier rejects an unregistered extra script with its exact target", async (t) => {
-  await assertVerifierRejects(t, async (root) => { const scripts = path.join(root, expectedLock.tree.root, "scripts"); await mkdir(scripts); await writeFile(path.join(scripts, "update.mjs"), "export default null;\n"); }, { code: "IM_NOT_AI_UNREGISTERED_FILE", path: "humanize-korean/v2.3.0/scripts/update.mjs" });
+  await assertVerifierRejects(t, async (root) => { const scripts = path.join(root, expectedLock.tree.root, "scripts"); await mkdir(scripts); await writeFile(path.join(scripts, "update.mjs"), "export default null;\n"); }, { code: "IM_NOT_AI_UNREGISTERED_FILE", path: `${treeRoot}/scripts/update.mjs` });
 });
 
 test("im-not-ai updater parses offline and explicitly networked modes", async () => {
   const { parseImNotAiUpdaterArgs } = await import(updaterUrl.href);
-  assert.deepEqual(parseImNotAiUpdaterArgs(["--check"]), { mode: "check", network: false });
-  assert.deepEqual(parseImNotAiUpdaterArgs(["--check-latest"]), { mode: "check-latest", network: true });
-  assert.deepEqual(parseImNotAiUpdaterArgs(["--update"]), { mode: "update", network: true });
+  assert.deepEqual(parseImNotAiUpdaterArgs(["--check"]), { mode: "check", network: false, referencesSource: undefined });
+  assert.deepEqual(parseImNotAiUpdaterArgs(["--check-latest"]), { mode: "check-latest", network: true, referencesSource: undefined });
+  assert.deepEqual(parseImNotAiUpdaterArgs(["--update"]), { mode: "update", network: true, referencesSource: undefined });
+  // An upstream release can move the directory the references come from. That is a reviewed decision an
+  // operator types, so it rides on the upgrade and nowhere else.
+  assert.deepEqual(
+    parseImNotAiUpdaterArgs(["--update", "--references-source", "skills/humanize-korean/references"]),
+    { mode: "update", network: true, referencesSource: "skills/humanize-korean/references" },
+  );
+  assert.throws(() => parseImNotAiUpdaterArgs(["--check", "--references-source", "skills/x"]), /Usage/u);
+  for (const hostile of ["/etc", "../escape", "skills\\windows", "skills/../..", ""]) {
+    assert.throws(() => parseImNotAiUpdaterArgs(["--update", "--references-source", hostile]), (error) => {
+      assert.equal(error.code, "IM_NOT_AI_REFERENCE_SOURCE_INVALID");
+      return true;
+    }, hostile);
+  }
 });
 test("official latest adapter selects stable SemVer and peels an annotated tag to an immutable commit", async () => {
   const { fetchOfficialLatestImNotAiRelease } = await import(updaterUrl.href);
@@ -253,7 +266,7 @@ test("check-latest uses the injected release capability and leaves the tree and 
   const calls = [];
   const result = await checkLatestImNotAi({ root: fixture, fetchRelease: async () => { calls.push("fetchRelease"); return futureRelease; } });
   assert.deepEqual(calls, ["fetchRelease"]);
-  assert.deepEqual(result, { status: "outdated", installedTag: "v2.3.0", latestTag: "v2.3.1", updateAvailable: true });
+  assert.deepEqual(result, { status: "outdated", installedTag: pin.tag, latestTag: futureTag, updateAvailable: true });
   assert.deepEqual(await snapshotVendor(fixture), before);
 });
 test("update prepares a private sibling stage and publishes only through its opaque receipt", async (t) => {
@@ -264,12 +277,12 @@ test("update prepares a private sibling stage and publishes only through its opa
   const calls = [];
   const result = await updateImNotAi({ root: fixture, fetchRelease: async () => { calls.push("fetchRelease"); return futureRelease; }, fetchArchive: async (release) => { calls.push({ fetchArchive: release }); return archive; } });
   assert.deepEqual(calls, ["fetchRelease", { fetchArchive: futureRelease }]);
-  assert.deepEqual({ status: result.status, tag: result.tag, verifiedFiles: result.verifiedFiles }, { status: "updated", tag: "v2.3.1", verifiedFiles: 15 });
+  assert.deepEqual({ status: result.status, tag: result.tag, verifiedFiles: result.verifiedFiles }, { status: "updated", tag: futureTag, verifiedFiles: expectedFiles.length });
   assert.equal(typeof result.publish, "function");
   assert.deepEqual(await snapshotVendor(fixture), before, "successful update must leave the original vendor root byte-for-byte unchanged");
   await result.publish();
-  assert.deepEqual(JSON.parse(await readFile(path.join(fixture, "vendor.lock.json"), "utf8")), { ...expectedLock, upstream: { ...expectedLock.upstream, tag: "v2.3.1", commit: "1111111111111111111111111111111111111111", releasedAt: "2026-08-12T00:00:00Z" }, tree: { ...expectedLock.tree, root: "humanize-korean/v2.3.1" } });
-  assert.deepEqual(await listRegularFiles(path.join(fixture, "humanize-korean/v2.3.1")), expectedFiles);
+  assert.deepEqual(JSON.parse(await readFile(path.join(fixture, "vendor.lock.json"), "utf8")), { ...expectedLock, upstream: { ...expectedLock.upstream, tag: futureTag, commit: "1111111111111111111111111111111111111111", releasedAt: "2026-08-12T00:00:00Z" }, tree: { ...expectedLock.tree, root: `humanize-korean/${futureTag}` } });
+  assert.deepEqual(await listRegularFiles(path.join(fixture, `humanize-korean/${futureTag}`)), expectedFiles);
   assert.equal((await readdir(path.dirname(fixture))).some((entry) => entry.startsWith(".im-not-ai.stage-")), false, "published private stage must be removed");
 });
 
@@ -288,11 +301,20 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 const root = process.env.IM_NOT_AI_CLI_FIXTURE_ROOT;
 const vendor = path.join(root, "shared/vendor/im-not-ai");
-const tree = "humanize-korean/v2.3.0";
+const tree = "${treeRoot}";
 const commit = "${futureRelease.commit}";
 globalThis.fetch = async (url) => {
-  if (url.includes("/releases?")) return { ok: true, json: async () => [{ tag_name: "v2.3.1", published_at: "2026-08-12T00:00:00Z", draft: false, prerelease: false }] };
-  if (url.includes("/git/ref/tags/v2.3.1")) return { ok: true, json: async () => ({ object: { type: "commit", sha: commit } }) };
+  if (url.includes("/releases?")) return { ok: true, json: async () => [{ tag_name: "${futureTag}", published_at: "2026-08-12T00:00:00Z", draft: false, prerelease: false }] };
+  if (url.includes("/git/ref/tags/${futureTag}")) return { ok: true, json: async () => ({ object: { type: "commit", sha: commit } }) };
+  // The upstream release drops one pinned reference file and adds one the pin does not carry. The
+  // upgrade has to follow the removal and report the addition without pulling it in.
+  if (url.includes("/contents/")) {
+    const { readdir } = await import("node:fs/promises");
+    const names = (await readdir(path.join(vendor, tree, "references")))
+      .filter((name) => name !== "metrics.py")
+      .map((name) => ({ type: "file", name }));
+    return { ok: true, json: async () => [...names, { type: "file", name: "brand-new-reference.md" }] };
+  }
   const marker = \`raw.githubusercontent.com/epoko77-ai/im-not-ai/\${commit}/\`;
   const source = url.slice(url.indexOf(marker) + marker.length);
   const local = source === "LICENSE" ? path.join(vendor, "LICENSE")
@@ -309,19 +331,26 @@ globalThis.fetch = async (url) => {
   assert.deepEqual(JSON.parse(result.stdout), {
     status: "published",
     root: await realpath(path.join(fixtureRoot, "shared/vendor/im-not-ai")),
-    tag: "v2.3.1",
-    pin: { pinPath, tag: "v2.3.1", files: 15 },
+    tag: futureTag,
+    unpinnedUpstreamFiles: ["brand-new-reference.md"],
+    removedUpstreamFiles: ["references/metrics.py"],
+    pin: { pinPath, tag: futureTag, files: expectedFiles.length - 1 },
   });
   const installed = path.join(fixtureRoot, "shared/vendor/im-not-ai");
   const publishedLock = JSON.parse(await readFile(path.join(installed, "vendor.lock.json"), "utf8"));
-  assert.equal(publishedLock.upstream.tag, "v2.3.1");
+  assert.equal(publishedLock.upstream.tag, futureTag);
   // The pin is the witness the next `--check` compares against. An upgrade that moved the tree but left
   // the pin behind would fail that check until someone hand-transcribed fifteen digests, so the upgrade
   // carries the pin with it.
-  const pin = JSON.parse(await readFile(pinPath, "utf8"));
-  assert.equal(pin.tag, "v2.3.1");
-  assert.equal(pin.commit, publishedLock.upstream.commit);
-  assert.deepEqual(pin.files, publishedLock.tree.files.map(({ path: file, sha256, size }) => ({ path: file, sha256, size })));
+  const published = JSON.parse(await readFile(pinPath, "utf8"));
+  assert.equal(published.tag, futureTag);
+  assert.equal(published.commit, publishedLock.upstream.commit);
+  assert.deepEqual(published.files, publishedLock.tree.files.map(({ path: file, sha256, size }) => ({ path: file, sha256, size })));
+  // Following the removal is the point: keeping a file the release deleted would ship something that
+  // release does not contain. Not following the addition is equally the point: the allowlist is reviewed.
+  assert.equal(published.files.some(({ path: file }) => file === "references/metrics.py"), false, "the deleted file is gone from the pin");
+  assert.equal(published.files.some(({ path: file }) => file === "references/brand-new-reference.md"), false, "an added file is reported, never vendored");
+  await assert.rejects(readFile(path.join(installed, publishedLock.tree.root, "references/metrics.py")), /ENOENT/u);
   assert.equal((await readdir(path.dirname(installed))).some((entry) => entry.startsWith(".im-not-ai.stage-") || entry.startsWith(".im-not-ai.backup-")), false);
 });
 
@@ -385,7 +414,7 @@ test("tampered or symlinked private staging is rejected before vendor rename and
   const parent = path.dirname(fixture);
   const stage = (await readdir(parent)).find((entry) => entry.startsWith(".im-not-ai.stage-"));
   assert.ok(stage, "private stage exists only while its opaque receipt is live");
-  const target = path.join(parent, stage, "humanize-korean/v2.3.1/references/quick-rules.md");
+  const target = path.join(parent, stage, `humanize-korean/${futureTag}/references/quick-rules.md`);
   await rm(target);
   await symlink("rewriting-playbook.md", target);
   await assert.rejects(prepared.publish(), (error) => error.code === "IM_NOT_AI_SYMLINK");
@@ -423,7 +452,7 @@ test("update rejects altered archive license bytes without staging or original w
   await assertArchiveRejectedWithoutWrites(t, (archive) => { archive.files.find((file) => file.path === "LICENSE").bytes = Buffer.from("altered license\n"); }, { code: "IM_NOT_AI_LICENSE_HASH_MISMATCH", path: "archive/LICENSE" });
 });
 test("update rejects altered archive payload bytes without staging or original writes", async (t) => {
-  await assertArchiveRejectedWithoutWrites(t, (archive) => { archive.files.find((file) => file.path === ".claude/skills/humanize-korean/references/quick-rules.md").bytes = Buffer.from("altered rules\n"); }, { code: "IM_NOT_AI_ARCHIVE_FILE_HASH_MISMATCH", path: ".claude/skills/humanize-korean/references/quick-rules.md" });
+  await assertArchiveRejectedWithoutWrites(t, (archive) => { archive.files.find((file) => file.path === `${pin.referencesSource}/quick-rules.md`).bytes = Buffer.from("altered rules\n"); }, { code: "IM_NOT_AI_ARCHIVE_FILE_HASH_MISMATCH", path: `${pin.referencesSource}/quick-rules.md` });
 });
 test("update rejects an extra archive script without staging or original writes", async (t) => {
   await assertArchiveRejectedWithoutWrites(t, (archive) => { const bytes = Buffer.from("export default null;\n"); archive.files.push({ path: "scripts/update.mjs", bytes, sha256: sha256(bytes) }); }, { code: "IM_NOT_AI_ARCHIVE_UNREGISTERED_FILE", path: "scripts/update.mjs" });

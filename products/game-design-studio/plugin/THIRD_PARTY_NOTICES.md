@@ -13,7 +13,7 @@ The vendored component retains its upstream `LICENSE.txt`. Game Design Studio se
 ## Archify
 
 - Upstream: https://github.com/tt-a1i/archify
-- Version: 2.14.0 (`v2.14.0`, `a3bf80c25a824f5d5c46dfdbfdb96cc52dd4742a`)
+- Version: 2.15.0 (`v2.15.0`, `e1ac748f19cf805e44bf74fb93c796662152e273`)
 - License: MIT
 
 The packaged `$archify` skill is a regular-file, SHA-256-locked local release closure. It produces checked architecture HTML and receipts; it does not approve a game-design document.
@@ -21,7 +21,7 @@ The packaged `$archify` skill is a regular-file, SHA-256-locked local release cl
 ## im-not-ai humanize-korean
 
 - Upstream: https://github.com/epoko77-ai/im-not-ai
-- Version: `v2.3.0` (`82137e858763dadb99561f194c5c00465735017b`)
+- Version: `v2.3.2` (`bad4ef0a2b514318b2278b65cb4545414ad84d82`)
 - License: MIT
 
 The packaged `$humanize-korean` skill is a regular-file, SHA-256-locked copy. Installation uses this local bundle and never runs remote update code.

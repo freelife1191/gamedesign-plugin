@@ -152,10 +152,14 @@ async function inactiveReferenceIntelligenceSourceRuntimes(pluginRoot) {
   return inactive;
 }
 
-async function verifyVendor(pluginRoot, { component, files }) {
+// The expected file count comes from the repository's vendor lock rather than a literal here, so an
+// upstream bump does not have to be transcribed into this gate. What the gate proves is unchanged: the
+// installed package carries exactly the closure the source lock declares, with nothing added or lost.
+async function verifyVendor(pluginRoot, { component, repoRoot: sourceRepoRoot }) {
   const { id: name, destinationRoot, installedTag: tag, sourceRoot } = component;
   const skillId = path.posix.basename(destinationRoot);
   const treeRoot = sourceRoot.slice(`shared/vendor/${name}/`.length);
+  const files = JSON.parse(await readFile(path.join(sourceRepoRoot, "shared/vendor", name, "vendor.lock.json"), "utf8")).tree.files.length;
   const lock = JSON.parse(await readFile(path.join(pluginRoot, `references/shared/vendor/${name}/vendor.lock.json`), "utf8"));
   if (lock?.upstream?.tag !== tag || lock?.tree?.root !== treeRoot || !Array.isArray(lock.tree.files)) {
     throw new Error(`${name} package-local vendor lock mismatch`);
@@ -335,8 +339,8 @@ async function verifyOne({ repoRoot, productName, isolationRoot, mutateCopy, act
 
   const vendorComponents = new Map(loadVendorComponents({ repoRoot }).map((component) => [component.id, component]));
   const vendors = await Promise.all([
-    verifyVendor(pluginRoot, { component: vendorComponents.get("skillstead"), files: 55 }),
-    verifyVendor(pluginRoot, { component: vendorComponents.get("archify"), files: 62 }),
+    verifyVendor(pluginRoot, { component: vendorComponents.get("skillstead"), repoRoot }),
+    verifyVendor(pluginRoot, { component: vendorComponents.get("archify"), repoRoot }),
   ]);
   const hooks = JSON.parse(await readFile(path.join(pluginRoot, "hooks/hooks.json"), "utf8"));
   exactHookCommand(hooks, "SessionStart");

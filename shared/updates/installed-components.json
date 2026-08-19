@@ -10,14 +10,14 @@
     {
       "id": "archify",
       "repository": "https://github.com/tt-a1i/archify",
-      "installedTag": "v2.14.0",
-      "commit": "a3bf80c25a824f5d5c46dfdbfdb96cc52dd4742a"
+      "installedTag": "v2.15.0",
+      "commit": "e1ac748f19cf805e44bf74fb93c796662152e273"
     },
     {
       "id": "im-not-ai",
       "repository": "https://github.com/epoko77-ai/im-not-ai",
-      "installedTag": "v2.3.0",
-      "commit": "82137e858763dadb99561f194c5c00465735017b"
+      "installedTag": "v2.3.2",
+      "commit": "bad4ef0a2b514318b2278b65cb4545414ad84d82"
     },
     {
       "id": "game-design-suite",

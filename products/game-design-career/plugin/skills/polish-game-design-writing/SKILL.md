@@ -29,7 +29,7 @@ description: Use when a Korean game design document needs a minimal readability 
     "humanReviewHandoff": "writing-revision/human-review-handoff.md"
   },
   "humanizeKorean": {
-    "source": "bundled-im-not-ai-v2.3.0",
+    "source": "bundled-im-not-ai-v2.3.2",
     "skill": "humanize-korean",
     "path": "../humanize-korean/SKILL.md"
   },

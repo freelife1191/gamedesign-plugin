@@ -17,6 +17,7 @@ const TOUCHED = Object.freeze([
   "products/game-design-studio/plugin/skills/polish-game-design-writing/SKILL.md",
   "products/game-design-career/plugin/skills/polish-game-design-writing/SKILL.md",
   "products/game-design-studio/plugin/skills/visualize-game-design/scripts/validate-visualization-evidence.mjs",
+  "guides/archify-diagrams/catalog.json",
 ]);
 
 async function checkout(t) {
@@ -33,7 +34,7 @@ async function checkout(t) {
 }
 
 test("the committed documents already agree with the vendor locks", async () => {
-  assert.deepEqual(await syncVendorReferences({ check: true }), { status: "current", rules: 13, drifted: [] });
+  assert.deepEqual(await syncVendorReferences({ check: true }), { status: "current", rules: 14, drifted: [] });
 });
 
 test("every stated version comes from a lock, not from the document", async () => {
@@ -57,7 +58,7 @@ test("a bumped lock drives every document, and --check refuses to let one lag", 
 
   const pending = await syncVendorReferences({ root, check: true });
   assert.equal(pending.status, "drifted");
-  assert.equal(pending.drifted.length, 4, JSON.stringify(pending.drifted));
+  assert.equal(pending.drifted.length, 5, JSON.stringify(pending.drifted));
 
   const written = await syncVendorReferences({ root });
   assert.equal(written.status, "written");
@@ -67,7 +68,11 @@ test("a bumped lock drives every document, and --check refuses to let one lag", 
     const readme = await readFile(path.join(root, `products/${product}/plugin/README.md`), "utf8");
     assert.ok(readme.includes("# vendored Archify 9.9.9"), `${product} README follows the lock`);
   }
-  assert.deepEqual(await syncVendorReferences({ root, check: true }), { status: "current", rules: 13, drifted: [] });
+  // The Archify diagram catalog cites the vendored tree by path, and the path carries the version.
+  const catalog = await readFile(path.join(root, "guides/archify-diagrams/catalog.json"), "utf8");
+  assert.ok(catalog.includes("shared/vendor/archify/archify/9.9.9/"), "catalog citations follow the lock");
+  assert.equal(catalog.includes("shared/vendor/archify/archify/2.15.0/"), false, "no citation lags behind");
+  assert.deepEqual(await syncVendorReferences({ root, check: true }), { status: "current", rules: 14, drifted: [] });
 });
 
 // A document that no longer states a version is not a synced document. Reporting it clean would let a

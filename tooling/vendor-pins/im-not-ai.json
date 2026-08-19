@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
   "repository": "https://github.com/epoko77-ai/im-not-ai",
-  "tag": "v2.3.0",
-  "commit": "82137e858763dadb99561f194c5c00465735017b",
-  "releasedAt": "2026-07-22T06:28:52Z",
+  "tag": "v2.3.2",
+  "commit": "bad4ef0a2b514318b2278b65cb4545414ad84d82",
+  "releasedAt": "2026-08-18T11:08:56Z",
   "skillPath": "codex/skills/humanize-korean",
-  "referencesSource": ".claude/skills/humanize-korean/references",
+  "referencesSource": "skills/humanize-korean/references",
   "licenseSha256": "4cc7e8c439fe42f09d98457599c129ea6df9e5d0e622750d75952b441a38343f",
   "files": [
     {
       "path": "SKILL.md",
-      "sha256": "6c34dbf00c23ee52e5cb374273952dab9bb5d38552cf1fb7a90ed42854ee304f",
-      "size": 4352
+      "sha256": "7a60c8240218ac7a3cb15f26f0824a682958cdc0475ba2d828c8375edc870569",
+      "size": 4397
     },
     {
       "path": "references/ai-tell-taxonomy.md",
@@ -50,23 +50,23 @@
     },
     {
       "path": "references/metrics_v2.py",
-      "sha256": "97343e74d16d71eeaae773cfb2e3b5970bd395239b1457b9ca6e8bebae2740bd",
-      "size": 31314
+      "sha256": "e73ef18e0a5165f4e67250bc26808410394c92cda39efd456f1cea0cd90cc5cc",
+      "size": 31306
     },
     {
       "path": "references/quick-rules.footer.md",
-      "sha256": "933c5300b71fdf6eecc0ec0788910afd9a166ce7969ba129e2029ced000f2335",
-      "size": 1920
+      "sha256": "6101e6ca4da121bc73163207067d0eb3407b9cd0694b51187c7a8b56b4aaf6f2",
+      "size": 2033
     },
     {
       "path": "references/quick-rules.header.md",
-      "sha256": "e129aa91bfe74433d81ff6817e934a233a9a7febd85f1f9484eca1ced33c1c13",
-      "size": 1156
+      "sha256": "592781fededf8cddfa86820cc1fb4b96599580f350c3729958dde0687fd3c614",
+      "size": 1657
     },
     {
       "path": "references/quick-rules.md",
-      "sha256": "cc8947e145a34af000b3684ef09ed62c51c0b35080f43b96bcd38e2ff98d28ef",
-      "size": 10040
+      "sha256": "258bd9f755fc04a5894f42e5e0a0dcf3c66ee7cf20854d91b4fbac0becf2c08e",
+      "size": 10654
     },
     {
       "path": "references/rewriting-playbook.md",

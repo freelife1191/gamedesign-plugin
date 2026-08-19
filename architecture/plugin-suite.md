@@ -241,7 +241,22 @@ Windows에서 실제로 성립해야 하는 계약은 Windows checkout과 설치
 
 im-not-ai만 두 번째 증인을 둡니다. `tooling/vendor-pins/im-not-ai.json`이 태그·커밋·라이선스 해시와 파일 15개의 sha256을 들고 있고, `--check`는 벤더 락을 이 핀과 대조합니다. 락이 스스로를 승인하지 못하게 하는 장치입니다. 예전에는 이 표가 `tooling/sync-im-not-ai.mjs` 소스 안에 있어서, 업그레이드를 하려면 그 업그레이드를 지키는 검사를 통과시키기 위해 해시 15개를 손으로 옮겨 적어야 했습니다. 지금은 `--update`가 핀도 함께 씁니다. 사람이 PR diff에서 해시 변화를 읽는다는 성질은 그대로입니다.
 
+테스트 fixture도 같은 규칙을 따릅니다. `tests/unit/diagram-skill-vendor.test.mjs`는 상류 정체성(저장소·라이선스·skillPath·태그 형태)만 리터럴로 두고 태그·커밋·파일 수는 설치된 락에서 읽습니다. `tests/unit/im-not-ai-vendor.test.mjs`는 핀에서, `tests/unit/capability-probe.test.mjs`는 `installed-components.json`에서, 두 `writing-quality.test.mjs`는 im-not-ai 락에서 읽습니다. `tooling/isolation-smoke.mjs`도 기대 파일 수를 저장소 락에서 가져옵니다. 예전에는 이 값들이 전부 복사본이어서, 업그레이드 하나가 업그레이드와 무관한 이유로 여섯 파일을 깨뜨렸습니다.
+
 im-not-ai의 벤더 파일 목록은 닫힌 allowlist입니다. 상류에 참조 파일이 새로 생겨도 업그레이드가 자동으로 가져오지 않습니다. 대신 `--update`가 상류 디렉터리를 조회해 핀에 없는 파일을 `unpinnedUpstreamFiles`로 보고하므로, 넣을지는 사람이 정합니다.
+
+### skillstead v0.10.0은 아직 못 올립니다
+
+상류 `svg-infographic/v0.10.0`은 폰트 3개(HiMelody 12MB, Pretendard 2종)와 PNG 1개를 함께 배포합니다. 트리가 55개 283KB에서 319개 18MB로 늘어납니다.
+
+`tooling/lib/tree-audit.mjs`는 패키지에 들어가는 **모든 파일을 UTF-8로 디코딩**하고 텍스트 안전성 검사를 겁니다. 지금 두 제품 패키지에는 바이너리가 한 개도 없고, 바이너리를 허용하는 경로도 없습니다. 그래서 v0.10.0을 벤더링하면 `npm run build`가 `skills/svg-infographic/assets/fonts/HiMelody-Regular.ttf is not valid UTF-8`로 멈춥니다.
+
+올리려면 결정 두 개가 필요합니다.
+
+1. 패키징 감사에 바이너리 레인을 만들 것인가. 벤더 락이 해시로 선언한 파일에 한해 텍스트 검사를 건너뛰는 형태가 될 텐데, 이는 하드닝된 게이트를 완화하는 변경입니다.
+2. 제품 패키지가 제품당 18MB 늘어나는 것을 받아들일 것인가. 늘어나는 264개 파일의 대부분은 상류의 테스트 fixture와 `.test.mjs`입니다.
+
+렌더 드리프트는 확인했습니다. v0.10.0 렌더러는 기존 도식 73장을 바이트 동일하게 재현합니다. 즉 막는 것은 렌더 결과가 아니라 패키징 계약뿐입니다.
 
 ## 0.2.0 릴리스
 

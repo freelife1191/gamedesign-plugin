@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -8,6 +9,8 @@ import { fileURLToPath } from "node:url";
 
 import { buildProduct } from "../../../tooling/lib/build-product.mjs";
 import { collectTree } from "../../../tooling/lib/copy-tree.mjs";
+
+const bundledImNotAiTag = JSON.parse(readFileSync(new URL("../../../shared/vendor/im-not-ai/vendor.lock.json", import.meta.url), "utf8")).upstream.tag;
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const pluginRoot = path.join(repoRoot, "products/game-design-career/plugin");
@@ -26,7 +29,8 @@ const expectedSkillContract = {
     humanReviewHandoff: "writing-revision/human-review-handoff.md",
   },
   humanizeKorean: {
-    source: "bundled-im-not-ai-v2.3.0",
+    // The bundled tag follows the vendor lock; a copy here would break on every upgrade.
+    source: `bundled-im-not-ai-${bundledImNotAiTag}`,
     skill: "humanize-korean",
     path: "../humanize-korean/SKILL.md",
   },
