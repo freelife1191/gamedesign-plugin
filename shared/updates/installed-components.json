@@ -4,26 +4,26 @@
     {
       "id": "skillstead",
       "repository": "https://github.com/kyungseo/skillstead",
-      "installedTag": "svg-infographic/v0.9.0",
-      "commit": "6e5b850f66716af9eb3c6a79f60e4f8ff5716dee"
+      "installedTag": "svg-infographic/v0.10.0",
+      "commit": "d46d1443624a7a07773efae213f25dc59bedd358"
     },
     {
       "id": "archify",
       "repository": "https://github.com/tt-a1i/archify",
-      "installedTag": "v2.14.0",
-      "commit": "a3bf80c25a824f5d5c46dfdbfdb96cc52dd4742a"
+      "installedTag": "v2.15.0",
+      "commit": "e1ac748f19cf805e44bf74fb93c796662152e273"
     },
     {
       "id": "im-not-ai",
       "repository": "https://github.com/epoko77-ai/im-not-ai",
-      "installedTag": "v2.3.0",
-      "commit": "82137e858763dadb99561f194c5c00465735017b"
+      "installedTag": "v2.3.2",
+      "commit": "bad4ef0a2b514318b2278b65cb4545414ad84d82"
     },
     {
       "id": "game-design-suite",
       "repository": "https://github.com/freelife1191/gamedesign-plugin",
-      "installedTag": "v0.1.1",
-      "commit": "973f9a93013471a4fb882dcaea0435e9bd44c130"
+      "installedTag": "v0.2.0",
+      "commit": "1c3300a63d290c50839389c2ee70d2bf4cbd4ff4"
     }
   ]
 }

@@ -65,6 +65,10 @@ Studio 또는 Career 한 제품을 고른 뒤 다음 순서로 진행합니다.
 8. [Studio 내보내기](game-design-studio/exports.md) 또는 [Career 내보내기](game-design-career/exports.md)로 필요한 형식만 준비합니다.
 9. [Studio 문제 해결](game-design-studio/troubleshooting.md) 또는 [Career 문제 해결](game-design-career/troubleshooting.md)로 안전하게 재개합니다.
 
+무엇을 부를지 모르는 상태로 시작해도 됩니다. 대표 진입 스킬([Studio](game-design-studio/skills/game-design-studio.md) · [Career](game-design-career/skills/game-design-career.md))에 요청이나 사례 ID를 그대로 넘기면 소유 제품 하나와 실행 경로 하나를 고르고 라우팅 영수증을 남깁니다. 이 스킬 자체는 문서를 만들지 않습니다.
+
+설치본을 올릴 때는 `$upgrade-game-design-suite`를 먼저 부릅니다. 설치된 버전과 공개된 최신 릴리스를 비교해 보여 주고, 승인 전에는 어떤 설치도 바꾸지 않습니다. 절차와 손으로 하는 대안은 [Studio 설치의 업데이트](game-design-studio/installation.md#업데이트) 또는 [Career 설치의 업데이트](game-design-career/installation.md#업데이트)에 있습니다.
+
 ### 사용자 유형·난이도별 요청문
 
 [요청문 템플릿 허브](prompt-templates/README.md)는 입문·표준·고급·사례 카드를 사용자 유형과 목표별로 묶습니다. 각 카드에서 복사할 요청문, 실행 흐름, 예상 결과, 사람 검토와 실패·재개 경계를 함께 확인합니다.

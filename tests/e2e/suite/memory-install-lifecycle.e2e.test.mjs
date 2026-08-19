@@ -22,6 +22,11 @@ const memorySkills = [
 // sites, which is how it went stale when each product gained an entry skill. Accepts either a bare
 // product name or a stage label that contains one.
 const packagedSkillCounts = Object.freeze({ "game-design-career": 25, "game-design-studio": 26 });
+// The release moves the packaged version, and a cache path written from a literal points at a directory
+// the install never created. `availableVersion` is the synthetic one-patch bump these tests hand the
+// marketplace snapshot so a comparison has something to compare against.
+const builtVersion = JSON.parse(await readFile(path.join(repoRoot, "products/game-design-studio/plugin/.codex-plugin/plugin.json"), "utf8")).version;
+const availableVersion = builtVersion.replace(/(\d+)$/u, (patch) => String(Number(patch) + 1));
 function packagedSkillCount(product) {
   return product.includes("studio") ? packagedSkillCounts["game-design-studio"] : packagedSkillCounts["game-design-career"];
 }
@@ -206,7 +211,7 @@ test("explicit plugin update inspection and planning leave isolated Codex state 
 
   const installedSourceManifest = path.join(sourceRoot, "plugins", "game-design-studio", ".codex-plugin", "plugin.json");
   const installedSourcePlugin = JSON.parse(await readFile(installedSourceManifest, "utf8"));
-  installedSourcePlugin.version = "0.1.2";
+  installedSourcePlugin.version = availableVersion;
   await writeFile(installedSourceManifest, `${JSON.stringify(installedSourcePlugin, null, 2)}\n`);
   const codexRuntimeTmp = path.join(root, "codex-cli-runtime-tmp");
   await mkdir(codexRuntimeTmp, { recursive: true });
@@ -214,7 +219,7 @@ test("explicit plugin update inspection and planning leave isolated Codex state 
   await symlink(codexRuntimeTmp, path.join(env.CODEX_HOME, "tmp"), "dir");
   command({ stage: "inspection-list-preflight", args: ["list", "--marketplace", marketplace, "--available"] });
 
-  const cacheRoot = path.join(env.CODEX_HOME, "plugins", "cache", marketplace, "game-design-studio", "0.1.1");
+  const cacheRoot = path.join(env.CODEX_HOME, "plugins", "cache", marketplace, "game-design-studio", builtVersion);
   const before = await Promise.all([treeIdentity(workspace), treeIdentity(env.HOME), treeIdentity(env.CODEX_HOME), treeIdentity(cacheRoot)]);
   const inspected = inspectPluginUpdates({
     codexPath: codex,
@@ -229,9 +234,9 @@ test("explicit plugin update inspection and planning leave isolated Codex state 
   // is what the bump above changed. `available` still mirrors the host exactly.
   assert.deepEqual(inspected, {
     marketplace: { name: marketplace, sourceType: "local" },
-    installed: [{ plugin: "game-design-studio", version: "0.1.1" }],
-    available: [{ plugin: "game-design-career", version: "0.1.1" }],
-    comparisons: [{ plugin: "game-design-studio", installedVersion: "0.1.1", availableVersion: "0.1.2", status: "comparable" }],
+    installed: [{ plugin: "game-design-studio", version: builtVersion }],
+    available: [{ plugin: "game-design-career", version: builtVersion }],
+    comparisons: [{ plugin: "game-design-studio", installedVersion: builtVersion, availableVersion, status: "comparable" }],
   }, "the marketplace snapshot manifest is the available-version evidence for an installed plugin");
   assert.equal(inspected.available.some((entry) => entry.plugin === "game-design-studio"), false, "--available remains unrelated uninstalled inventory for the installed Studio plugin");
   assert.equal(JSON.stringify(inspected).includes(path.resolve(env.CODEX_HOME)), false, "inspection does not expose the isolated cache path");
@@ -278,10 +283,10 @@ test("explicit plugin update inspection and planning leave isolated Codex state 
   await assertIsolatedTreesPreserved(before, { workspace, home: env.HOME, codexHome: env.CODEX_HOME, cacheRoot }, "--products preserves all isolated state");
 
   // Producing a plan must never be the same thing as applying one: the installed version is still
-  // 0.1.1 and the cache still holds only that version after both read-only commands.
+  // the built one and the cache still holds only that version after both read-only commands.
   const stillInstalled = spawnSync(codex, ["plugin", "list", "--marketplace", marketplace, "--json"], { cwd: workspace, env, encoding: "utf8", shell: false, timeout: 30_000 });
   assert.equal(stillInstalled.status, 0, stillInstalled.stderr);
-  assert.deepEqual(JSON.parse(stillInstalled.stdout).installed.map(({ name, version }) => ({ name, version })), [{ name: "game-design-studio", version: "0.1.1" }], "the plan did not install anything");
+  assert.deepEqual(JSON.parse(stillInstalled.stdout).installed.map(({ name, version }) => ({ name, version })), [{ name: "game-design-studio", version: builtVersion }], "the plan did not install anything");
   assert.equal(evidence.every((entry) => entry.args.every((argument) => argument !== "upgrade")), true, "test setup never upgrades the marketplace");
 });
 
@@ -313,7 +318,7 @@ test("one local Codex workspace preserves project memory while both products ins
   };
   const command = ({ stage, args }) => runLocalPluginCommand({ codex, cwd: workspace, env, evidence, stage, args });
   const selector = (product) => `${product}@${marketplace}`;
-  const cacheRoot = (product) => path.join(env.CODEX_HOME, "plugins", "cache", marketplace, product, "0.1.1");
+  const cacheRoot = (product) => path.join(env.CODEX_HOME, "plugins", "cache", marketplace, product, builtVersion);
 
   const market = command({ stage: "marketplace-add", args: ["marketplace", "add", repoRoot] });
   assert.equal(market.marketplaceName, marketplace, "exact local marketplace name");

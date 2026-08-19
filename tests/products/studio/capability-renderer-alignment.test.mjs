@@ -7,7 +7,9 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { buildProduct } from "../../../tooling/lib/build-product.mjs";
-import { resolveBrowser } from "../../../shared/vendor/skillstead/svg-infographic/0.9.0/scripts/render.mjs";
+import { importVendored } from "../../lib/vendored.mjs";
+
+const { resolveBrowser } = await importVendored("skillstead", "scripts/render.mjs");
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const temporaryDirectories = [];

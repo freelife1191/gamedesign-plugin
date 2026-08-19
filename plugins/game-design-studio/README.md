@@ -2,15 +2,21 @@
 
 Game Design Studio는 게임 비전부터 시스템·콘텐츠·플레이어 경험·경제·LiveOps·프로덕션 설계, 전문 검토, 도식화, 문서 내보내기까지 하나의 검증 가능한 작업 흐름으로 연결하는 Codex 플러그인입니다. 그럴듯한 수치나 승인을 조작하지 않고 근거, 가정, 결정, 차단 조건을 Canonical Artifact에 남깁니다.
 
-플러그인은 제품 스킬 17개, 전문 역할 12개, Canonical Artifact 템플릿 15개와 문서·이미지·내보내기 계약을 하나의 독립 패키지에 포함합니다. 공통 스킬 9개는 Archify, humanize-korean, Skillstead `svg-infographic` 0.9.0, 프로젝트 기억 스킬 3개, [레퍼런스 분석 스킬](skills/analyze-game-design-references/SKILL.md), [용어 사전 스킬](skills/maintain-game-design-glossary/SKILL.md), [스위트 업데이트 스킬](skills/upgrade-game-design-suite/SKILL.md)입니다. 제품 스킬과 합친 설치 스킬은 26개입니다.
+플러그인은 제품 스킬 17개, 전문 역할 12개, Canonical Artifact 템플릿 15개와 문서·이미지·내보내기 계약을 하나의 독립 패키지에 포함합니다. 공통 스킬 9개는 Archify, humanize-korean, Skillstead `svg-infographic` 0.10.0, 프로젝트 기억 스킬 3개, [레퍼런스 분석 스킬](skills/analyze-game-design-references/SKILL.md), [용어 사전 스킬](skills/maintain-game-design-glossary/SKILL.md), [스위트 업데이트 스킬](skills/upgrade-game-design-suite/SKILL.md)입니다. 제품 스킬과 합친 설치 스킬은 26개입니다.
 
 ## 설치
 
 요구 사항은 Codex CLI와 Node.js 18 이상입니다. 설치 대상은 release checkout의 `plugins/game-design-studio`이며, `products/game-design-studio/plugin`은 개발 원천입니다. suite build가 아직 실행되지 않은 개발 checkout에는 설치 가능한 스냅샷이 없을 수 있습니다.
 
-### 로컬 저장소 marketplace 등록
+### marketplace 등록
 
-저장소 루트에는 suite build가 관리하는 `.agents/plugins/marketplace.json`이 있어야 합니다. `<path-to-repository-root>`를 실제 저장소 루트로 바꿉니다.
+등록 방법은 둘이고 갱신 방법이 다릅니다. 공개 릴리스를 최신 판정 근거로 쓰려면 GitHub 저장소를 Git marketplace로 등록합니다.
+
+```bash
+codex plugin marketplace add freelife1191/gamedesign-plugin
+```
+
+저장소를 직접 고치며 쓸 때만 로컬 checkout을 등록합니다. 이 경우 공개 릴리스로 갱신되지 않습니다. 저장소 루트에는 suite build가 관리하는 `.agents/plugins/marketplace.json`이 있어야 합니다. `<path-to-repository-root>`를 실제 저장소 루트로 바꿉니다.
 
 ```bash
 codex plugin marketplace add <path-to-repository-root>
@@ -39,7 +45,11 @@ codex plugin add game-design-studio@game-design-suite
 
 `SessionStart`는 처음 시작할 때와 마지막 확인 뒤 7일이 지난 뒤에만 번들 업데이트를 확인합니다. 결과는 “플러그인 업데이트를 확인해 줘”라는 **알림**일 뿐이며, 플러그인을 자동으로 업데이트하거나 다시 설치하지 않습니다. 확인을 끄려면 `GAME_DESIGN_UPDATE_CHECKS=false`를 설정하세요. Skillstead·Archify·im-not-ai 번들은 다음 suite release 전까지 현재 버전으로 고정됩니다. 설치된 캐시 폴더는 직접 편집하지 마세요.
 
-`codex plugin list --available`은 설치하지 않은 플러그인 목록만 보여 줍니다. Codex 0.147.0에서는 이미 설치한 Studio의 새 원천 버전을 판별하지 않습니다. 알림을 본 뒤에만 아래 명령을 명시적으로 실행하고, 재설치가 끝나면 새 채팅 또는 새 세션을 열어 새 설치본을 사용하세요.
+설치한 제품의 `$upgrade-game-design-suite`를 호출하면 아래 명령을 대신 안내받을 수 있습니다. 설치된 버전과 공개된 최신 릴리스를 비교한 결과를 먼저 보여 주고 승인을 기다리며, 검사와 계획 단계에서는 어떤 설치도 바꾸지 않습니다. 승인 없이 적용되는 업데이트는 없습니다. 선택지 표는 저장소의 `guides/game-design-studio/installation.md`에 있습니다.
+
+아래는 스킬 없이 손으로 처리할 때의 명령입니다.
+
+`codex plugin list --available --json`은 설치하지 않은 플러그인 목록만 보여 줍니다. Codex 0.147.0에서는 이미 설치한 Studio의 새 원천 버전을 판별하지 않습니다. 알림을 본 뒤에만 아래 명령을 명시적으로 실행하고, 재설치가 끝나면 새 채팅 또는 새 세션을 열어 새 설치본을 사용하세요.
 
 Git marketplace로 등록한 경우 snapshot을 갱신하고 플러그인을 다시 설치합니다.
 
@@ -86,13 +96,13 @@ plugins/game-design-studio/
 │   ├── <17개 Studio 제품 스킬>/
 │   │   └── scripts/                 # 필요한 스킬에만 있는 product helper
 │   ├── analyze-game-design-references/ # 근거를 분리해 레퍼런스를 분석
-│   ├── archify/                      # vendored Archify 2.14.0
+│   ├── archify/                      # vendored Archify 2.15.0
 │   ├── capture-game-design-memory/   # 검증한 교훈을 후보로 기록
 │   ├── humanize-korean/              # vendored im-not-ai
 │   ├── maintain-game-design-glossary/ # 용어 후보와 사람 검토 결정 관리
 │   ├── maintain-game-design-memory/  # 후보와 승인 이력 관리
 │   ├── retrieve-approved-design-memory/ # 승인된 관련 기억 조회
-│   └── svg-infographic/              # vendored Skillstead 0.9.0
+│   └── svg-infographic/              # vendored Skillstead 0.10.0
 ├── agents/ (12개)                   # 기획·검토·이미지 작업을 맡는 이식 가능한 전문 역할 프롬프트
 ├── hooks/
 │   └── hooks.json
@@ -208,7 +218,7 @@ plugins/game-design-studio/
 
 `references/source/docs/`의 원문 49개는 사용자 제공 workspace에서 왔으며, 사용자가 요청한 로컬 플러그인 제작·사용을 위해 복사됩니다. [원문 권리 매니페스트](references/source-document-rights.json)는 각 문서의 정확한 package path와 SHA-256, `user-provided-workspace` origin, 로컬 포함 근거, MIT 제외 상태, 공개 재배포 상태, 검토일과 필요한 후속 조치를 기록합니다.
 
-플러그인 코드와 이 프로젝트가 작성한 문서·템플릿·설정에는 MIT License가 적용됩니다. Skillstead `svg-infographic` 0.9.0에는 Apache-2.0이 적용됩니다. 원문 49개는 MIT로 재허가되지(not sublicensed) 않았고 공개 재배포(public redistribution) 권리는 확인되지 않았습니다. 따라서 현재 상태에서는 원문을 포함한 snapshot을 공개하거나 제3자에게 배포하면 안 됩니다.
+플러그인 코드와 이 프로젝트가 작성한 문서·템플릿·설정에는 MIT License가 적용됩니다. Skillstead `svg-infographic` 0.10.0에는 Apache-2.0이 적용됩니다. 원문 49개는 MIT로 재허가되지(not sublicensed) 않았고 공개 재배포(public redistribution) 권리는 확인되지 않았습니다. 따라서 현재 상태에서는 원문을 포함한 snapshot을 공개하거나 제3자에게 배포하면 안 됩니다.
 
 [원문 재배포 가드](skills/orchestrate-game-design-project/scripts/check-source-document-redistribution.mjs)는 매니페스트 49개와 실제 package bytes를 대조합니다. `local`과 `private` 모드는 요청된 로컬·사설 사용을 허용합니다.
 
@@ -662,7 +672,7 @@ Skillstead SVG는 권위 있는 도식 원본입니다. 하나의 title/desc와 
 
 ## Skillstead 도식화
 
-[visualize-game-design](skills/visualize-game-design/SKILL.md)는 spatial encoding이 실제로 관계를 더 명확하게 할 때만 Skillstead `svg-infographic` 0.9.0을 사용합니다. 지원 preset은 core/motivation loop, state/rule flow, economy source/sink, progression/lifecycle, production timeline/dependency, RACI/role flow입니다. 단순 목록은 본문이나 표로 유지합니다.
+[visualize-game-design](skills/visualize-game-design/SKILL.md)는 spatial encoding이 실제로 관계를 더 명확하게 할 때만 Skillstead `svg-infographic` 0.10.0을 사용합니다. 지원 preset은 core/motivation loop, state/rule flow, economy source/sink, progression/lifecycle, production timeline/dependency, RACI/role flow입니다. 단순 목록은 본문이나 표로 유지합니다.
 
 모든 node, connector, label, date와 numeric annotation은 stable source locator에 연결해야 합니다. SVG에는 `<title>`, `<desc>`, alt text가 필요합니다. 패키지의 SVG lint를 통과한 뒤 Chromium이 있으면 canonical renderer로 정확한 2× PNG를 생성하고 browser identity/version, source/output digest, 실제 dimensions와 fit-to-page·close-up visual QA를 기록합니다.
 
@@ -748,4 +758,4 @@ python3 "$CODEX_ROOT/skills/.system/plugin-creator/scripts/validate_plugin.py" p
 
 ## 라이선스
 
-Game Design Studio 플러그인 코드와 이 프로젝트가 작성한 문서·템플릿·설정은 [MIT License](LICENSE)로 배포됩니다. 포함된 Skillstead `svg-infographic` 0.9.0은 Apache-2.0이며 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)와 패키지 안의 원본 라이선스가 적용됩니다. 사용자 제공 원문 49개는 MIT 대상에서 제외되고 재허가되지 않으며, 공개 재배포 권리가 문서별로 확인될 때까지 로컬·사설 사용 범위를 벗어나 배포할 수 없습니다.
+Game Design Studio 플러그인 코드와 이 프로젝트가 작성한 문서·템플릿·설정은 [MIT License](LICENSE)로 배포됩니다. 포함된 Skillstead `svg-infographic` 0.10.0은 Apache-2.0이며 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)와 패키지 안의 원본 라이선스가 적용됩니다. 사용자 제공 원문 49개는 MIT 대상에서 제외되고 재허가되지 않으며, 공개 재배포 권리가 문서별로 확인될 때까지 로컬·사설 사용 범위를 벗어나 배포할 수 없습니다.

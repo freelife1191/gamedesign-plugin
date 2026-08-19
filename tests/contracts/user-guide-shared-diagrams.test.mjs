@@ -4,6 +4,8 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
+import { vendorVersion } from "../lib/vendored.mjs";
+
 const root = fileURLToPath(new URL("../..", import.meta.url));
 const manifestPath = path.join(root, "guides/assets/diagram-manifest.json");
 const manifestDir = path.dirname(manifestPath);
@@ -16,6 +18,9 @@ const expectedSharedIds = [
   "image-provider-cost-routing",
   "plugin-selection-flow",
   "project-memory-reuse-flow",
+  "suite-entry-routing-flow",
+  "suite-handoff-ownership-flow",
+  "suite-update-approval-flow",
 ];
 
 function assertContainedRelativePath(value, field) {
@@ -36,10 +41,10 @@ async function assertRegularFile(value, field) {
   return resolved;
 }
 
-test("shared diagram manifest declares exactly the eight canonical shared diagram pairs", async () => {
+test("shared diagram manifest declares exactly the eleven canonical shared diagram pairs", async () => {
   const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
   assert.equal(manifest.version, 1);
-  assert.equal(manifest.skillsteadVersion, "0.9.0");
+  assert.equal(manifest.skillsteadVersion, vendorVersion("skillstead"));
   assert.ok(Array.isArray(manifest.diagrams));
   const shared = manifest.diagrams.filter(({ scope }) => scope === "shared");
   assert.deepEqual(shared.map(({ id }) => id).sort(), expectedSharedIds);
@@ -102,6 +107,62 @@ test("project memory diagram keeps LLM Wiki reuse local, source-bound, and human
   assert.match(svg, /data-flow-edge="memory-disabled"[^>]*data-from="memory-config"[^>]*data-to="memory-free-work"[^>]*stroke-dasharray=/u);
   assert.match(svg, /data-flow-edge="approved-memory-reuse"[^>]*data-from="local-memory-event"[^>]*data-to="approved-memory"[^>]*stroke-dasharray=/u);
   assert.doesNotMatch(svg, /자동 승인|채팅 전체 자동 수집|자동 원격 동기화/u);
+});
+
+test("entry routing diagram shows one route, the receipt, and the one-way handoff candidate", async () => {
+  const svg = await readFile(path.join(root, "guides/assets/shared/suite-entry-routing-flow.svg"), "utf8");
+  for (const phrase of ["사례 ID", "소유 제품", "route-receipt.json", "routeId", "단방향 인계"]) {
+    assert.match(svg, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "u"), phrase);
+  }
+  // 대표 진입 스킬은 자기 파일을 만들지 않는다. 도식이 산출물을 약속하면 가이드 본문과 어긋난다.
+  assert.doesNotMatch(svg, /자동 적용|승인 없이 실행/u, "entry routing must not promise unattended execution");
+});
+
+test("handoff diagram names the final owner, the supplier evidence, and the one-way return", async () => {
+  const svg = await readFile(path.join(root, "guides/assets/shared/suite-handoff-ownership-flow.svg"), "utf8");
+  for (const phrase of ["최종 owner", "supplier", "단방향 반환", "blocker", "사람 승인"]) {
+    assert.match(svg, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "u"), phrase);
+  }
+  // 공급 제품은 다시 인계를 시작할 수 없다. 왕복을 그리면 계약과 어긋난다.
+  assert.doesNotMatch(svg, /양방향|다시 인계합니다/u, "handoff must stay one-way");
+});
+
+test("update diagram gates every install change behind a user approval", async () => {
+  const svg = await readFile(path.join(root, "guides/assets/shared/suite-update-approval-flow.svg"), "utf8");
+  for (const phrase of ["upgrade-game-design-suite", "사용자 승인", "codex plugin add", "새 세션"]) {
+    assert.match(svg, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "u"), phrase);
+  }
+  assert.match(svg, /설치를 바꾸지 않고/u, "inspection stage changes nothing");
+  assert.doesNotMatch(svg, /자동 업데이트|자동 적용/u, "update must never read as unattended");
+});
+
+test("install diagram carries the UTF-8 preflight and the marketplace kind before either lane", async () => {
+  const svg = await readFile(path.join(root, "guides/assets/shared/app-cli-install-flow.svg"), "utf8");
+  for (const phrase of ["UTF-8 preflight", "BOM", "마켓플레이스 종류"]) {
+    assert.match(svg, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "u"), phrase);
+  }
+  // 읽기 순서가 lane보다 앞서야 사용자가 설치 실패를 만나기 전에 인코딩을 확인한다.
+  assert.ok(
+    svg.indexOf('aria-label="읽기 순서 1: 설치 전 확인"') < svg.indexOf('aria-label="읽기 순서 2: Codex App lane"'),
+    "the preflight band precedes the App lane",
+  );
+});
+
+test("the three suite diagrams are embedded where their decision is actually made", async () => {
+  const consumers = [
+    ["guides/game-design-studio/skills/game-design-studio.md", "../../assets/shared/suite-entry-routing-flow.png", "../../assets/shared/suite-handoff-ownership-flow.png"],
+    ["guides/game-design-career/skills/game-design-career.md", "../../assets/shared/suite-entry-routing-flow.png", "../../assets/shared/suite-handoff-ownership-flow.png"],
+    ["guides/use-cases/output-catalog.md", "../assets/shared/suite-handoff-ownership-flow.png"],
+    ["guides/game-design-studio/installation.md", "../assets/shared/suite-update-approval-flow.png"],
+    ["guides/game-design-career/installation.md", "../assets/shared/suite-update-approval-flow.png"],
+  ];
+  for (const [filename, ...pngPaths] of consumers) {
+    const markdown = await readFile(path.join(root, filename), "utf8");
+    for (const pngPath of pngPaths) {
+      const svgPath = pngPath.replace(/\.png$/u, ".svg");
+      assert.ok(markdown.includes(`](${pngPath})](${svgPath})`), `${filename} embeds ${pngPath} and links its SVG source`);
+    }
+  }
 });
 
 test("shared image and memory diagrams are embedded in every relevant overview and detailed guide", async () => {

@@ -9,6 +9,10 @@ const storePath = path.join(root, "shared/scripts/lib/safe-memory-store.mjs");
 const validatorUrl = pathToFileURL(path.join(root, "shared/scripts/validate-design-memory.mjs")).href;
 const testPath = path.join(root, "tests/unit/design-memory-store.test.mjs");
 const MAX_OUTPUT_BYTES = 4 * 1024 * 1024;
+// The selected test is itself a `node --test` run, so this budget has to absorb the contention of
+// the whole suite around it, not just the work the test does. The caller derives its own caps from
+// this number by reading it out of this file, so raising it here raises the whole chain.
+const TEST_TIMEOUT_MS = 120_000;
 
 function harnessError(reason) { const error = new Error(reason); error.reason = reason; return error; }
 function replaceExact(source, before, after) {
@@ -75,7 +79,7 @@ async function runTest(moduleUrl, mutationName, mutation, selectedTestPath) {
   const stdout = []; const stderr = []; const evidence = []; let outputBytes = 0; let evidenceBytes = 0; let settled = false;
   return new Promise((resolve, reject) => {
     const finish = (operation, value) => { if (settled) return; settled = true; clearTimeout(timeout); operation(value); };
-    const timeout = setTimeout(() => { child.kill(); finish(reject, harnessError("test-timeout")); }, 45_000);
+    const timeout = setTimeout(() => { child.kill(); finish(reject, harnessError("test-timeout")); }, TEST_TIMEOUT_MS);
     const collectOutput = (target) => (chunk) => { outputBytes += chunk.byteLength; if (outputBytes > MAX_OUTPUT_BYTES) { child.kill(); finish(reject, harnessError("output-limit")); } else target.push(chunk); };
     child.stdout.on("data", collectOutput(stdout)); child.stderr.on("data", collectOutput(stderr)); child.stdio[3].on("data", (chunk) => { evidenceBytes += chunk.byteLength; if (evidenceBytes > 4096) { child.kill(); finish(reject, harnessError("evidence-limit")); } else evidence.push(chunk); }); child.once("error", () => finish(reject, harnessError("test-launch")));
     child.once("close", (code) => finish(resolve, { code, stdout: Buffer.concat(stdout), stderr: Buffer.concat(stderr), evidence: Buffer.concat(evidence) }));

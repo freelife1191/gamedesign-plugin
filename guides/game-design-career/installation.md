@@ -19,7 +19,18 @@ App에서는 프롬프트 입력창에서 `@Game Design Career`를 선택해 호
 
 ## Codex CLI 설치
 
-저장소 루트에서 다음 명령을 순서대로 실행합니다.
+marketplace를 등록하고 제품을 설치합니다. 등록 방법이 둘이고 갱신 방법이 다르므로 먼저 고릅니다.
+
+공개 릴리스를 최신 판정 근거로 쓰려면 GitHub 저장소를 Git marketplace로 등록합니다. `$upgrade-game-design-suite`가 읽는 태그가 이 원본에서 나옵니다.
+
+```bash
+codex plugin marketplace add freelife1191/gamedesign-plugin
+codex plugin marketplace list
+codex plugin add game-design-career@game-design-suite
+codex plugin list
+```
+
+저장소를 직접 고치며 쓸 때는 로컬 checkout을 등록합니다. 로컬 marketplace는 Git fetch 대상이 아니므로 공개 릴리스로 갱신되지 않고, 갱신하려면 checkout을 직접 최신으로 만들어야 합니다.
 
 ```bash
 codex plugin marketplace add .
@@ -27,6 +38,8 @@ codex plugin marketplace list
 codex plugin add game-design-career@game-design-suite
 codex plugin list
 ```
+
+설치 전에 marketplace JSON의 인코딩을 확인합니다. 사용자 환경의 **다른** marketplace JSON에 UTF-8 BOM이 있으면 `codex plugin list` 로딩 자체가 막혀 이 제품도 설치할 수 없습니다. 내용을 그대로 두고 BOM 없는 UTF-8로 다시 저장하면 풀립니다. 이 플러그인 패키지는 BOM·CRLF 게이트를 통과한 상태로만 배포되므로 원인은 항상 바깥 파일입니다.
 
 `PLUGIN@MARKETPLACE` 선택자인 `game-design-career@game-design-suite`를 그대로 사용합니다. 또는 Codex CLI 세션에서 `/plugins`를 열고 `game-design-suite` 탭의 Career 항목을 설치할 수 있습니다. `/plugins`의 `Space` 키는 설치된 항목의 활성화 상태를 전환하는 CLI 전용 조작입니다. 설치 뒤에는 **새 세션**을 시작합니다.
 
@@ -37,6 +50,29 @@ codex plugin list
 - 플러그인이 보이지만 스킬이 선택되지 않으면 기존 대화를 이어 쓰지 말고 App은 새 채팅, CLI는 새 세션에서 다시 확인합니다.
 
 ## 업데이트
+
+[![업데이트 알림에서 승인과 재설치와 검증을 거쳐 새 세션에서 재개하는 흐름](../assets/shared/suite-update-approval-flow.png)](../assets/shared/suite-update-approval-flow.svg)
+
+먼저 `$upgrade-game-design-suite`를 부르는 것을 권합니다. 손으로 하는 절차는 그 아래에 그대로 둡니다.
+
+### `$upgrade-game-design-suite` 스킬로 처리하기
+
+아래의 제거·재설치 명령을 직접 입력하는 대신 `$upgrade-game-design-suite`를 호출하면, 설치된 버전과 공개된 최신 릴리스를 비교한 결과를 먼저 보여 주고 승인을 기다립니다. 검사와 계획 단계에서는 어떤 설치도 바꾸지 않습니다.
+
+선택지는 넷입니다.
+
+| 선택 | 결과 |
+| --- | --- |
+| 지금 업데이트 | 검증된 계획을 그대로 적용합니다. |
+| 나중에 | 7일 주기 안내 상태를 그대로 둡니다. |
+| 이 버전은 다시 알리지 않기 | 지금 설치된 버전과 최신 버전 조합에 대해서만 알림을 멈춥니다. 더 새 버전이 나오면 다시 알립니다. |
+| 업데이트 알림 끄기 | `GAME_DESIGN_UPDATE_CHECKS=false`를 안내하고 검사와 캐시 기록을 중단합니다. |
+
+승인 없이 적용되는 업데이트는 없습니다. 로컬 marketplace는 공개 릴리스로 갱신할 수 없으므로 Git marketplace 전환 방법을 안내만 하고 파일을 직접 고치지 않습니다. checkout에 커밋하지 않은 변경이 있으면 업데이트를 멈추고 현재 상태를 보고합니다.
+
+업데이트가 끝나면 이전 버전, 새 버전, 바뀐 제품, 번들 구성 요소 변화, 검증 결과를 요약하고 새 세션에서 이어가는 방법을 알려 줍니다. 새 스킬 목록은 세션을 다시 시작한 뒤에 반영됩니다.
+
+### 손으로 제거하고 다시 설치하기
 
 로컬 marketplace는 Git refresh 대상이 아닙니다. checkout을 갱신하고 저장소 루트에서 다음 검증을 마친 뒤 Career를 제거하고 다시 설치합니다.
 
@@ -55,23 +91,6 @@ codex plugin list --marketplace game-design-suite --available --json
 ```
 
 `codex plugin marketplace upgrade`는 구성된 **Git marketplace**를 refresh하는 명령입니다. 다음 명령은 그 marketplace의 설치 가능 항목을 확인합니다. 같은 확인은 `/plugins`의 `game-design-suite` 탭에서도 할 수 있습니다. 기본 `codex plugin list`는 설치 상태 확인용이며 설치 가능 snapshot 조회를 대신하지 않습니다. refresh는 설치된 Career 자체를 새 snapshot으로 교체하지 않으므로, 필요한 버전을 확인한 뒤 명시적으로 다시 설치합니다.
-
-### `$upgrade-game-design-suite` 스킬로 처리하기
-
-위 명령을 직접 입력하는 대신 `$upgrade-game-design-suite`를 호출하면, 설치된 버전과 공개된 최신 릴리스를 비교한 결과를 먼저 보여 주고 승인을 기다립니다. 검사와 계획 단계에서는 어떤 설치도 바꾸지 않습니다.
-
-선택지는 넷입니다.
-
-| 선택 | 결과 |
-| --- | --- |
-| 지금 업데이트 | 검증된 계획을 그대로 적용합니다. |
-| 나중에 | 7일 주기 안내 상태를 그대로 둡니다. |
-| 이 버전은 다시 알리지 않기 | 지금 설치된 버전과 최신 버전 조합에 대해서만 알림을 멈춥니다. 더 새 버전이 나오면 다시 알립니다. |
-| 업데이트 알림 끄기 | `GAME_DESIGN_UPDATE_CHECKS=false`를 안내하고 검사와 캐시 기록을 중단합니다. |
-
-승인 없이 적용되는 업데이트는 없습니다. 로컬 marketplace는 공개 릴리스로 갱신할 수 없으므로 Git marketplace 전환 방법을 안내만 하고 파일을 직접 고치지 않습니다. checkout에 커밋하지 않은 변경이 있으면 업데이트를 멈추고 현재 상태를 보고합니다.
-
-업데이트가 끝나면 이전 버전, 새 버전, 바뀐 제품, 번들 구성 요소 변화, 검증 결과를 요약하고 새 세션에서 이어가는 방법을 알려 줍니다. 새 스킬 목록은 세션을 다시 시작한 뒤에 반영됩니다.
 
 ## 제거
 

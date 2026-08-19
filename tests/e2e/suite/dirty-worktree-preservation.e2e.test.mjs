@@ -14,7 +14,11 @@ import { runGameDesignWritingPolish } from "../../../shared/scripts/run-game-des
 import { verifyDiagramSkillVendor } from "../../../tooling/sync-diagram-skills.mjs";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
-const archifyCli = path.join(repoRoot, "shared/vendor/archify/archify/2.14.0/bin/archify.mjs");
+// The vendored tree carries its version in its path, so an upstream bump moves it. The lock is the one
+// place that knows where it went.
+const archifyTreeRoot = JSON.parse(await readFile(path.join(repoRoot, "shared/vendor/archify/vendor.lock.json"), "utf8")).tree.root;
+const archifyCliRelative = path.join(archifyTreeRoot, "bin/archify.mjs");
+const archifyCli = path.join(repoRoot, "shared/vendor/archify", archifyCliRelative);
 
 function sha256(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
@@ -248,10 +252,8 @@ test("public vendor verifier rejects a tampered Archify runtime closure", async 
   t.after(() => rm(root, { recursive: true, force: true }));
   const vendorRoot = path.join(root, "archify");
   await cp(path.join(repoRoot, "shared/vendor/archify"), vendorRoot, { recursive: true });
-  await writeFile(
-    path.join(vendorRoot, "archify/2.14.0/bin/archify.mjs"),
-    `${await readFile(path.join(vendorRoot, "archify/2.14.0/bin/archify.mjs"), "utf8")}\n// hostile byte mutation\n`,
-  );
+  const tamperTarget = path.join(vendorRoot, archifyCliRelative);
+  await writeFile(tamperTarget, `${await readFile(tamperTarget, "utf8")}\n// hostile byte mutation\n`);
 
   await assert.rejects(
     () => verifyDiagramSkillVendor({ root: vendorRoot, name: "archify" }),

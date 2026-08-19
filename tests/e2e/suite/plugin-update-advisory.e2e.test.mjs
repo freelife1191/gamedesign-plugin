@@ -16,6 +16,21 @@ const expectedInventory = {
   "game-design-career": { skills: 25, agents: 10 },
 };
 const checkedAt = Date.parse("2026-08-15T00:00:00.000Z");
+// The release moves these two, and a test that restates them keeps passing against a package that no
+// longer exists. Both come from the files the build itself writes.
+const installedComponents = JSON.parse(await readFile(path.join(repoRoot, "shared/updates/installed-components.json"), "utf8")).components
+  .map(({ id, repository, installedTag }) => ({ id, repository, installedTag }));
+const suiteVersion = JSON.parse(await readFile(path.join(repoRoot, "products/game-design-studio/plugin/.codex-plugin/plugin.json"), "utf8")).version;
+
+// The advisory only has something to report when one component is behind, so the fixture answers with a
+// tag one minor above whatever archify is pinned at today.
+function oneMinorAhead(tag) {
+  const match = /^(?<prefix>.*?)(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)$/u.exec(tag);
+  assert.ok(match, `cannot derive a newer tag from ${tag}`);
+  return `${match.groups.prefix}${match.groups.major}.${Number(match.groups.minor) + 1}.0`;
+}
+const archifyInstalledTag = installedComponents.find(({ id }) => id === "archify").installedTag;
+const archifyNewerTag = oneMinorAhead(archifyInstalledTag);
 
 async function snapshotProjectTree(root) {
   async function visit(relative) {
@@ -70,10 +85,10 @@ function runPluginCommand({ codex, cwd, env, args, commands, stage }) {
 async function assertInstalledPackage(pluginRoot, product) {
   const manifest = JSON.parse(await readFile(path.join(pluginRoot, ".codex-plugin", "plugin.json"), "utf8"));
   const components = JSON.parse(await readFile(path.join(pluginRoot, "references", "shared", "updates", "installed-components.json"), "utf8"));
-  assert.equal(manifest.version, "0.1.1", `${product}: installed manifest uses the update-channel version`);
+  assert.equal(manifest.version, suiteVersion, `${product}: installed manifest uses the update-channel version`);
   assert.deepEqual(
     components.components.map(({ id, installedTag }) => [id, installedTag]),
-    [["skillstead", "svg-infographic/v0.9.0"], ["archify", "v2.14.0"], ["im-not-ai", "v2.3.0"], ["game-design-suite", "v0.1.1"]],
+    installedComponents.map(({ id, installedTag }) => [id, installedTag]),
     `${product}: installed bundles stay pinned`,
   );
   const [skills, agents] = await Promise.all([
@@ -88,19 +103,14 @@ function runInstalledSessionStart({ pluginRoot, workspace, env, now = checkedAt,
   const probe = pathToFileURL(path.join(pluginRoot, "scripts", "capability-probe.mjs")).href;
   const script = `
     import { runCapabilityProbe } from ${JSON.stringify(probe)};
-    const installed = ${JSON.stringify([
-      { id: "skillstead", repository: "https://github.com/kyungseo/skillstead", installedTag: "svg-infographic/v0.9.0" },
-      { id: "archify", repository: "https://github.com/tt-a1i/archify", installedTag: "v2.14.0" },
-      { id: "im-not-ai", repository: "https://github.com/epoko77-ai/im-not-ai", installedTag: "v2.3.0" },
-      { id: "game-design-suite", repository: "https://github.com/freelife1191/gamedesign-plugin", installedTag: "v0.1.1" },
-    ])};
+    const installed = ${JSON.stringify(installedComponents)};
     const requests = [];
     globalThis.fetch = async (url) => {
       requests.push(url);
       if (${JSON.stringify(offline)}) throw new Error("offline fixture");
       const component = installed.find(({ repository }) => url === repository.replace("github.com", "api.github.com/repos") + "/releases");
       if (!component) throw new Error("unexpected endpoint: " + url);
-      const tag = component.id === "archify" ? "v2.15.0" : component.installedTag;
+      const tag = component.id === "archify" ? ${JSON.stringify(archifyNewerTag)} : component.installedTag;
       return { ok: true, status: 200, url, async json() { return [{ tag_name: tag, draft: false, prerelease: false, html_url: component.repository + "/releases/tag/" + tag.split("/").map(encodeURIComponent).join("/") }]; } };
     };
     const result = await runCapabilityProbe({ updateOptions: {
@@ -144,13 +154,13 @@ test("fresh local products advise without implicit updates and preserve the comp
   command("marketplace-add", ["marketplace", "add", sourceRoot]);
   for (const product of products) {
     const receipt = command(`${product}-add`, ["add", selector(product)]);
-    assert.equal(receipt.version, "0.1.1", `${product}: local marketplace installs the built version`);
-    await assertInstalledPackage(path.join(env.CODEX_HOME, "plugins", "cache", marketplace, product, "0.1.1"), product);
+    assert.equal(receipt.version, suiteVersion, `${product}: local marketplace installs the built version`);
+    await assertInstalledPackage(path.join(env.CODEX_HOME, "plugins", "cache", marketplace, product, suiteVersion), product);
   }
   const listed = command("plugin-list", ["list"]);
-  for (const product of products) assert.ok(listed.installed.some((entry) => entry.pluginId === selector(product) && entry.version === "0.1.1"), `${product}: list reports exact installed version`);
+  for (const product of products) assert.ok(listed.installed.some((entry) => entry.pluginId === selector(product) && entry.version === suiteVersion), `${product}: list reports exact installed version`);
 
-  const studioCache = path.join(env.CODEX_HOME, "plugins", "cache", marketplace, "game-design-studio", "0.1.1");
+  const studioCache = path.join(env.CODEX_HOME, "plugins", "cache", marketplace, "game-design-studio", suiteVersion);
   const cacheBeforeSession = await snapshotProjectTree(studioCache);
   const first = runInstalledSessionStart({ pluginRoot: studioCache, workspace, env });
   assert.deepEqual(first.result.updates.notification, { kind: "update-available", prompt: "플러그인 업데이트를 확인해 줘", componentIds: ["archify"] });
@@ -181,7 +191,7 @@ test("fresh local products advise without implicit updates and preserve the comp
   command("studio-readd", ["add", selector("game-design-studio")]);
   await assertInstalledPackage(studioCache, "game-design-studio");
   for (const product of products) command(`${product}-remove`, ["remove", selector(product)]);
-  for (const product of products) await assert.rejects(lstat(path.join(env.CODEX_HOME, "plugins", "cache", marketplace, product, "0.1.1")), { code: "ENOENT" });
+  for (const product of products) await assert.rejects(lstat(path.join(env.CODEX_HOME, "plugins", "cache", marketplace, product, suiteVersion)), { code: "ENOENT" });
   command("marketplace-remove", ["marketplace", "remove", marketplace]);
   assert.deepEqual(command("marketplace-list", ["marketplace", "list"]).marketplaces, []);
   await lstat(path.join(env.XDG_CACHE_HOME, "game-design-suite", "update-advisory-v1.json"));

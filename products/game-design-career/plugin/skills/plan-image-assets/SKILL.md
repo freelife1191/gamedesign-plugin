@@ -1,6 +1,6 @@
 ---
 name: plan-image-assets
-description: Use when a Career canonical artifact needs a profile-bound image asset manifest, reusable prompt package, placeholders, or a Skillstead diagram evidence handoff before any image generation.
+description: Use when a Career canonical artifact needs an image asset manifest, prompt package, or placeholders before generation.
 ---
 
 # Plan Image Assets

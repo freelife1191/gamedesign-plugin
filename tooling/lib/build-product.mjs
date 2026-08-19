@@ -400,14 +400,22 @@ function isReferenceIntelligenceDestination(relativePath) {
     || relativePath.startsWith("references/shared/reference-intelligence/");
 }
 
-function removeSourceOnlySkillsteadFallback(entry, productName, skillsteadSourceRoot) {
+// The repository copy of this script also resolves the vendored Skillstead tree, so a developer can run
+// it before a build exists. That path climbs out of the package, and the packaged copy must not carry
+// it. The script marks those lines as a region rather than leaving one literal line for this function
+// to match, because the resolution reads the vendor lock and is therefore several lines, not one.
+const REPOSITORY_ONLY_REGION = /^[^\n]*\/\/ #region repository-only\n[\s\S]*?^[^\n]*\/\/ #endregion repository-only\n(?:[ \t]*\n)?/gmu;
+
+export function removeSourceOnlySkillsteadFallback(entry, productName, skillsteadSourceRoot) {
   const fallback = sourceOnlySkillsteadFallbacks[productName];
   if (!fallback || entry.relativePath !== fallback.path) return entry;
-  const sourceFallback = `    path.resolve(path.dirname(ownPath), "../../../../../../${skillsteadSourceRoot}"),\n`;
   const source = entry.bytes.toString("utf8");
-  const count = source.split(sourceFallback).length - 1;
-  if (count !== 1) throw new Error(`Expected one source-only Skillstead fallback in ${fallback.path}; found ${count}`);
-  return { ...entry, bytes: Buffer.from(source.replace(sourceFallback, "")) };
+  const regions = source.match(REPOSITORY_ONLY_REGION) ?? [];
+  if (regions.length !== 2) throw new Error(`Expected two repository-only regions in ${fallback.path}; found ${regions.length}`);
+  const packaged = source.replace(REPOSITORY_ONLY_REGION, "");
+  const vendorRoot = skillsteadSourceRoot.split("/").slice(0, 3).join("/");
+  if (packaged.includes(vendorRoot)) throw new Error(`Packaged ${fallback.path} still reaches outside the package into ${vendorRoot}`);
+  return { ...entry, bytes: Buffer.from(packaged) };
 }
 
 function projectPackageLocalLinks(entry, productName) {

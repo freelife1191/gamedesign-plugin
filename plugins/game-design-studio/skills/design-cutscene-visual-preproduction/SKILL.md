@@ -1,6 +1,6 @@
 ---
 name: design-cutscene-visual-preproduction
-description: "Use when a Studio request needs 컷씬 or 시네마틱 visual preproduction: storyboard shots, master-image prompts, or cutscene continuity."
+description: "Use when a Studio request needs 컷씬 or 시네마틱 visual preproduction: storyboard shots, master-image prompts, or continuity."
 ---
 
 # Design Cutscene Visual Preproduction

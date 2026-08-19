@@ -1,0 +1,53 @@
+# Font delivery policy — the separate axis that decides **how a font travels with an artifact**.
+#
+# Boundary: font identity (face, weight, asset, digest, license, RFN) is owned by the typography
+# SSoT (references/typography/typography-v1.yaml). This file decides only whether that font ships
+# portable (an embedded subset of the glyphs actually used) or system (relying on an installed
+# font). Keeping the two axes apart stops the typography profile combinations from multiplying as
+# fonts or output modes are added.
+schema_version: 1
+id: font-delivery-v1
+kind: font-delivery
+extends: null
+status: current
+default_mode: portable
+modes:
+  portable:
+    # Renders with the same geometry even where the target environment lacks the font — the basis
+    # for gallery and release evidence.
+    grade: acceptance
+    embed: subset
+    format: woff2
+    # Handling the OFL Reserved Font Name: a subset is a Modified Version, so it may not carry the
+    # original name. The validator checks this alias against typography license.rfn.
+    alias: SkinSans-Subset
+    editable: false
+    tool:
+      # Subsetting happens only through the wrapper the package owns. The wrapper reads the
+      # running library version itself and checks it against the declaration below, so an
+      # arbitrary executable cannot produce an acceptance artifact. All the environment supplies
+      # is the interpreter (SVGINFO_PYTHON).
+      name: fonttools
+      version: 4.53.1
+      brotli: 1.1.0
+      wrapper: scripts/font-subset.py
+      command: python3
+      options: ["--flavor=woff2", "--layout-features=*", "--no-hinting", "--desubroutinize", "--drop-tables+=DSIG"]
+      # This tool is needed **only to produce a portable artifact**. Viewing or verifying an
+      # existing artifact (lint, layout, render, audit) does not require it.
+      dependency_class: build-only
+    on_tool_missing: fail-closed
+    on_glyph_missing: fail-closed
+    # Under the OFL a subset is a Modified Version — so not just the CSS alias but the generated
+    # font's identity name records (family, unique ID, full name, PostScript name) are rewritten to
+    # neutral names, while the copyright, trademark and license records are preserved as the legal
+    # notice they are.
+    identity_rewrite: required
+    preserve_legal_names: required
+  system:
+    # Light and editable, but an **environment-dependent artifact** — never used as acceptance
+    # evidence.
+    grade: environment-dependent
+    embed: none
+    editable: true
+    requires_installed_family: true

@@ -1,6 +1,6 @@
 ---
 name: game-design-career
-description: Use when a game-design career request is broad, mixed, or ambiguous, names a Career case ID, or the user does not know which skill to call, and it has to become one owning product, one route, and one published routing receipt.
+description: Use when a game-design career request is broad or ambiguous, names a Career case ID, or no skill obviously fits.
 ---
 
 # Game Design Career

@@ -12,33 +12,57 @@
 
 ### 직접 호출 활용 — game-design-career
 
-[![게임 기획 커리어 오케스트레이터 흐름도 — 대표 진입은 이 흐름의 앞단](../../assets/game-design-career/skills/orchestrate-game-design-career.png)](../../assets/game-design-career/skills/orchestrate-game-design-career.svg)
+[![대표 진입 스킬이 요청을 소유 제품 하나와 route 하나로 좁히는 흐름](../../assets/shared/suite-entry-routing-flow.png)](../../assets/shared/suite-entry-routing-flow.svg)
 
 #### 직접 호출 조건
 
 무엇을 불러야 할지 모르는 상태에서 시작할 때 직접 호출합니다. 결과가 하나로 분명한 요청은 그 결과를 소유한 전문 스킬을 바로 호출합니다.
 
-#### 입문 요청문
+#### 입문 App 요청문
+
+```text
+@Game Design Career 기획자 준비를 어디서부터 시작할지 모르겠어. 요청을 다섯 항목으로 정리하고 담당 스킬 하나를 골라 라우팅 영수증을 남겨 줘. 모르는 정보는 미정으로 남겨 줘.
+```
+
+#### 입문 CLI 요청문
 
 ```text
 $game-design-career:game-design-career 기획자 준비를 어디서부터 시작할지 모르겠어. 요청을 정규화하고 route 하나를 골라 라우팅 영수증으로 남겨.
 ```
 
-#### 응용 요청문
+#### 응용 App 요청문
+
+```text
+@Game Design Career 포트폴리오·채용 조사·면접이 한 번에 섞인 요청이야. 소유 제품 하나와 실행 경로 하나로 좁히고 나머지는 후속 결정으로 라우팅 영수증에 적어 줘.
+```
+
+#### 응용 CLI 요청문
 
 ```text
 $game-design-career:game-design-career 포트폴리오·채용 조사·면접이 섞인 요청을 소유 제품 하나와 route 하나로 좁히고 나머지는 후속 결정으로 라우팅 영수증에 적어.
 ```
 
-#### 고급 요청문
+#### 고급 App 요청문
+
+```text
+@Game Design Career CA-C07로 시작하고 기획 산출물 근거도 있어야 해. 사례 ID를 실행 경로로 바꾸고 소유자와 공급자를 나눠 라우팅 영수증을 만들어 줘. 상대 제품이 없으면 그 사실을 그대로 적어 줘.
+```
+
+#### 고급 CLI 요청문
 
 ```text
 $game-design-career:game-design-career CA-C07을 실행 경로로 바꾸고 기획 산출물 근거가 필요한 부분은 공급자 요청으로 나눠 라우팅 영수증에 적어.
 ```
 
+사례 ID를 그대로 넘겨도 됩니다. `$game-design-career:game-design-career CA-C01`처럼 ID만 주면 제작용 요청문 카탈로그에서 그 ID를 찾아 실행 경로 하나로 바꿉니다. 없는 ID는 이웃 사례로 추측하지 않고 한 번만 되묻습니다.
+
 #### 예상 파일과 읽는 순서
 
 이 스킬은 자기 파일을 만들지 않습니다. 위임된 스킬이 만든 Canonical Artifact를 `content.md → evidence.yml → export-manifest.yml` 순서로 읽고, workspace에 `route-receipt.json`이 있으면 그 안의 `routeId`만 채웁니다.
+
+상대 제품(Studio) 소유로 판정한 요청은 근거만 요청하는 단방향 인계로 나눕니다. 인계는 한 요청에 한 번이고, 상대 제품이 없거나 비활성이면 증거를 지어내지 않고 blocker로 남깁니다.
+
+[![최종 owner와 supplier evidence와 단방향 반환을 나눈 인계 흐름](../../assets/shared/suite-handoff-ownership-flow.png)](../../assets/shared/suite-handoff-ownership-flow.svg)
 
 #### 다음 스킬 조건
 

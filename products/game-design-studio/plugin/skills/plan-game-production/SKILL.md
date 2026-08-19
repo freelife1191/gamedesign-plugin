@@ -1,6 +1,6 @@
 ---
 name: plan-game-production
-description: Use when a game concept needs prototype gates, scope priorities, effort evidence, dependencies, milestones, ownership, kill criteria, maintenance analysis, or production commitment decisions.
+description: Use when a game concept needs prototype gates, scope priorities, milestones, ownership, or kill criteria.
 ---
 
 # Plan Game Production

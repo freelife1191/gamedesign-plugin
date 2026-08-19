@@ -1,6 +1,6 @@
 ---
 name: practice-game-design-interview
-description: Use when a game designer needs interview questions, answer practice, objection handling, or feedback grounded in a target posting and portfolio evidence.
+description: Use when a game designer needs interview questions, answer practice, objection handling, or posting-grounded feedback.
 ---
 
 # Practice Game Design Interview

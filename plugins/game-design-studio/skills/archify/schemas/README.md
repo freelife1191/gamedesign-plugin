@@ -25,6 +25,13 @@ in generated HTML. Omit it, or set `"none"`, for the default static output.
 motion-forward presentation), `blueprint` (high-contrast engineering review),
 or `editorial` (warm publication-style design review and documentation).
 Presets change only viewer styling; they do not alter semantic IDs or geometry.
+Sequence `meta` additionally accepts `column_fit`. The default `fixed` keeps
+the historical 108px column gap and 86px participant boxes, so an authored
+diagram renders at the same coordinates no matter how wide its viewBox is.
+`spread` derives the gap and box width from the viewBox instead, which turns a
+wide canvas into column distance and label room rather than empty space on the
+right. Lane order, IDs, and message semantics are unchanged either way.
+
 It may also include up to five guided `views`. Each view has a unique `id`, a
 reader-facing `label`, a non-empty `focus` list of existing semantic node IDs,
 and an optional short `note`.
@@ -84,6 +91,16 @@ authored ID enables a stable `#relation=<id>` viewer link that survives array
 reordering. ID-less documents remain valid and their relationship pins stay
 local to the current page.
 
+Every semantic node collection (`components`, `nodes`, `participants`, and
+`states`) also accepts one optional `brand`: either a canonical string returned
+by `archify brands --json`, or a digest-pinned `{ "url", "sha256" }` object
+returned by `archify brands capture <url> --json`. Known IDs and known-brand
+domains use the bundled vector catalogue. Unknown URLs must be captured in that
+explicit command before authoring; render and validate never perform an
+unpinned network capture. Unsafe, unavailable, changed, or unsupported content
+fails closed with a brand diagnostic. Omitted `brand` preserves the prior
+output.
+
 ## schema_version policy
 
 `schema_version` is `"const": 1`. The constant pins the IR contract: a file
@@ -103,6 +120,7 @@ The five diagram schemas reference `common.schema.json#/$defs/...`:
 - `point` — an `[x, y]` pair of numbers (used by `via` and `labelAt`)
 - `componentType` — `frontend`, `backend`, `database`, `cloud`, `security`,
   `messagebus`, `external`
+- `brandMark` — one optional built-in brand ID or explicit HTTP(S) site URL
 - `variant` — `default`, `emphasis`, `security`, `dashed` (sequence messages
   extend this list locally with `return`)
 - `legendMode` and `legendEntry` — the shared strict mode and label/visibility

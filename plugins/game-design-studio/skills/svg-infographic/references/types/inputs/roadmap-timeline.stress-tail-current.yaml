@@ -1,0 +1,49 @@
+schema_version: 1
+kind: typepack-input
+typepack: roadmap-timeline
+case: stress-tail-current
+preset: document-compact
+layout: row
+count: 4
+prompt_ko: "마지막 단계를 진행 중인 롤아웃을 보여줘. 4:5."
+prompt_en: "A rollout whose final phase is under way. 4:5."
+title:
+  ko: "마지막 단계를 진행하고 있다"
+  en: "The final phase is under way"
+phases:
+  - id: "phase-1"
+    label:
+      ko: "준비"
+      en: "Prepare"
+    status: "done"
+    card:
+      title:
+        ko: "기준선 확정"
+        en: "Baseline agreed"
+  - id: "phase-2"
+    label:
+      ko: "시범"
+      en: "Pilot"
+    status: "done"
+    card:
+      title:
+        ko: "시범 팀 적용"
+        en: "Pilot team live"
+  - id: "phase-3"
+    label:
+      ko: "확대"
+      en: "Expand"
+    status: "done"
+    card:
+      title:
+        ko: "전사 확대"
+        en: "Org-wide rollout"
+  - id: "phase-4"
+    label:
+      ko: "안정화"
+      en: "Stabilise"
+    status: "current"
+    card:
+      title:
+        ko: "운영 안정화"
+        en: "Ops stabilised"

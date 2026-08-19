@@ -19,7 +19,7 @@ const FAQ_PATHS = Object.freeze([
   "guides/game-design-career/faq.md",
 ]);
 const DIAGRAM_EXPECTED_SCOPE_COUNTS = Object.freeze({
-  shared: 8,
+  shared: 11,
   "game-design-studio": 6,
   "game-design-career": 6,
   "use-case-audience": 6,

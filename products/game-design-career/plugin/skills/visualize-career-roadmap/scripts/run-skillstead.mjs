@@ -13,13 +13,32 @@ function inside(root, target) {
   return relative !== "" && relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
 }
 
+// #region repository-only
+// The repository checkout keeps the vendored copy under a version-named directory, and the vendor lock
+// is what names it. Reading the lock means an upstream bump does not have to be hand-edited into this
+// path. The whole region is cut from the packaged copy, which resolves the skill it actually ships.
+async function vendorTreeRoot(vendorRoot) {
+  try {
+    const { readFile } = await import("node:fs/promises");
+    const lock = JSON.parse(await readFile(path.join(vendorRoot, "vendor.lock.json"), "utf8"));
+    const treeRoot = lock?.tree?.root;
+    return typeof treeRoot === "string" && /^svg-infographic\/\d+\.\d+\.\d+$/u.test(treeRoot) ? treeRoot : null;
+  } catch {
+    return null;
+  }
+}
+// #endregion repository-only
+
 async function packageRoots() {
   const ownPath = await realpath(fileURLToPath(import.meta.url));
   const pluginRoot = path.resolve(path.dirname(ownPath), "../../..");
-  return [
-    path.join(pluginRoot, "skills/svg-infographic"),
-    path.resolve(path.dirname(ownPath), "../../../../../../shared/vendor/skillstead/svg-infographic/0.9.0"),
-  ];
+  const roots = [path.join(pluginRoot, "skills/svg-infographic")];
+  // #region repository-only
+  const vendorRoot = path.resolve(path.dirname(ownPath), "../../../../../../shared/vendor/skillstead");
+  const treeRoot = await vendorTreeRoot(vendorRoot);
+  if (treeRoot) roots.push(path.join(vendorRoot, treeRoot));
+  // #endregion repository-only
+  return roots;
 }
 
 export async function resolveSkillsteadCli(command) {

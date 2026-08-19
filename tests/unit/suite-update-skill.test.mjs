@@ -120,6 +120,10 @@ test("every destructive recovery command appears only inside its prohibition", (
 test("the skill forbids unattended upgrades and never offers a setting for one", () => {
   assert.doesNotMatch(skill, /auto_upgrade/u);
   assert.match(skill, /Never apply an update without an approval given in this conversation/u);
+  // A bundled skill ships inside the package. Telling someone a newer Archify is "available" without
+  // saying it arrives with a suite release invites them to go install it beside the plugin.
+  assert.match(skill, /never installed or upgraded on its own/u);
+  assert.match(skill, /A bundled skill moves only when a new suite release moves it/u);
 });
 
 test("the skill refuses to touch a dirty checkout instead of clearing it", () => {
@@ -266,4 +270,23 @@ test("the reference file names the components the suppress command accepts", () 
     assert.match(commands, new RegExp(`\`${component}\``, "u"), `missing component id: ${component}`);
   }
   assert.match(commands, /The name of an installed product is\nnot a component and the command refuses it/u);
+});
+
+// A bare `node scripts/…` path resolves only when the installed package root is the working
+// directory, and the agent works in the user's workspace. This file is the single place the skill
+// is allowed to take commands from, so an unrunnable path here silently turns "the check failed"
+// into "there is nothing to update".
+test("every host command is anchored to the package root, and the root is derivable", () => {
+  const invocations = [...commands.matchAll(/^- .*?: `(node [^`]+)`/gmu)].map((match) => match[1]);
+  assert.equal(invocations.length, 5, "the reference file must still name all five read-only commands");
+  for (const invocation of invocations) {
+    assert.doesNotMatch(invocation, /^node scripts\//u, `a bare relative scripts/ path dies outside the package root: ${invocation}`);
+    assert.match(invocation, /^node <package root>\/scripts\//u, `the command must anchor its working directory: ${invocation}`);
+  }
+  // The file hard-wraps its prose, so match against a whitespace-flattened copy.
+  const flowed = commands.replace(/\s+/gu, " ");
+  assert.match(flowed, /The package root is this file's path with `skills\/upgrade-game-design-suite\/references\/codex-commands\.md` removed/u,
+    "the skill needs a way to derive the package root it must run from");
+  assert.match(flowed, /A command that fails to resolve is not a "nothing to update" answer/u,
+    "a failed lookup and an up-to-date installation are different results");
 });

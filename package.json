@@ -12,8 +12,10 @@
     "build": "node tooling/build-snapshots.mjs",
     "validate": "node tooling/validate-suite.mjs",
     "validate:release": "node tooling/validate-suite.mjs --release",
+    "probe:routing": "node tooling/probe-skill-routing.mjs",
     "validate:guides": "node tooling/validate-user-guides.mjs --complete",
     "smoke:marketplace": "node tooling/marketplace-smoke.mjs",
+    "verify:install-roundtrip": "node tooling/install-roundtrip.mjs",
     "smoke:image:live": "node tooling/smoke-openai-image.mjs",
     "build:guide-diagrams": "node tooling/build-use-case-diagrams.mjs",
     "check:guide-diagrams": "node tooling/build-use-case-diagrams.mjs --check",
@@ -26,12 +28,20 @@
     "check:im-not-ai": "node tooling/sync-im-not-ai.mjs --check",
     "check:im-not-ai-latest": "node tooling/sync-im-not-ai.mjs --check-latest",
     "update:im-not-ai": "node tooling/sync-im-not-ai.mjs --update",
+    "sync:vendor-refs": "node tooling/sync-vendor-references.mjs",
+    "check:vendor-refs": "node tooling/sync-vendor-references.mjs --check",
+    "sync:vendor-catalog": "node tooling/sync-vendor-catalog-entries.mjs",
+    "check:vendor-catalog": "node tooling/sync-vendor-catalog-entries.mjs --check",
     "check:updates": "node tooling/check-suite-updates.mjs",
+    "check:updates:report": "node tooling/update-vendors.mjs --report",
+    "update:vendors": "node tooling/update-vendors.mjs",
     "validate:release:latest": "node tooling/check-suite-updates.mjs --require-current && node tooling/validate-suite.mjs --release",
     "check:diagram-skills": "node tooling/sync-diagram-skills.mjs --check",
     "check:diagram-skills-latest": "node tooling/sync-diagram-skills.mjs --check-latest",
     "update:diagram-skillstead": "node tooling/sync-diagram-skills.mjs --update skillstead",
     "update:diagram-archify": "node tooling/sync-diagram-skills.mjs --update archify"
   },
-  "engines": { "node": ">=18" }
+  "engines": {
+    "node": ">=18"
+  }
 }

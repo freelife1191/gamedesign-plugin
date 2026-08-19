@@ -544,19 +544,28 @@ async function defaultFetchArchive({ name, release, commit }) {
   return Buffer.from(await response.arrayBuffer());
 }
 
-async function defaultFetchOfficialTree({ name, commit }) {
+export async function defaultFetchOfficialTree({ name, commit, fetchJson = fetchGithubJson }) {
   const repository = githubRepository(name);
-  const tree = await fetchGithubJson(`https://api.github.com/repos/${repository}/git/trees/${commit}?recursive=1`, "Official immutable tree lookup");
+  const tree = await fetchJson(`https://api.github.com/repos/${repository}/git/trees/${commit}?recursive=1`, "Official immutable tree lookup");
   if (!tree || tree.truncated === true || !Array.isArray(tree.tree)) throw vendorError("DIAGRAM_VENDOR_OFFICIAL_TREE_INVALID", "tree");
   const prefix = "skills/svg-infographic/";
   const matching = tree.tree.filter((entry) => typeof entry?.path === "string" && entry.path.startsWith(prefix));
   if (name !== "skillstead" || matching.length === 0) throw vendorError("DIAGRAM_VENDOR_OFFICIAL_TREE_INVALID", "tree");
-  return matching.map((entry) => {
+  const files = [];
+  for (const entry of matching) {
+    // A recursive listing names directories alongside files, and the skill has had subdirectories since
+    // before it was first vendored. Passing those to the blob check rejected every real tree, which left
+    // this cross-check — the one that proves the downloaded archive is the bytes GitHub records for the
+    // tagged commit — failing closed and therefore never actually run. Directories are skipped; anything
+    // that is neither a blob nor a directory, a submodule above all, still ends the run.
+    if (entry.type === "tree" && entry.mode === "040000") continue;
     if (entry.type !== "blob" || entry.mode === "120000" || !/^[a-f0-9]{40}$/u.test(entry.sha ?? "")) {
       throw vendorError("DIAGRAM_VENDOR_OFFICIAL_TREE_INVALID", entry.path);
     }
-    return { path: entry.path.slice(prefix.length), sha: entry.sha };
-  }).sort(compareFiles);
+    files.push({ path: entry.path.slice(prefix.length), sha: entry.sha });
+  }
+  if (files.length === 0) throw vendorError("DIAGRAM_VENDOR_OFFICIAL_TREE_INVALID", "tree");
+  return files.sort(compareFiles);
 }
 
 function assertSkillsteadOfficialTree(files, officialTree) {
@@ -706,7 +715,10 @@ async function main() {
   process.stdout.write(`${JSON.stringify(await updateDiagramSkill({ name: options.skill }))}\n`);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Compare resolved paths, not a hand-built file:// string: import.meta.url percent-encodes anything a
+// URL must escape, so a checkout under a path with a space or a non-ASCII character never matches the
+// concatenated form. The guard then silently declines to run main, and the caller reads exit 0 as done.
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main().catch((error) => {
     process.stderr.write(`${error.stack ?? error.message}\n`);
     process.exitCode = 1;

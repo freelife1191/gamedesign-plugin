@@ -1,6 +1,6 @@
 ---
 name: maintain-game-design-memory
-description: Use when a human needs to review game-design memory candidates or explicitly approve, reject, retire, lint, or rebuild them.
+description: Use when a human reviews game-design memory candidates or approves, rejects, retires, lints, or rebuilds them.
 ---
 
 # 게임 기획 기억 유지관리

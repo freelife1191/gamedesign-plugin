@@ -2,7 +2,7 @@
 
 ## 목적과 최종 산출물
 
-Career 구조를 위한 vendored Skillstead 0.8.3의 editable SVG authoring과 canonical Chromium 정확한 2× PNG workflow를 설명합니다.
+Career 구조를 위한 vendored Skillstead 0.10.0의 editable SVG authoring과 canonical Chromium 정확한 2× PNG workflow를 설명합니다.
 
 ## 사용할 때
 

@@ -75,7 +75,7 @@ async function findBinary(names, explicitCandidate, env = process.env) {
   return { available: false };
 }
 
-// Keep this order byte-for-byte equivalent to the vendored Skillstead 0.8.3
+// Keep this order byte-for-byte equivalent to the vendored Skillstead 0.10.0
 // renderer. The probe must never advertise a browser that the renderer would
 // not select first.
 export function browserCandidates(platform = process.platform, env = process.env) {

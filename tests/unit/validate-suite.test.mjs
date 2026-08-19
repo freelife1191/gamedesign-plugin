@@ -4,12 +4,14 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { FORMAT_RESULT_FILES, runSuite } from "../../tooling/validate-suite.mjs";
+import { FORMAT_RESULT_FILES, SKIPPABLE_STAGES, STAGE_SHARDS, runSuite } from "../../tooling/validate-suite.mjs";
 
 const expectedStages = [
   "reference drift",
   "evidence audit",
   "vendor hash",
+  "vendor references",
+  "vendor catalog entries",
   "update manifest",
   "unit tests",
   "contract tests",
@@ -18,6 +20,7 @@ const expectedStages = [
   "official plugin validators",
   "skill quick validators",
   "isolation smoke",
+  "diagram render drift",
   "format smoke",
 ];
 
@@ -143,6 +146,132 @@ test("complete Task 11 delegates readiness to the full format regression gate", 
     assert.equal(result.formatStatus, "PASS");
     assert.deepEqual(formatStage.command.slice(1), ["tests/formats/run-format-gate.mjs"]);
     assert.equal(formatStage.rerun, "npm run test:formats");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("skippable stages are a closed set and a skip is never reported as a pass", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "validate-suite-skip-"));
+  const ran = [];
+  try {
+    const result = await runSuite({
+      repoRoot: root,
+      skip: [...SKIPPABLE_STAGES],
+      runCommand: async (stage) => {
+        ran.push(stage.name);
+        return { status: 0, signal: null };
+      },
+    });
+    assert.deepEqual([...SKIPPABLE_STAGES], [
+      "official plugin validators",
+      "skill quick validators",
+      "diagram render drift",
+      "format smoke",
+    ]);
+    assert.equal(result.ok, true);
+    assert.equal(result.releaseReady, false);
+    assert.equal(result.formatStatus, "SKIPPED");
+    assert.deepEqual(result.skipped, [...SKIPPABLE_STAGES]);
+    for (const skipped of result.skipped) assert.equal(ran.includes(skipped), false);
+    assert.deepEqual(ran, expectedStages.filter((stage) => !SKIPPABLE_STAGES.includes(stage)));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("an unknown skip name is refused rather than silently ignored", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "validate-suite-skip-"));
+  try {
+    await assert.rejects(
+      () => runSuite({ repoRoot: root, skip: ["unit tests"], runCommand: async () => ({ status: 0, signal: null }) }),
+      /not skippable/u,
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("release mode refuses to run with any stage skipped", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "validate-suite-skip-"));
+  try {
+    await assert.rejects(
+      () => runSuite({ repoRoot: root, release: true, skip: ["format smoke"], runCommand: async () => ({ status: 0, signal: null }) }),
+      /release runs every stage/u,
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("the isolation smoke inherits the official validator's skip rather than failing for the same reason", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "validate-suite-inherit-"));
+  const commands = new Map();
+  try {
+    await runSuite({
+      repoRoot: root,
+      skip: ["official plugin validators"],
+      runCommand: async (stage) => {
+        commands.set(stage.name, stage.command);
+        return { status: 0, signal: null };
+      },
+    });
+    assert.equal(commands.get("isolation smoke").at(-1), "--allow-missing-official-validator");
+
+    commands.clear();
+    await runSuite({
+      repoRoot: root,
+      runCommand: async (stage) => {
+        commands.set(stage.name, stage.command);
+        return { status: 0, signal: null };
+      },
+    });
+    assert.equal(
+      commands.get("isolation smoke").includes("--allow-missing-official-validator"),
+      false,
+      "a run that validates for real must not be told the validator may be missing",
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// CI runs the shards as separate jobs and reads four green checks as one green suite. That reading is only
+// true while the shards partition the stages: a stage in no shard runs nowhere and still shows green, and a
+// stage in two burns a runner twice for the same answer.
+test("the shards partition every stage exactly once", () => {
+  const assigned = Object.values(STAGE_SHARDS).flat();
+  assert.deepEqual([...assigned].sort(), [...expectedStages].sort(), "every stage belongs to exactly one shard");
+  assert.equal(new Set(assigned).size, assigned.length, "no stage is claimed by two shards");
+});
+
+test("a shard runs its own stages and never claims the whole suite passed", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "validate-suite-"));
+  try {
+    const ran = [];
+    const result = await runSuite({
+      repoRoot: root,
+      shard: "unit",
+      runCommand: async (stage) => {
+        ran.push(stage.name);
+        return { status: 0, signal: null };
+      },
+    });
+    assert.deepEqual(ran, [...STAGE_SHARDS.unit]);
+    assert.equal(result.ok, true);
+    assert.equal(result.shard, "unit");
+    assert.equal(result.releaseReady, false, "one shard is not the run");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("an unknown shard and a sharded release are both refused", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "validate-suite-"));
+  try {
+    const runCommand = async () => ({ status: 0, signal: null });
+    await assert.rejects(() => runSuite({ repoRoot: root, shard: "nope", runCommand }), /unknown shard: nope/u);
+    await assert.rejects(() => runSuite({ repoRoot: root, release: true, shard: "unit", runCommand }), /--shard is refused/u);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

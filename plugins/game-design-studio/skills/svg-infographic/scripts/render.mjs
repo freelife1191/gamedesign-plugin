@@ -24,7 +24,7 @@
 // substituting another renderer and labelling it a Chromium render is
 // forbidden (SKILL.md §5).
 
-import { readFileSync, writeFileSync, copyFileSync, openSync, readSync, closeSync, existsSync, mkdtempSync, mkdirSync, renameSync, rmSync, statSync } from "node:fs";
+import { readFileSync, writeFileSync, copyFileSync, openSync, readSync, closeSync, existsSync, mkdtempSync, mkdirSync, renameSync, rmSync, statSync , realpathSync } from "node:fs";
 import { spawnSync, spawn } from "node:child_process";
 import { setTimeout as delay } from "node:timers/promises";
 import { tmpdir } from "node:os";
@@ -33,6 +33,8 @@ import { pathToFileURL, fileURLToPath } from "node:url";
 import process from "node:process";
 
 import { runCli as runLintCli } from "./check-svg.mjs";
+import { runLayoutCli } from "./check-layout.mjs";
+import { preflight } from "./preflight-lib.mjs";
 
 // ---------------------------------------------------------------------------
 // Pure helpers (exported for unit tests)
@@ -266,6 +268,40 @@ async function runBrowserForScreenshot(executable, flags, shotPath, timeoutMs) {
 // profile handles a moment after the child exits, so EBUSY/EPERM/ENOTEMPTY
 // gets a bounded retry. A final failure is reported as an ASCII diagnostic
 // and never changes the render exit code.
+// --- DOM dump lifecycle ---------------------------------------------------
+// spawnSync's timeout cannot bound this path: Chromium may stay alive after producing its
+// result (behaviour render.mjs documents), and while a helper process holds the stdout pipe the
+// parent's synchronous read stays blocked past the timeout. In practice a call declared at 60
+// seconds spent 549 seconds and then failed.
+// So it uses the same contract as render.mjs: spawn into its own process group, kill our child
+// **as soon as the output we need appears**, and hard-bound the wall clock. No retries.
+export async function dumpDom(exePath, argv, { timeoutMs = 30000, maxBytes = 64 * 1024 * 1024 } = {}) {
+  return await new Promise((resolve) => {
+    let child;
+    try { child = spawn(exePath, argv, { stdio: ["ignore", "pipe", "pipe"], detached: true }); }
+    catch { return resolve({ stdout: "", stderr: "", reason: "spawn-error" }); }
+    let stdout = "", stderr = "", bytes = 0, settled = false;
+    const stop = (reason) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      // Clean up only our child and its helpers — the user's browser is in another group.
+      try { process.kill(-child.pid, "SIGKILL"); } catch { try { child.kill("SIGKILL"); } catch { /* already gone */ } }
+      resolve({ stdout, stderr, reason });
+    };
+    const timer = setTimeout(() => stop("timeout"), timeoutMs);
+    child.stdout.on("data", (b) => {
+      bytes += b.length;
+      if (bytes <= maxBytes) stdout += b;
+      // What we want is the probe output, not the whole dump. Once it appears we wait no longer.
+      if (/<\/pre>/.test(stdout)) stop("done");
+    });
+    child.stderr.on("data", (b) => { stderr += b; });
+    child.on("error", () => stop("spawn-error"));
+    child.on("close", () => stop("exit"));
+  });
+}
+
 export async function cleanupWithRetry(path, { rmFn = rmSync, retries = 5, delayMs = 300, delayFn = delay } = {}) {
   for (let attempt = 0; ; attempt++) {
     try {
@@ -321,6 +357,36 @@ export async function main(argv) {
   if (lintExit !== 0) {
     console.error("source lint failed: fix the hard errors above (SKILL.md section 4), then re-run.");
     return 5;
+  }
+
+  // --- 1a2. typography contract gate (typography SSoT) ----------------------
+  // An SVG carrying sketch/typography annotation must pass typography-check fail-closed before
+  // the browser runs — so running only the canonical renderer still cannot bypass a must-fix.
+  // (The runtime font-probe is a separate command; the static gate is this stage's contract.)
+  if (/data-treatment\s*=\s*["']sketch["']|data-typography-(scope|role)\s*=/.test(readFileSync(svg, "utf8"))) {
+    const skinCli = fileURLToPath(new URL("./skin.mjs", import.meta.url));
+    const tr = spawnSync(process.execPath, [skinCli, "typography-check", svg], { encoding: "utf8" });
+    if (tr.stdout) process.stdout.write(tr.stdout);
+    if (tr.status !== 0) {
+      console.error("typography contract failed: fix the effective-font errors above (design-kernel section 4), then re-run.");
+      return 5;
+    }
+  }
+
+  // --- 1b. layout contract gate (design-kernel §7) -------------------------
+  // An SVG carrying layout annotation runs fail-closed in the order check-svg -> check-layout ->
+  // browser. data-layout-unverified (exit 3) is an explicit review state, not a success — the
+  // hard gate does not treat it as a pass.
+  if (/data-(layout-(container|parent|item|group|title|unverified)|cluster(-id|-at)?)\s*=/.test(readFileSync(svg, "utf8"))) {
+    const layoutExit = runLayoutCli([svg]);
+    if (layoutExit === 3) {
+      console.error("layout contract: data-layout-unverified participants present — explicit review state, not a pass. Resolve or review them before canonical rendering.");
+      return 5;
+    }
+    if (layoutExit !== 0) {
+      console.error("layout contract failed: fix the padding/gap/cluster errors above (design-kernel section 7), then re-run.");
+      return 5;
+    }
   }
 
   // --- 2. viewBox ---------------------------------------------------------
@@ -415,6 +481,18 @@ img{display:block;width:${vb.w}px;height:${vb.h}px}
   }
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+// Entrypoint guard compares REAL paths so symlinked installs still execute —
+// the previous href comparison silently skipped main() behind a symlink (exit 0
+// with no output), bypassing the hard gate.
+const __isMain = (() => {
+  try {
+    if (!process.argv[1]) return false;
+    return realpathSync(fileURLToPath(import.meta.url)) === realpathSync(process.argv[1]);
+  } catch {
+    return import.meta.url === pathToFileURL(process.argv[1] ?? "").href;
+  }
+})();
+if (__isMain) {
+  preflight({ entrypointUrl: import.meta.url });
   process.exit(await main(process.argv.slice(2)));
 }

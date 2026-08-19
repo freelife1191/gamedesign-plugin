@@ -26,8 +26,17 @@ jobs:
           node tooling/check-suite-updates.mjs > "$summary"
           status=$?
           set -e
+          # An available upstream release is a recommendation, not a build break: nothing in the tree is
+          # wrong, and the decision to vendor a new version belongs to a person running the upgrade
+          # locally. Only an unresolved check (exit 1) fails, because that is the case where the audit
+          # did not actually answer the question it was scheduled to answer.
+          advisory="$(node tooling/update-vendors.mjs --report --from "$summary" || true)"
           {
             echo "## Bundled skill update audit"
+            echo ""
+            echo "$advisory"
+            echo ""
+            echo "적용은 저장소에서 \`npm run update:vendors\` 를 실행해 승인한 뒤에만 이루어집니다. 이 작업은 아무것도 바꾸지 않습니다."
             echo ""
             echo '```json'
             cat "$summary"

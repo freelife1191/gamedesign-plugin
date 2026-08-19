@@ -1,6 +1,6 @@
 ---
 name: research-game-design-jobs
-description: Use when game-design career work depends on current postings, employer or project facts, required or preferred skills, regional hiring signals, tool preferences, or evidence-backed candidate gaps.
+description: Use when career work needs current postings, employer facts, required skills, regional hiring signals, or tools.
 ---
 
 # Research Game Design Jobs

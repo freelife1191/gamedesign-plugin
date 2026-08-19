@@ -44,8 +44,21 @@ function assertNoRepeatedGenericReasonTemplates(entries) {
   }
 }
 
+// Entries that mirror a vendored upstream document are written from the packages, so their number is the
+// upstream release's business and changes on every bump. What must not move without review is the number
+// of documents this repository authored a decision about, so that is the count pinned here.
+const VENDOR_MIRROR_ROOTS = Object.freeze(["skills/svg-infographic", "skills/archify", "skills/humanize-korean"]);
+const AUTHORED_CATALOG_ENTRIES = 705;
+
+function isVendorMirrorEntry(entry) {
+  const document = entry.source_document ?? "";
+  return /^plugins\/game-design-(?:studio|career)\//u.test(document)
+    && VENDOR_MIRROR_ROOTS.some((root) => document.includes(`/${root}/`));
+}
+
 function assertSuiteCatalogCardinality(catalog) {
-  assert.equal(catalog.entries.length, 759, "catalog must retain exactly 759 entries");
+  const authored = catalog.entries.filter((entry) => !isVendorMirrorEntry(entry));
+  assert.equal(authored.length, AUTHORED_CATALOG_ENTRIES, `catalog must retain exactly ${AUTHORED_CATALOG_ENTRIES} authored entries`);
   assert.equal(
     catalog.entries.filter((entry) => entry.source_document === "README.md").length,
     1,
@@ -261,7 +274,11 @@ test("production exclusions retain exact package classes and source-specific evi
 test("production shared package mirrors retain structured build origins", async () => {
   const catalog = await loadArchifyCatalog({ repoRoot });
   const origins = catalog.entries.filter((entry) => Object.hasOwn(entry, "origin_source"));
-  assert.equal(origins.length, 95, "shared and product-source package mirrors declare an origin_source");
+  // Vendored mirrors carry an origin_source too, and how many Markdown documents Archify and im-not-ai
+  // ship is theirs to decide. Only the shared and product-source half is a number we chose.
+  const vendorOrigins = origins.filter((entry) => /\/skills\/(?:archify|humanize-korean)\//u.test(entry.source_document));
+  assert.equal(origins.length - vendorOrigins.length, 55, "shared and product-source package mirrors declare an origin_source");
+  assert.ok(vendorOrigins.length > 0, "vendored package mirrors declare an origin_source");
 
   const mappings = new Map([
     ["document-quality", ["shared/document-quality", "references/shared/document-quality"]],
@@ -460,11 +477,11 @@ test("curated Archify index rejects stale counts and spec links presented as sou
 test("Suite catalog cardinality rejects an appended record or duplicate README record", async () => {
   const catalog = await loadArchifyCatalog({ repoRoot });
   const appended = structuredClone(catalog);
-  appended.entries.push({ ...appended.entries[0], id: "unexpected-760th-record", source_document: "guides/README.md" });
-  assert.throws(() => assertSuiteCatalogCardinality(appended), /759/u);
+  appended.entries.push({ ...appended.entries[0], id: "unexpected-764th-record", source_document: "guides/README.md" });
+  assert.throws(() => assertSuiteCatalogCardinality(appended), /705/u);
   const duplicateReadme = structuredClone(catalog);
   duplicateReadme.entries.push({ ...duplicateReadme.entries[0], id: "duplicate-readme-record" });
-  assert.throws(() => assertSuiteCatalogCardinality(duplicateReadme), /759/u);
+  assert.throws(() => assertSuiteCatalogCardinality(duplicateReadme), /705/u);
   duplicateReadme.entries.pop();
   duplicateReadme.entries[1] = { ...duplicateReadme.entries[1], source_document: "README.md" };
   assert.throws(() => assertSuiteCatalogCardinality(duplicateReadme), /exactly one catalog record/u);

@@ -1,6 +1,6 @@
 ---
 name: visualize-game-design
-description: Use when a validated game design artifact contains loops, state transitions, progression, value flows, timelines, dependencies, roles, or other spatial structure that may be clearer as an accessible diagram.
+description: Use when a validated game design artifact needs a diagram of loops, state transitions, progression, or value flows.
 ---
 
 # Visualize Game Design

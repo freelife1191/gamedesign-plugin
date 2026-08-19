@@ -1,0 +1,120 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A new push supersedes the run it replaces; keeping the old one alive only burns runner minutes on a
+# tree nobody will merge.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Linux only, deliberately. The Windows offline lane was built, run, and read: it reports 272 failing
+  # assertions, and they are not one problem. Two are defects in shipped code — load-workspace-env refuses
+  # outright because Node does not define O_NOFOLLOW on Windows, and safe-memory-store fsyncs a directory,
+  # which Windows returns EPERM for. Porting those means redesigning two hardening primitives, which is its
+  # own piece of work with its own decisions to make, not a fix to fold into a CI change. The rest are POSIX
+  # assumptions in the tests and tooling themselves: hardcoded /bin/sh and /tmp, path joins that produce a
+  # doubled drive letter, a chmod-based assertion that cannot mean anything where chmod is a no-op. What
+  # actually has to hold on Windows is that a Windows checkout and install produce the same bytes as every
+  # other platform, and the install gate below proves exactly that, on Windows, every run. See
+  # architecture/plugin-suite.md for the full finding list and what is owed.
+  offline-gate:
+    name: Offline gate (${{ matrix.shard }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    # One shard, not the whole suite, so the ceiling is a third of what a single-queue run needed. Loose
+    # enough for an honest run on a shared runner, tight enough that a hang fails in minutes not hours.
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+        # Four jobs instead of one queue. The three test stages are three quarters of the run and have
+        # nothing to say to each other, so serialising them only spent wall clock. `validate-suite.mjs`
+        # owns the partition and a unit test holds it to covering every stage exactly once, which is what
+        # keeps a shard split from quietly becoming a stage nobody runs.
+        shard:
+          - checks
+          - unit
+          - contracts
+          - products
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Several contract tests validate their specs against a real Archify CLI resolved from the host.
+      # This puts the copy this repository already vendors, and verifies by hash in the same run, where
+      # the resolver looks — so the contracts assert against the real tool rather than being weakened.
+      - name: Stage the vendored Archify CLI as a host skill
+        run: node tooling/stage-host-archify.mjs
+      # Four stages cannot run here. The official plugin and skill validators ship with a Codex install.
+      # The format smoke imports a host-provided module that is not a dependency of this package. The
+      # diagram render drift compares PNG bytes produced by a headless Chromium against the host's fonts,
+      # so it only means anything on the machine whose renderer committed them. validate-suite records
+      # all four as SKIPPED, so a green run here is never read as a full one.
+      - name: Validate suite
+        run: >-
+          node tooling/validate-suite.mjs
+          --shard ${{ matrix.shard }}
+          --skip "official plugin validators"
+          --skip "skill quick validators"
+          --skip "diagram render drift"
+          --skip "format smoke"
+      - name: Note the stages CI could not run
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "### Skipped here, run locally before release"
+            echo ""
+            echo "- official plugin validators"
+            echo "- skill quick validators"
+            echo "- diagram render drift"
+            echo "- format smoke"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # Both operating systems, and Windows is the point of it. This is the lane that proves the spec's Windows
+  # contract: that a checkout and install on Windows yields the same bytes the other platforms yield.
+  install-gate:
+    name: Install gate (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Installed into a directory we name rather than globally, so the JavaScript entry point is at a
+      # path that is identical on every runner. A global install would leave only a launcher, and on
+      # Windows that launcher is a .cmd shim, which Node refuses to spawn without a shell — and a shell
+      # would have to re-quote the Hangul, space-containing paths this gate exists to exercise.
+      - name: Install the Codex CLI
+        run: npm install --no-save --no-fund --no-audit --prefix .codex-cli @openai/codex
+      # No model is called, so no credential is needed and none is provided. The round trip installs
+      # both products under a Hangul, space-containing CODEX_HOME and workspace, then compares the
+      # installed bytes against the source. --require-codex turns a missing CLI into a failure rather
+      # than a silent skip, because here the CLI was just installed and its absence is a real fault.
+      - name: Install round trip
+        run: >-
+          node tooling/install-roundtrip.mjs --require-codex
+          --codex .codex-cli/node_modules/@openai/codex/bin/codex.js

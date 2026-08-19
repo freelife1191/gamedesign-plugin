@@ -4,4 +4,20 @@
 * text=auto eol=lf
 
 shared/vendor/im-not-ai/** whitespace=-trailing-space
-shared/vendor/skillstead/svg-infographic/0.9.0/** whitespace=-trailing-space
+shared/vendor/skillstead/svg-infographic/*/** whitespace=-trailing-space
+
+# Vendored upstreams ship fonts and images. Git detects those by content anyway, but declaring them
+# keeps the classification independent of what happens to sit in the first 8000 bytes, and it matches
+# the register the packaging audit checks them against (tooling/lib/vendor-components.mjs).
+*.ttf binary
+*.otf binary
+*.ttc binary
+*.woff binary
+*.woff2 binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary

@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "name": "game-design-career",
   "sourceDateEpoch": 0,
-  "treeSha256": "d3cfad916003765f3cb7ba8c25a5f7d8560175695e91485e69b158ac7be8af59",
+  "treeSha256": "f313bd5e970e330ec77945c3a2f946cb42710497ee027340570e8d89b4e8097a",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
-      "sha256": "eafc6e2ce652ab9c69201d959f146e90c7ca51292540ffe8cb26fcb75fe52d1d",
+      "sha256": "ee18bd354d7bfb4a44b44d3bf10cfbca8757a39d758588d4ff490d390af8166f",
       "size": 1068
     },
     {
@@ -21,13 +21,13 @@
     },
     {
       "path": "README.md",
-      "sha256": "763236418130aa7676939525dfaf6b3452892c8bc73ef2d1976054cb39610db7",
-      "size": 63636
+      "sha256": "58090521f11eb9d4ded8e820de7b83390b6c07cb3c9a529b2a607102a05ef098",
+      "size": 64471
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
-      "sha256": "1c2b6dac3f8230785c1f5f3317055e88648bdc9643cb3311eb38b14b66878e0f",
-      "size": 2171
+      "sha256": "a27b427d6304e2f35ad9d0d5b9134be674f1e9c81d4a95d9ead85ab85cacb7f1",
+      "size": 2173
     },
     {
       "path": "agents/art-brief-director.md",
@@ -1286,12 +1286,12 @@
     },
     {
       "path": "references/shared/updates/installed-components.json",
-      "sha256": "afa5e4d1923ed870a7fe695fb3b06e6c220ccc532a7c316dafb87a6d449b720c",
-      "size": 842
+      "sha256": "11c6556f7ac56574afedc365c5ad256ee6bb4988f3d339f120bcc6b72026f5b0",
+      "size": 843
     },
     {
       "path": "references/shared/updates/suite-release.lock.json",
-      "sha256": "7c7471065c9d874b0a87a792fc085ef4342a191a16dc8d5ba0c68500577d9c5b",
+      "sha256": "a269605c00249f7f9f19e508370f07072db0f1237a271352a401bcb31e120391",
       "size": 207
     },
     {
@@ -1306,13 +1306,13 @@
     },
     {
       "path": "references/shared/vendor/archify/vendor.lock.json",
-      "sha256": "8abcc7e519c9cbbb6ca64415a41016bd83a15f84474d7e323047e29d435a8e19",
-      "size": 11599
+      "sha256": "34111e8a3c094ae3984d21472317e6e483b5c79be4d74c744665366f200ad287",
+      "size": 12660
     },
     {
       "path": "references/shared/vendor/skillstead/vendor.lock.json",
-      "sha256": "251c670761e0487aced544c4394516a09bc56e2f4cc4271912c5b4a6dfa233b3",
-      "size": 10421
+      "sha256": "89bb172814235831519753cfb54caf2f12943eca257f12a7c6f0f3795149ca3f",
+      "size": 60586
     },
     {
       "path": "references/source/docs/01. 게임 기획자 취업 튜토리얼/1. [게임 기획 취업] 게임 회사에 취업해야 하는 이유! - 자세한 리포트.md",
@@ -1576,8 +1576,8 @@
     },
     {
       "path": "scripts/capability-probe.mjs",
-      "sha256": "67898827eaf270b4e121ef5f3de59bfff7c0943c250adfbe3a825a4cbb7ddf0e",
-      "size": 20524
+      "sha256": "6afeded93a2371f14e284482ce74d6d70dedaac37fa4ce54c99568c51a1a9064",
+      "size": 20525
     },
     {
       "path": "scripts/capture-design-memory.mjs",
@@ -1636,8 +1636,8 @@
     },
     {
       "path": "scripts/lib/game-design-glossary-schema-evaluator.mjs",
-      "sha256": "45726e6b0e8163f49e3bf3c487334c3374386a224f45740014c8f1f40bdf0da2",
-      "size": 12526
+      "sha256": "c6307095a4050b70bb0c8fb0a2ecfe2b84d6041a09240429cf6f826b112fc6c5",
+      "size": 13124
     },
     {
       "path": "scripts/lib/image-file-validation.mjs",
@@ -1846,8 +1846,8 @@
     },
     {
       "path": "skills/apply-document-quality-profile/SKILL.md",
-      "sha256": "7dd900b45d45fe38018d18696caf2572b52ff76c9f468b1ca2f12c582d5916bd",
-      "size": 8923
+      "sha256": "5d451d7e9b5a57255956a705fddbd68687b6250d5e367019fd53efd30eb9a527",
+      "size": 8864
     },
     {
       "path": "skills/apply-document-quality-profile/agents/openai.yaml",
@@ -1861,18 +1861,18 @@
     },
     {
       "path": "skills/archify/SKILL.md",
-      "sha256": "fe4445b1c33706e8dc70c805cd1609272c1194a6dff1c5c8251abda3ca88cf4b",
-      "size": 12749
+      "sha256": "258c8b332f7a6cef15acd8c3a1c29ec5405d52897a55cd358b0baf623c9810f2",
+      "size": 13737
     },
     {
       "path": "skills/archify/assets/template.html",
-      "sha256": "95886aa9c7e466cf81fa3b26e90e4338c1e5fc7460477549626a97061791a58c",
-      "size": 626565
+      "sha256": "13d42e614546a842923b794ae5d26ee463951c0e37f842a5a0bd73849fb71e08",
+      "size": 627887
     },
     {
       "path": "skills/archify/bin/archify.mjs",
-      "sha256": "ed7b3f657c922d2c11523cca78d43b8e6e09b7a3245ec1319cf5145aad2a4cc4",
-      "size": 56592
+      "sha256": "4ce95433141a503c569235e7dfbe6964da626d230cab31960b676af862b3397d",
+      "size": 59079
     },
     {
       "path": "skills/archify/bin/open-artifact.mjs",
@@ -1888,6 +1888,16 @@
       "path": "skills/archify/bin/visual-check.mjs",
       "sha256": "1c7bf59b871ae2333919e034e79cd506a51be4a51ad93689bde35c809a07ae5c",
       "size": 18968
+    },
+    {
+      "path": "skills/archify/brand-marks/README.md",
+      "sha256": "8b771a16322ce9ea47fdc00b9935e33adf0f3af608f2d735235443e15ef622e2",
+      "size": 1449
+    },
+    {
+      "path": "skills/archify/brand-marks/catalog.json",
+      "sha256": "e1a6c555cbf8ea36fb8100a4a25824e7ab87bebe9871e450ba05b6dea3b036d6",
+      "size": 14162
     },
     {
       "path": "skills/archify/delta/architecture-delta.mjs",
@@ -1910,6 +1920,11 @@
       "size": 4370
     },
     {
+      "path": "skills/archify/examples/brand-aware-delivery.architecture.json",
+      "sha256": "d4f0df8114b3524756ffa49529c015e00757b0594a357183490c1edeb341e3c6",
+      "size": 3271
+    },
+    {
       "path": "skills/archify/examples/cache-miss-request.sequence.json",
       "sha256": "4bbaa6ca3cd4036002fd5d0f3a332eb922cec69d09bac3d7925f95beb4308389",
       "size": 4345
@@ -1926,8 +1941,8 @@
     },
     {
       "path": "skills/archify/examples/dataflow-product-analytics.html",
-      "sha256": "3c30dd770f181415c11ec0b0526d86991af2177fb790182ecb7bf47d0c798cd7",
-      "size": 644091
+      "sha256": "1bf03be86fa9897bdb9928e7a733d727e014c50c2ea427e329d46abe024e1954",
+      "size": 645413
     },
     {
       "path": "skills/archify/examples/deployment-release.lifecycle.json",
@@ -1946,8 +1961,8 @@
     },
     {
       "path": "skills/archify/examples/lifecycle-agent-run.html",
-      "sha256": "9ef047c4a029fa4649d84a0c299552a5d02f31ac0e3a51b7187b6696f33ed718",
-      "size": 637726
+      "sha256": "03932501477f47297b1f41f7d77f20fb2e80761f97701c14d6863598f570b55a",
+      "size": 639048
     },
     {
       "path": "skills/archify/examples/product-analytics.dataflow.json",
@@ -1966,13 +1981,13 @@
     },
     {
       "path": "skills/archify/examples/sequence-cache-miss-request.html",
-      "sha256": "738d651b8c3f3ff8b5b5298834cbd8b7acda5f46a456c5be031647cbc6eb2216",
-      "size": 640506
+      "sha256": "05412f1ea54dc895cda3baa7b5c6ba77199253475ad09b5c40b5527db0661a09",
+      "size": 641828
     },
     {
       "path": "skills/archify/examples/web-app-rendered.html",
-      "sha256": "b1753910784abc7e37952868051861c2c90d953aeb80342ebb59febdeec87612",
-      "size": 637933
+      "sha256": "382cb6f48e806f9a591df102c86dcf102215ebaa7c6b9ec6a1f81fd085234458",
+      "size": 639255
     },
     {
       "path": "skills/archify/examples/web-app.architecture.json",
@@ -1981,12 +1996,12 @@
     },
     {
       "path": "skills/archify/examples/workflow-agent-tool-call-rendered.html",
-      "sha256": "a7a3b2836f7f5795173db40527a9d2df1c53c99ac3a08049617ccef3072629c0",
-      "size": 644009
+      "sha256": "f8c03155d4601fb56a48d8d712a94bcd9d3c859e495ba231a3f9a96b15010145",
+      "size": 645331
     },
     {
       "path": "skills/archify/package.json",
-      "sha256": "5bfc71c103a1b9f925c18e942196a7e142b24082a4105525f86feecabde30d6f",
+      "sha256": "4493ac62a67c45c7ba8b3fbd6eee89706d9ed5dbb080f2e8044ff0ac09785050",
       "size": 303
     },
     {
@@ -1998,6 +2013,11 @@
       "path": "skills/archify/references/authoring-contract.md",
       "sha256": "35220be7dee5792d630e0b5d5a3e4d57ddf16a497015a4674d0fdb0910f7811b",
       "size": 8952
+    },
+    {
+      "path": "skills/archify/references/brand-marks.md",
+      "sha256": "8010869da70677e686ecb312d9c3eec2d20723a44f817ab2bbf5525361c8a136",
+      "size": 2179
     },
     {
       "path": "skills/archify/references/delivery-contract.md",
@@ -2016,8 +2036,8 @@
     },
     {
       "path": "skills/archify/renderers/architecture/render-architecture.mjs",
-      "sha256": "c49ba91dd57d78bd2a3a5852ba1cdc8bf6b2afd1d96845ff3b240bdae55c5be0",
-      "size": 33528
+      "sha256": "92efe4f7ae052e42c553c9d73f630694cb97f0498ea03f94af384e514e99eec6",
+      "size": 34062
     },
     {
       "path": "skills/archify/renderers/dataflow/README.md",
@@ -2026,8 +2046,8 @@
     },
     {
       "path": "skills/archify/renderers/dataflow/render-dataflow.mjs",
-      "sha256": "89b173216c638017baa24e90a6c42ab9ce13d7e43eb2371aa871109563a5a1a4",
-      "size": 19906
+      "sha256": "a805831425dffc80f4dd9193b36562190432c26062a225a50254efd37af6e4aa",
+      "size": 20457
     },
     {
       "path": "skills/archify/renderers/lifecycle/README.md",
@@ -2036,23 +2056,28 @@
     },
     {
       "path": "skills/archify/renderers/lifecycle/render-lifecycle.mjs",
-      "sha256": "ac37f1afed1a1d9b70bcae3113edb1d945b0699e11efaeda9e35f03ba3cb56cf",
-      "size": 22668
+      "sha256": "c96017b3834a480aa4ed5168b67faefde989cd91545df38be5217ad89bc8309d",
+      "size": 23344
     },
     {
       "path": "skills/archify/renderers/sequence/README.md",
-      "sha256": "c18894766441faa0d1c88fe02a96f0eabe05e1d477463f8ec52b94728cec3b88",
-      "size": 4128
+      "sha256": "a442335dcf44b1587d3ad88809e31b001a4fafdf7a134040e8b1927455af4206",
+      "size": 4828
     },
     {
       "path": "skills/archify/renderers/sequence/render-sequence.mjs",
-      "sha256": "f6ce2758522405343dcf13f3de20407a00a1f079b2eca67c8518bbc015e83ace",
-      "size": 20313
+      "sha256": "c394998c21e61e43a2ac38439dd17a1f8079ff998b512ecaa6a8c4a270e1004d",
+      "size": 21996
+    },
+    {
+      "path": "skills/archify/renderers/shared/brand-marks.mjs",
+      "sha256": "4557b7f3eec25a3dba66a0f5da1c5dca6ec607e2a68e9be51cd697cefe9e6425",
+      "size": 22582
     },
     {
       "path": "skills/archify/renderers/shared/cli.mjs",
-      "sha256": "0d221a5368b61d09ea4f21d14c6c31b2fea48b3b49edb205021261a068c271a8",
-      "size": 9291
+      "sha256": "55bc26bb410eff99b10cab065e463df1ecdd48a1c4c319898fe2c66f800f4cb1",
+      "size": 10104
     },
     {
       "path": "skills/archify/renderers/shared/diagnostics.mjs",
@@ -2065,14 +2090,19 @@
       "size": 6936
     },
     {
+      "path": "skills/archify/renderers/shared/generated-brand-marks.mjs",
+      "sha256": "0f157d229c12df6f53763a3b88684baa5803a52484c49c4d34ec40b8743beea2",
+      "size": 163612
+    },
+    {
       "path": "skills/archify/renderers/shared/generated-validators.mjs",
-      "sha256": "89201a8f0916991b597f620891a885c697540de621fd4c0e836fca57acaba102",
-      "size": 382681
+      "sha256": "e675550e66bf42be9dcf7e9f0cccdbf2bdc5e74599b8e7fd03b41361087b2ffc",
+      "size": 420243
     },
     {
       "path": "skills/archify/renderers/shared/geometry.mjs",
-      "sha256": "71e5ee761fced528afa613821e4d4ad47699e1067b83439a1152617536b4cf23",
-      "size": 52614
+      "sha256": "2b7b5a1e0d7b647f4afc0a71440931f2d6bdb4a6039f492767d5dad7e783622c",
+      "size": 53072
     },
     {
       "path": "skills/archify/renderers/shared/layout-report.mjs",
@@ -2116,43 +2146,43 @@
     },
     {
       "path": "skills/archify/renderers/workflow/render-workflow.mjs",
-      "sha256": "4f8e16ca648b485486ce4ff7c7d0dba4ec5af4a2d0ec8c9f41c7208ae9baba68",
-      "size": 27456
+      "sha256": "af930f2e3fe268d58c55e36652500b05caaa8668843f85512a19e9759b2f9e79",
+      "size": 27941
     },
     {
       "path": "skills/archify/schemas/README.md",
-      "sha256": "a280d6f9fee20ad7f0e75e43b82675d85f89578d6743519e1e19888d307a4d73",
-      "size": 9138
+      "sha256": "0bc4190034b27dcf074566decf828b25007a2f5e0b77a47525beca9793e395d3",
+      "size": 10296
     },
     {
       "path": "skills/archify/schemas/architecture.schema.json",
-      "sha256": "2f2fad88bed1b408a9fd65d62f94f86c43eeefa2e82ff11edc8a2a5f20ac1a07",
-      "size": 6523
+      "sha256": "d9799dc024103879edf749ee39b4731787988a4b52b559bf3b05b41759735d28",
+      "size": 6593
     },
     {
       "path": "skills/archify/schemas/common.schema.json",
-      "sha256": "7cbd0cfff3715fb89a50c75188c7893db853f7f27a821522142717300da1c3e4",
-      "size": 2041
+      "sha256": "a18ee7414f8a23a1c0faf84e14926290f0375fa28fdc8448d4e1ca7f65511890",
+      "size": 2670
     },
     {
       "path": "skills/archify/schemas/dataflow.schema.json",
-      "sha256": "436a03b806061f623fbe9913a1476e61c8af2273047620bc91a823249bb15356",
-      "size": 5972
+      "sha256": "0e613944defa8d63d1de391e656f39c35d743f10d28b66e3dc5942e2a41fc997",
+      "size": 6064
     },
     {
       "path": "skills/archify/schemas/lifecycle.schema.json",
-      "sha256": "3dc62d8d382e1495c5b43b5a4570716bd57e8e9e02f46b447ba37896b0cf917c",
-      "size": 6662
+      "sha256": "e43b84beb819afada46ef265445c30814f3c085575e4ec289f7d42f336cb21fb",
+      "size": 6754
     },
     {
       "path": "skills/archify/schemas/sequence.schema.json",
-      "sha256": "2da7f92f6fdf12d218edfc4a0b96c494bcf96572982152be002cf5cabf04f272",
-      "size": 5132
+      "sha256": "8bdea875fcf04ee14c6365615b381d1f24ce7ac0e848685b8857fb752681ef08",
+      "size": 5664
     },
     {
       "path": "skills/archify/schemas/workflow.schema.json",
-      "sha256": "4c0d90c4216b8c0fb456dd0912048d00ecc363b6c0cb53faa2837c3d729b2608",
-      "size": 8476
+      "sha256": "d1fa5628447b2f5f8a44bfc5e207d7a545f7f049a7a53cac5bde75dd5fdaa514",
+      "size": 8568
     },
     {
       "path": "skills/archify/scripts/check-render-output.mjs",
@@ -2166,8 +2196,8 @@
     },
     {
       "path": "skills/build-game-design-portfolio/SKILL.md",
-      "sha256": "e933a46a0becb31eef3d7bd1982b5937ba6effa53a2c5a03a9e516eee809f059",
-      "size": 2714
+      "sha256": "8e2f29dd727344209f12cdf90d1570a29c3a8c0644be0386c4042ad69278f0f6",
+      "size": 2637
     },
     {
       "path": "skills/build-game-design-portfolio/agents/openai.yaml",
@@ -2181,8 +2211,8 @@
     },
     {
       "path": "skills/export-career-documents/SKILL.md",
-      "sha256": "008903b696440973beb55dd62a8babcb99da1f4142071bd23cd0d4f6b870285f",
-      "size": 3463
+      "sha256": "7063058a67531ca43dca784151872a143a9d8a61fa0705eb7095db638a626396",
+      "size": 3385
     },
     {
       "path": "skills/export-career-documents/agents/openai.yaml",
@@ -2196,8 +2226,8 @@
     },
     {
       "path": "skills/game-design-career/SKILL.md",
-      "sha256": "20b848841e5b409dbec251e81ed7c65934bfaf14a6b185c7fcce6b7d50b27df2",
-      "size": 5115
+      "sha256": "db93fd726a6d750f66a5753df7817db0ff97ce900f20ccca5c32d6b806ca1a38",
+      "size": 5001
     },
     {
       "path": "skills/game-design-career/references/handoff.md",
@@ -2206,8 +2236,8 @@
     },
     {
       "path": "skills/generate-image-assets/SKILL.md",
-      "sha256": "5b97293cdc8c7a3ce2a492c4f007687d424346e662b761ee15e4b0e351fdd16e",
-      "size": 3957
+      "sha256": "8448dcd8ccef96183da517230bfb390b3b0dff2e07209aad00065056c59f519f",
+      "size": 3916
     },
     {
       "path": "skills/generate-image-assets/agents/openai.yaml",
@@ -2216,8 +2246,8 @@
     },
     {
       "path": "skills/humanize-korean/SKILL.md",
-      "sha256": "6c34dbf00c23ee52e5cb374273952dab9bb5d38552cf1fb7a90ed42854ee304f",
-      "size": 4352
+      "sha256": "7a60c8240218ac7a3cb15f26f0824a682958cdc0475ba2d828c8375edc870569",
+      "size": 4397
     },
     {
       "path": "skills/humanize-korean/references/ai-tell-taxonomy.md",
@@ -2256,23 +2286,23 @@
     },
     {
       "path": "skills/humanize-korean/references/metrics_v2.py",
-      "sha256": "97343e74d16d71eeaae773cfb2e3b5970bd395239b1457b9ca6e8bebae2740bd",
-      "size": 31314
+      "sha256": "e73ef18e0a5165f4e67250bc26808410394c92cda39efd456f1cea0cd90cc5cc",
+      "size": 31306
     },
     {
       "path": "skills/humanize-korean/references/quick-rules.footer.md",
-      "sha256": "933c5300b71fdf6eecc0ec0788910afd9a166ce7969ba129e2029ced000f2335",
-      "size": 1920
+      "sha256": "6101e6ca4da121bc73163207067d0eb3407b9cd0694b51187c7a8b56b4aaf6f2",
+      "size": 2033
     },
     {
       "path": "skills/humanize-korean/references/quick-rules.header.md",
-      "sha256": "e129aa91bfe74433d81ff6817e934a233a9a7febd85f1f9484eca1ced33c1c13",
-      "size": 1156
+      "sha256": "592781fededf8cddfa86820cc1fb4b96599580f350c3729958dde0687fd3c614",
+      "size": 1657
     },
     {
       "path": "skills/humanize-korean/references/quick-rules.md",
-      "sha256": "cc8947e145a34af000b3684ef09ed62c51c0b35080f43b96bcd38e2ff98d28ef",
-      "size": 10040
+      "sha256": "258bd9f755fc04a5894f42e5e0a0dcf3c66ee7cf20854d91b4fbac0becf2c08e",
+      "size": 10654
     },
     {
       "path": "skills/humanize-korean/references/rewriting-playbook.md",
@@ -2301,13 +2331,13 @@
     },
     {
       "path": "skills/maintain-game-design-memory/SKILL.md",
-      "sha256": "dd853dbebd860c0c7d86d5a174f934e7050b5450aaae8b78b50fb9271d4915c5",
-      "size": 1114
+      "sha256": "af528b2d8881b91ad9de5b34c602a1f5551535eea81dc1e85dfa071a1e6bdb52",
+      "size": 1100
     },
     {
       "path": "skills/map-game-design-career/SKILL.md",
-      "sha256": "4bc2e2b48a1e5c9b0a1710bcde5a7048978cdd429917c52cfce12eb1d43e67db",
-      "size": 2542
+      "sha256": "93edffa3debf101db8d9696a7e73d497da963c8a5b8487d540d819b5f52a2ca1",
+      "size": 2437
     },
     {
       "path": "skills/map-game-design-career/agents/openai.yaml",
@@ -2316,8 +2346,8 @@
     },
     {
       "path": "skills/orchestrate-game-design-career/SKILL.md",
-      "sha256": "e3da7f0d1715decb0578b8bfcbb35b60c88574e58b82fd078b4f8b2d581a9e69",
-      "size": 5117
+      "sha256": "523c1957b4addbef85dcac9a57a3a4e0df96a1cf83e9b84b000757d32a3d0bd0",
+      "size": 5022
     },
     {
       "path": "skills/orchestrate-game-design-career/agents/openai.yaml",
@@ -2336,8 +2366,8 @@
     },
     {
       "path": "skills/plan-image-assets/SKILL.md",
-      "sha256": "189e3141ad5cf421a568607d35f3ab54950a606ea457bf8f341a257d0b625de3",
-      "size": 3371
+      "sha256": "3e1e91627c847def3ce597d830972d9c8ab9ed477db11f9b6f46492eeb961878",
+      "size": 3300
     },
     {
       "path": "skills/plan-image-assets/agents/openai.yaml",
@@ -2346,8 +2376,8 @@
     },
     {
       "path": "skills/plan-junior-growth/SKILL.md",
-      "sha256": "c53ae6481e984f25ce8f20cf340309f61b6c7da2f5b80a7637719710690ae590",
-      "size": 2431
+      "sha256": "2cf0f2a2699cadbcbe7526e190a3f9dbf304920213d20061c339be1f998986f0",
+      "size": 2392
     },
     {
       "path": "skills/plan-junior-growth/agents/openai.yaml",
@@ -2356,8 +2386,8 @@
     },
     {
       "path": "skills/polish-game-design-writing/SKILL.md",
-      "sha256": "26a0bff643803edbcbce330eb0dea2047e17c2815a516ccda494cca6c63ef973",
-      "size": 4343
+      "sha256": "5f2ccce0aea01d1ab0b920d341acb3d8c39cbcff06811ac9f8d83706ef68a21d",
+      "size": 4324
     },
     {
       "path": "skills/polish-game-design-writing/agents/openai.yaml",
@@ -2366,8 +2396,8 @@
     },
     {
       "path": "skills/practice-game-design-interview/SKILL.md",
-      "sha256": "1a2c9937e859849c43886f449a0a2ef09354d21e4060720d0a03ac104a77e882",
-      "size": 2341
+      "sha256": "b1fd17eaf532810ee51c8ba02e1a08a10f4ad2b9208b3faa3d5df78a8a263fe4",
+      "size": 2306
     },
     {
       "path": "skills/practice-game-design-interview/agents/openai.yaml",
@@ -2376,8 +2406,8 @@
     },
     {
       "path": "skills/research-game-design-jobs/SKILL.md",
-      "sha256": "7a9f4b8de2506d6504ce60cd54a8a8b8b05742ece6e13fe91defb45222765435",
-      "size": 4048
+      "sha256": "7534660a4ba1e0254f9c395e983fc76ee997f1fd87d795e8b28721277f9eade3",
+      "size": 3964
     },
     {
       "path": "skills/research-game-design-jobs/agents/openai.yaml",
@@ -2396,8 +2426,8 @@
     },
     {
       "path": "skills/reverse-engineer-game-design/SKILL.md",
-      "sha256": "85dab0c08e18f3260aeda1360a842fed4ff3d6192921a6d50a6c661552fba0e2",
-      "size": 2838
+      "sha256": "a2c56f83d6720ab600382d44ec9bbe14ffcf9d53800ccd240ac7e56182ba2e72",
+      "size": 2739
     },
     {
       "path": "skills/reverse-engineer-game-design/agents/openai.yaml",
@@ -2406,8 +2436,8 @@
     },
     {
       "path": "skills/review-game-design-portfolio/SKILL.md",
-      "sha256": "2165bd8f2249755843f0699f0c180add41f84655556c9b4f82217b1412dfd423",
-      "size": 2259
+      "sha256": "85aac7bb0b7a6f7e860cf6708646e631d5487aad599c4d43abe3779a5083b6fa",
+      "size": 2247
     },
     {
       "path": "skills/review-game-design-portfolio/agents/openai.yaml",
@@ -2416,8 +2446,8 @@
     },
     {
       "path": "skills/review-image-assets/SKILL.md",
-      "sha256": "cb6c0e2bcc3a2d34c5956485a405434ec3b73dc0eebe78aa0a100b10bedd8b2b",
-      "size": 3514
+      "sha256": "dabd430c6f2acae5ccbcbf2dd7f728c8e798b1414ff4f59709a7a7f95b9d30a4",
+      "size": 3483
     },
     {
       "path": "skills/review-image-assets/agents/openai.yaml",
@@ -2426,8 +2456,8 @@
     },
     {
       "path": "skills/svg-infographic/CHANGELOG.md",
-      "sha256": "2b22255c3f8df790c447b5810d5efff4c893b544aad41036cd6131e0d388e78a",
-      "size": 3117
+      "sha256": "8e690dc46197df59a52f6f106597330c859aec0e0d3972cbee99b4fa7e8c41a5",
+      "size": 6618
     },
     {
       "path": "skills/svg-infographic/LICENSE.txt",
@@ -2436,43 +2466,643 @@
     },
     {
       "path": "skills/svg-infographic/README.ko.md",
-      "sha256": "3be6be71eb58f3873186a4f140242ca0373b8c5d9d3f60404a1950cc1223b9df",
-      "size": 16846
+      "sha256": "f87182595f1b534bf9798a1eb08689a81d3c56bfd7867452b4a94861ae57e4f7",
+      "size": 19245
     },
     {
       "path": "skills/svg-infographic/README.md",
-      "sha256": "2917952c8c9d157c55682811b4fe4171fcae34f78630af8e51628139b947d598",
-      "size": 14331
+      "sha256": "2043cb45057158fb9967e885780cd40344861d4b172cfb2360d891ff396c1cd3",
+      "size": 16665
     },
     {
       "path": "skills/svg-infographic/SKILL.md",
-      "sha256": "65834a67f0aa273c65923555b1a1440fe31e468a2c42f5a761b04eacf2682035",
-      "size": 23508
+      "sha256": "ba02d911917611e25b08dd06c7b26a197f3e62c0f5591b0a2627e6aca60fd6ca",
+      "size": 29915
+    },
+    {
+      "path": "skills/svg-infographic/assets/fonts/HiMelody-OFL.txt",
+      "sha256": "ed80f0ffdf9088b38cc85305b0122e43e0192bf6f4bbb71d6ce59ffd93c7a265",
+      "size": 4353
+    },
+    {
+      "path": "skills/svg-infographic/assets/fonts/HiMelody-Regular.ttf",
+      "sha256": "360d2c0a880918aa48328d1d9219f5390788d09a1c9353e12b471de018673ae6",
+      "size": 12623412
+    },
+    {
+      "path": "skills/svg-infographic/assets/fonts/Pretendard-Bold.otf",
+      "sha256": "2e91915fab54df71cc9598ebf608b2bdb54c6fe3c066ac61dff0bc44fca71cc7",
+      "size": 1576660
+    },
+    {
+      "path": "skills/svg-infographic/assets/fonts/Pretendard-OFL.txt",
+      "sha256": "b04538c9abec39a3db75108cf0af0fd9c77032fe8aa2cf38345b4d250e98e38e",
+      "size": 4419
+    },
+    {
+      "path": "skills/svg-infographic/assets/fonts/Pretendard-Regular.otf",
+      "sha256": "3ffbacde6ab8411f1d2db54bb9b1f0b3ee2a738932033722cf0388c06aed1c93",
+      "size": 1574352
+    },
+    {
+      "path": "skills/svg-infographic/assets/fonts/README.md",
+      "sha256": "cef14905587748f179eb36c684e50bc3270e99774bdb193eeabf0e570b071f64",
+      "size": 2374
+    },
+    {
+      "path": "skills/svg-infographic/references/PROMPT-GALLERY.md",
+      "sha256": "a3863b5e356452c286593aae4ed54500936bf9610c5bb636ab495be77b0593e9",
+      "size": 13609
     },
     {
       "path": "skills/svg-infographic/references/archetypes.md",
-      "sha256": "7199fb4c6303a80cb78078a81b40b10d73e37e0b03802b50a6fe1047e181a6af",
-      "size": 11832
+      "sha256": "c902f85f1fa59643f74f1188e6b679a6b9e8328b5b1c6677c17cef1567eeb8b7",
+      "size": 4509
     },
     {
       "path": "skills/svg-infographic/references/authoring.md",
-      "sha256": "a2c8cdf6c528df360dbbe245370a5c52076359544fb7341f8263afe45d8fcae7",
-      "size": 25752
+      "sha256": "ed20771d20e186c28b19709ac94f2f4137bccf7121d64b1abbdc1c85ee5fb604",
+      "size": 25123
+    },
+    {
+      "path": "skills/svg-infographic/references/delivery/font-delivery-v1.yaml",
+      "sha256": "1fc29ca6a5bd7e1ba43e396c74766581de7cdb4c0098bfcd971d0130d6030307",
+      "size": 2545
+    },
+    {
+      "path": "skills/svg-infographic/references/design-kernel.md",
+      "sha256": "f1e548f3b3de866b1148e7dbc99844f5c489c97c1fc0261efd5b4f191a1e1557",
+      "size": 39662
+    },
+    {
+      "path": "skills/svg-infographic/references/language-policy.yaml",
+      "sha256": "4b6bc39061b6c6e8c113d7146d512425c6be0829f6aec0b17fa754409891029a",
+      "size": 4784
+    },
+    {
+      "path": "skills/svg-infographic/references/legacy/page-title-rail.md",
+      "sha256": "bb4eaafd967147e91ce692f6179317c455f42a427efbde92ddd2e1005df30f2e",
+      "size": 2422
+    },
+    {
+      "path": "skills/svg-infographic/references/media/README.md",
+      "sha256": "4bb0950a468112b49d82d6a1aef39cbb83ba970156cbd3f3b31d94f696aac7c1",
+      "size": 1823
+    },
+    {
+      "path": "skills/svg-infographic/references/media/canonical-skin-contact-sheet.png",
+      "sha256": "8509aaba2664afee6e24132a7fb259854f35bb46e08d7fce8373da33bf6fb7c9",
+      "size": 486372
+    },
+    {
+      "path": "skills/svg-infographic/references/media/canonical-skin-contact-sheet.svg",
+      "sha256": "26b578a8874bc06353d32db192f05eb8c6e04377b303992dc51fae8137ce6664",
+      "size": 245406
+    },
+    {
+      "path": "skills/svg-infographic/references/package-surface.yaml",
+      "sha256": "4dcf76807b8bfd61a5c7201f0644f1ec329174b6d698b27dea67d8a82a1575ed",
+      "size": 7111
     },
     {
       "path": "skills/svg-infographic/references/sketch.md",
-      "sha256": "887c33236665d3e7645b3bedaff564a7326542c1de1b4ecc6497a007c7aa8403",
-      "size": 8431
+      "sha256": "9107f3bfc41c56c5e6988060f875bd0d384d57dabc6baf0bae4681c68aa4dc46",
+      "size": 9731
+    },
+    {
+      "path": "skills/svg-infographic/references/skins/current-v1.yaml",
+      "sha256": "d02498fd9e0a2efea6bb7f8dbbaa493de0749998c351e4941b08eb3c09cab3b2",
+      "size": 1356
+    },
+    {
+      "path": "skills/svg-infographic/references/skins/derivation-v1.yaml",
+      "sha256": "6d886d48716b7c086901d045a6824603010b33dc7311d15ac656e3227089bac8",
+      "size": 1970
+    },
+    {
+      "path": "skills/svg-infographic/references/skins/legacy-v0.8.yaml",
+      "sha256": "7712d9641527533a220e13fba867a9308c1a7db9a5527295600f6022d72ad8ec",
+      "size": 901
+    },
+    {
+      "path": "skills/svg-infographic/references/skins/pageframe-v1.yaml",
+      "sha256": "f4edd624bbe296d4726da6cdfb71643ffb6a96507066cd1f9925638d4ea2d04d",
+      "size": 3367
+    },
+    {
+      "path": "skills/svg-infographic/references/skins/registry.yaml",
+      "sha256": "d212d80dd8e912d5d21d0c4484de6e6ce2046eb4bb4d9e67368fb1175423606f",
+      "size": 405
+    },
+    {
+      "path": "skills/svg-infographic/references/skins/sketch-overlay-v1.yaml",
+      "sha256": "6fad8d4591ae74b070736a31ffa7feac65cb72f5f3fb56358715668f0eb78ae8",
+      "size": 1435
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/approval-gate.canonical.yaml",
+      "sha256": "ac19876c44cd223a87d1a669fd72b85f20ed24005bd7136b23a5d8060bdf7ccf",
+      "size": 797
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/approval-gate.stress-cardinality.yaml",
+      "sha256": "854a8112fa58c5a8cca7e3d6626757614333f3cf1ff33495b05158f136c097e7",
+      "size": 878
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/approval-gate.stress-copy.yaml",
+      "sha256": "2420b837b1a545d48d1a17462394db97df1863e399c0164f34733328e178057b",
+      "size": 974
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/approval-gate.stress-degrade.yaml",
+      "sha256": "7cd6e0c4dab460abb96af9b0ba940d25614c82a806cc8e3b8a60ff1d907b872a",
+      "size": 867
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/before-after.canonical.yaml",
+      "sha256": "333e21cee25ea4d81671978d5a82562857afaa216ba4c42b22ee93a7403211ca",
+      "size": 862
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/before-after.stress-cardinality.yaml",
+      "sha256": "3e9b3b8b93d0fd0cd569aea025fb721f7f429b280f60d447e9557fc092ba8056",
+      "size": 1552
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/before-after.stress-copy.yaml",
+      "sha256": "7dc676d44c7e679805a7d8be612a6dd4bb21ffa0ffb097cfb8481d100187b28b",
+      "size": 1031
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/cards-kpi-grid.canonical.yaml",
+      "sha256": "fda34ae4566fc67adcee1c72b7e2533c6b49522728ada61639e6165f32c24e55",
+      "size": 1217
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/cards-kpi-grid.stress-cardinality.yaml",
+      "sha256": "2c8c7a9522b68f57818dd465118d526ae9ad2a52cd57d5bed24d9ae6f63ff756",
+      "size": 1414
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/cards-kpi-grid.stress-copy.yaml",
+      "sha256": "e96c89a49c5ee53a7c0e915522525ddcfb7dd7b4a5f836077b572dc4dc26f4cc",
+      "size": 1534
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/cards-kpi-grid.stress-degrade.yaml",
+      "sha256": "850623b4accb3fb2f95ccd4a94cbec5b5185484a88e856ef1af4a9dfeab03661",
+      "size": 1418
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/decision-matrix.canonical.yaml",
+      "sha256": "0c23a9f8770902b32618ebf5a960aa8f06d2d6da3ed42bf954aa2533c54c30ed",
+      "size": 1514
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/decision-matrix.stress-cardinality.yaml",
+      "sha256": "a57bb154d700b63ce1eba1025fc50a4a9392b17f016ac616fb9aff77b820c94c",
+      "size": 2085
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/decision-matrix.stress-copy.yaml",
+      "sha256": "a0e5cb70402668d0212a966d985b53c6f76c4ba230a265bbb9ab853f7070dc40",
+      "size": 1785
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/decision-matrix.stress-degrade.yaml",
+      "sha256": "da659bcfadd8dea54e759055a39be1037cf17ada7cc58e8e319190ddf6773601",
+      "size": 2080
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/layer-stack.canonical.yaml",
+      "sha256": "2e19cb6d8b86e2095e769407e93566482ae8f304060f6f68bd62adcfd6134d03",
+      "size": 1516
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/layer-stack.stress-cardinality.yaml",
+      "sha256": "1688664d7979aba1bdd9ae31732749b4863dbad7d689722a6982a5d36948098f",
+      "size": 2697
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/layer-stack.stress-copy.yaml",
+      "sha256": "9c0a79aa9a19eef1a3ec2775241863ea8f36955ae9c78cb4e6ed2023f3331d19",
+      "size": 960
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/layer-stack.stress-degrade.yaml",
+      "sha256": "ce083fe1f027fb3d40e7355b3cc5ca17e24c59bc496566c32d574aeda432ed37",
+      "size": 2823
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/nested-scope.canonical.yaml",
+      "sha256": "1d3db4418ad8da0f2ee9b0bc947dac528863755af8dcbba202e35c5b51bf6909",
+      "size": 656
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/nested-scope.stress-cardinality.yaml",
+      "sha256": "f8a682e3780e0648bd5e5ab0ecc7ae82e40102605194e8d173c032837e3b6454",
+      "size": 722
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/nested-scope.stress-copy.yaml",
+      "sha256": "0e14efa59552a45db01729f53d277189fdd295d364268de9319fea68be6a89d5",
+      "size": 748
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/process-flow.canonical.yaml",
+      "sha256": "33aa53633359c7918468b066d6292aba07b9f32ef147c1d744bd83772ba5b51b",
+      "size": 711
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/process-flow.stress-cardinality.yaml",
+      "sha256": "3aa5e7aefad79618d941285c18142acf4d3bdd97512d4bff7a83c2d1ad099c46",
+      "size": 787
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/process-flow.stress-copy.yaml",
+      "sha256": "43039f76b5c081491570c31c3e45708d0424379218fe2b2d3ad9e3726de40ff6",
+      "size": 872
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/process-flow.stress-degrade.yaml",
+      "sha256": "a0fdf0bd4ace3dd5928cdf69f8801c1f2bce3d9d08aef937eaf0e4f6da0754c8",
+      "size": 774
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/roadmap-timeline.canonical.yaml",
+      "sha256": "46fc002dbc030321acdd73781fdcab486fff5fe44af21d42abb1e8f05eaec595",
+      "size": 1141
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/roadmap-timeline.stress-body.yaml",
+      "sha256": "516f7ed9647f70dd91e60d706a0a6454bebd3a61b8a7f6867f12425f055e6992",
+      "size": 1634
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/roadmap-timeline.stress-cardinality.yaml",
+      "sha256": "51d1707c916288663350714185d5133d58a116b3ff3b4d6ec0456ecdf3900c45",
+      "size": 1319
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/roadmap-timeline.stress-copy.yaml",
+      "sha256": "a0ea0d01475d85a659a28e2593c434bbbcc296918b72bd6f33fca841196c2574",
+      "size": 1329
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/roadmap-timeline.stress-degrade.yaml",
+      "sha256": "42ad5644bce1c2a56f20e8b56b92624c8d904c03e94934f4bb27fb78f59ee892",
+      "size": 1307
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/roadmap-timeline.stress-tail-current.yaml",
+      "sha256": "0f23c5e672f9d97f78394428f8e083fbee764feb17af234a632c5c9e31cb06df",
+      "size": 1061
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/topology-component.canonical.yaml",
+      "sha256": "b9897da9a8cccb3365819b01da50d0a022aed62e05547d04a4d69c4540e06752",
+      "size": 1550
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/topology-component.stress-cardinality.yaml",
+      "sha256": "a7bd0f993f1fb3e736cde05ad5a517b4750ccffabbd912d7069c9f7140aa60a4",
+      "size": 3490
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/topology-component.stress-copy.yaml",
+      "sha256": "587595088efaf006d8075da33548541812e398627c1cc2919bf46a9a2303f91e",
+      "size": 1740
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/topology-component.stress-primitive-coverage.yaml",
+      "sha256": "54501c02ceba3e481837ec4f4c78b877ed5484f5ea131ba0a3d0cb9be76f588d",
+      "size": 3131
+    },
+    {
+      "path": "skills/svg-infographic/references/types/inputs/topology-component.stress-wave1-reference.yaml",
+      "sha256": "18f96b0dcee7d68b1221ee752a6975f6389ec9dde22d6ff9b1211bb300220944",
+      "size": 1811
+    },
+    {
+      "path": "skills/svg-infographic/references/types/manifest.yaml",
+      "sha256": "182ee1f2c33f01cd3c1ecc3b299e89410676745ed6a566194e16daa77451792d",
+      "size": 35596
+    },
+    {
+      "path": "skills/svg-infographic/references/types/selection.md",
+      "sha256": "4872ad660eb1f8d2c3343010eabcfe1733aa4e5e297968db575d42841f9c6f12",
+      "size": 3156
+    },
+    {
+      "path": "skills/svg-infographic/references/types/specs/approval-gate.md",
+      "sha256": "f119116ab6903d0043583a7998f3059e92a4014a53a8a8fe3f68500ebf9555c4",
+      "size": 4042
+    },
+    {
+      "path": "skills/svg-infographic/references/types/specs/before-after.md",
+      "sha256": "e39c25812905a78798996ea9d37b910f42f9e09c646795e286e629d17ece6370",
+      "size": 5441
+    },
+    {
+      "path": "skills/svg-infographic/references/types/specs/cards-kpi-grid.md",
+      "sha256": "5fc88f8bbdaf4b8ebc5c08293a6f2afd59f7ce638e33a8cc41eab0d4934a0077",
+      "size": 6564
+    },
+    {
+      "path": "skills/svg-infographic/references/types/specs/decision-matrix.md",
+      "sha256": "ec75fb31877c6553e743734ed9641ee801e51a209654dfd20c8a7ed41367040b",
+      "size": 8577
+    },
+    {
+      "path": "skills/svg-infographic/references/types/specs/layer-stack.md",
+      "sha256": "d110c35f921e1e79544a2e9dfa1a7fd6b3d84fe7e8633665cdcab0e52fa33080",
+      "size": 6512
+    },
+    {
+      "path": "skills/svg-infographic/references/types/specs/nested-scope.md",
+      "sha256": "b5fde68067551ed57d1b4057d0ec00b320f92023c9d117a459a5e213aebd64bf",
+      "size": 4564
+    },
+    {
+      "path": "skills/svg-infographic/references/types/specs/process-flow.md",
+      "sha256": "0b80875bac9e7e9cde49f74e7531571f9fdc52efb75da4a2dc0e743ff569da78",
+      "size": 4399
+    },
+    {
+      "path": "skills/svg-infographic/references/types/specs/roadmap-timeline.md",
+      "sha256": "4c97b627588c7dbefd6a3062a713cedeffc7c37094490f70400e06cee1a3dbf0",
+      "size": 8476
+    },
+    {
+      "path": "skills/svg-infographic/references/types/specs/topology-component.md",
+      "sha256": "326196fc7dec35bba724f29e1426221153dcafeacceb342dedf939699f7f064b",
+      "size": 11333
+    },
+    {
+      "path": "skills/svg-infographic/references/typography/typography-v1.yaml",
+      "sha256": "154f16e844e12cbf9d03896556f243e3c59df9ec6cf8fcd6203f814996c22dff",
+      "size": 4046
+    },
+    {
+      "path": "skills/svg-infographic/scripts/check-language.mjs",
+      "sha256": "13e925dcd4cfdfb03932c4c29e2d7e05dec34359e168aef79e54641de5f64bbc",
+      "size": 8986
+    },
+    {
+      "path": "skills/svg-infographic/scripts/check-language.test.mjs",
+      "sha256": "562205bff36102666100beed64ae10aa9807fed69d4834a30e3bb24bb760dd28",
+      "size": 9366
+    },
+    {
+      "path": "skills/svg-infographic/scripts/check-layout.mjs",
+      "sha256": "3ea9baea72b48b5c53cc7f9fef1361468bb26d62bbb01ac1c4b94adc0ac5676b",
+      "size": 31366
+    },
+    {
+      "path": "skills/svg-infographic/scripts/check-layout.test.mjs",
+      "sha256": "59ba9b797f0d5d6ccc0c3a4ba23eadf790627909ffba71c1482a89545e21f5a1",
+      "size": 11825
     },
     {
       "path": "skills/svg-infographic/scripts/check-svg.mjs",
-      "sha256": "61271a00d5466438eeabe5aeedf961d5df802c0976732ed193e265a7c94493e3",
-      "size": 60617
+      "sha256": "2bababfd4a0d808a37cb8458a456ce3b2349b937409c5d86c6c56c68b4708ecf",
+      "size": 78218
     },
     {
       "path": "skills/svg-infographic/scripts/check-svg.test.mjs",
-      "sha256": "e6e9bd03a6ae4dd30267fd1556e83c607842b67a89d8fc4d59abd579d8fcb9b7",
-      "size": 22477
+      "sha256": "070ebc2666c84655014fa7e390d922bc71e4ccfa811da0bde8730a66115736cc",
+      "size": 24903
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/fragments-en/summary-cards.receipt.json",
+      "sha256": "a099edf24b770301e3e2343cf80004dc6d882329a603a7028aa77687cc5220c9",
+      "size": 2423
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/fragments-en/summary-cards.svg",
+      "sha256": "bd3c4d11f7fa182ddb62e5b3ae5e339903da605e498f787995c1d69ee2136152",
+      "size": 3058
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/fragments-en/tree.receipt.json",
+      "sha256": "3ef79a548bb86d3518153b667a94070b0f7c4c94b1790da59ab6d72e6116fd5c",
+      "size": 2506
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/fragments-en/tree.spacious.receipt.json",
+      "sha256": "492f326e33fa1dc22d0aff03cb21becbe7275fa3f582ad6dc3fd7558df224931",
+      "size": 2510
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/fragments-en/tree.spacious.svg",
+      "sha256": "3a4e2e7b5c79f3c9be35d10f00f24a900cb2b7fc153191eae9d3281fb752d88d",
+      "size": 4029
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/fragments-en/tree.svg",
+      "sha256": "ac7581ecc89141e8b6a6c3e3aa1f5d0b2debdb22b898de2f8f303c8e074e455f",
+      "size": 4045
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/fragments/icon-band.receipt.json",
+      "sha256": "ce6510072fa613d010e56098e792adad6c64830d73853ec789bfb36c948ed3b2",
+      "size": 666
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/fragments/icon-band.svg",
+      "sha256": "8dce3c0ee6c030d2bbc2085b803a1aa241cc274aa0fcc7262e47e7050582caa5",
+      "size": 908
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/fragments/summary-cards.receipt.json",
+      "sha256": "1d51d878cc826b1815ce012f671a21e65370315acf7f9b23f1516c6f7e7c3579",
+      "size": 2423
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/fragments/summary-cards.svg",
+      "sha256": "b2b0838a6a955448d55137d823c9c504aa9475470e5e21269120e6cf7886acde",
+      "size": 3078
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/fragments/tree.receipt.json",
+      "sha256": "a08b7e5187eee35d32fb37acfd27c358a12ebe3238a92944f393bf69f8e67aad",
+      "size": 2499
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/fragments/tree.spacious.receipt.json",
+      "sha256": "a222900e707b0fc4c4f81d419817be505e29ecbdf26407280a13e2e7b4258bb8",
+      "size": 2503
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/fragments/tree.spacious.svg",
+      "sha256": "4e6e39fcbfe64e06000f1c0c92288b16a17907e4faa549e0cf6ae66c303765bd",
+      "size": 4033
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/fragments/tree.svg",
+      "sha256": "a79802faa2bbc1ec61c3d419721d3bb3c6d753ad5feb3bf35c2076155b7278fe",
+      "size": 4049
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/inputs/icon-band.canonical.yaml",
+      "sha256": "fb1357f10d92f68aa13b33f4e615f308f1d8028de573c593bdd884ab33a7706a",
+      "size": 257
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/inputs/icon-band.stress-cardinality.yaml",
+      "sha256": "3d3fd3ba256737dd5c4af57f913731630245c0dd199d27659fe03a7ce55ddf25",
+      "size": 266
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/inputs/not-composable.canonical.yaml",
+      "sha256": "18051b67074101d8dc0ca2f6444729c8526f59aa419148aaabfb25b1b83ad4c1",
+      "size": 262
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/inputs/not-composable.stress-cardinality.yaml",
+      "sha256": "d3d15ea64303cbb97505654bb5d963027b9b960ee7f734c38b34bfbcf63fdfd4",
+      "size": 271
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/inputs/summary-cards.canonical.yaml",
+      "sha256": "1ae4b4c3883eb1b8ff10c55a59f71edea0288ea75f13d28f7359492a30d67d60",
+      "size": 261
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/inputs/summary-cards.stress-cardinality.yaml",
+      "sha256": "aeec28ef11b3959d32e7258e703fb628c80e8c76fc5516eb6a165448cde7ce70",
+      "size": 270
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/inputs/tree.canonical.yaml",
+      "sha256": "a7691a6984484756d4ad2665883280e7e7de0eb59a89a16139814d428c28c7e4",
+      "size": 252
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/inputs/tree.stress-cardinality.yaml",
+      "sha256": "126037abbf7cb68ef27693f941298dc475c81ed406688b56665d7b8da874fc92",
+      "size": 261
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/manifest.yaml",
+      "sha256": "e7faca7fd87842a6bcb6ded753e09f121bfe6007695c2b5a86d3bcda5c01bc4b",
+      "size": 6392
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/plan-bad-port.yaml",
+      "sha256": "f38d905afa9050b46bb2d604f5f382422cebcd19bfc73801b2a86c3c293736c3",
+      "size": 1271
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/plan-cards-iconband.yaml",
+      "sha256": "705dad480c1d2d94dc091e97fd9d81b9e8ef1fddc1d29f3811dc1b1dc270d937",
+      "size": 811
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/plan-cards-tree-en.yaml",
+      "sha256": "f87df4b7c6881b03e37dd27d80175aed630b598d6dd43c39497b90b978cc46ef",
+      "size": 1416
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/plan-cards-tree.yaml",
+      "sha256": "5f1d3143725fb5ee63168cd22cfc4e7e1d4e3730c355c0ef2dbf5ecb77d8a1de",
+      "size": 1416
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/plan-connector-micro.yaml",
+      "sha256": "ad6893e5ba73a500447f499390c44f1816f112eace11ce5367c33aac01399c0e",
+      "size": 1467
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/plan-dup-instance.yaml",
+      "sha256": "3cb087cd5671f5a246516c2f7e2909d60d08a4290a3dd9b10b00f0caf4137d91",
+      "size": 1180
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/plan-ghost-entity.yaml",
+      "sha256": "e014363ca7192a047c073b4139595357619a310269c4561a4142c29106d0484f",
+      "size": 1220
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/plan-missing-binding.yaml",
+      "sha256": "62d03ae10ce7f47159f678b2194f1d26fa64d439f13c105cb93c11bfa5d23736",
+      "size": 1082
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/plan-needs-split.yaml",
+      "sha256": "7ead2151199afc789adb50c75a4d7428943111e88eb734bb2d9ab6cc161c1888",
+      "size": 1175
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/plan-not-composable.yaml",
+      "sha256": "5d1d93ae7c26b39e97435f04c11788b0cea2d41328a3daff4b53a7eca275ae36",
+      "size": 1185
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/plan-residual-undeclared.yaml",
+      "sha256": "9d2f54a036c5c0e36bfc9275f9a45f9386121be1fe2a4af6ebf104c0b4ece40d",
+      "size": 1216
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/plan-too-many.yaml",
+      "sha256": "b35c092a227aa0f92fc693bebad693bbda20353abc65ec39c4d4bef83e024d3d",
+      "size": 1363
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/regen-receipts.mjs",
+      "sha256": "4dcc1359d0847e85be1e22e91da74f07c80e2bbb54da3e970133769d0bbabe3c",
+      "size": 3162
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/specs/icon-band.md",
+      "sha256": "3c9dedf39df96df135941090bd345084dc9214c5537f17bdfe2f5f79bbc1ba8d",
+      "size": 1198
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/specs/not-composable.md",
+      "sha256": "70e422eea10bc8301b6cf80ac62ae20e7428bc75c5f5743571677930b3aa9662",
+      "size": 1222
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/specs/summary-cards.md",
+      "sha256": "d7def9f20b8c6d5fc63139c45cbd0c90c65a2a2610791f06afbb445360ea21cd",
+      "size": 1241
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose-fixtures/specs/tree.md",
+      "sha256": "37001f5f48068ce294e6e6eda0c5f4555c9f8ef406fc7166c0afe1510ad27e21",
+      "size": 1242
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose.mjs",
+      "sha256": "2e944cccd011b129ebe7e7c1cc4f4f5dc1ac228c15eae0f3bd6becc41ce4d46c",
+      "size": 63442
+    },
+    {
+      "path": "skills/svg-infographic/scripts/compose.test.mjs",
+      "sha256": "26e5a6a83e575e9e39adf71f87628600a006581c3bf7c58d8dcd92dd5d1c5cc9",
+      "size": 31792
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/bypass-defs-group-paint-ok.svg",
+      "sha256": "cc613e6ee788bd4e98eccff9a26c172d5c3a06fd6942a4e888be1efca8c96dc6",
+      "size": 347
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/bypass-defs-group-paint.svg",
+      "sha256": "2ea8efc34bc9f3b5356c6d0e5165c0485a64ffeaa8beac6001f3559ae9e9e15d",
+      "size": 358
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/bypass-g-font-size-ok.svg",
+      "sha256": "c2f61eb12e721db3c0bc888da8339138721785ff2b183b3c2e36b1abc02f4bed",
+      "size": 269
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/bypass-g-font-size.svg",
+      "sha256": "9a3bd2d7200dd09024aefaec8c4343b8132f0520cf3b852c168e4651c6ff357a",
+      "size": 273
     },
     {
       "path": "skills/svg-infographic/scripts/fixtures/curve-head-unverified.svg",
@@ -2483,6 +3113,16 @@
       "path": "skills/svg-infographic/scripts/fixtures/dangling-ref.svg",
       "sha256": "c65a722af8c8dfdb1b94d8968d1b11cf3935c9d6f7906f8bf111573daf2491f1",
       "size": 380
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/dup-attr-double.svg",
+      "sha256": "c5610363d71a7719239d3c99b90d418576fb78193606f714d2847a222b8fa828",
+      "size": 276
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/dup-attr-single.svg",
+      "sha256": "da0349860aed4ac3ded28eb2591c8c8081d8ba001af31961883075677874ff14",
+      "size": 263
     },
     {
       "path": "skills/svg-infographic/scripts/fixtures/exponent-coords.svg",
@@ -2555,6 +3195,71 @@
       "size": 769
     },
     {
+      "path": "skills/svg-infographic/scripts/fixtures/header-cluster-breathing.svg",
+      "sha256": "ff8c7942bbab24079f09f86fbe97200cd896fdf1428293cbc37960c6d8ce435a",
+      "size": 897
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/header-cluster-collapse.svg",
+      "sha256": "2d94544e3e0dc2029661de9e95e8c278088d4c13e4ca749fb4f4013f70fc409a",
+      "size": 616
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/header-cluster-keyline-2line.svg",
+      "sha256": "d1496cf5729e02faec4610fa653503c095ad0d6f383b29c5f9cb066b3b2b2965",
+      "size": 971
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/header-cluster-keyline-asym.svg",
+      "sha256": "8bdf69962bd3bca64a9f9812f2f2ad77a73b7e4ac69ac29432f03ed317db1c85",
+      "size": 934
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/header-cluster-keyline-double.svg",
+      "sha256": "7c15213e2a14937f130ab583ef8d0e571f4fd5fcad8897e9e04c84bb7b56a133",
+      "size": 831
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/header-cluster-keyline-ko1.svg",
+      "sha256": "3e7bb433d7d7579c0b1cdb660f5eadabc341b7b5fe48b1552e5b3437d3a5c256",
+      "size": 918
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/header-cluster-keyline-rail.svg",
+      "sha256": "8b9b85b9f351c3fbb390724b2e7ec3183ff8ddeee1aac976de73e53ebb5a45f3",
+      "size": 944
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/header-cluster-ko1.svg",
+      "sha256": "d42160ba08b45ff5877a41f4f6bc0593112006db8b81491caaff3f9f33fd42e6",
+      "size": 861
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/header-cluster-ko2.svg",
+      "sha256": "dfa8e5fc8f229b6cfba55b6abdb07ce29e3332a98df803928edfb021cc24f71d",
+      "size": 1000
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/header-cluster-locator-only.svg",
+      "sha256": "5950881468dced0915d843c59ca267633298de6651bc47651a10e35b3e320608",
+      "size": 750
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/header-cluster-locator-ratio.svg",
+      "sha256": "32159438c0ba9964e88fd6a5df6b0ed2c1055d726983b771e0123c40cbd0313d",
+      "size": 903
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/header-cluster-nosub.svg",
+      "sha256": "5878c8319fdd7481e99753d032011f09ee8c0fd318331c605b0be841736919fc",
+      "size": 674
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/header-cluster-subtitle-intrude.svg",
+      "sha256": "21291791b40a84f014887dc6894cb70af76b2b17249f37dd246f41c39cb33bb2",
+      "size": 904
+    },
+    {
       "path": "skills/svg-infographic/scripts/fixtures/huge-viewport-small-glyph.svg",
       "sha256": "dbb331b91ca32a50ee8240e0f9c1e86e0c9686eb76429746766994f82325b52b",
       "size": 923
@@ -2605,6 +3310,16 @@
       "size": 895
     },
     {
+      "path": "skills/svg-infographic/scripts/fixtures/mlr-misaligned.svg",
+      "sha256": "c1d388131fb678654d1b598ac1c3847b9760c317b4925c536a75544542298cb7",
+      "size": 385
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/mlr-positive.svg",
+      "sha256": "4d4b62aa4a1986fa5e2b8f46b03a5aeb6b224fc01da73a79af2f1ab3d4bae50f",
+      "size": 385
+    },
+    {
       "path": "skills/svg-infographic/scripts/fixtures/multi-stroke-all-clean.svg",
       "sha256": "e160b3cb55d83f2221da9aedf8fc1df7ebe6614e76d255336dca3f4cd34d8daa",
       "size": 878
@@ -2623,6 +3338,11 @@
       "path": "skills/svg-infographic/scripts/fixtures/oversized-visible-head.svg",
       "sha256": "780ffe2f9396e5942909fef3b6324223639b34816d271fbbdab7108d40428534",
       "size": 926
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/palette-out-of-profile.svg",
+      "sha256": "a029da49447884ff1a9858782b822a39d4c5ba6323c03f464fe6875468e67b71",
+      "size": 323
     },
     {
       "path": "skills/svg-infographic/scripts/fixtures/par-slice.svg",
@@ -2685,9 +3405,279 @@
       "size": 346
     },
     {
+      "path": "skills/svg-infographic/scripts/font-probe.mjs",
+      "sha256": "0e5c13a385c61f228f29f4ef8f373783a550dcd3612020ced49992d095c5a62c",
+      "size": 8966
+    },
+    {
+      "path": "skills/svg-infographic/scripts/font-probe.test.mjs",
+      "sha256": "570da5b4a23f292595c932e2f246a014bbf108edd3c3200962717355dce43eee",
+      "size": 2105
+    },
+    {
+      "path": "skills/svg-infographic/scripts/font-subset.py",
+      "sha256": "f265dff7e9041e5c90e8fea0b92f43b2ba1e278e812ad6af2d28d6864a6c527f",
+      "size": 6808
+    },
+    {
+      "path": "skills/svg-infographic/scripts/generate.mjs",
+      "sha256": "6385ee4dbd7a5b332cee75f243a8e03b1f9125155f0b4c0c52aa1ab0c99852b2",
+      "size": 135577
+    },
+    {
+      "path": "skills/svg-infographic/scripts/generate.test.mjs",
+      "sha256": "c28985559443fb68f3f42cd353b8b569fd5c1b6eb09ab8381fc7ae740984770d",
+      "size": 58015
+    },
+    {
+      "path": "skills/svg-infographic/scripts/icon-registry.mjs",
+      "sha256": "1eee681513591184e030b313fe34f11fd35ea9f22fcbdbf4d2af105a323584de",
+      "size": 3001
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-align-col-drift.svg",
+      "sha256": "c6022c49090f0335a62cef721f8e43d4b644c65e3eaad38172396ad17eeaeff9",
+      "size": 445
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-align-count-forged.svg",
+      "sha256": "3191c6b06d54c2b93839d433beb55e621b6286b350d7ce70c38e1f59cf392d2f",
+      "size": 471
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-align-inventory-col-gone.svg",
+      "sha256": "1a4e8cf63d00639d52157458a3e4a0da1426358bc82a917c539a381f76a837b1",
+      "size": 978
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-align-inventory-group-gone.svg",
+      "sha256": "5d2ff1f51a8e24507f9ef77aa10acf0a3bbe58ed28d5f253bf29354269fad6b5",
+      "size": 735
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-align-inventory-row-gone.svg",
+      "sha256": "31bf5c329ee7a33ae4c6951772fdd5e548511d678aec857f820e80e930aaf329",
+      "size": 975
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-align-inventory-unexpected.svg",
+      "sha256": "5c63e2b6dd3de7bb81c4698e1f50330f0696480be297fffac15556ef66c9d7ca",
+      "size": 815
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-align-missing-cell.svg",
+      "sha256": "1fa8d79624d989adfd88c0b3b210ac6fbb045b7d59faddc78c2591d862e2a1db",
+      "size": 685
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-align-missing-mirror.svg",
+      "sha256": "1f9374d874aba5848781f3eb588a7d1487fdb56a21afe7fec8b52b154a22a164",
+      "size": 438
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-align-row-drift.svg",
+      "sha256": "d89c5d32a0fb1baf661fbc9b4c13370dc110df91a5850cf2fdeef56b749db7ef",
+      "size": 443
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-align-singleton.svg",
+      "sha256": "cc34c4a66cea6342bdef2ffcff37cd6b2b58a67bb9489fc39d8564df6485f4de",
+      "size": 321
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-bad-axis.svg",
+      "sha256": "1b3d72b6dfc9a5bd16a9343f8e2a6edb7f9a6924e281a8fcdb6f924ab98b347e",
+      "size": 719
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-bad-distribution.svg",
+      "sha256": "6dc7d5bd2ba38bb5b68f4efae7331701dec69b88752d13be850fec81e7bc7f9e",
+      "size": 715
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-bad-minpad.svg",
+      "sha256": "b0cf7ee1ea5e51d2677e84fcf038abd76a1bc6843c282907df53d09ef9ff2b44",
+      "size": 494
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-cluster-drift.svg",
+      "sha256": "c301c09eb5a6d4c7836194e69f0edebfd64d0bd704ab73424e05a14045be1ef2",
+      "size": 596
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-cluster-misplaced.svg",
+      "sha256": "ca0dc8a4075b3d0d963c588c0d193ad9efac85a198e7500c484728b275e8093e",
+      "size": 698
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-cluster-missing.svg",
+      "sha256": "953f050e8a76d7efe9fbdac78bb5c3bb41750f5797da80d4588d86812458e8ad",
+      "size": 575
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-content-pad.svg",
+      "sha256": "903d7682732b4580b7fb15c8e3f1e5dff51214f5e295bff451b440a1979c9721",
+      "size": 663
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-dup-id.svg",
+      "sha256": "6cd52bbdeb8ef8eed33eb47eef15c1c38c43b34f905713eef2a9da5e9221c867",
+      "size": 551
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-gap-drift.svg",
+      "sha256": "f7d3190cd0ec36039cc2fc9c0d31ac53081933ab5b9e593074382e8c1e28bd82",
+      "size": 834
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-minpad.svg",
+      "sha256": "84a151114cde2e3f9f0e1e2b2959d302d3e80b013a708ec7b7e89f2762561797",
+      "size": 575
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-missing-count.svg",
+      "sha256": "44e9b896967d00573aaad7767497c2a5b6e961aefc8116d384ae1041c33c5b34",
+      "size": 470
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-missing-member.svg",
+      "sha256": "01339611c9a3fcd8698a29776d45175a36d9374f886b71a7ab3311a70dfa50df",
+      "size": 788
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-nested-bottom.svg",
+      "sha256": "560106b54b4cace09b40ae1c1009a22a410068accf3b81bef455fec234d23fda",
+      "size": 696
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-nested-intrude.svg",
+      "sha256": "10431e6d53f184b4b9d75b169e0c57d758ec7702bef3c534991be9bf91a41e5d",
+      "size": 657
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-outer-inset.svg",
+      "sha256": "b5a8b87ce348076fbcc2f5f477b47b9bc900e6a29ddeb411bfc69fd179345a78",
+      "size": 856
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-reserve-left-breach.svg",
+      "sha256": "b36eac0b63740355da28da6b5a259ea1e1120378b759a94904ac2015f48183c3",
+      "size": 806
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-shadow.svg",
+      "sha256": "63500698de9069b66b3b8f1b010a475b14949ab2683f59e5266fb764cab89142",
+      "size": 536
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-sym-x.svg",
+      "sha256": "1e638863146b98d21a003937c0937eb249f1689a6ff286e91c21322f8daf762c",
+      "size": 531
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-title-collision.svg",
+      "sha256": "da172526b3d7ca71580b153fdabb4fe09ce585774115f4525c1fe13157a6c5da",
+      "size": 586
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-title-dup.svg",
+      "sha256": "b9a0071ec5b2ef7daf9f4469f08c155b1d2e17065136aaf945645dd6476638a5",
+      "size": 769
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-title-gap.svg",
+      "sha256": "86b0adf5242b1a92538369425bb62ca3a733d9b4ded9bedfd027c2d1cff68431",
+      "size": 696
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-title-orphan.svg",
+      "sha256": "8e810b49e4a4a5b41f8fe30540c2207040a3551554274c89bffdb8807de030cd",
+      "size": 436
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-title-overflow.svg",
+      "sha256": "de56b0072f7ddacdc09242c338d7360bf9448d1454ed8e85b23f433b8b8e7867",
+      "size": 662
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-title-zero.svg",
+      "sha256": "6a5b544063d6ac4cb40ae96ada085b17c597fc046490bc359058b79c565df718",
+      "size": 641
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-titled-ysym.svg",
+      "sha256": "b06457e7bc4a7a43198dbe76e5ccf592b004d4e1bafe8db03092fdebe5433462",
+      "size": 704
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-touch.svg",
+      "sha256": "b805e1b969b35bfa45b5511123a1dd6eeca72a0f9fcd81b381ccb379ad0e5042",
+      "size": 575
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/ln-transform.svg",
+      "sha256": "7e87df9ed089806c60771d7af65cfd54209cb618a849608c94858b6e7b3ab8a0",
+      "size": 521
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/lp-align-grid.svg",
+      "sha256": "8dcbd14c28119e03597d61c402a5a2753a4013461aee3ead05c24c92549af257",
+      "size": 1112
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/lp-positive-spaced.svg",
+      "sha256": "f7fae8c17ef31621e8c75a38a4b418b62963921f48d87c010e2d6310b611c345",
+      "size": 1373
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/lp-positive-squote.svg",
+      "sha256": "3116b8ee73de23c0cef26d27bdc9d9034d8388fed4ed330180b8295c0e574376",
+      "size": 1325
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/lp-positive.png",
+      "sha256": "540f64afb7303c878c3d91853c04773ceee9d1464b33449c1ae85a7930f5bf7a",
+      "size": 6525
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/lp-positive.svg",
+      "sha256": "d5d79364f65b8a4673756b586ec4ef521b6c399b7d8587c304398889cb1745f0",
+      "size": 1325
+    },
+    {
+      "path": "skills/svg-infographic/scripts/layout-fixtures/lp-reserve-left.svg",
+      "sha256": "eab342b7358a94667b151021d5ebc87f1199053ba1de951299e3f715c0148d28",
+      "size": 1030
+    },
+    {
+      "path": "skills/svg-infographic/scripts/legacy/check-svg.legacy.test.mjs",
+      "sha256": "cfe7b46e3b32c3d0cad2bcee43975ea894c903638710e740b5eaf937cf98503d",
+      "size": 6477
+    },
+    {
+      "path": "skills/svg-infographic/scripts/measure-text.mjs",
+      "sha256": "1c0b7e1f44e7a084882913414e5f9501e8094ae2ab5a832afeea19dc99e790a1",
+      "size": 6164
+    },
+    {
+      "path": "skills/svg-infographic/scripts/preflight-lib.mjs",
+      "sha256": "c73c50e5722f0e69b1f6830b173df5e4b08b6b5fb7211c1fe0e1dd863521aa17",
+      "size": 29043
+    },
+    {
+      "path": "skills/svg-infographic/scripts/preflight.mjs",
+      "sha256": "7b2eb16c2ecf8a4e88a5999f55fed09608f97ba7d347d36d1fe0622215ace355",
+      "size": 7597
+    },
+    {
+      "path": "skills/svg-infographic/scripts/preflight.test.mjs",
+      "sha256": "59352f1e2cd132f2a72232680dea19bfc6290926b57ddcc4e5d3abd1a25b84c4",
+      "size": 29514
+    },
+    {
       "path": "skills/svg-infographic/scripts/render.mjs",
-      "sha256": "5f2d6f43c1c6ee43e4c52c9bdf02053297e13ca3315ea16652741f3fe85e3d8e",
-      "size": 19876
+      "sha256": "e61518a8605e33f289e46960396ec162ebb90721c101b7c0d6c5e5f22fdcd04c",
+      "size": 24072
     },
     {
       "path": "skills/svg-infographic/scripts/render.sh",
@@ -2696,23 +3686,383 @@
     },
     {
       "path": "skills/svg-infographic/scripts/render.test.mjs",
-      "sha256": "40f3150dd8902527e6e7945366ad717e70b2bc7fb84e39b11f7a63fbe7b3fcb1",
-      "size": 17368
+      "sha256": "0dc4f392d7a08183ac6ad1ee6d5d0081c9fa3dd44110388b9444204297dc1539",
+      "size": 18892
+    },
+    {
+      "path": "skills/svg-infographic/scripts/residual-disposition.mjs",
+      "sha256": "983c08679f5cc3ca13dd1a8e31c21c0e0a12c838a8b16feef95118dd9bad95cb",
+      "size": 3976
+    },
+    {
+      "path": "skills/svg-infographic/scripts/route-orthogonal.mjs",
+      "sha256": "3d27504f40cbb8e2f2092832990c6b9a091b194f08b0c06eda789d81d87d65a7",
+      "size": 51525
+    },
+    {
+      "path": "skills/svg-infographic/scripts/route-orthogonal.test.mjs",
+      "sha256": "2c4da5911a8708e7c473f1c4021daf477641f31ba00d998b838cef42dfa3ae77",
+      "size": 23202
+    },
+    {
+      "path": "skills/svg-infographic/scripts/run-tests.sh",
+      "sha256": "53049a1b9960b85c229ea812d64f294f6e9a6ccab11ba62219e4a190c959a1db",
+      "size": 3459
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/baseline-red-cssvar.svg",
+      "sha256": "9a2454b85033734b91fc42148b1315c96a7167973c22f39d5eaee9053264b937",
+      "size": 566
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/inputs/fixture-topology.canonical.yaml",
+      "sha256": "e03dc35b2815f702f8d425200455017e637bc78892b3a8f0f13c380b384a813a",
+      "size": 264
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/inputs/fixture-topology.stress-cardinality.yaml",
+      "sha256": "bddc190d7d34d6e66a788ce35febb294e6e3c64cb14ace8a3dfbcf18076d940a",
+      "size": 273
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/manifest-bad-role.yaml",
+      "sha256": "f816354d5be4e0dc1e7d5492c2fd0c78649bd1c426621f9ef66ac7e1c369365a",
+      "size": 1656
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/manifest-comp-bad-aspect.yaml",
+      "sha256": "dafd8611ed16e9c4774f1e79975a4a6d142134ef66726cba36cf6b86f22a261f",
+      "size": 2025
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/manifest-comp-bad-port.yaml",
+      "sha256": "692b8c660d21d1aae57da058cc382da644d81e2447fd905d2beb88e918e40792",
+      "size": 2034
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/manifest-comp-positive.yaml",
+      "sha256": "e485883353419398b99d01aae8fc73711b8d3fce7d8dc230fa4b86298f2d1b4c",
+      "size": 2029
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/manifest-comp-unknown.yaml",
+      "sha256": "41cf33283930c3c4909964833bec77fdb568749312c63f628d75273e1497a267",
+      "size": 2050
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/manifest-dup-id.yaml",
+      "sha256": "4722445310e9558fd9c5d86b8648204953a3177b5f02dd8cb512069aefe4807c",
+      "size": 2564
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/manifest-missing-spec.yaml",
+      "sha256": "cba111f4ef8c0c30091b797c15a12802b1ec1c69c3019d9c3dafd3fd96fe61b9",
+      "size": 1679
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/manifest-positive.yaml",
+      "sha256": "e3ac2eb4e23cc427a97948a9e8085606f5f27655e7e8470bf62e3a00689913e3",
+      "size": 1679
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/manifest-unknown-field.yaml",
+      "sha256": "601b634230c6f40eb38bbf69d5aa37460a020e9af3c612c2fdf3d75e070e0b66",
+      "size": 1706
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/manifest-v1-rejected.yaml",
+      "sha256": "c13ad9d275986df1640160a68286b6704d0a512bc2e6f33fdeb70025d8ae2d39",
+      "size": 1679
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/materialize-mismatch-sq.svg",
+      "sha256": "893714bff27836af71300b5e31aaa96dc2a5aa36b794e10d399d86a6b9ebc76b",
+      "size": 294
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/materialize-mismatch.svg",
+      "sha256": "802116065fa5264ba4f0bcb58e8c9806fea94605072082b25d158eaaee3b72be",
+      "size": 267
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/materialize-unknown-role.svg",
+      "sha256": "cd4254eb7e4e2584fceac6c8e5ec1d1bc06160f5c47531c7146e25eb06e898ca",
+      "size": 270
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/mf-connector.svg",
+      "sha256": "f3b329112c3f9be6ce7ef6b5fb9bef0bf0a54b292b7e8991bf19db998b065bda",
+      "size": 1427
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/mf-grid.svg",
+      "sha256": "b0507a687184d11be80b2bf3cedc7db4e45b93ca76d5b63b9df9c7976723430e",
+      "size": 882
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/mf-longcopy.svg",
+      "sha256": "aeeddc88615e4e860c5b4e4f550eda460d8ae910cd44408764118751349a6895",
+      "size": 840
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/mf-nested.svg",
+      "sha256": "ce29f32eecbd17604cad7baa4e3760cb87b454fa455e05ae024ba2bdfc9a9796",
+      "size": 773
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/portable-positive-sq.svg",
+      "sha256": "dfcb2a712c9a205b5331502dce95515fbc449ead6fa22274ce2c92855de235e6",
+      "size": 334
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/portable-positive.svg",
+      "sha256": "67cd8fa34780e8151cb4a631e8d08aa5e7ef86b45ef8e9eb6f4d29258ee77ade",
+      "size": 776
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/skins-negative/anchors-unknown.yaml",
+      "sha256": "442d87f296afe1902327fe778899ddb2380489041fad53527969f9d106e7dec8",
+      "size": 1382
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/skins-negative/bad-alias-target.yaml",
+      "sha256": "1726ab64c9a961b3bf99d5b276913937a001683f15d2639797638d7921a6e426",
+      "size": 1972
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/skins-negative/bad-contrast.yaml",
+      "sha256": "c70cd235fc519f6bc174a8e26e01af2c3e9e52053888606b10a87fc92bddaff2",
+      "size": 1357
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/skins-negative/current-v1.yaml",
+      "sha256": "8590ad0d06c8f3504f87f28cf2112b01c65b93daec2a61fd2d85fd862b2512d2",
+      "size": 1353
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/skins-negative/derivation-v1.yaml",
+      "sha256": "5f4659c3e3dd037de5f74bb76342e14d8a752c074bf02758aa7f4cb35c0aad80",
+      "size": 1967
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/skins-negative/extends-bad-id.yaml",
+      "sha256": "2d187560f357daa05b09b195621f98437daa5d1105af8b6abc83bbb6f0a25d16",
+      "size": 88
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/skins-negative/legacy-v0.8.yaml",
+      "sha256": "7712d9641527533a220e13fba867a9308c1a7db9a5527295600f6022d72ad8ec",
+      "size": 901
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/skins-negative/missing-role.yaml",
+      "sha256": "b87d43b9a7c380c84d1129ae6c26b398b2f8a16b41d4af99d5879a619b774f21",
+      "size": 1334
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/skins-negative/overlay-missing-token.yaml",
+      "sha256": "fe2805e203eef469fe522183bfe94e1c30061c5293414bd7b21eb2909a8ad59d",
+      "size": 1357
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/skins-negative/overlay-unexpected-token.yaml",
+      "sha256": "74cd11145d48a7002ad36fe50d670796e1de2e13f18bd4f565a023ec7bd0923d",
+      "size": 1399
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/skins-negative/pf-arrow-order.yaml",
+      "sha256": "f631e8858aa1e756f8c3d171f34e2b16a284d2e35ce08f0f54136d8def8529b7",
+      "size": 3363
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/skins-negative/pf-bad-header-internal.yaml",
+      "sha256": "9c35a60101a139577e33ae9c5814600c6f1241669c5b6673cec795ef27d37cb8",
+      "size": 3364
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/skins-negative/pf-bad-number.yaml",
+      "sha256": "65e27c83df26ee9723888278b513b696222cd3d9ff5c403359604628600ace6a",
+      "size": 3366
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/skins-negative/pf-band-order.yaml",
+      "sha256": "2e90d3000ffb86e2cd85b9aeb7778f934a23cd871224ccd6e40ad5c7f9a6c8e7",
+      "size": 3361
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/skins-negative/pf-missing-header-internal.yaml",
+      "sha256": "92a9932bbb9c04e2170459e19a63586d1e50b7cda33e44b3f6d383b7b951766c",
+      "size": 3033
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/skins-negative/pf-missing-subfield.yaml",
+      "sha256": "51d53ef9b83dff78bae90cf63b979fa39b37166db451731dd8ce8259ea3dd2f8",
+      "size": 3343
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/skins-negative/pf-too-small.yaml",
+      "sha256": "30c1d04d560384fc4b84ef775d4c86a640f8b7dd8008b8e7d678e9087564a6c9",
+      "size": 3363
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/skins-negative/pf-unknown-field.yaml",
+      "sha256": "5d6868417ec75a200ec1f9ebec7b01113f59fddff183ca6ed8ef7973969c487e",
+      "size": 3378
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/skins-negative/ratio-oob.yaml",
+      "sha256": "fad075577c48e644708d6082a0d995990804d93e857e94018095a123f05efb9c",
+      "size": 1963
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/skins-negative/registry.yaml",
+      "sha256": "e38e057d10b8ac0637a424aea616ab76095b1e0b15c13191809ce373e0bcc693",
+      "size": 377
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/skins-negative/sketch-overlay-v1.yaml",
+      "sha256": "52a623b2c54b1cae18bee5b66266cae9336ece0b09ff92538cb752cb53563808",
+      "size": 1377
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/types/fixture-spec.md",
+      "sha256": "5b255eaa96b79a447ae2f9e30116e1f3080b24d89577576c7f67837942777149",
+      "size": 1218
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/typography/tf-inherited-weight.svg",
+      "sha256": "721d9e19213a7596f613221913aebed9cacf2d95c89536a5bc9dfff454f03d69",
+      "size": 355
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/typography/tf-positive.svg",
+      "sha256": "6e2a338dccfbf722d1180e6b1e5b9de215ba78d894d9bcca56a919a67050fea5",
+      "size": 490
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/typography/tf-probe-en-only.svg",
+      "sha256": "250712bac3ee91ffc4dbb5a1c50e7de522cb0d7a9e96974b2984b799eea974d4",
+      "size": 5330
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/typography/tf-probe-ko-only.svg",
+      "sha256": "29ae53e339535452eb3639cf19c874760457c603e0bea3819121dd2e8112578f",
+      "size": 5340
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/typography/tf-probe-positive.svg",
+      "sha256": "8709258514c995ccbeb3209f5b97ba7a49440d01e72415c330079bdfe7e81abb",
+      "size": 5407
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/typography/tf-probe-profile-broken.json",
+      "sha256": "0228f717792ffbc02f7fa058c934c10d7e91d0de743e365ebd78bfebf019254e",
+      "size": 10
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/typography/tf-probe-secondary-only.svg",
+      "sha256": "5cef6456588dc400e61ad3a5c8e84a92f60a17ab29563adf62194bc4c6b4e4a5",
+      "size": 5414
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/typography/tf-remote-font.svg",
+      "sha256": "751ada105c280db14e571c19e445361739e88bacfc402e644fd425fd6ee48654",
+      "size": 312
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/typography/tf-secondary-unannotated.svg",
+      "sha256": "91b962efb4455fcf10342814e0db1c29add453cbf7e9b5492a3b5d934cbff4cb",
+      "size": 378
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/typography/tf-single-quote-scope.svg",
+      "sha256": "5434559ec0364e9856ee433f7d12da6a73a440bec15a049df54bf7833c42105e",
+      "size": 322
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/typography/tf-spaced-scope-ok.svg",
+      "sha256": "87a7a0b8af239992c67a977ad7cfa04bfc8153a687893c38145104a726a9d963",
+      "size": 382
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/typography/tf-sq-sketch-root.svg",
+      "sha256": "f5dcd02c7941b1e8430c7f10508db06fdac230d77840964422c42501af432658",
+      "size": 324
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/typography/tf-weight-700.svg",
+      "sha256": "0d312823c0e1939a08cb90e61c8dc94cf97a6f1d534326334db1bfe3a89df8a7",
+      "size": 357
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/typography/tf-wrapper-lost.svg",
+      "sha256": "28c3bcf92cd45af50ff9ad1e348243a0d59c12daefb553a486db93856afaf1b2",
+      "size": 333
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/typography/typo-bad-weight.yaml",
+      "sha256": "e38ef76a43d452bf40283ac8c7df95b4e470cc29a5276422da6b4a5af7dd3efe",
+      "size": 1427
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/typography/typo-missing-license-evidence.yaml",
+      "sha256": "9d0dc4a0b5cf03cfaff350a52c7591f52f13047075796395d13b32d9ed899136",
+      "size": 1525
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/typography/typo-missing-locale.yaml",
+      "sha256": "a68e216bbc8327bc2d665b55982f1221b7c9546f786ced09109b7bc4426e0f92",
+      "size": 1337
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/typography/typo-synthetic.yaml",
+      "sha256": "f12f0bb46996f924ffc97cd4ddafbab69fd654d925dac47e9b96369691466da7",
+      "size": 1423
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/typography/typo-unknown-field.yaml",
+      "sha256": "23f117506bdbfcc11d693256de4a67d6123deadafed3200849893f892b8787e2",
+      "size": 1445
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin-fixtures/unannotated-canonical-hex.svg",
+      "sha256": "9d2a3ca57d4a70854b2be5235748cff0d329133ae2a2f5f9ecbc5c409c6b340c",
+      "size": 350
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin.mjs",
+      "sha256": "ed2931de7f25ad3cc944586cf09581d0f6f2fa31c085acf24d4d6cee8981ceaa",
+      "size": 156249
+    },
+    {
+      "path": "skills/svg-infographic/scripts/skin.test.mjs",
+      "sha256": "eb71ee296bb10b007e72e6ffb24afc1f300bbd6062a14f6197ac3de53f8cbf07",
+      "size": 77669
+    },
+    {
+      "path": "skills/svg-infographic/scripts/topology-contract.mjs",
+      "sha256": "bf3226b4771f83fcb63806e2f33188740787cb94c6529353ceb3a8e93d1dd37c",
+      "size": 2654
+    },
+    {
+      "path": "skills/svg-infographic/scripts/treatment.mjs",
+      "sha256": "ba63a9d9ebd176547155c2cbb9051fcfd7a53068960e885f9cf8a37e86b78240",
+      "size": 4234
     },
     {
       "path": "skills/upgrade-game-design-suite/SKILL.md",
-      "sha256": "8e4e8a1f6db2662c969e6329d627203cfbee8fd630c52eecae03634d4993d6e7",
-      "size": 3143
+      "sha256": "e0a54534dd0315f7a006dedc899f8ecc92165fccd329c2bef8e6f01227bc14c7",
+      "size": 3510
     },
     {
       "path": "skills/upgrade-game-design-suite/references/codex-commands.md",
-      "sha256": "2a0ef1c40e70d8ce1b774703239d1b5d946845b58986d4159e482a57015a1ad7",
-      "size": 2576
+      "sha256": "108145b0124b80e07b6a3c936ce89148a2b7c11e350158f222fe5ef0def639ca",
+      "size": 3150
     },
     {
       "path": "skills/visualize-career-roadmap/SKILL.md",
-      "sha256": "325328b465d32f2ff4e37ed16de1f1efdbe5cbe453bcb4ccd564ddf1373e3cef",
-      "size": 5233
+      "sha256": "9bbaf021e18136877962ed82326574a060a50dbcc2c464ba79831e040d8ce701",
+      "size": 5157
     },
     {
       "path": "skills/visualize-career-roadmap/agents/openai.yaml",
@@ -2721,8 +4071,8 @@
     },
     {
       "path": "skills/visualize-career-roadmap/scripts/run-skillstead.mjs",
-      "sha256": "aadaefb302d309907c66e8c1d6cdf6abdc76a0810f31d88997a16fe8235a1c0c",
-      "size": 5027
+      "sha256": "4f18c150554f913d6d183af4cb3b682f2eef1160fa4a5649f546e69b8de1f604",
+      "size": 5041
     },
     {
       "path": "skills/visualize-career-roadmap/scripts/validate-visualization-state.mjs",

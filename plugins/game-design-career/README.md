@@ -2,7 +2,7 @@
 
 Game Design Career는 게임 기획 입문, 첫 취업, 주니어 성장, 이직 준비를 검증 가능한 산출물로 바꾸는 Codex 플러그인입니다. 진로를 단정하거나 합격을 보장하지 않고, 현재 자료와 제약에서 확인할 수 있는 근거·공백·다음 실험을 분리합니다.
 
-플러그인은 제품 스킬 16개, 전문 역할 10개, 15개 Canonical Artifact 템플릿과 문서·이미지·내보내기 계약을 하나의 독립 패키지에 포함합니다. 공통 스킬 9개는 Archify, humanize-korean, Skillstead `svg-infographic` 0.9.0, 프로젝트 기억 스킬 3개, [레퍼런스 분석 스킬](skills/analyze-game-design-references/SKILL.md), [용어 사전 스킬](skills/maintain-game-design-glossary/SKILL.md), [스위트 업데이트 스킬](skills/upgrade-game-design-suite/SKILL.md)입니다. 제품 스킬과 합친 설치 스킬은 25개입니다.
+플러그인은 제품 스킬 16개, 전문 역할 10개, 15개 Canonical Artifact 템플릿과 문서·이미지·내보내기 계약을 하나의 독립 패키지에 포함합니다. 공통 스킬 9개는 Archify, humanize-korean, Skillstead `svg-infographic` 0.10.0, 프로젝트 기억 스킬 3개, [레퍼런스 분석 스킬](skills/analyze-game-design-references/SKILL.md), [용어 사전 스킬](skills/maintain-game-design-glossary/SKILL.md), [스위트 업데이트 스킬](skills/upgrade-game-design-suite/SKILL.md)입니다. 제품 스킬과 합친 설치 스킬은 25개입니다.
 
 ## 대표 작업 경로
 
@@ -133,9 +133,15 @@ Game Design Career는 게임 기획 입문, 첫 취업, 주니어 성장, 이직
 
 요구 사항은 Codex CLI와 Node.js 18 이상입니다. 배포 대상은 저장소의 `plugins/game-design-career` 스냅샷이며, `products/game-design-career/plugin`은 개발 원천입니다.
 
-### 저장소 marketplace 등록
+### marketplace 등록
 
-저장소를 받은 뒤 저장소 루트를 비기본 로컬 marketplace로 한 번 등록합니다. `<path-to-repository-root>`에는 `.agents/plugins/marketplace.json`이 들어 있는 디렉터리의 실제 경로를 넣습니다.
+등록 방법은 둘이고 갱신 방법이 다릅니다. 공개 릴리스를 최신 판정 근거로 쓰려면 GitHub 저장소를 Git marketplace로 등록합니다.
+
+```bash
+codex plugin marketplace add freelife1191/gamedesign-plugin
+```
+
+저장소를 직접 고치며 쓸 때만 저장소 루트를 로컬 marketplace로 한 번 등록합니다. 이 경우 공개 릴리스로 갱신되지 않습니다. `<path-to-repository-root>`에는 `.agents/plugins/marketplace.json`이 들어 있는 디렉터리의 실제 경로를 넣습니다.
 
 ```bash
 codex plugin marketplace add <path-to-repository-root>
@@ -162,7 +168,11 @@ codex plugin add game-design-career@game-design-suite
 
 `SessionStart`는 처음 시작할 때와 마지막 확인 뒤 7일이 지난 뒤에만 번들 업데이트를 확인합니다. 결과는 “플러그인 업데이트를 확인해 줘”라는 **알림**일 뿐이며, 플러그인을 자동으로 업데이트하거나 다시 설치하지 않습니다. 확인을 끄려면 `GAME_DESIGN_UPDATE_CHECKS=false`를 설정하세요. Skillstead·Archify·im-not-ai 번들은 다음 suite release 전까지 현재 버전으로 고정됩니다. 설치된 캐시 폴더는 직접 편집하지 마세요.
 
-`codex plugin list --available`은 설치하지 않은 플러그인 목록만 보여 줍니다. Codex 0.147.0에서는 이미 설치한 Career의 새 원천 버전을 판별하지 않습니다. 알림을 본 뒤에만 아래 명령을 명시적으로 실행하고, 재설치가 끝나면 새 채팅 또는 새 세션을 열어 새 설치본을 사용하세요.
+설치한 제품의 `$upgrade-game-design-suite`를 호출하면 아래 명령을 대신 안내받을 수 있습니다. 설치된 버전과 공개된 최신 릴리스를 비교한 결과를 먼저 보여 주고 승인을 기다리며, 검사와 계획 단계에서는 어떤 설치도 바꾸지 않습니다. 승인 없이 적용되는 업데이트는 없습니다. 선택지 표는 저장소의 `guides/game-design-career/installation.md`에 있습니다.
+
+아래는 스킬 없이 손으로 처리할 때의 명령입니다.
+
+`codex plugin list --available --json`은 설치하지 않은 플러그인 목록만 보여 줍니다. Codex 0.147.0에서는 이미 설치한 Career의 새 원천 버전을 판별하지 않습니다. 알림을 본 뒤에만 아래 명령을 명시적으로 실행하고, 재설치가 끝나면 새 채팅 또는 새 세션을 열어 새 설치본을 사용하세요.
 
 Git marketplace로 등록했다면 스냅샷을 갱신한 뒤 다시 설치합니다.
 
@@ -205,13 +215,13 @@ codex plugin marketplace remove game-design-suite
 │   ├── <16개 Career 제품 스킬>/
 │   │   └── scripts/                 # 필요한 스킬에만 있는 product helper
 │   ├── analyze-game-design-references/ # 근거를 분리해 레퍼런스를 분석
-│   ├── archify/                      # vendored Archify 2.14.0
+│   ├── archify/                      # vendored Archify 2.15.0
 │   ├── capture-game-design-memory/   # 검증한 교훈을 후보로 기록
 │   ├── humanize-korean/              # vendored im-not-ai
 │   ├── maintain-game-design-glossary/ # 용어 후보와 사람 검토 결정 관리
 │   ├── maintain-game-design-memory/  # 후보와 승인 이력 관리
 │   ├── retrieve-approved-design-memory/ # 승인된 관련 기억 조회
-│   └── svg-infographic/              # vendored Skillstead 0.9.0
+│   └── svg-infographic/              # vendored Skillstead 0.10.0
 ├── agents/ (10개)                   # 이식 가능한 전문 역할 프롬프트
 ├── hooks/
 │   └── hooks.json
@@ -557,7 +567,7 @@ Skillstead SVG는 권위 있는 도식 원본입니다. 하나의 title/desc와 
 
 ## Skillstead 도식화
 
-[visualize-career-roadmap](skills/visualize-career-roadmap/SKILL.md)는 관계가 실제로 더 명확해질 때만 Skillstead `svg-infographic` 0.9.0을 사용합니다. 역할 맵, 역량 의존도, 학습 순서, 개발 프로세스, 포트폴리오 정보 구조, 복수 성장 경로 프리셋을 비교하고 선택·제외 이유를 남깁니다. 단순 목록이나 근거 없는 수치는 표 또는 본문으로 유지합니다.
+[visualize-career-roadmap](skills/visualize-career-roadmap/SKILL.md)는 관계가 실제로 더 명확해질 때만 Skillstead `svg-infographic` 0.10.0을 사용합니다. 역할 맵, 역량 의존도, 학습 순서, 개발 프로세스, 포트폴리오 정보 구조, 복수 성장 경로 프리셋을 비교하고 선택·제외 이유를 남깁니다. 단순 목록이나 근거 없는 수치는 표 또는 본문으로 유지합니다.
 
 SVG에는 `<title>`, `<desc>`, 결론을 설명하는 alt text가 필요합니다. 패키지의 SVG lint는 정확한 SVG bytes와 digest를 다시 검사합니다. Chromium이 있으면 2× PNG 렌더를 준비할 수 있지만, terminal 성공은 downstream trusted bundled renderer와 visual QA가 실제 SVG/PNG 파일, 정확한 크기와 artifact digest를 결합해 확인한 뒤에만 기록합니다. 브라우저가 없으면 편집 가능한 lint 통과 SVG를 보존하고 PNG를 `unavailable`로 표시하며, 렌더·검증 성공을 주장하지 않습니다.
 
@@ -637,4 +647,4 @@ python3 "$CODEX_PLUGIN_CREATOR_ROOT/scripts/validate_plugin.py" products/game-de
 
 ## 라이선스
 
-Game Design Career 자체는 [MIT License](LICENSE)로 배포됩니다. 포함된 Skillstead `svg-infographic` 0.9.0은 Apache-2.0이며 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)와 패키지 안의 원본 라이선스가 적용됩니다. 프로젝트 제공 원문과 제3자 자료의 권리는 각각의 권리자에게 남습니다.
+Game Design Career 자체는 [MIT License](LICENSE)로 배포됩니다. 포함된 Skillstead `svg-infographic` 0.10.0은 Apache-2.0이며 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)와 패키지 안의 원본 라이선스가 적용됩니다. 프로젝트 제공 원문과 제3자 자료의 권리는 각각의 권리자에게 남습니다.

@@ -1,6 +1,6 @@
 ---
 name: review-image-assets
-description: Use when a Career image asset needs evidence-backed visual, accessibility, rights, placement, or lifecycle review by a named human decision owner.
+description: Use when a Career image asset needs visual, accessibility, rights, placement, or lifecycle review by a named owner.
 ---
 
 # Review Image Assets

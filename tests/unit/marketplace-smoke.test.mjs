@@ -551,7 +551,8 @@ test("marketplace version preflight requires matching release manifests", async 
       writeFile(sourceManifest, JSON.stringify(manifest)),
       writeFile(snapshotManifest, JSON.stringify(manifest)),
     ]);
-    assert.equal(await resolveExpectedPluginVersion({ repoRoot: root, productName: product }), "0.1.1");
+    // 릴리스 상수에 묶는다. 버전을 올릴 때마다 이 fixture를 손으로 따라 옮기던 자리다.
+    assert.equal(await resolveExpectedPluginVersion({ repoRoot: root, productName: product }), marketplaceSmoke.RELEASE_PLUGIN_VERSION);
     const missingDescription = structuredClone(manifest); delete missingDescription.description;
     await writeFile(sourceManifest, JSON.stringify(missingDescription));
     await assert.rejects(resolveExpectedPluginVersion({ repoRoot: root, productName: product }), /marketplace version preflight failed/u);

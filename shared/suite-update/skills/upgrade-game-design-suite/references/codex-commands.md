@@ -4,11 +4,18 @@ This file is the only place that names host-specific commands. Replace this file
 
 ## Read-only, safe before approval
 
-- Advisory: `node scripts/check-game-design-updates.mjs`
-- Installation inspection: `node scripts/inspect-game-design-plugin-updates.mjs --inspect`
-- Reinstall plan for one plugin: `node scripts/inspect-game-design-plugin-updates.mjs --plan <plugin>`
-- Installed suite products: `node scripts/inspect-game-design-plugin-updates.mjs --products`
-- Silence one version pair: `node scripts/check-game-design-updates.mjs --suppress [<component> ...]`
+Run these from the installed package root, never as a bare relative path. A `scripts/...` path
+resolves only when the package root is the working directory, and the agent works in the user's
+workspace, so the bare form fails to find the file. The package root is this file's path with
+`skills/upgrade-game-design-suite/references/codex-commands.md` removed. A command that fails to
+resolve is not a "nothing to update" answer, and neither is one that fails to run: report the
+failure as a failure.
+
+- Advisory: `node <package root>/scripts/check-game-design-updates.mjs`
+- Installation inspection: `node <package root>/scripts/inspect-game-design-plugin-updates.mjs --inspect`
+- Reinstall plan for one plugin: `node <package root>/scripts/inspect-game-design-plugin-updates.mjs --plan <plugin>`
+- Installed suite products: `node <package root>/scripts/inspect-game-design-plugin-updates.mjs --products`
+- Silence one version pair: `node <package root>/scripts/check-game-design-updates.mjs --suppress [<component> ...]`
 
 The plan command prints an ordered argv list. It executes nothing. It prints `"status":"current"`
 instead when the marketplace snapshot is not newer than the installed version, and

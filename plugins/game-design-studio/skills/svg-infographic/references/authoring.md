@@ -5,25 +5,8 @@ Detailed geometry, connector, panel, emphasis, color, and icon rules, plus the m
 ## 1. Geometry & containment
 
 - **Containment is arithmetic, not eyeballing.** Every child (card, icon, arrow, badge, label) sits inside its container/panel bounds **plus inner padding**, unless it is a deliberate outside-the-frame callout. For a row of repeated cards, compute the last card's far edge as `start + (n−1)·(cardW+gap) + cardW` and confirm it is `≤ container_edge − padding`; same for a column's bottom edge. If a row won't fit, shrink `cardW`/`gap`, wrap to a second row, or widen the canvas.
-- **Page-title accent rail follows the title stack.** Never copy a fixed rail height from a one-line title into a two-line title. With centered-baseline text, compute `eyebrowTop = eyebrowY − eyebrowFontSize/2`, `titleBottom = max(titleLineY + titleFontSize/2)`, `railY = eyebrowTop − railTopPad`, and `railH = titleBottom + railBottomPad − railY`. Keep `subtitleTop − railBottom ≥ subtitleGap`. For the premium one-line/two-line header, opt into the source check:
-
-```xml
-<g data-layout-role="page-title-header" data-layout-rail-padding-top="16"
-   data-layout-rail-padding-bottom="0" data-layout-subtitle-gap="12"
-   data-layout-tolerance="2">
-  <rect data-layout-role="title-rail" x="60" y="58" width="6" height="143" rx="3"/>
-  <text data-layout-role="title-eyebrow" x="88" y="82" font-size="16"
-    dominant-baseline="middle">SKILL · EXAMPLE</text>
-  <text data-layout-role="title-line" x="88" y="127" font-size="46"
-    dominant-baseline="middle">첫 번째 제목 줄</text>
-  <text data-layout-role="title-line" x="88" y="178" font-size="46"
-    dominant-baseline="middle">두 번째 제목 줄</text>
-  <text data-layout-role="title-subtitle" x="88" y="230" font-size="18"
-    dominant-baseline="middle">한 줄 설명</text>
-</g>
-```
-
-The contract accepts one or two **measurable visual title lines**, counted across `title-line` elements and their non-nested `<tspan>` lines. It requires plain numeric rail padding/gap, a positive-width rect rail, centered-baseline measurable text, and translate-only transforms. Optional `data-layout-tolerance` defaults to 2px and accepts 0–8px; an unsupported, negative, or larger value emits `W-LAYOUT` and falls back to 2px for the actual comparison. Unsupported units or typography become `W-LAYOUT`; a rail whose top/bottom does not match the stack or that enters the subtitle clearance becomes `E-LAYOUT`. The same source-coordinate limitation described in §4 applies, so verify the final rail and rendered glyphs in the 2× PNG.
+- **Page header:** the H-C editorial stack (design-kernel §6) — optional muted eyebrow row → H1 (1–2 lines) with the computed `--focus` title-keyline (canonical default; the eyebrow square locator is the explicit alternative, never doubled with the keyline) → optional muted subtitle → breathing room. The vertical accent rail is a **rejected** composition: never author it in new output. The legacy rail formula and its opt-in lint contract live only in `legacy/page-title-rail.md` (pre-kernel examples, until the catalog regeneration; the header-cluster contract replaces it in CP3).
+- **Containment and distribution are machine-guarded** (`scripts/check-layout.mjs`, design-kernel §7): annotate containers (`data-layout-container` + `data-min-pad`/`data-symmetry`) and repeated rows (`data-layout-group` equal-gap) so padding, inset balance, and gap uniformity are verified from the layout receipt instead of eyeballed; a local nudge that breaks a group invariant is an error, and unsupported geometry must be classified `data-layout-unverified` — never silently passed.
 - **Containment is judged on visual bounds, not the fill rect.** A child's visual edge = its rect/path edge **plus** half its stroke width, the drop-shadow spread (conservative margin: `abs(offset) + ~3 × stdDeviation`), and anything drawn outside the base rect (badge, corner label, marker/arrowhead). Pass condition on every side: `child_visual_edge ≤ parent_edge − inner_padding`. In a padded panel, a child that merely *touches* the parent edge is a containment failure even though the coordinates read "inside" — and a generous shadow *filter region* says nothing about containment. Keep left/right inner padding balanced, and fix an overflow by recomputing card width, gutters, or position inside the current region before reaching for a wider canvas.
 - **Paired / side-by-side boxes:** always leave a **visible gutter of 24–32px**; never let two boxes touch. Balance the left/right outer margins.
 - **Generous margins; align to a grid; consistent gutters.** Pick the margin and gutter values once in the layout pass and reuse them everywhere.
@@ -66,6 +49,9 @@ The contract accepts one or two **measurable visual title lines**, counted acros
   - **`markerUnits="userSpaceOnUse"` is mandatory on every referenced marker** — the lint gate (`scripts/check-svg.mjs`, run automatically by `render.sh`) hard-errors otherwise, because the default `strokeWidth` units silently multiply the head by the stroke width (a "10" head on a 3px line renders 30px). Declare a reviewed exception with `data-lint-allow="marker-footprint"` only when an oversized head is a deliberate design decision.
 - **Fan-out** (one source → many targets): one vertical stem from the source, one horizontal bus, then a centered vertical branch to each target. No orphan stubs, and no line that nearly overlaps a box edge.
 - **Zone aid for busy diagrams:** if nodes collide, assign each to a **3×3 zone** (top-left … center … bottom-right), route edges only between zones, and wrap co-located nodes in one group frame. A quick sketching aid to cut crossings — not a required schema; simple diagrams don't need it.
+- **Marker paint contract (canonical):** marker interiors never use `currentColor`, `context-stroke` or inherited paint. Either author one marker per role with direct stroke (`id="ah-edge"` … `data-stroke-role="edge-line"` `stroke="#2E6DA4"`), or let the materializer generate per-role markers. A connector references the marker matching its own stroke role.
+- **Sketch arrowhead band:** rough displacement visually thins the head, so the flat contract (visible ≈3× shaft) reads weak in sketch. Sketch targets **visible ≈3.5× shaft** within an acceptance band of **3.0–4.5×**. `data-lint-allow="marker-footprint"` stays reserved for pre-kernel legacy examples — new sketch output must meet the band, not bypass it.
+- **Machine-verifiable connector subset (boundary record):** future label-clearance and corridor-overlap lint (backlog `svg-infographic-connector-machine-guards`) may only *prove* violations where geometry is resolvable from source: straight segments from absolute `M/L/H/V` commands, translate-only transforms, numeric stroke-width, and label mask rects with numeric geometry. Curves/arcs, relative or exponent coordinates, non-translate transforms and CSS-resolved stroke widths degrade to warnings — never silent passes, never false errors (no-false-certainty).
 - **Semantics:** one `<marker>` arrowhead definition reused via `marker-end`. Solid = sync/request/normal; dashed `stroke-dasharray="5 4"` = async/batch/private/feedback. Legend whenever both appear.
 
 ## 4. Panels & header bands
@@ -98,17 +84,17 @@ The line box is a **source-coordinate model**, not rendered ink measurement. `mi
 
 ## 6. Color & contrast
 
-- **Tokens:** all colors as CSS variables in one `<style>` block (see SKILL.md §3); Chrome headless fully supports SVG CSS custom properties. Colors encode role, not decoration — keep roles, change hex to rebrand.
-- **Dark variant:** override the same variables under `@media (prefers-color-scheme:dark)`. PNG renders light unless forced.
-- **On-accent text:** default to **light (white/near-white) text on a saturated fill** — never dark text on a mid/dark accent. A light-tinted chip may keep dark ink; a saturated fill needs light text. Use an explicit class (`.on-accent{ fill:#FFFFFF }`) on those labels.
-- **Gotcha — blanket text color rules hide contrast problems.** An inline `fill="#FFFFFF"` usually wins over a global `text{ fill:var(--ink) }` rule in headless Chrome, but inherited text (`<tspan>`, grouped labels, generated variants) can silently lose its on-accent contrast. When the diagram mixes dark body text and light-on-accent text, **avoid a blanket `text{fill}` rule entirely** — set ink color per group/class — and always inspect the PNG (aim for an AA-like separation).
+- **Tokens:** every paint-bearing shape carries direct `fill`/`stroke` plus `data-fill-role`/`data-stroke-role` annotations (SKILL.md §3, design-kernel §5). Colors encode role, not decoration — rebrand by re-running the `skin.mjs` materializer against a profile, never by hand-editing hex or maintaining a variable block.
+- **Dark variant:** a separate direct-paint artifact (`diagram.light.svg` / `diagram.dark.svg`), each materialized from the same profile — never a `prefers-color-scheme` media query inside one SVG (design-kernel §5). PNG renders from each artifact directly.
+- **On-focus text:** default to **light (white/near-white) text on a saturated fill** — never dark text on a mid/dark accent. A light-tinted chip may keep dark ink; a saturated fill needs light text. Annotate those labels `data-fill-role="on-focus"` with a direct light fill.
+- **Gotcha — blanket text color rules hide contrast problems.** An inline `fill="#FFFFFF"` usually wins over a global `text{ fill:… }` rule in headless Chrome, but inherited text (`<tspan>`, grouped labels, generated variants) can silently lose its on-focus contrast. When the diagram mixes dark body text and light on-focus text, **avoid a blanket `text{fill}` rule entirely** — set ink color per group/class — and always inspect the PNG (aim for an AA-like separation).
 
 ## 7. Icons
 
 Icon-first is the default: a simple **line icon inside a soft tinted circle** per card or node.
 
 - **Icon vs number:** a **number badge only when sequence or cross-reference matters** (numbered steps). When the icon alone identifies the item, use the icon only — never icon + redundant number.
-- **Placement:** icon circle `r≈34–38` with a light tint fill (`#E3EEF8`), the icon centered inside at ~40px via `<use>`. Derive both the circle center and the complete text cluster from card geometry (`centerY = card_y + card_h/2`) — never a hand-tuned per-language offset; EN and KO variants share the same formula. For repeated icon-text cards, annotate the card group with `data-layout-role="icon-text-card" data-layout-center-y="118"`; mark its actual background rect `card-frame`, the circle `icon-center`, and centered-baseline text lines `card-title` / `card-body`. The lint checks frame, icon, and the accumulated text cluster against the same target. The card-specific `data-layout-center-tolerance` defaults to 2px; keep explicit values in the reviewed 0–8px range. For backward compatibility, a larger value emits `W-LAYOUT` but remains the supplied comparison tolerance, unlike the page-title contract's 2px fallback. Treat that warning as unverified geometry requiring correction or explicit 2× PNG disposition, never as alignment proof.
+- **Placement:** icon circle `r≈34–38` with a light tint fill (`#E3EEF8`), with the selected registry path expanded as a concrete path and centered inside at ~40px. Derive both the circle center and the complete text cluster from card geometry (`centerY = card_y + card_h/2`) — never a hand-tuned per-language offset; EN and KO variants share the same formula. For repeated icon-text cards, annotate the card group with `data-layout-role="icon-text-card" data-layout-center-y="118"`; mark its actual background rect `card-frame`, the circle `icon-center`, and centered-baseline text lines `card-title` / `card-body`. The lint checks frame, icon, and the accumulated text cluster against the same target. The card-specific `data-layout-center-tolerance` defaults to 2px; keep explicit values in the reviewed 0–8px range. For backward compatibility, a larger value emits `W-LAYOUT` but remains the supplied comparison tolerance, unlike the page-title contract's 2px fallback. Treat that warning as unverified geometry requiring correction or explicit 2× PNG disposition, never as alignment proof.
 
 ```xml
 <g data-layout-role="icon-text-card" data-layout-center-y="118">
@@ -123,27 +109,18 @@ Icon-first is the default: a simple **line icon inside a soft tinted circle** pe
 
 The source-coordinate model limitation described in §4 also applies to card-center checks; confirm rendered ink and optical centering in the final 2× PNG.
 
-- **Recolor:** author each symbol with `stroke="currentColor"`; set the color per instance with `style="color:#…"` on the `<use>`.
+- **Recolor:** the icon registry is the authoring source. Before an SVG counts as canonical, place the selected registry geometry as **concrete paths** carrying `data-stroke-role` (and `data-fill-role` where filled) with direct paint — today this expansion is the generator/author's responsibility; automatic expansion inside the materializer remains the catalog regeneration candidate (`svg-infographic-materializer-icon-expansion`). Per-instance `currentColor` recoloring never appears in canonical output.
 - **Style options to offer:** default = soft circular background + thin line icon. Alternatives: no background (line icon only), filled/solid icon, or mono. Stroke width ~1.7–1.9.
 
-Reusable icon set (drop into `<defs>`; all 24×24, `fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"`):
+The bundled icon list is not copied into this document. Query the registry SSoT with
+`node scripts/skin.mjs icons`; use `node scripts/skin.mjs icons --json` when path data is needed
+for authoring or tooling. Each entry is a 24×24 concrete path in the same round-cap/round-join line
+grammar. The placeholder stroke is replaced with role-annotated direct paint when an icon is
+expanded into canonical output.
 
-```xml
-<symbol id="ic-terminal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7 9l3 3-3 3"/><path d="M13 15h4"/></symbol>
-<symbol id="ic-doc" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 13h6M9 16.5h6M9 9.5h2"/></symbol>
-<symbol id="ic-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
-<symbol id="ic-loop" viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 0 1 12.8-5.3L20 9"/><path d="M20 3.5V9h-5.5"/><path d="M19.5 12a7.5 7.5 0 0 1-12.8 5.3L4 15"/><path d="M4 20.5V15h5.5"/></symbol>
-<symbol id="ic-cloud" viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1.3A3.5 3.5 0 0 1 18 18z"/></symbol>
-<symbol id="ic-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></symbol>
-<symbol id="ic-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="7" ry="3"/><path d="M5 5v14c0 1.7 3.1 3 7 3s7-1.3 7-3V5"/><path d="M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/></symbol>
-<symbol id="ic-network" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.5"/><circle cx="5" cy="19" r="2.5"/><circle cx="19" cy="19" r="2.5"/><path d="M12 7.5V13M12 13l-5 4M12 13l5 4"/></symbol>
-<symbol id="ic-server" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="7" rx="2"/><rect x="4" y="13" width="16" height="7" rx="2"/><path d="M8 7.5h.01M8 16.5h.01"/></symbol>
-<symbol id="ic-api" viewBox="0 0 24 24"><path d="M9 5l-4 7 4 7M15 5l4 7-4 7"/></symbol>
-```
+Canonical example (icon expanded to a concrete path): `<circle cx="172" cy="726" r="38" data-fill-role="icon-tint" fill="#EAF0F6"/><path d="…terminal glyph at 152,706 scaled 40px…" data-stroke-role="edge-line" stroke="#2E6DA4" fill="none" stroke-width="3"/>`. There is no separate `data-color-role` schema — fill/stroke annotations cover icons too.
 
-Use example: `<circle cx="172" cy="726" r="38" fill="#E3EEF8"/><use href="#ic-terminal" x="152" y="706" width="40" height="40" style="color:#1F6FB2"/>`.
-
-Need an icon that isn't in the set? Compose it from the same 24×24 line grammar (stroke 1.8, round caps/joins, `currentColor`) so it matches — don't mix icon families.
+Need an icon that isn't in the set? Compose it from the same 24×24 line grammar (stroke 1.8, round caps/joins) so it matches — don't mix icon families.
 
 ## 8. Render — manual fallback
 

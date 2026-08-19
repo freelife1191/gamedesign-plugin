@@ -2,7 +2,7 @@
 
 ## 목적과 최종 산출물
 
-고급 사용자가 구조적 SVG를 직접 authoring하고 canonical Chromium renderer로 정확한 2× PNG를 만드는 vendored Skillstead 0.8.3 레퍼런스입니다.
+고급 사용자가 구조적 SVG를 직접 authoring하고 canonical Chromium renderer로 정확한 2× PNG를 만드는 vendored Skillstead 0.10.0 레퍼런스입니다.
 
 ## 사용할 때
 

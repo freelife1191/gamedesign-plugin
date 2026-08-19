@@ -250,11 +250,22 @@ ChatGPT 데스크톱 앱의 Work 또는 Codex에서 저장소와 플러그인을
 4. **Plugins**에서 marketplace를 열고 필요한 제품을 설치합니다.
 5. 설치 직후 **새 채팅**을 열고 Studio 또는 Career를 선택합니다.
 
+Git 마켓플레이스를 CLI로 먼저 등록해 두면 App의 **Plugins Directory**에서도 같은 `game-design-suite`가 보입니다. 저장소 checkout을 그대로 쓰는 로컬 마켓플레이스와는 이름이 같아도 갱신 방법이 다릅니다. Git 마켓플레이스는 공개 릴리스를 따라가고, 로컬 마켓플레이스는 checkout을 직접 갱신해야 합니다.
+
 제품별 화면 절차는 [Studio 설치 가이드](guides/game-design-studio/installation.md)와 [Career 설치 가이드](guides/game-design-career/installation.md)를 따르세요.
 
 ### Codex CLI에 설치하기
 
-저장소 루트에서 marketplace를 등록하고 설치할 제품을 하나씩 선택합니다.
+marketplace를 등록하고 설치할 제품을 하나씩 선택합니다. 등록 방법은 두 가지이며 갱신 방법이 다릅니다.
+
+GitHub 저장소를 Git 마켓플레이스로 등록하면 공개 릴리스가 최신 판정 근거가 되고, `upgrade-game-design-suite`가 그 태그를 읽어 설치본과 비교합니다.
+
+```bash
+codex plugin marketplace add freelife1191/gamedesign-plugin
+codex plugin marketplace list
+```
+
+저장소를 직접 고치며 쓸 때는 로컬 checkout을 등록합니다. 로컬 마켓플레이스는 Git fetch 대상이 아니므로 공개 릴리스로 갱신되지 않고, 갱신하려면 checkout을 직접 최신으로 만들어야 합니다.
 
 ```bash
 codex plugin marketplace add .
@@ -283,9 +294,30 @@ codex plugin list
 
 Marketplace refresh와 설치 패키지 교체는 서로 다른 작업입니다.
 
+[![업데이트 알림에서 승인과 재설치와 검증을 거쳐 새 세션에서 재개하는 흐름](guides/assets/shared/suite-update-approval-flow.png)](guides/assets/shared/suite-update-approval-flow.svg)
+
 `SessionStart`는 처음 시작할 때와 마지막 확인 뒤 7일이 지난 뒤에만 번들 업데이트를 확인합니다. 결과는 “플러그인 업데이트를 확인해 줘”라는 **알림**일 뿐이며, 플러그인을 자동으로 업데이트하거나 다시 설치하지 않습니다. 확인을 끄려면 Codex를 시작할 환경에 `GAME_DESIGN_UPDATE_CHECKS=false`를 설정하세요. Skillstead·Archify·im-not-ai 번들은 다음 suite release 전까지 현재 버전으로 고정됩니다. 설치된 캐시 폴더는 직접 편집하지 마세요.
 
-`codex plugin list --available`은 설치하지 않은 플러그인 목록을 보여 주는 용도입니다. Codex 0.147.0에서는 이미 설치한 플러그인의 더 새로운 원천 버전을 판별하지 않습니다. 알림을 본 뒤에는 아래처럼 marketplace 종류에 맞는 명시적 명령을 실행하고, 마지막에 새 채팅 또는 새 세션을 열어 새 설치본을 사용하세요.
+`codex plugin list --available --json`은 설치하지 않은 플러그인 목록을 보여 주는 용도입니다. Codex 0.147.0에서는 이미 설치한 플러그인의 더 새로운 원천 버전을 판별하지 않습니다. 알림을 본 뒤에는 아래처럼 marketplace 종류에 맞는 명시적 명령을 실행하고, 마지막에 새 채팅 또는 새 세션을 열어 새 설치본을 사용하세요.
+
+#### 업그레이드 스킬로 처리하기
+
+설치한 제품의 업그레이드 스킬을 호출하면 아래 수동 절차를 대신 안내받을 수 있습니다.
+
+```text
+$game-design-studio:upgrade-game-design-suite
+$game-design-career:upgrade-game-design-suite
+```
+
+- 설치된 버전과 공개된 최신 릴리스를 비교한 결과를 먼저 보여 주고 승인을 기다립니다.
+- 검사와 계획 단계에서는 어떤 설치도 바꾸지 않습니다.
+- 승인 없이 적용되는 업데이트는 없습니다.
+- 끝나면 이전 버전, 새 버전, 바뀐 제품, 번들 구성 요소 변화, 검증 결과를 요약하고 새 세션에서 이어가는 방법을 알려 줍니다.
+- 자세한 선택지 표는 [Studio 설치 가이드](guides/game-design-studio/installation.md)와 [Career 설치 가이드](guides/game-design-career/installation.md)에 있습니다.
+
+App에서는 같은 스킬을 `@Game Design Studio` 또는 `@Game Design Career` 뒤에 "설치본을 최신 릴리스와 비교해 줘"라고 요청해 호출합니다.
+
+아래 두 절차는 스킬 없이 손으로 처리할 때의 순서입니다.
 
 #### Codex App
 
@@ -433,6 +465,8 @@ $game-design-career:build-game-design-portfolio
 
 제작용 요청문 목록 (Production catalog)의 대표 카드 18개를 Studio 7개, Career 7개, 연계 4개 순서로 제공합니다. 카드를 열어 입력, 실행 흐름, 결과와 사람 검토 경계를 확인하세요.
 
+[![대표 진입 스킬이 요청을 소유 제품 하나와 route 하나로 좁히는 흐름](guides/assets/shared/suite-entry-routing-flow.png)](guides/assets/shared/suite-entry-routing-flow.svg)
+
 #### 빈칸 요청문을 읽는 법
 
 `복사할 요청문`의 빈칸 템플릿은 전체 제작용 요청문 카탈로그 (Production catalog)와 호환되어야 하므로 고정된 영문 용어를 유지합니다. 다음 뜻으로 읽으면 됩니다.
@@ -463,6 +497,12 @@ $game-design-career:build-game-design-portfolio
 | 퀘스트·캐릭터 설계 | `@Game Design Studio 협동 복구 퀘스트와 NPC 선택 결과를 설계해 줘.` | 콘텐츠 설계 → 시스템·제작 검토 | 퀘스트·NPC 명세, 전투 콘텐츠 명세 |
 | 경제·운영 설계 | `@Game Design Studio 이벤트 재화의 유입·소비와 중단 기준을 설계해 줘.` | 경제·라이브 운영 설계 → 검토 | 경제 명세, 이벤트 실험 계획 |
 | 제작 범위 점검 | `@Game Design Studio 8주 시제품의 범위와 출시 위험을 점검해 줘.` | 제작 계획 → 기획 검토 → 출력 준비 | 제작 범위·위험 명세, 출력 준비 목록 |
+
+각 카드 제목 옆의 `ST-C01` 같은 값이 사례 ID입니다. 제작용 요청문 카탈로그의 키이므로, 카드의 요청문을 다 읽지 않고 ID만 대표 진입 스킬에 넘겨도 됩니다. 대표 진입 스킬이 카탈로그에서 그 ID를 찾아 실행 경로 하나와 라우팅 영수증으로 바꿉니다. 카드에 적힌 전문 스킬 호출은 같은 경로를 손으로 고정할 때 씁니다.
+
+```text
+$game-design-studio:game-design-studio ST-C01
+```
 
 <details data-prompt-id="studio:case:ST-C01">
 <summary>게임의 방향과 핵심 재미 정의 (studio:case:ST-C01)</summary>
@@ -990,6 +1030,12 @@ ST-C08의 보존 결과 폴더 (`artifact`)와 중단·재개 기록을 읽고 �
 | 면접 준비 | `@Game Design Career 내 포트폴리오 근거로 면접 질문과 답변을 연습해 줘.` | 면접 연습 → 성장 계획 | 질문·답변 기록, 다음 검증 과제 |
 | 역할부터 학습까지 | `@Game Design Career 목표 역할 선택부터 학습 순서까지 한 번에 정리해 줘.` | 경력 오케스트레이터 → 최소 스킬 경로 | 역할 지도, 역량 표, 학습 로드맵 |
 
+각 카드 제목 옆의 `CA-C01` 같은 값이 사례 ID입니다. 제작용 요청문 카탈로그의 키이므로, ID만 대표 진입 스킬에 넘겨도 카탈로그를 읽어 실행 경로 하나와 라우팅 영수증으로 바꿉니다. 카드에 적힌 전문 스킬 호출은 같은 경로를 손으로 고정할 때 씁니다.
+
+```text
+$game-design-career:game-design-career CA-C01
+```
+
 <details data-prompt-id="career:case:CA-C01">
 <summary>기획 직무와 전문 분야 탐색 (career:case:CA-C01)</summary>
 
@@ -1478,6 +1524,14 @@ CA-T01의 보존 결과물과 중단 기록을 읽고 미정인 역할 근거와
 | 기획서·이미지·발표 준비 | `기획서에 필요한 이미지와 발표 자료를 검토 가능한 상태로 준비해 줘.` | Studio 기획 → 이미지 계획·검토 → 문서 출력 | 기획서, 이미지 프롬프트, 발표 자료 초안 |
 | 실패 작업만 재개 | `보존된 원본을 읽고 실패한 이미지와 문서 출력만 다시 진행해 줘.` | 중단 사유 확인 → 실패 경로만 재실행 | 원본 보존 목록, 재시도 기록, 검토 대기 목록 |
 
+연계 사례의 사례 ID는 `suite:studio-to-career-handoff:case`처럼 긴 형태입니다. 그대로 대표 진입 스킬에 넘기면 소유 제품을 먼저 정하고 상대 제품에는 근거만 요청하는 단방향 인계로 바꿉니다. 카드에 적힌 전문 스킬 호출은 같은 경로를 손으로 고정할 때 씁니다.
+
+[![최종 owner와 supplier evidence와 단방향 반환을 나눈 인계 흐름](guides/assets/shared/suite-handoff-ownership-flow.png)](guides/assets/shared/suite-handoff-ownership-flow.svg)
+
+```text
+$game-design-studio:game-design-studio suite:studio-to-career-handoff:case
+```
+
 <details data-prompt-id="suite:studio-to-career-handoff:case">
 <summary>완성한 기획을 포트폴리오 사례로 정리 (suite:studio-to-career-handoff:case)</summary>
 
@@ -1787,7 +1841,7 @@ Studio는 제품 스킬 17개와 공통 스킬 9개로 총 26개, Career는 제�
 | 게임 기획 검토 (`review-game-design`) | 기획서의 근거·위험·미결정을 사람 검토 전에 찾을 때 | 근거, 위험과 막힌 지점을 검토해 최소 수정이 담긴 검토 문서를 만듭니다. | `$game-design-studio:review-game-design` | [게임 기획 검토 상세 가이드](guides/game-design-studio/skills/review-game-design.md) |
 | 이미지 자산 검토 (`review-image-assets`) | 이미지의 읽기 쉬움·권리·배치를 승인 전에 확인할 때 | 시각 품질, 접근성, 권리와 배치를 검토해 사람의 결정을 요청합니다. | `$game-design-studio:review-image-assets` | [이미지 자산 검토 상세 가이드](guides/game-design-studio/skills/review-image-assets.md) |
 | 승인된 프로젝트 기억 조회 (`retrieve-approved-design-memory`) | 이전 설계 교훈을 현재 작업의 참고 자료로 쓸 때 | 출처·범위·만료를 확인한 승인 기록과 제외 이유를 돌려줍니다. | `$game-design-studio:retrieve-approved-design-memory` | [Studio 프로젝트 기억](guides/game-design-studio/memory.md) |
-| 기획 도식 만들기 (`svg-infographic`) | 표나 설명만으로 관계를 이해하기 어려울 때 | Skillstead 0.9.0에서 번들된 스킬로 편집 가능한 SVG와 검증용 PNG를 만듭니다. | `$game-design-studio:svg-infographic` | [기획 도식 만들기 상세 가이드](guides/game-design-studio/skills/svg-infographic.md) |
+| 기획 도식 만들기 (`svg-infographic`) | 표나 설명만으로 관계를 이해하기 어려울 때 | Skillstead 0.10.0에서 번들된 스킬로 편집 가능한 SVG와 검증용 PNG를 만듭니다. | `$game-design-studio:svg-infographic` | [기획 도식 만들기 상세 가이드](guides/game-design-studio/skills/svg-infographic.md) |
 | 스위트 업데이트 (`upgrade-game-design-suite`) | 설치한 스위트에 새 릴리스가 있는지 확인하고 처리 방법을 고를 때 | 설치된 버전과 공개된 릴리스를 비교하고 사람이 고른 처리만 적용합니다. | `$game-design-studio:upgrade-game-design-suite` | [스위트 업데이트 상세 가이드](guides/game-design-studio/installation.md) |
 | 게임 기획 시각화 (`visualize-game-design`) | 루프·상태·의존성을 기획 문서에 도식으로 넣을 때 | 루프, 상태, 흐름과 의존성을 접근 가능한 SVG와 PNG 도식으로 만듭니다. | `$game-design-studio:visualize-game-design` | [게임 기획 시각화 상세 가이드](guides/game-design-studio/skills/visualize-game-design.md) |
 
@@ -1822,7 +1876,7 @@ Studio는 제품 스킬 17개와 공통 스킬 9개로 총 26개, Career는 제�
 | 기획 포트폴리오 검토 (`review-game-design-portfolio`) | 포트폴리오의 기여·근거·권리 누락을 찾을 때 | 증거, 개인 기여, 권리와 수정 우선순위를 포트폴리오 검토 문서로 만듭니다. | `$game-design-career:review-game-design-portfolio` | [기획 포트폴리오 검토 상세 가이드](guides/game-design-career/skills/review-game-design-portfolio.md) |
 | 경력 이미지 자산 검토 (`review-image-assets`) | 공개 전 이미지의 읽기 쉬움·권리·배치를 확인할 때 | 시각 품질, 접근성, 권리와 배치를 검토해 사람의 결정을 요청합니다. | `$game-design-career:review-image-assets` | [경력 이미지 자산 검토 상세 가이드](guides/game-design-career/skills/review-image-assets.md) |
 | 승인된 프로젝트 기억 조회 (`retrieve-approved-design-memory`) | 이전 학습·포트폴리오 교훈을 현재 작업의 참고 자료로 쓸 때 | 출처·범위·만료를 확인한 승인 기록과 제외 이유를 돌려줍니다. | `$game-design-career:retrieve-approved-design-memory` | [Career 프로젝트 기억](guides/game-design-career/memory.md) |
-| 경력 도식 만들기 (`svg-infographic`) | 학습 경로나 포트폴리오 구조를 그림으로 설명할 때 | Skillstead 0.9.0에서 번들된 스킬로 편집 가능한 SVG와 검증용 PNG를 만듭니다. | `$game-design-career:svg-infographic` | [경력 도식 만들기 상세 가이드](guides/game-design-career/skills/svg-infographic.md) |
+| 경력 도식 만들기 (`svg-infographic`) | 학습 경로나 포트폴리오 구조를 그림으로 설명할 때 | Skillstead 0.10.0에서 번들된 스킬로 편집 가능한 SVG와 검증용 PNG를 만듭니다. | `$game-design-career:svg-infographic` | [경력 도식 만들기 상세 가이드](guides/game-design-career/skills/svg-infographic.md) |
 | 스위트 업데이트 (`upgrade-game-design-suite`) | 설치한 스위트에 새 릴리스가 있는지 확인하고 처리 방법을 고를 때 | 설치된 버전과 공개된 릴리스를 비교하고 사람이 고른 처리만 적용합니다. | `$game-design-career:upgrade-game-design-suite` | [스위트 업데이트 상세 가이드](guides/game-design-career/installation.md) |
 | 경력 성장 경로 시각화 (`visualize-career-roadmap`) | 역할·역량·학습 순서를 한눈에 보여 줄 때 | 역할, 역량, 학습 의존성과 성장 경로를 SVG와 PNG 도식으로 만듭니다. | `$game-design-career:visualize-career-roadmap` | [경력 성장 경로 시각화 상세 가이드](guides/game-design-career/skills/visualize-career-roadmap.md) |
 

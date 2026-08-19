@@ -1,6 +1,6 @@
 ---
 name: export-game-design-documents
-description: Use when a validated canonical game design artifact must be prepared for Markdown, PDF, DOCX, PPTX, an executive presentation, or a renderer-neutral multi-format delivery package.
+description: Use when a validated game design artifact needs Markdown, PDF, DOCX, PPTX, or executive presentation delivery.
 ---
 
 # Export Game Design Documents

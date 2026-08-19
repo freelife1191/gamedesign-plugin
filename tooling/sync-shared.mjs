@@ -11,6 +11,7 @@ import { collectTree } from "./lib/copy-tree.mjs";
 import { hashFileEntries, sha256 } from "./lib/hash.mjs";
 import { classifyInactiveReferenceIntelligenceSourcePaths, parseReferenceIntelligenceContract, referenceIntelligenceContractLayouts } from "./lib/reference-intelligence-contract.mjs";
 import { auditTree } from "./lib/tree-audit.mjs";
+import { packagedBinaryFiles, vendorDestinationRoots } from "./lib/vendor-components.mjs";
 
 const PRODUCT_NAMES = Object.freeze(["game-design-career", "game-design-studio"]);
 const VENDOR_LOCK_DESTINATION = "references/shared/vendor/skillstead/vendor.lock.json";
@@ -148,6 +149,8 @@ export async function syncShared({ repoRoot, productName, stagingRoot, stagingCa
     siblingNames: PRODUCT_NAMES.filter((name) => name !== productName),
     forbiddenAbsolutePaths: [path.resolve(repoRoot), path.dirname(path.resolve(repoRoot)), homedir()],
     inactiveRelativeReferenceTuples,
+    binaryFiles: packagedBinaryFiles({ repoRoot, productName }),
+    vendorRoots: vendorDestinationRoots({ repoRoot, productName }),
   });
   if (JSON.stringify(audit.usedInactiveRelativeReferenceTuples) !== JSON.stringify([...inactiveRelativeReferenceTuples].sort())) {
     throw new Error("reference-intelligence inactive source tuple consumption mismatch");

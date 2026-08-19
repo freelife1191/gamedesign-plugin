@@ -1,6 +1,6 @@
 # Sketch preset (Tier 2) — tidy hand-drawn
 
-An **opt-in** visual preset: paper background, Korean-capable handwriting font, rough hand-drawn strokes, and highlighter accents. Offer it only when the user asks for a hand-drawn / sketchnote / 손글씨 feel — the flat premium style stays the default.
+An **opt-in** visual preset: paper background, Korean-capable handwriting font, rough hand-drawn strokes, and highlighter accents. Offer it only when the user asks for a hand-drawn / sketchnote / handwritten feel — the flat premium style stays the default.
 
 **Identity: "tidy hand-drawn."** The *surface* becomes hand-drawn; the *structure* does not. The layout pass, text budgets, and pre-render checklist from `SKILL.md` apply unchanged — alignment stays computed, spacing stays even, text stays real and editable. Do **not** fake organic imperfection (random misalignment, per-element wobble in placement). That precision is the deliberate difference from image-model sketchnotes: crisp layout, hand feel.
 
@@ -8,21 +8,26 @@ An **opt-in** visual preset: paper background, Korean-capable handwriting font, 
 
 ## 1. Tokens (sketch palette)
 
-Warm paper, dark warm ink, pastel fills with darker same-family strokes:
+Warm paper, single warm ink, highlighter accent. Canonical values come from the
+sketch overlay profile `references/skins/sketch-overlay-v1.yaml` (resolve with
+`node scripts/skin.mjs resolve references/skins/current-v1.yaml --mode light --treatment sketch`
+— the kernel supports sketch in **light mode only**):
 
 ```xml
+<!-- Canonical sketch output uses direct paint + role annotations, like flat
+     (design-kernel §5). Reference values from sketch-overlay-v1:
+     paper #FAF4EB · sketch-ink #403C34 · highlight #EFDCA9 · derived muted #847E71 -->
 <style>
-  text { font-family:'Hand','Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif; fill:#4A4438 }
-  svg { --paper:#FBF7EE; --ink:#4A4438; --muted:#8A8272;
-    --a-f:#EFE6F7; --a-s:#7A5EA8;  /* lavender */
-    --b-f:#E3EEF8; --b-s:#4A7DB5;  /* blue */
-    --c-f:#E4F2E9; --c-s:#4E9268;  /* green */
-    --d-f:#FBF3D9; --d-s:#C0983B;  /* yellow */
-    --e-f:#F8E3E0; --e-s:#B85C4F;  /* red */
-    --f-f:#FAE8DC; --f-s:#C06A3B;  /* orange */
-    --g-f:#ECE7F8; --g-s:#6C58B0;  /* purple */ }
+  text { font-family:'Hand',Pretendard,Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif }
 </style>
+<rect data-fill-role="paper" fill="#FAF4EB" width="1000" height="880"/>
+<text data-fill-role="sketch-ink" fill="#403C34">…</text>
 ```
+
+The multi-hue pastel families (`--a-*` … `--g-*`) of pre-kernel sketch examples are
+**deprecated**: they are the largest measured drift slice in the current gallery.
+New sketch output uses paper + sketch-ink + highlight (plus derived muted); existing
+examples keep their palettes only until the catalog regeneration.
 
 Roles still encode meaning (ok = green, warning = yellow/orange, danger = red). Label ink per box: a darker shade of the box's stroke family.
 
@@ -51,28 +56,27 @@ Roles still encode meaning (ok = green, warning = yellow/orange, danger = red). 
 ```xml
 <marker id="ah" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="11.25" markerHeight="11.25"
   markerUnits="userSpaceOnUse" orient="auto-start-reverse">
-  <path d="M2 2 L10 6 L2 10" fill="none" stroke="#4A4438" stroke-width="2" stroke-linecap="round"/></marker>
+  <path d="M2 2 L10 6 L2 10" fill="none" data-stroke-role="sketch-ink" stroke="#403C34" stroke-width="2" stroke-linecap="round"/></marker>
 ```
 
 - Connectors may use gentle curves (`C`/`Q` paths) — hand-drawn lines aren't strictly orthogonal — but the curve **geometry** follows the flat recipe in `authoring.md` §3 (perpendicular entry/exit, single bend by default, 8–12px arrowhead gap, visible shaft); the sketch preset only adds the rough texture on top.
 
 ## 3. Handwriting font (embed, don't assume)
 
-No platform ships a Korean handwriting font, so the SVG must embed one as a base64 `@font-face` data URI. Use an **OFL-licensed** font — default **Nanum Pen Script** (round, legible); alternatives: Gaegu, Hi Melody.
+No platform ships a Korean handwriting font, so the SVG must embed one as a base64 `@font-face` data URI. The canonical sketch face is owned by the **typography profile SSoT** (`references/typography/typography-v1.yaml`): **Hi Melody** (OFL-1.1, no Reserved Font Name), bundled at `assets/fonts/HiMelody-Regular.ttf` with its license — no download needed for authoring. Embed a **glyph subset** under the neutral internal alias (`HiMelody-Subset`), keep every text role at **weight 400** (regular-only face — synthetic bold is forbidden and `typography-check` rejects it), and wrap glyphs the face does not cover in an explicit `<tspan data-typography-role="secondary" font-family="Pretendard, sans-serif">` — silent fallback fails the render gate.
 
-**Subset before embedding whenever possible.** A full Korean TTF is ~3MB (≈4MB SVG). Subsetting to the glyphs actually used yields tens of KB:
+**Subset before embedding — always.** The bundled Hi Melody TTF is ~12MB (a full-font embed would be a ~16MB SVG and is forbidden). Subsetting to the glyphs actually used yields tens of KB:
 
 ```bash
-# 1. get the font (OFL — keep the license notice in your provenance/README)
-curl -sL -o /tmp/NanumPenScript.ttf \
-  "https://github.com/google/fonts/raw/main/ofl/nanumpenscript/NanumPenScript-Regular.ttf"
+# 1. the canonical face ships with the skill (license: assets/fonts/HiMelody-OFL.txt)
 # 2. collect the exact text used in the SVG, then subset (needs fonttools: pip install fonttools)
-pyftsubset /tmp/NanumPenScript.ttf --text-file=used-chars.txt \
-  --output-file=hand-subset.ttf --layout-features='*' --hinting
-# 3. base64-embed hand-subset.ttf in the <style> @font-face
+pyftsubset assets/fonts/HiMelody-Regular.ttf --text-file=used-chars.txt \
+  --flavor=woff2 --output-file=hand-subset.woff2 --layout-features='*' --hinting
+# 3. base64-embed hand-subset.woff2 as @font-face { font-family:'HiMelody-Subset'; ... }
+# 4. verify: node scripts/skin.mjs typography-check out.svg  (also runs the renderer)
 ```
 
-- No `fonttools` available → full embed is acceptable for a one-off, but **warn the user about the ~4MB SVG** and note the PNG is the shareable artifact.
+- No `fonttools` available → **do not silently fall back to a full embed** (the bundled TTF is ~12MB; a full embed is a ~16MB SVG and nonconforming). Offer to set up the subset tool (`pip install fonttools`) or propose the flat treatment instead.
 - **Subset gotcha (add to pre-render checklist for sketch):** the subset contains only the glyphs present at subset time. **Any text edit requires re-subsetting**, or the new characters render as tofu. When verifying the PNG, check every label — a missing glyph looks exactly like the CJK-tofu failure.
 - EN/KO variants: subset each variant's own text (or one union subset for both).
 
@@ -98,5 +102,5 @@ On top of the standard §7 quality bar:
 - every glyph renders (subset completeness — check *each* label on the PNG)
 - rough displacement didn't clip at any filter region edge
 - highlighter sits under, not over, its text; label ink still reads on pastel fills
-- file size reported to the user (subset SVG tens-of-KB vs full-embed ~4MB)
+- file size reported to the user (conforming subset SVG is tens of KB; a full embed would be ~16MB and is forbidden)
 - OFL license notice recorded where the asset ships (example README / provenance)

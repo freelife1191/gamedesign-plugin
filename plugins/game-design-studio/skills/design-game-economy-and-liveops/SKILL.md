@@ -1,6 +1,6 @@
 ---
 name: design-game-economy-and-liveops
-description: Use when a game needs currency flows, inventory targets, progression pacing, monetization, randomized rewards, pity rules, events, segmentation, or live experiment decisions.
+description: Use when a game needs currency flows, progression pacing, monetization, gacha pity rules, or liveops events.
 ---
 
 # Design Game Economy and LiveOps

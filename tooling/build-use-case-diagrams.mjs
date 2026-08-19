@@ -176,7 +176,7 @@ async function writeSvg(filename, svg, outputRoot) {
   await writeFile(filename, svg, "utf8");
 }
 
-async function buildOne({ source, manifest, repoRoot, outputRoot, check, optionalLstat }) {
+async function buildOne({ source, manifest, repoRoot, outputRoot, check, comparePng, optionalLstat }) {
   const output = outputForSource(source, manifest, repoRoot);
   const relativeSvg = path.relative(repoRoot, output.svg);
   const relativePng = path.relative(repoRoot, output.png);
@@ -206,15 +206,22 @@ async function buildOne({ source, manifest, repoRoot, outputRoot, check, optiona
   await assertSafeExistingFile(outputRoot, pngPath, { optionalLstat });
   await assertCompletePng(pngPath);
   if (check) {
-    const [existingSvg, existingPng] = await Promise.all([readFile(output.svg, "utf8"), readFile(output.png)]);
+    const existingSvg = await readFile(output.svg, "utf8");
     if (existingSvg !== svg) throw new Error(`generated SVG differs: ${relativeSvg}`);
-    if (!existingPng.equals(await readFile(pngPath))) throw new Error(`generated PNG differs: ${relativePng}`);
+    // The SVG is generated here and is identical everywhere. The PNG is rasterized by a headless
+    // Chromium against the fonts the host happens to have, so its bytes are a property of the machine
+    // that produced them, not of this repository. Callers that cannot pin the renderer compare the SVG
+    // and skip the raster; the raster comparison is its own release stage, run where the renderer is known.
+    if (comparePng) {
+      const existingPng = await readFile(output.png);
+      if (!existingPng.equals(await readFile(pngPath))) throw new Error(`generated PNG differs: ${relativePng}`);
+    }
     await assertCompletePng(output.png);
   }
   return { svg: 1, png: 1 };
 }
 
-export async function buildUseCaseDiagrams({ repoRoot, ids = [], check = false, __testLstat = lstat }) {
+export async function buildUseCaseDiagrams({ repoRoot, ids = [], check = false, comparePng = true, __testLstat = lstat }) {
   const requestedRepoRoot = path.resolve(repoRoot);
   const canonicalRepoRoot = await assertSafeDirectory(requestedRepoRoot, "repository root");
   const sources = await loadSources(canonicalRepoRoot);
@@ -232,7 +239,7 @@ export async function buildUseCaseDiagrams({ repoRoot, ids = [], check = false, 
   try {
     let counts = { svg: 0, png: 0 };
     for (const source of selected) {
-      const result = await buildOne({ source, manifest, repoRoot: canonicalRepoRoot, outputRoot, check, optionalLstat: __testLstat });
+      const result = await buildOne({ source, manifest, repoRoot: canonicalRepoRoot, outputRoot, check, comparePng, optionalLstat: __testLstat });
       counts = { svg: counts.svg + result.svg, png: counts.png + result.png };
     }
     return counts;

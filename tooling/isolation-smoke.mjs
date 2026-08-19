@@ -24,7 +24,7 @@ import { sha256 } from "./lib/hash.mjs";
 import { auditTree } from "./lib/tree-audit.mjs";
 import { scanJavaScriptImports } from "./lib/js-import-scanner.mjs";
 import { classifyInactiveReferenceIntelligenceSourcePaths, parseReferenceIntelligenceContract, referenceIntelligenceContractLayouts } from "./lib/reference-intelligence-contract.mjs";
-import { loadVendorComponents } from "./lib/vendor-components.mjs";
+import { loadVendorComponents, packagedBinaryFiles, vendorDestinationRoots } from "./lib/vendor-components.mjs";
 
 const TEMP_PREFIX = "game-design-isolation-";
 const PRODUCT_NAMES = Object.freeze(["game-design-career", "game-design-studio"]);
@@ -152,10 +152,14 @@ async function inactiveReferenceIntelligenceSourceRuntimes(pluginRoot) {
   return inactive;
 }
 
-async function verifyVendor(pluginRoot, { component, files }) {
+// The expected file count comes from the repository's vendor lock rather than a literal here, so an
+// upstream bump does not have to be transcribed into this gate. What the gate proves is unchanged: the
+// installed package carries exactly the closure the source lock declares, with nothing added or lost.
+async function verifyVendor(pluginRoot, { component, repoRoot: sourceRepoRoot }) {
   const { id: name, destinationRoot, installedTag: tag, sourceRoot } = component;
   const skillId = path.posix.basename(destinationRoot);
   const treeRoot = sourceRoot.slice(`shared/vendor/${name}/`.length);
+  const files = JSON.parse(await readFile(path.join(sourceRepoRoot, "shared/vendor", name, "vendor.lock.json"), "utf8")).tree.files.length;
   const lock = JSON.parse(await readFile(path.join(pluginRoot, `references/shared/vendor/${name}/vendor.lock.json`), "utf8"));
   if (lock?.upstream?.tag !== tag || lock?.tree?.root !== treeRoot || !Array.isArray(lock.tree.files)) {
     throw new Error(`${name} package-local vendor lock mismatch`);
@@ -264,11 +268,18 @@ function assertExactReferenceFiles(actual, expected, productName) {
   }
 }
 
-async function officialValidatorPath() {
+// The official validator is written by a Codex installation, not shipped in this repository, so a
+// machine without Codex has no way to run it. Callers that already account for that absence elsewhere
+// pass allowMissing and get null; everyone else still gets the hard failure, because silently not
+// validating a package is the failure mode this whole smoke exists to prevent.
+async function officialValidatorPath({ allowMissing = false } = {}) {
   const codexHome = process.env.CODEX_HOME ? path.resolve(process.env.CODEX_HOME) : path.join(homedir(), ".codex");
   const validator = path.join(codexHome, "skills/.system/plugin-creator/scripts/validate_plugin.py");
   const stats = await lstat(validator).catch(() => null);
-  if (!stats?.isFile() || stats.isSymbolicLink()) throw new Error(`official plugin validator unavailable: ${validator}`);
+  if (!stats?.isFile() || stats.isSymbolicLink()) {
+    if (allowMissing) return null;
+    throw new Error(`official plugin validator unavailable: ${validator}`);
+  }
   return realpath(validator);
 }
 
@@ -283,7 +294,7 @@ async function discoverPython() {
   throw new Error("python3 unavailable for official plugin validation");
 }
 
-async function verifyOne({ repoRoot, productName, isolationRoot, mutateCopy, actualHome }) {
+async function verifyOne({ repoRoot, productName, isolationRoot, mutateCopy, actualHome, allowMissingOfficialValidator }) {
   const build = await buildProduct({
     repoRoot,
     productName,
@@ -299,7 +310,7 @@ async function verifyOne({ repoRoot, productName, isolationRoot, mutateCopy, act
   await mutateCopy?.({ pluginRoot, productName, actualHome });
 
   const manifest = JSON.parse(await readFile(path.join(pluginRoot, ".codex-plugin/plugin.json"), "utf8"));
-  if (manifest.name !== productName || manifest.version !== "0.1.1" || manifest.skills !== "./skills/") {
+  if (manifest.name !== productName || manifest.version !== "0.2.0" || manifest.skills !== "./skills/") {
     throw new Error(`${productName} manifest mismatch`);
   }
   const skillEntries = await readdir(path.join(pluginRoot, "skills"), { withFileTypes: true });
@@ -321,6 +332,8 @@ async function verifyOne({ repoRoot, productName, isolationRoot, mutateCopy, act
     siblingNames: [sibling],
     forbiddenAbsolutePaths: [repoRoot, actualHome, process.env.CODEX_HOME ?? path.join(actualHome, ".codex")],
     inactiveRelativeReferenceTuples: inactiveSourceRuntimeTuples,
+    binaryFiles: packagedBinaryFiles({ repoRoot, productName }),
+    vendorRoots: vendorDestinationRoots({ repoRoot, productName }),
   });
   if (JSON.stringify(audit.usedInactiveRelativeReferenceTuples) !== JSON.stringify([...inactiveSourceRuntimeTuples].sort())) {
     throw new Error("reference-intelligence inactive source tuple consumption mismatch");
@@ -328,8 +341,8 @@ async function verifyOne({ repoRoot, productName, isolationRoot, mutateCopy, act
 
   const vendorComponents = new Map(loadVendorComponents({ repoRoot }).map((component) => [component.id, component]));
   const vendors = await Promise.all([
-    verifyVendor(pluginRoot, { component: vendorComponents.get("skillstead"), files: 55 }),
-    verifyVendor(pluginRoot, { component: vendorComponents.get("archify"), files: 62 }),
+    verifyVendor(pluginRoot, { component: vendorComponents.get("skillstead"), repoRoot }),
+    verifyVendor(pluginRoot, { component: vendorComponents.get("archify"), repoRoot }),
   ]);
   const hooks = JSON.parse(await readFile(path.join(pluginRoot, "hooks/hooks.json"), "utf8"));
   exactHookCommand(hooks, "SessionStart");
@@ -343,9 +356,14 @@ async function verifyOne({ repoRoot, productName, isolationRoot, mutateCopy, act
   await copyTree(path.join(pluginRoot, "assets/shared/templates/canonical-artifact"), artifact, { label: `${productName} canonical artifact` });
   const env = minimalEnvironment({ root: isolationRoot, home: isolatedHome, codexHome: isolatedCodex });
 
-  const isolatedOfficialValidator = path.join(isolationRoot, "official-validate-plugin.py");
-  await writeFile(isolatedOfficialValidator, await readFile(await officialValidatorPath()));
-  runProcess(await discoverPython(), [isolatedOfficialValidator, pluginRoot], { cwd: isolationRoot, env });
+  const officialValidator = await officialValidatorPath({ allowMissing: allowMissingOfficialValidator });
+  if (officialValidator === null) {
+    process.stdout.write(`${productName}: SKIP official plugin validator (run locally before release)\n`);
+  } else {
+    const isolatedOfficialValidator = path.join(isolationRoot, "official-validate-plugin.py");
+    await writeFile(isolatedOfficialValidator, await readFile(officialValidator));
+    runProcess(await discoverPython(), [isolatedOfficialValidator, pluginRoot], { cwd: isolationRoot, env });
+  }
   const session = runProcess(process.execPath, [path.join(pluginRoot, "scripts/capability-probe.mjs")], {
     cwd: isolationRoot,
     env,
@@ -462,7 +480,7 @@ async function verifyOne({ repoRoot, productName, isolationRoot, mutateCopy, act
   };
 }
 
-export async function runIsolationSmoke({ repoRoot = fileURLToPath(new URL("..", import.meta.url)), mutateCopy } = {}) {
+export async function runIsolationSmoke({ repoRoot = fileURLToPath(new URL("..", import.meta.url)), mutateCopy, allowMissingOfficialValidator = false } = {}) {
   const requestedRepoRoot = path.resolve(repoRoot);
   if (requestedRepoRoot === path.parse(requestedRepoRoot).root) throw new Error(`unsafe repository root: ${requestedRepoRoot}`);
   const canonicalRepoRoot = await canonicalDirectory(requestedRepoRoot, "repository root");
@@ -473,7 +491,7 @@ export async function runIsolationSmoke({ repoRoot = fileURLToPath(new URL("..",
   try {
     for (const productName of PRODUCT_NAMES) {
       const perPlugin = await mkdtemp(path.join(isolationRoot, `${TEMP_PREFIX}${productName}-`));
-      reports.push(await verifyOne({ repoRoot: canonicalRepoRoot, productName, isolationRoot: perPlugin, mutateCopy, actualHome }));
+      reports.push(await verifyOne({ repoRoot: canonicalRepoRoot, productName, isolationRoot: perPlugin, mutateCopy, actualHome, allowMissingOfficialValidator }));
     }
     return reports;
   } finally {
@@ -482,7 +500,12 @@ export async function runIsolationSmoke({ repoRoot = fileURLToPath(new URL("..",
 }
 
 async function main() {
-  const report = await runIsolationSmoke();
+  const args = process.argv.slice(2);
+  const allowMissingOfficialValidator = args.includes("--allow-missing-official-validator");
+  if (args.some((argument) => argument !== "--allow-missing-official-validator")) {
+    throw new Error("Usage: node tooling/isolation-smoke.mjs [--allow-missing-official-validator]");
+  }
+  const report = await runIsolationSmoke({ allowMissingOfficialValidator });
   for (const result of report) {
     process.stdout.write(`${result.name}: PASS (${result.skillCount} exact skills, ${result.vendorFiles.map(({ name, files }) => `${name}:${files}`).join(", ")} vendor files, network:0, canonical MD + quality profile + hooks)\n`);
   }

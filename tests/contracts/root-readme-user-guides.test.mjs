@@ -6,6 +6,8 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
+import { vendorVersion } from "../lib/vendored.mjs";
+
 import {
   collectMarkdownHeadings as visibleMarkdownHeadings,
   collectProductInventory,
@@ -409,7 +411,7 @@ const readableSkillMetadata = new Map([
     ["review-game-design", ["게임 기획 검토", "근거, 위험과 막힌 지점을 검토해 최소 수정이 담긴 검토 문서를 만듭니다."]],
     ["review-image-assets", ["이미지 자산 검토", "시각 품질, 접근성, 권리와 배치를 검토해 사람의 결정을 요청합니다."]],
     ["retrieve-approved-design-memory", ["승인된 프로젝트 기억 조회", "출처·범위·만료를 확인한 승인 기록과 제외 이유를 돌려줍니다."]],
-    ["svg-infographic", ["기획 도식 만들기", "Skillstead 0.9.0에서 번들된 스킬로 편집 가능한 SVG와 검증용 PNG를 만듭니다."]],
+    ["svg-infographic", ["기획 도식 만들기", `Skillstead ${vendorVersion("skillstead")}에서 번들된 스킬로 편집 가능한 SVG와 검증용 PNG를 만듭니다.`]],
     ["upgrade-game-design-suite", ["스위트 업데이트", "설치된 버전과 공개된 릴리스를 비교하고 사람이 고른 처리만 적용합니다."]],
     ["visualize-game-design", ["게임 기획 시각화", "루프, 상태, 흐름과 의존성을 접근 가능한 SVG와 PNG 도식으로 만듭니다."]],
   ])],
@@ -436,7 +438,7 @@ const readableSkillMetadata = new Map([
     ["review-game-design-portfolio", ["기획 포트폴리오 검토", "증거, 개인 기여, 권리와 수정 우선순위를 포트폴리오 검토 문서로 만듭니다."]],
     ["review-image-assets", ["경력 이미지 자산 검토", "시각 품질, 접근성, 권리와 배치를 검토해 사람의 결정을 요청합니다."]],
     ["retrieve-approved-design-memory", ["승인된 프로젝트 기억 조회", "출처·범위·만료를 확인한 승인 기록과 제외 이유를 돌려줍니다."]],
-    ["svg-infographic", ["경력 도식 만들기", "Skillstead 0.9.0에서 번들된 스킬로 편집 가능한 SVG와 검증용 PNG를 만듭니다."]],
+    ["svg-infographic", ["경력 도식 만들기", `Skillstead ${vendorVersion("skillstead")}에서 번들된 스킬로 편집 가능한 SVG와 검증용 PNG를 만듭니다.`]],
     ["upgrade-game-design-suite", ["스위트 업데이트", "설치된 버전과 공개된 릴리스를 비교하고 사람이 고른 처리만 적용합니다."]],
     ["visualize-career-roadmap", ["경력 성장 경로 시각화", "역할, 역량, 학습 의존성과 성장 경로를 SVG와 PNG 도식으로 만듭니다."]],
   ])],
@@ -1947,8 +1949,11 @@ function assertSharedPngLinks(markdown) {
       "guides/assets/shared/image-provider-cost-routing.png",
       "guides/assets/shared/plugin-selection-flow.png",
       "guides/assets/shared/project-memory-reuse-flow.png",
+      "guides/assets/shared/suite-entry-routing-flow.png",
+      "guides/assets/shared/suite-handoff-ownership-flow.png",
+      "guides/assets/shared/suite-update-approval-flow.png",
     ],
-    "root README embeds the three canonical shared overview diagrams",
+    "root README embeds the six canonical shared overview diagrams",
   );
   for (const { png, start, end } of pngEmbeds) {
     const svg = png.replace(/\.png$/, ".svg");
@@ -2380,6 +2385,26 @@ test("root README starts with simple natural-language requests and keeps explici
   const readme = await readFile(path.join(root, "README.md"), "utf8");
   assertNaturalLanguageFirstRoot(readme);
   await assertRepresentativePromptCards(readme);
+});
+
+test("each case group tells the reader the entry skill resolves a case ID", async () => {
+  const markdown = await readFile(path.join(root, "README.md"), "utf8");
+  for (const [heading, product] of [
+    ["Studio 기획 사례 7개", "game-design-studio"],
+    ["Career 학습·취업 사례 7개", "game-design-career"],
+    ["Studio와 Career 연계 사례 4개", "game-design-studio"],
+  ]) {
+    const group = exactSection(markdown, heading, 3);
+    const intro = group.slice(0, group.indexOf("<details data-prompt-id="));
+    // 사례 ID는 카탈로그의 키다. 대표 진입 스킬이 그 키를 실행 경로로 바꾼다는 사실이 카드보다 먼저 보여야
+    // 사용자가 ID를 외운 사람만 쓰는 것으로 오해하지 않는다.
+    assert.match(intro, /사례 ID/u, `${heading}: 도입부가 사례 ID를 이름으로 부른다`);
+    assert.match(
+      intro,
+      new RegExp(`\\$${product}:${product} `, "u"),
+      `${heading}: 도입부가 대표 진입 스킬의 실제 CLI 호출을 보여 준다`,
+    );
+  }
 });
 
 test("root README keeps Korean meanings before English helper terms outside canonical commands", async () => {
