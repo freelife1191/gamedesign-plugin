@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import { CHILD_ENVIRONMENT_KEYS } from "../lib/platform-support.mjs";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
 const harness = path.join(root, "tests/fixtures/reference-intelligence/reference-intelligence-mutation-harness.mjs");
@@ -21,7 +22,7 @@ const mutations = [
 
 function allowedOuterEnvironment(additions = {}) {
   const env = {};
-  for (const key of ["PATH", "TMPDIR", "TEMP", "TMP", "LANG", "LC_ALL", "HOME"]) if (typeof process.env[key] === "string") env[key] = process.env[key];
+  for (const key of CHILD_ENVIRONMENT_KEYS) if (typeof process.env[key] === "string") env[key] = process.env[key];
   return { ...env, ...additions };
 }
 

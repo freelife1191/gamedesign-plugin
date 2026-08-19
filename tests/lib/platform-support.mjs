@@ -1,4 +1,5 @@
 import { execFileSync, spawnSync } from "node:child_process";
+import { closeSync, mkdirSync, mkdtempSync, openSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { chmod, mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -131,3 +132,41 @@ export async function temporaryDirectory(prefix, { shortOnDarwin = false } = {})
   const base = shortOnDarwin && process.platform === "darwin" ? "/tmp" : tmpdir();
   return mkdtemp(path.join(base, prefix));
 }
+
+// The environment keys a spawned child needs before it can start at all. The POSIX set is small. On
+// Windows a process started without the system root cannot resolve the DLLs node.exe itself links
+// against, without PATHEXT a program name never becomes a file name, and without the profile
+// directory os.homedir() answers nothing — so a harness that hands a child only the POSIX set gets a
+// child that dies before it reaches the thing under test. Both lists are allowlists: a key absent from
+// the parent is still absent from the child.
+export const CHILD_ENVIRONMENT_KEYS = Object.freeze(process.platform === "win32"
+  ? ["PATH", "TMPDIR", "TEMP", "TMP", "LANG", "LC_ALL", "HOME", "SystemRoot", "SYSTEMROOT", "windir", "PATHEXT", "USERPROFILE", "COMSPEC"]
+  : ["PATH", "TMPDIR", "TEMP", "TMP", "LANG", "LC_ALL", "HOME"]);
+
+// Whether this platform will rename a directory that something still holds open inside it. POSIX will:
+// a rename moves the name and open handles keep pointing at the same inode, which is exactly what a
+// hostile mid-build swap looks like. Windows refuses with EBUSY, so a test that has to swap a
+// directory out from under a running build cannot stage its scenario there at all — the swap fails
+// before the code under test ever sees it. Probed rather than assumed, so the answer comes from the
+// filesystem the run is actually on.
+export const DIRECTORY_RENAME_WITH_OPEN_HANDLE = (() => {
+  const root = mkdtempSync(path.join(tmpdir(), "rename-open-handle-"));
+  let descriptor = null;
+  try {
+    const occupied = path.join(root, "occupied");
+    mkdirSync(occupied);
+    const inside = path.join(occupied, "held");
+    writeFileSync(inside, "held\n");
+    descriptor = openSync(inside, "r");
+    renameSync(occupied, path.join(root, "moved"));
+    return true;
+  } catch {
+    return false;
+  } finally {
+    if (descriptor !== null) closeSync(descriptor);
+    rmSync(root, { recursive: true, force: true });
+  }
+})();
+
+export const NO_DIRECTORY_RENAME_WITH_OPEN_HANDLE_REASON =
+  "this platform refuses to rename a directory that has an open handle inside it, so the mid-build swap this case has to stage fails before the code under test can answer it";

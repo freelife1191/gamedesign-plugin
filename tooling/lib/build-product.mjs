@@ -314,7 +314,15 @@ async function prepareOutputDestination({ repoRoot, productName, stagingRoot, st
     throw new Error(`Staging root escapes the canonical OS temporary root: ${absoluteStagingRoot}`);
   }
   const canonicalHome = await realpath(homedir());
-  if (stagingRootOverlapsHome({ canonicalHome, canonicalCandidate, canonicalTemporaryRoot: temporaryRoot?.canonical })) {
+  // The match above is in requested space, because that is where the symlink assertions have to run.
+  // The home exemption asks a different question — is this canonically the OS scratch area — and it
+  // has to ask it canonically: Windows hands out `C:\Users\RUNNER~1\AppData\Local\Temp` as the
+  // temporary directory while the candidate resolves to the long profile name, so a requested-space
+  // comparison misses a path that is plainly inside it.
+  const canonicalTemporaryRootForCandidate = temporaryRoots
+    .map(({ canonical }) => canonical)
+    .find((root) => isInside(root, canonicalCandidate) && canonicalCandidate !== root);
+  if (stagingRootOverlapsHome({ canonicalHome, canonicalCandidate, canonicalTemporaryRoot: canonicalTemporaryRootForCandidate })) {
     throw new Error(`Staging root must not be the home directory or overlap it: ${absoluteStagingRoot}`);
   }
   if (isInside(canonicalRepoRoot, canonicalCandidate) || isInside(canonicalCandidate, canonicalRepoRoot)) {

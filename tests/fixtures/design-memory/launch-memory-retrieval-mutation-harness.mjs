@@ -1,8 +1,9 @@
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { CHILD_ENVIRONMENT_KEYS } from "../../lib/platform-support.mjs";
 
 const harnessPath = fileURLToPath(new URL("./memory-retrieval-mutation-harness.mjs", import.meta.url));
-const PASSTHROUGH_KEYS = ["PATH", "TMPDIR", "TEMP", "TMP", "LANG", "LC_ALL", "HOME", "DESIGN_MEMORY_RETRIEVAL_HOSTILE_PID_PATH", "DESIGN_MEMORY_RETRIEVAL_HOSTILE_SENTINEL"];
+const PASSTHROUGH_KEYS = [...CHILD_ENVIRONMENT_KEYS, "DESIGN_MEMORY_RETRIEVAL_HOSTILE_PID_PATH", "DESIGN_MEMORY_RETRIEVAL_HOSTILE_SENTINEL"];
 const BLOCKED_NODE_KEYS = ["NODE_OPTIONS", "NODE_PATH", "NODE_INSPECT_RESUME_ON_START", "NODE_V8_COVERAGE", "NODE_TEST_CONTEXT"];
 
 function allowlistedEnvironment(source) {

@@ -227,7 +227,8 @@ async function assertCanonicalSourceLink(markdownFile, target, expectedRelativeP
   const sharedRoot = await realpath(path.join(repoRoot, "shared"));
   const targetReal = await realpath(path.resolve(path.dirname(markdownFile), target));
   assert.equal(
-    path.relative(sharedRoot, targetReal),
+    // The map is written in repo-relative form, which this suite always spells with forward slashes.
+    path.relative(sharedRoot, targetReal).split(path.sep).join("/"),
     expectedRelativePath,
     `source-only canonical link must resolve to the approved shared input: ${target}`,
   );

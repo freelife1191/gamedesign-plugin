@@ -41,7 +41,9 @@ test("shared and clean-built runtimes do not carry a copied Skillstead linter or
 
 test("source and clean-built Stop runtimes resolve only their canonical product-owned Skillstead wrappers", async (t) => {
   const sourceStop = path.join(repoRoot, "shared/scripts/stop-artifact-review.mjs");
-  assert.deepEqual((await resolveApprovedSkillsteadWrappers({ runtimeModulePath: sourceStop })).map(({ wrapperPath }) => path.relative(repoRoot, wrapperPath)), [
+  // path.relative answers in the host's separator; the expectation is a repo-relative path list, which
+  // this suite always writes with forward slashes.
+  assert.deepEqual((await resolveApprovedSkillsteadWrappers({ runtimeModulePath: sourceStop })).map(({ wrapperPath }) => path.relative(repoRoot, wrapperPath).split(path.sep).join("/")), [
     "products/game-design-career/plugin/skills/visualize-career-roadmap/scripts/run-skillstead.mjs",
     "products/game-design-studio/plugin/skills/visualize-game-design/scripts/run-skillstead.mjs",
   ]);

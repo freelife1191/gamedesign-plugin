@@ -523,10 +523,13 @@ const cliContext = {
   cacheRoot: "/temp/cache/game-design-career/0.1.1",
   expectedVersion: "0.1.1",
 };
+// The validator compares the host's reported plugin path against path.join(repoRoot, ...), which is
+// right: on a real host both sides come from that host. The fixture has to be built the same way, or
+// it only matches on platforms whose separator happens to be the one written here.
 const cliSamples = {
   marketplaceAdd: { marketplaceName: "game-design-suite", installedRoot: "/repo", alreadyAdded: false },
   pluginAdd: { pluginId, name: product, marketplaceName: "game-design-suite", version: "0.1.1", installedPath: cliContext.cacheRoot, authPolicy: "ON_USE" },
-  pluginList: { installed: [{ pluginId, name: product, marketplaceName: "game-design-suite", version: "0.1.1", installed: true, enabled: true, source: { source: "local", path: "/repo/plugins/game-design-career" }, marketplaceSource: { sourceType: "local", source: "/repo" }, installPolicy: "AVAILABLE", authPolicy: "ON_USE" }], available: [] },
+  pluginList: { installed: [{ pluginId, name: product, marketplaceName: "game-design-suite", version: "0.1.1", installed: true, enabled: true, source: { source: "local", path: path.join(cliContext.repoRoot, "plugins", product) }, marketplaceSource: { sourceType: "local", source: "/repo" }, installPolicy: "AVAILABLE", authPolicy: "ON_USE" }], available: [] },
   pluginRemove: { pluginId, name: product, marketplaceName: "game-design-suite" },
   marketplaceRemove: { marketplaceName: "game-design-suite", installedRoot: null },
   marketplaceList: { marketplaces: [] },

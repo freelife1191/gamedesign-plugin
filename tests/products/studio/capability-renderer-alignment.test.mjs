@@ -39,7 +39,9 @@ test("clean-built SessionStart probe and Skillstead renderer report the same rea
   const output = JSON.parse(probe.stdout);
   assert.equal(output.updates.cache, "disabled");
   assert.equal(output.updates.status, "disabled");
-  assert.equal(output.capabilities.chromium.available, true);
+  // resolveBrowser() already found one, so a disagreement here is the probe's, and the probe's own
+  // answer is the only thing that can say why.
+  assert.equal(output.capabilities.chromium.available, true, `probe disagrees with the renderer: ${JSON.stringify(output.capabilities.chromium)}`);
   assert.deepEqual(Object.keys(output.capabilities.chromium), ["available", "command", "version", "via"]);
 
   const scripts = path.join(pluginRoot, "skills/svg-infographic/scripts");

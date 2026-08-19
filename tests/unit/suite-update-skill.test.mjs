@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import path from "node:path";
 
 import {
   inspectPluginUpdates,
@@ -203,7 +204,9 @@ test("an installed plugin is compared against the marketplace snapshot it was in
     availableVersion: "0.1.2",
     status: "comparable",
   }]);
-  assert.deepEqual(read, ["/private/tmp/marketplace/plugins/game-design-studio/.codex-plugin/plugin.json"]);
+  // snapshotVersion joins the manifest onto the source path the host reported, using the host's own
+  // path module. Building the expectation the same way keeps the subject the read, not the separator.
+  assert.deepEqual(read, [path.join("/private/tmp/marketplace/plugins/game-design-studio", ".codex-plugin", "plugin.json")]);
   assert.deepEqual(planApprovedPluginUpdate({
     marketplace: inspection.marketplace,
     plugin: "game-design-studio",

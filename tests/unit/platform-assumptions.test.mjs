@@ -83,6 +83,14 @@ const RULES = Object.freeze([
     allow: new Set(),
   },
   {
+    name: "a module preload flag given a filesystem path",
+    pattern: /["'`]--(?:import|experimental-loader|loader)["'`]\s*,\s*(?!.*(?:pathToFileURL|\.href))/u,
+    reason: "--import and --experimental-loader take a module specifier. A POSIX absolute path happens "
+      + "to resolve as one; a Windows path is read as the scheme `c:` and Node refuses it. Pass "
+      + "pathToFileURL(target).href.",
+    allow: new Set(),
+  },
+  {
     name: "a raw no-follow or directory open constant",
     pattern: /\bO_(?:NOFOLLOW|DIRECTORY)\b/u,
     reason: "Windows defines neither, and `flags | undefined` is `flags` — so naming the constant does not "

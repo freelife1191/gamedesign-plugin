@@ -5,7 +5,7 @@ import { cp, lstat, mkdir, mkdtemp, readFile, readdir, realpath, rm, symlink, wr
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const vendorRoot = path.join(repoRoot, "shared/vendor/im-not-ai");
@@ -179,7 +179,10 @@ globalThis.fetch = async () => { throw new Error("offline verifier import attemp
 await import(process.argv[2]);
 process.stdout.write("offline-verifier-imported\\n");
 `);
-  const result = await runNode(["--experimental-loader", loaderPath, runnerPath, updaterUrl.href]);
+  // --experimental-loader and --import take a module specifier, not a filesystem path. A POSIX
+  // absolute path happens to resolve as one; a Windows one is read as the scheme `c:` and the loader
+  // refuses it outright.
+  const result = await runNode(["--experimental-loader", pathToFileURL(loaderPath).href, runnerPath, updaterUrl.href]);
   assert.equal(result.exitCode, 0, result.stderr);
   assert.equal(result.stdout, "offline-verifier-imported\n");
   assert.match(result.stderr, /ExperimentalWarning/u);
@@ -332,7 +335,7 @@ globalThis.fetch = async (url) => {
   return { ok: true, arrayBuffer: async () => bytes };
 };
 `);
-  const result = await runNode(["--import", preload, path.join(fixtureRoot, "tooling/sync-im-not-ai.mjs"), "--update"], { env: { ...process.env, IM_NOT_AI_CLI_FIXTURE_ROOT: fixtureRoot } });
+  const result = await runNode(["--import", pathToFileURL(preload).href, path.join(fixtureRoot, "tooling/sync-im-not-ai.mjs"), "--update"], { env: { ...process.env, IM_NOT_AI_CLI_FIXTURE_ROOT: fixtureRoot } });
   assert.equal(result.exitCode, 0, result.stderr);
   assert.match(result.stdout, /\S/u, `CLI produced no result: ${result.stderr}`);
   const pinPath = path.join(await realpath(fixtureRoot), "tooling/vendor-pins/im-not-ai.json");

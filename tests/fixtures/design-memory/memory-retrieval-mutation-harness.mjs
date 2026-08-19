@@ -5,6 +5,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { relocateModuleImports } from "../../lib/relocated-module-source.mjs";
+import { CHILD_ENVIRONMENT_KEYS } from "../../lib/platform-support.mjs";
 
 const root = fileURLToPath(new URL("../../..", import.meta.url));
 const retrievalPath = path.join(root, "shared/scripts/retrieve-design-memory.mjs");
@@ -97,7 +98,7 @@ async function tamperedTest(temporary, mutation, tamper) {
 
 async function runTest(moduleUrl, mutation, tamper, selectedTestPath) {
   const env = {};
-  for (const key of ["PATH", "TMPDIR", "TEMP", "TMP", "LANG", "LC_ALL", "HOME"]) if (typeof process.env[key] === "string") env[key] = process.env[key];
+  for (const key of CHILD_ENVIRONMENT_KEYS) if (typeof process.env[key] === "string") env[key] = process.env[key];
   Object.assign(env, { DESIGN_MEMORY_RETRIEVAL_MUTATION_EVIDENCE: tamper === "wrong-env" ? "wrong" : "fd-json-v2", DESIGN_MEMORY_RETRIEVAL_MUTATION_ID: mutation.id, DESIGN_MEMORY_RETRIEVAL_MUTATION_TEST_ID: mutation.testId, DESIGN_MEMORY_RETRIEVAL_MUTATION_SENTINEL: mutation.sentinel, DESIGN_MEMORY_RETRIEVAL_SELECTED_TEST: mutation.selectedTest });
   if (tamper?.startsWith("grandchild-")) Object.assign(env, { DESIGN_MEMORY_RETRIEVAL_HOSTILE_PID_PATH: process.env.DESIGN_MEMORY_RETRIEVAL_HOSTILE_PID_PATH, DESIGN_MEMORY_RETRIEVAL_HOSTILE_SENTINEL: process.env.DESIGN_MEMORY_RETRIEVAL_HOSTILE_SENTINEL });
   if (mutation.target === "retrieval") env.DESIGN_MEMORY_RETRIEVAL_MODULE_URL = moduleUrl; else env.DESIGN_MEMORY_SCHEMA_EVALUATOR_MODULE_URL = moduleUrl;

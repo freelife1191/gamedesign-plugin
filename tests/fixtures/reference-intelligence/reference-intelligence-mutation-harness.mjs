@@ -4,6 +4,7 @@ import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { CHILD_ENVIRONMENT_KEYS } from "../../lib/platform-support.mjs";
 
 const root = fileURLToPath(new URL("../../..", import.meta.url));
 const MAX_EVIDENCE_BYTES = 4 * 1024;
@@ -136,7 +137,7 @@ function selectedTestSource(mutation, moduleUrl, tamper) {
 
 function allowlistedEnvironment(mutation, tamper) {
   const env = {};
-  for (const key of ["PATH", "TMPDIR", "TEMP", "TMP", "LANG", "LC_ALL", "HOME"]) if (typeof process.env[key] === "string") env[key] = process.env[key];
+  for (const key of CHILD_ENVIRONMENT_KEYS) if (typeof process.env[key] === "string") env[key] = process.env[key];
   Object.assign(env, {
     REFERENCE_INTELLIGENCE_MUTATION_EVIDENCE: tamper === "wrong-env" ? "wrong" : "fd-json-v3",
     REFERENCE_INTELLIGENCE_MUTATION_ID: mutation.id,

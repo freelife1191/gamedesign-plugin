@@ -240,11 +240,21 @@ async function writeExclusive(candidate, bytes) {
   const handle = await open(candidate, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | noFollowOpenFlag(), 0o600);
   try { await handle.writeFile(bytes); await handle.sync(); } finally { await handle.close(); }
 }
+async function nameIsTaken(candidate) { return lstat(candidate).then(() => true, () => false); }
 async function reserveSlot(directory, max, width, make) {
   await ensureDirectories(directory, "");
   for (let slot = 0; slot < max; slot += 1) {
     const candidate = path.join(directory, `${String(slot).padStart(width, "0")}.json`);
-    try { await writeExclusive(candidate, make(slot)); return slot; } catch (error) { if (error?.code !== "EEXIST") throw error; }
+    try { await writeExclusive(candidate, make(slot)); return slot; } catch (error) {
+      if (error?.code === "EEXIST") continue;
+      // A slot already occupied by a symlink to something absent. POSIX reports EEXIST for the
+      // exclusive create because the name is taken; Windows resolves the reparse point first and
+      // reports ENOENT about the target instead. The name is taken either way, and lstat is what says
+      // so — trusting the errno made one platform skip an occupied slot and the other abort the whole
+      // publish over a slot it should simply have stepped past.
+      if (error?.code === "ENOENT" && await nameIsTaken(candidate)) continue;
+      throw error;
+    }
   }
   return null;
 }

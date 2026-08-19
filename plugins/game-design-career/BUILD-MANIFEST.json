@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-career",
   "sourceDateEpoch": 0,
-  "treeSha256": "6b3b0c6e21c1237ba43ad3035fd409a200252ad2007c59b17b7edb34e85788b9",
+  "treeSha256": "87baec298841be90ee1e8b663fc39ab02d152218ed5e0473da9972e4ed3e140e",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -1761,8 +1761,8 @@
     },
     {
       "path": "scripts/retrieve-design-memory.mjs",
-      "sha256": "efed3a6ff06bde735832cc96c317b2d743d6cde05676ce07118ab4ba2c0e12f9",
-      "size": 49543
+      "sha256": "108db1418467c8fd309b4e6ec661266111f137a7879878c0a3f51490613bcee1",
+      "size": 50211
     },
     {
       "path": "scripts/review-cutscene-continuity.mjs",
