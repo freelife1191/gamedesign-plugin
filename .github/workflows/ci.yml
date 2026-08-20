@@ -63,6 +63,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          # The checks shard validates historical release tags and their exact commits. Checkout defaults
+          # to one commit without tags, so the matrix needs the complete release graph on both platforms.
+          fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:

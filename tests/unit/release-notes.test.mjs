@@ -166,9 +166,10 @@ test("the repository release history and enforcement surfaces stay complete", as
     "release/2026-08-20-v0.2.0-대표 진입 스킬, 제품 간 인계, 승인형 업그레이드.md",
   ]);
 
-  const [packageJson, workflow, agents, readme] = await Promise.all([
+  const [packageJson, workflow, ciWorkflow, agents, readme] = await Promise.all([
     readFile(path.join(repositoryRoot, "package.json"), "utf8").then(JSON.parse),
     readFile(path.join(repositoryRoot, ".github", "workflows", "release-notes.yml"), "utf8"),
+    readFile(path.join(repositoryRoot, ".github", "workflows", "ci.yml"), "utf8"),
     readFile(path.join(repositoryRoot, "AGENTS.md"), "utf8"),
     readFile(path.join(repositoryRoot, "README.md"), "utf8"),
   ]);
@@ -178,6 +179,10 @@ test("the repository release history and enforcement surfaces stay complete", as
   assert.match(workflow, /tags:\s*\n\s+- "v\*"/u);
   assert.match(workflow, /fetch-depth:\s*0/u);
   assert.match(workflow, /npm run validate:release-notes/u);
+  assert.match(
+    ciWorkflow,
+    /offline-gate:[\s\S]*?- uses: actions\/checkout@v4\s*\n\s*with:\s*\n(?:\s*#.*\n)*\s*fetch-depth:\s*0\s*\n\s*persist-credentials:\s*false/u,
+  );
   assert.match(agents, /새 버전 태그를 만들기 전에 `release\/YYYY-MM-DD-vX\.Y\.Z-자연스러운 릴리스 요약\.md`/u);
   assert.match(agents, /\$humanize-korean/u);
   assert.match(readme, /\[버전별 릴리스 노트\]\(release\/README\.md\)/u);
