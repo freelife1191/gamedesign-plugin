@@ -186,3 +186,11 @@ export const NO_INHERITED_EXTRA_DESCRIPTORS_REASON =
 // cleanup is bounded, not that the bound is fifteen seconds; the bound scales with the host and the
 // assertion does not move.
 export const CHILD_DEADLINE_SCALE = process.platform === "win32" ? 3 : 1;
+
+// Creating and walking 100,001 real filesystem entries is deliberately expensive: it proves that the
+// shipped census limit fails closed at the boundary instead of replacing the boundary with a mock. NTFS
+// on the hosted Windows runner has repeatedly needed more than two minutes for that setup and scan. Keep
+// the assertion identical on every host, but give Windows enough wall-clock time to reach it.
+export function filesystemCensusTestTimeout(platform = process.platform) {
+  return platform === "win32" ? 300000 : 120000;
+}

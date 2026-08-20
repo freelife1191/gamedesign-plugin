@@ -5,8 +5,15 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { minimalEnvironment } from "../../tooling/isolation-smoke.mjs";
+import { filesystemCensusTestTimeout } from "../lib/platform-support.mjs";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
+
+test("the large filesystem census keeps its fail-close assertion but gives Windows realistic I/O time", () => {
+  assert.equal(filesystemCensusTestTimeout("win32"), 300000);
+  assert.equal(filesystemCensusTestTimeout("linux"), 120000);
+  assert.equal(filesystemCensusTestTimeout("darwin"), 120000);
+});
 
 // The offline gate ran on Linux alone for one release because the tests and tooling had grown POSIX
 // assumptions nobody had counted. Fixing them once buys nothing on its own: the next hardcoded shell path,
