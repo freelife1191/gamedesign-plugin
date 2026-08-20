@@ -8,10 +8,10 @@ const root = fileURLToPath(new URL("../..", import.meta.url));
 
 function section(markdown, heading) {
   const lines = markdown.split("\n");
-  const start = lines.findIndex((line) => /^#{2,3} /u.test(line) && line.slice(line.indexOf(" ") + 1) === heading);
+  const start = lines.findIndex((line) => /^#{2,4} /u.test(line) && line.slice(line.indexOf(" ") + 1) === heading);
   assert.notEqual(start, -1, `missing ${heading} section`);
   const level = lines[start].indexOf(" ");
-  const end = lines.findIndex((line, index) => index > start && /^#{2,3} /u.test(line) && line.indexOf(" ") <= level);
+  const end = lines.findIndex((line, index) => index > start && /^#{2,4} /u.test(line) && line.indexOf(" ") <= level);
   return lines.slice(start + 1, end === -1 ? undefined : end);
 }
 

@@ -40,20 +40,11 @@ const memoryHeadings = [
   "손상·충돌·출처 변경 복구",
 ];
 const rootH2 = [
-  "목차",
-  "플러그인 소개",
-  "30초 안에 플러그인 선택하기",
-  "설치하기",
-  "5분 안에 첫 결과 만들기",
-  "케이스별 프롬프트로 시작하기",
-  "스킬별로 바로 실행하기",
-  "요청 뒤에 생성되는 결과물",
-  "플러그인 구조와 전체 시스템 아키텍처",
-  "이미지·도식·문서 내보내기",
-  "상세 가이드에서 더 알아보기",
-  "안전·권리·사람 승인 경계",
-  "문제를 해결하고 작업 재개하기",
-  "기술 문서·기여·라이선스",
+  "🚀 빠른 시작",
+  "🧭 제품 이해와 시작",
+  "🧰 활용 사례와 스킬",
+  "🏗️ 아키텍처와 결과물",
+  "📚 운영과 참고",
 ];
 const changedMarkdown = [
   "README.md",
@@ -383,7 +374,7 @@ test("entry, install, quick-start, workflow, FAQ, and skill guides link to produ
 test("root README keeps its H2 order, TOC, and 18 representative cards", async () => {
   const markdown = await readFile(path.join(root, "README.md"), "utf8");
   assert.deepEqual(headingNames(markdown, 2), rootH2);
-  for (const heading of rootH2.slice(1)) {
+  for (const heading of rootH2) {
     assert.match(markdown, new RegExp(`\\[${escapeRegExp(heading)}\\]\\(#`, "u"), heading);
   }
   assert.equal((markdown.match(/<details data-prompt-id=/gu) ?? []).length, 18);

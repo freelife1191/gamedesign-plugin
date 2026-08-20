@@ -20,7 +20,17 @@ const root = fileURLToPath(new URL("../..", import.meta.url));
 const guideRoot = path.join(root, "guides");
 const products = ["game-design-studio", "game-design-career"];
 const requiredRootHeadings = [
-  "목차",
+  "🚀 빠른 시작",
+  "🧭 제품 이해와 시작",
+  "🧰 활용 사례와 스킬",
+  "🏗️ 아키텍처와 결과물",
+  "📚 운영과 참고",
+];
+const requiredRootSubheadings = [
+  "1분 설치",
+  "대표·업데이트·핵심 스킬",
+  "한 문장으로 시작하기",
+  "전체 아키텍처 바로보기",
   "플러그인 소개",
   "30초 안에 플러그인 선택하기",
   "설치하기",
@@ -31,7 +41,7 @@ const requiredRootHeadings = [
   "플러그인 구조와 전체 시스템 아키텍처",
   "이미지·도식·문서 내보내기",
   "상세 가이드에서 더 알아보기",
-  "안전·권리·사람 승인 경계",
+  "안전·권리·담당자 승인 경계",
   "문제를 해결하고 작업 재개하기",
   "기술 문서·기여·라이선스",
 ];
@@ -69,14 +79,14 @@ const representativeCards = {
 };
 const requiredCardLabels = [
   "사용 시점", "준비 입력", "바로 써 보는 요청", "플러그인이 선택하는 작업 순서",
-  "받게 되는 결과", "읽는 순서", "사람 검토", "다음 요청",
+  "받게 되는 결과", "읽는 순서", "담당자 검토", "다음 요청",
 ];
 
 const smartRequestGroupContracts = [
   {
     heading: "Studio 기획 사례 7개",
     rows: 7,
-    phrases: ["한 줄 요청", "요청에 따라 선택", "필요한 경로만 실행", "사람 검토"],
+    phrases: ["한 줄 요청", "요청에 맞는 경로만 골라 실행", "담당자 검토"],
   },
   {
     heading: "Career 학습·취업 사례 7개",
@@ -86,7 +96,7 @@ const smartRequestGroupContracts = [
   {
     heading: "Studio와 Career 연계 사례 4개",
     rows: 4,
-    phrases: ["한 줄 요청", "공개 범위", "필요한 경로만 실행", "사람 승인 또는 보류"],
+    phrases: ["한 줄 요청", "공개 범위", "필요한 경로만 실행", "담당자의 승인 또는 보류"],
   },
 ];
 const expectedPluginTreeCounts = {
@@ -120,7 +130,7 @@ const verifiedArchifyRoutes = [
   {
     label: "전체 플러그인 시스템 구조",
     target: "guides/assets/archify/suite/suite-plugin-system-architecture.html",
-    explains: "Studio와 Career 플러그인, 기획 결과물, 검토와 사람 승인의 전체 연결",
+    explains: "Studio와 Career 플러그인, 기획 결과물, 검토와 담당자 승인의 전체 연결",
     when: "두 플러그인을 처음 함께 사용하거나 전체 승인 경계를 확인할 때",
   },
   {
@@ -155,7 +165,7 @@ const archifyStatusRoute = {
 const readmeSkillsteadDiagrams = [
   {
     section: "플러그인 소개",
-    subsection: "⚙️ 짧게 요청해도 체계가 작동합니다",
+    subsection: "짧게 요청해도 체계가 작동합니다",
     id: "simple-prompt-design-system",
     alt: "한 줄 요청을 전문 게임 기획 작업으로 바꾸는 플러그인 시스템 흐름",
     phrases: [
@@ -178,7 +188,7 @@ const readmeSkillsteadDiagrams = [
   {
     section: "5분 안에 첫 결과 만들기",
     id: "first-result-routing-flow",
-    alt: "한 문장 요청에서 스킬 선택과 사람 승인까지 이어지는 첫 결과 흐름",
+    alt: "한 문장 요청에서 스킬 선택과 담당자 승인까지 이어지는 첫 결과 흐름",
     phrases: [
       "Studio 또는 Career 한 문장 요청", "요청 목적·원하는 결과 분석", "한 분야가 분명한가?",
       "전문 스킬", "Studio·Career 오케스트레이터", "필요한 검토 역할 최대 세 개",
@@ -201,14 +211,14 @@ const readmeSkillsteadDiagrams = [
   {
     section: "요청 뒤에 생성되는 결과물",
     id: "artifact-review-flow",
-    alt: "기준 결과 폴더 (Canonical Artifact)를 읽고 사람이 승인하는 순서",
+    alt: "기준 결과 폴더(Canonical Artifact)를 읽고 담당자가 승인하는 순서",
     phrases: ["기획 본문", "검토 근거", "주요 의사결정 기록", "이미지·첨부 자료", "출력 준비표", "이름 있는 사람"],
   },
   {
     section: "케이스별 프롬프트로 시작하기",
     subsection: "Studio 기획 사례 7개",
     id: "studio-smart-request-flow",
-    alt: "Studio 한 줄 요청이 필요한 스킬과 사람 검토로 이어지는 흐름",
+    alt: "Studio 한 줄 요청이 필요한 스킬과 담당자 검토로 이어지는 흐름",
     phrases: ["Studio 한 줄 요청", "목적·결과 분석", "전문 스킬 또는 프로젝트 조율", "검토 역할 선택", "기준 결과 폴더", "사람 검토"],
   },
   {
@@ -222,7 +232,7 @@ const readmeSkillsteadDiagrams = [
     section: "케이스별 프롬프트로 시작하기",
     subsection: "Studio와 Career 연계 사례 4개",
     id: "suite-smart-request-flow",
-    alt: "Studio 결과가 Career 활용 자료와 사람 승인으로 이어지는 흐름",
+    alt: "Studio 결과가 Career 활용 자료와 담당자 승인으로 이어지는 흐름",
     phrases: ["연계 한 줄 요청", "Studio 원본·공개 범위", "Career 전환 스킬", "결과 검토", "포트폴리오·면접·발표", "사람 승인·보류"],
   },
   {
@@ -374,7 +384,7 @@ const readableCaseLabels = new Map([
   ["suite:resume-failed-derivatives:case", ["막힌 이미지·문서 출력 안전하게 재개", "이미지나 내보내기가 막혔을 때 보존 파일과 미해결 항목을 확인해 필요한 작업만 재개합니다."]],
 ]);
 const caseGroupIntroductions = new Map([
-  ["Studio 기획 사례 7개", "게임의 규칙, 콘텐츠, 경험과 제작 범위를 설계하려는 기획자가 Studio 사례를 고릅니다. 각 사례는 검토 가능한 기획 결과 폴더 (Artifact)와 사람 검토 지점을 남깁니다."],
+  ["Studio 기획 사례 7개", "게임의 규칙, 콘텐츠, 경험과 제작 범위를 설계하려면 Studio 사례를 고르세요. 각 사례는 검토 가능한 기획 결과 폴더(Artifact)와 담당자 검토 지점을 남깁니다."],
   ["Career 학습·취업 사례 7개", "게임 기획을 배우거나 취업을 준비하는 사람은 Career 사례로 역할, 근거와 다음 과제를 정리합니다. 각 사례는 멘토와 함께 검토할 수 있는 학습 또는 포트폴리오 결과물을 만듭니다."],
   ["Studio와 Career 연계 사례 4개", "제작 기획을 포트폴리오, 면접 연습, 발표 자료 또는 재개 계획으로 발전시키려면 아래에서 목적에 맞는 사례를 고릅니다. 각 사례는 공개해도 되는 자료만 골라내고, 이름과 역할을 적은 담당자의 검토를 거칩니다."],
 ]);
@@ -402,7 +412,7 @@ const readableSkillMetadata = new Map([
     ["generate-image-assets", ["이미지 자산 생성", "승인된 목록의 선택 작업만 생성하고 이미지 제공자 상태를 기록합니다."]],
     ["humanize-korean", ["한국어 문장 다듬기", "사실과 수치, ID를 보존하며 기계적인 표현을 자연스러운 문장으로 다듬습니다."]],
     ["capture-game-design-memory", ["프로젝트 기억 후보 기록", "출처와 적용·제외 조건이 붙은 검토 대기 후보를 기록합니다."]],
-    ["maintain-game-design-memory", ["프로젝트 기억 관리", "이름이 확인된 사람의 결정과 변경 이력을 기록합니다."]],
+    ["maintain-game-design-memory", ["프로젝트 기억 관리", "이름이 기록된 담당자의 결정과 변경 이력을 기록합니다."]],
     ["maintain-game-design-glossary", ["게임 기획 용어 사전 관리", "후보, findings와 승인된 용어 스냅샷을 기록합니다."]],
     ["orchestrate-game-design-project", ["게임 기획 프로젝트 조율", "여러 기획 분야의 범위, 순서와 검토 지점을 프로젝트 브리프로 묶습니다."]],
     ["plan-game-production", ["게임 제작 계획", "시제품 기준, 의존성, 담당자와 중단 기준을 제작 계획으로 만듭니다."]],
@@ -412,7 +422,7 @@ const readableSkillMetadata = new Map([
     ["review-image-assets", ["이미지 자산 검토", "시각 품질, 접근성, 권리와 배치를 검토해 사람의 결정을 요청합니다."]],
     ["retrieve-approved-design-memory", ["승인된 프로젝트 기억 조회", "출처·범위·만료를 확인한 승인 기록과 제외 이유를 돌려줍니다."]],
     ["svg-infographic", ["기획 도식 만들기", `Skillstead ${vendorVersion("skillstead")}에서 번들된 스킬로 편집 가능한 SVG와 검증용 PNG를 만듭니다.`]],
-    ["upgrade-game-design-suite", ["스위트 업데이트", "설치된 버전과 공개된 릴리스를 비교하고 사람이 고른 처리만 적용합니다."]],
+    ["upgrade-game-design-suite", ["스위트 업데이트", "설치된 버전과 공개된 릴리스를 비교하고 사용자가 고른 처리만 적용합니다."]],
     ["visualize-game-design", ["게임 기획 시각화", "루프, 상태, 흐름과 의존성을 접근 가능한 SVG와 PNG 도식으로 만듭니다."]],
   ])],
   ["game-design-career", new Map([
@@ -425,7 +435,7 @@ const readableSkillMetadata = new Map([
     ["generate-image-assets", ["경력 이미지 자산 생성", "승인된 이미지 목록의 선택 작업만 생성하고 이미지 제공자 상태를 기록합니다."]],
     ["humanize-korean", ["경력 문장 다듬기", "증거와 주장 경계를 보존하며 기계적인 표현을 자연스러운 문장으로 다듬습니다."]],
     ["capture-game-design-memory", ["프로젝트 기억 후보 기록", "출처와 적용·제외 조건이 붙은 검토 대기 후보를 기록합니다."]],
-    ["maintain-game-design-memory", ["프로젝트 기억 관리", "이름이 확인된 사람의 결정과 변경 이력을 기록합니다."]],
+    ["maintain-game-design-memory", ["프로젝트 기억 관리", "이름이 기록된 담당자의 결정과 변경 이력을 기록합니다."]],
     ["maintain-game-design-glossary", ["게임 기획 용어 사전 관리", "후보, findings와 승인된 용어 스냅샷을 기록합니다."]],
     ["map-game-design-career", ["게임 기획 경력 지도 만들기", "역할군, 목표 수준과 역량 격차를 비교해 경력 지도를 만듭니다."]],
     ["orchestrate-game-design-career", ["게임 기획 경력 조율", "경력 단계, 작업 순서와 검토를 하나의 경력 계획으로 묶습니다."]],
@@ -439,7 +449,7 @@ const readableSkillMetadata = new Map([
     ["review-image-assets", ["경력 이미지 자산 검토", "시각 품질, 접근성, 권리와 배치를 검토해 사람의 결정을 요청합니다."]],
     ["retrieve-approved-design-memory", ["승인된 프로젝트 기억 조회", "출처·범위·만료를 확인한 승인 기록과 제외 이유를 돌려줍니다."]],
     ["svg-infographic", ["경력 도식 만들기", `Skillstead ${vendorVersion("skillstead")}에서 번들된 스킬로 편집 가능한 SVG와 검증용 PNG를 만듭니다.`]],
-    ["upgrade-game-design-suite", ["스위트 업데이트", "설치된 버전과 공개된 릴리스를 비교하고 사람이 고른 처리만 적용합니다."]],
+    ["upgrade-game-design-suite", ["스위트 업데이트", "설치된 버전과 공개된 릴리스를 비교하고 사용자가 고른 처리만 적용합니다."]],
     ["visualize-career-roadmap", ["경력 성장 경로 시각화", "역할, 역량, 학습 의존성과 성장 경로를 SVG와 PNG 도식으로 만듭니다."]],
   ])],
 ]);
@@ -459,13 +469,13 @@ const readableSkillUsage = new Map([
     ["generate-image-assets", "승인된 이미지 목록에서 필요한 항목만 만들 때"],
     ["humanize-korean", "검토한 초안의 어색한 문체만 자연스럽게 다듬을 때"],
     ["capture-game-design-memory", "검증한 작업에서 다시 쓸 교훈을 후보로 남길 때"],
-    ["maintain-game-design-memory", "후보를 확인하고 사람이 승인·거부·폐기할 때"],
-    ["maintain-game-design-glossary", "용어 후보를 사람 검토와 스냅샷으로 관리할 때"],
+    ["maintain-game-design-memory", "후보를 확인하고 담당자가 승인·거부·폐기할 때"],
+    ["maintain-game-design-glossary", "용어 후보를 담당자 검토와 스냅샷으로 관리할 때"],
     ["orchestrate-game-design-project", "여러 기획 분야를 하나의 프로젝트 순서로 묶을 때"],
     ["plan-game-production", "시제품 범위·일정·의존성과 중단 기준을 검토할 때"],
     ["plan-image-assets", "기획서에 필요한 이미지와 프롬프트를 먼저 목록화할 때"],
     ["polish-game-design-writing", "긴 기획 문장의 뜻과 보호 항목을 보존해 다듬을 때"],
-    ["review-game-design", "기획서의 근거·위험·미결정을 사람 검토 전에 찾을 때"],
+    ["review-game-design", "기획서의 근거·위험·미결정을 담당자 검토 전에 찾을 때"],
     ["review-image-assets", "이미지의 읽기 쉬움·권리·배치를 승인 전에 확인할 때"],
     ["retrieve-approved-design-memory", "이전 설계 교훈을 현재 작업의 참고 자료로 쓸 때"],
     ["svg-infographic", "표나 설명만으로 관계를 이해하기 어려울 때"],
@@ -482,8 +492,8 @@ const readableSkillUsage = new Map([
     ["generate-image-assets", "승인된 포트폴리오 이미지 항목만 만들 때"],
     ["humanize-korean", "증거를 보존하며 포트폴리오 문체만 자연스럽게 다듬을 때"],
     ["capture-game-design-memory", "검증한 학습·포트폴리오 작업에서 다시 쓸 교훈을 후보로 남길 때"],
-    ["maintain-game-design-memory", "후보를 확인하고 사람이 승인·거부·폐기할 때"],
-    ["maintain-game-design-glossary", "용어 후보를 사람 검토와 스냅샷으로 관리할 때"],
+    ["maintain-game-design-memory", "후보를 확인하고 담당자가 승인·거부·폐기할 때"],
+    ["maintain-game-design-glossary", "용어 후보를 담당자 검토와 스냅샷으로 관리할 때"],
     ["map-game-design-career", "목표 직무와 현재 역량의 차이를 비교할 때"],
     ["orchestrate-game-design-career", "역할 탐색·학습·포트폴리오 작업을 한 경로로 묶을 때"],
     ["plan-image-assets", "포트폴리오에 넣을 이미지와 프롬프트를 먼저 정리할 때"],
@@ -566,22 +576,36 @@ const representativePromptCards = [
   ["프로젝트 증거와 면접을 잇는 사례 카드", "suite:career-proof-project-interview:case", "guides/prompt-templates/suite/career-proof-project-interview.md#suitecareer-proof-project-interviewcase"],
 ];
 
+function visibleHeadingPositions(markdown) {
+  const positions = [];
+  let offset = 0;
+  let fence = null;
+  for (const line of markdown.split("\n")) {
+    const marker = /^\s{0,3}(`{3,}|~{3,})/u.exec(line)?.[1] ?? null;
+    if (marker) {
+      if (!fence) fence = marker[0];
+      else if (marker[0] === fence) fence = null;
+    } else if (!fence) {
+      const [heading] = visibleMarkdownHeadings(line);
+      if (heading) positions.push({ ...heading, start: offset, bodyStart: offset + line.length + 1 });
+    }
+    offset += line.length + 1;
+  }
+  return positions;
+}
+
+function headingLevel(markdown, heading) {
+  const match = visibleHeadingPositions(markdown).find((candidate) => candidate.label === heading);
+  assert.ok(match, `missing section: ${heading}`);
+  return match.level;
+}
+
 function section(markdown, heading) {
-  const marker = `## ${heading}\n`;
-  const start = markdown.indexOf(marker);
-  assert.notEqual(start, -1, `missing section: ${heading}`);
-  const bodyStart = start + marker.length;
-  const next = markdown.indexOf("\n## ", bodyStart);
-  return markdown.slice(bodyStart, next === -1 ? markdown.length : next);
+  return exactSection(markdown, heading, headingLevel(markdown, heading));
 }
 
 function subsection(markdown, heading) {
-  const marker = `### ${heading}\n`;
-  const start = markdown.indexOf(marker);
-  assert.notEqual(start, -1, `missing subsection: ${heading}`);
-  const bodyStart = start + marker.length;
-  const next = markdown.indexOf("\n### ", bodyStart);
-  return markdown.slice(bodyStart, next === -1 ? markdown.length : next);
+  return exactSection(markdown, heading, headingLevel(markdown, heading));
 }
 
 function markdownTableRows(markdown) {
@@ -596,14 +620,12 @@ function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
 }
 
-function exactSection(markdown, heading, level = 2) {
-  const marker = `${"#".repeat(level)} ${heading}\n`;
-  const start = markdown.indexOf(marker);
-  assert.notEqual(start, -1, `missing section: ${heading}`);
-  const bodyStart = start + marker.length;
-  const remainder = markdown.slice(bodyStart);
-  const next = remainder.search(new RegExp(`\\n#{1,${level}} `, "u"));
-  return remainder.slice(0, next === -1 ? remainder.length : next);
+function exactSection(markdown, heading, level = headingLevel(markdown, heading)) {
+  const headings = visibleHeadingPositions(markdown);
+  const current = headings.findIndex((candidate) => candidate.level === level && candidate.label === heading);
+  assert.notEqual(current, -1, `missing visible section: ${heading}`);
+  const nextHeading = headings.slice(current + 1).find((candidate) => candidate.level <= level);
+  return markdown.slice(headings[current].bodyStart, nextHeading?.start ?? markdown.length);
 }
 
 function textBlocks(markdown) {
@@ -619,17 +641,17 @@ function renderedPromptCards(markdown) {
 
 function cardLabelBody(card, label) {
   const escaped = escapeRegExp(label);
-  const expression = new RegExp(`^#### ${escaped}\\n`, "gmu");
+  const expression = new RegExp(`^##### ${escaped}\\n`, "gmu");
   const matches = [...card.body.matchAll(expression)];
   assert.equal(matches.length, 1, `${card.id}: visible label must occur exactly once: ${label}`);
   const value = card.body.slice(matches[0].index + matches[0][0].length);
-  const nextLabel = /^#### /mu.exec(value);
+  const nextLabel = /^##### /mu.exec(value);
   return value.slice(0, nextLabel?.index ?? value.length).trim();
 }
 
 function assertReadableCaseGroupIntroductions(markdown) {
   for (const [heading, expected] of caseGroupIntroductions) {
-    const group = exactSection(markdown, heading, 3);
+    const group = exactSection(markdown, heading, 4);
     const beforeFirstCard = group.slice(0, group.indexOf("<details data-prompt-id="));
     assert.ok(
       normalizePromptWhitespace(beforeFirstCard).startsWith(normalizePromptWhitespace(expected)),
@@ -644,7 +666,7 @@ function assertReadableCardSummary(card) {
   const expected = readableCaseLabels.get(card.id);
   assert.ok(expected, `${card.id}: readable case metadata exists`);
   const [title, description] = expected;
-  const summaryMatch = /^<summary>([^\n]+)<\/summary>\n\n([^\n]+)\n\n#### /u.exec(card.body);
+  const summaryMatch = /^<summary>([^\n]+)<\/summary>\n\n([^\n]+)\n\n##### /u.exec(card.body);
   assert.ok(summaryMatch, `${card.id}: summary is followed immediately by one visible Korean sentence`);
   assert.equal(summaryMatch[1], `${title} (${card.id})`, `${card.id}: Korean task title precedes stable case ID`);
   assert.equal(summaryMatch[2], description, `${card.id}: visible one-sentence description is unique and task-specific`);
@@ -774,7 +796,7 @@ function assertNaturalLanguageFirstRoot(markdown) {
 
   assert.doesNotMatch(markdown, /채운 예시/u, "README removes the awkward filled-example label");
   for (const contract of smartRequestGroupContracts) {
-    const group = exactSection(markdown, contract.heading, 3);
+    const group = exactSection(markdown, contract.heading, 4);
     const intro = group.slice(0, group.indexOf("<details data-prompt-id="));
     const normalizedIntro = normalizePromptWhitespace(intro);
     for (const phrase of contract.phrases) {
@@ -827,7 +849,7 @@ function assertPromptCard(card, entry) {
   assert.match(outputs, /[가-힣]/u, `${entry.id}: expected results explain the outcome in Korean`);
   const readOrderExpected = entry.read_order.map((step) => `\`${step}\``).join(" → ");
   const readOrder = sourceBoundPrefix(cardLabelBody(card, "읽는 순서"), readOrderExpected, `${entry.id}: read_order`);
-  const humanReview = cardLabelBody(card, "사람 검토");
+  const humanReview = cardLabelBody(card, "담당자 검토");
   assert.match(humanReview, /승인|자동 표시하지 않/u, `${entry.id}: human review keeps a manual-decision boundary`);
   if (entry.id === "studio:case:ST-C01") {
     assert.ok(humanReview.startsWith(entry.human_review_boundary), `${entry.id}: human decision source remains first`);
@@ -888,7 +910,7 @@ async function assertRepresentativePromptCards(markdown) {
 }
 
 function assertTableShape(markdown, heading, headers, label) {
-  const rows = markdownTableRows(exactSection(markdown, heading, 3));
+  const rows = markdownTableRows(exactSection(markdown, heading, 4));
   assert.ok(rows.length >= 2, `${label}: table has header and rows`);
   assert.deepEqual(rows[0], headers, `${label}: table headers are exact`);
   return rows.slice(1);
@@ -1140,14 +1162,14 @@ async function assertResultExamples(markdown) {
 }
 
 function assertSafetyBoundary(markdown) {
-  const safety = exactSection(markdown, "안전·권리·사람 승인 경계");
+  const safety = exactSection(markdown, "안전·권리·담당자 승인 경계");
   assert.match(safety, /이미지·파생 문서·검토 결과는 자동 승인되지 않습니다\./u, "safety-boundary: images, derived documents, and review findings require human approval");
   assert.doesNotMatch(safety, /(?:이미지|파생 문서|검토 결과)[^.\n]{0,100}자동 승인(?:됩니다|한다)/u, "safety-boundary: README must reject automatic approval claims");
 }
 
 function assertUpdateAndReinstallInstructions(markdown) {
-  const instructions = exactSection(markdown, "업데이트·재설치하기", 3);
-  const recoveryStart = instructions.indexOf("#### 설치 복구");
+  const instructions = exactSection(markdown, "업데이트·재설치하기", 4);
+  const recoveryStart = instructions.indexOf("##### 설치 복구");
   assert.notEqual(recoveryStart, -1, "update instructions separate normal update from install recovery");
   const normalUpdate = instructions.slice(0, recoveryStart);
   const recovery = instructions.slice(recoveryStart);
@@ -1207,7 +1229,7 @@ function assertPortfolioQuickStartRejected(markdown, label) {
 
 function assertPortfolioQuickStart(markdown) {
   const quickStart = exactSection(markdown, "5분 안에 첫 결과 만들기");
-  const headings = [...quickStart.matchAll(/^### ([^\n]+)$/gmu)].map((match) => match[1]);
+  const headings = [...quickStart.matchAll(/^#### ([^\n]+)$/gmu)].map((match) => match[1]);
   assert.equal(headings.length, 3, "quick start keeps exactly three actionable routes");
   assert.equal(headings[2], portfolioQuickStartHeading, "third quick-start route names the portfolio task");
   assert.doesNotMatch(markdown, /(?:공개\s*)?증거 후보/u, "user-facing README avoids the abstract evidence-candidate term");
@@ -1254,14 +1276,24 @@ function assertPortfolioQuickStart(markdown) {
 
 async function assertStructuredRootReadme(markdown, { validateLinks = true } = {}) {
   assert.deepEqual(h2Headings(markdown), requiredRootHeadings, "root README H2 order is exact");
-  const toc = exactSection(markdown, "목차");
+  const tocMarker = "**📑 목차**\n";
+  const tocStart = markdown.indexOf(tocMarker);
+  assert.notEqual(tocStart, -1, "root README exposes a visible table of contents before the first main section");
+  const tocBodyStart = tocStart + tocMarker.length;
+  const tocEnd = markdown.indexOf("\n---\n", tocBodyStart);
+  assert.notEqual(tocEnd, -1, "root README table of contents has a bounded end");
+  const toc = markdown.slice(tocBodyStart, tocEnd);
   const tocLinks = visibleMarkdownLinks(toc);
-  const expectedToc = requiredRootHeadings.slice(1).map((label) => {
-    const heading = visibleMarkdownHeadings(markdown).find((candidate) => candidate.level === 2 && candidate.label === label);
-    assert.ok(heading, `TOC target heading exists: ${label}`);
-    return { label, target: `#${heading.anchor}` };
-  });
-  assert.deepEqual(tocLinks.map(({ label, target }) => ({ label, target })), expectedToc, "목차 has only ordered links to every following root section");
+  const documentHeadings = visibleMarkdownHeadings(markdown);
+  assert.deepEqual(
+    documentHeadings.filter(({ level }) => level === 3).map(({ label }) => label),
+    requiredRootSubheadings,
+    "root README H3 order is exact",
+  );
+  const expectedToc = documentHeadings
+    .filter(({ level }) => level === 2 || level === 3)
+    .map(({ label, anchor }) => ({ label, target: `#${anchor}` }));
+  assert.deepEqual(tocLinks.map(({ label, target }) => ({ label, target })), expectedToc, "목차 links every H2 and H3 section in document order");
   await assertRepresentativePromptCards(markdown);
   for (const product of products) {
     await assertPluginTreeContract(markdown, product);
@@ -1277,7 +1309,7 @@ async function assertStructuredRootReadme(markdown, { validateLinks = true } = {
 async function assertPluginIntroduction(markdown) {
   const introduction = exactSection(markdown, "플러그인 소개");
   const headings = visibleMarkdownHeadings(introduction)
-    .filter(({ level }) => level === 3)
+    .filter(({ level }) => level === 4)
     .map(({ label }) => label.replace(/^[^\p{L}\p{N}]+/u, ""));
   assert.deepEqual(headings, pluginIntroductionHeadings, "plugin introduction has the approved readable sequence");
 
@@ -1340,7 +1372,7 @@ function assertHorizontalSectionDividers(markdown, label) {
 async function assertSuiteArchitectureEmbed(markdown) {
   const architecture = section(markdown, suiteArchitectureEmbed.section);
   const readableArchitecture = architecture.replace(/\s+/gu, " ");
-  const previewEnd = architecture.indexOf("### 경로별 역할과 편집 경계");
+  const previewEnd = architecture.indexOf("#### 경로별 역할과 편집 경계");
   assert.notEqual(previewEnd, -1, "architecture preview appears before the component-boundary explanation");
   const readablePreview = architecture.slice(0, previewEnd).replace(/\s+/gu, " ");
   const exactEmbed = `[![${suiteArchitectureEmbed.alt}](${suiteArchitectureEmbed.png})](${suiteArchitectureEmbed.svg})`;
@@ -1351,7 +1383,7 @@ async function assertSuiteArchitectureEmbed(markdown) {
   );
   assert.match(
     readablePreview,
-    /시작점부터 설치·업데이트·전체 정리, 두 제품의 대표 진입, 기준 기획 결과물, 한국어 최종 편집, 자동 검증과 사람 결정을 잇는 큰 경계/u,
+    /시작점부터 설치·업데이트·전체 정리, 두 제품의 대표 진입, 기준 기획 결과물, 한국어 최종 편집, 자동 검증과 담당자 결정을 잇는 큰 경계/u,
     "architecture preview explains the overall system purpose without repeating a route question",
   );
   assert.match(
@@ -1406,7 +1438,7 @@ function assertBeginnerReadableRootAdditions(markdown) {
   for (const label of [
     "게임 기획 요약서 (`game-design-brief`)",
     "게임 기획 경력 계획 (`game-design-career-plan`)",
-    "기준 기획 결과물 2개 (Canonical Artifact)",
+    "기준 기획 결과물 2개(Canonical Artifact)",
   ]) assert.ok(chooser.includes(label), `30초 선택표는 한국어 결과 이름을 ID보다 먼저 보여 줍니다: ${label}`);
 
   const quickReference = subsection(markdown, "직접 스킬 빠른 참조");
@@ -1457,11 +1489,11 @@ async function buildValidStructuredReadmeFixture() {
       "",
       description,
       "",
-      "#### 사용 시점",
+      "##### 사용 시점",
       entry.when_to_use,
-      "#### 준비 입력",
+      "##### 준비 입력",
       entry.required_inputs.join(", "),
-      "#### 바로 써 보는 요청",
+      "##### 바로 써 보는 요청",
       "```text",
       "App",
       ...wrapPromptTemplate(entry.app_prompt.template),
@@ -1475,23 +1507,23 @@ async function buildValidStructuredReadmeFixture() {
       "경로를 직접 지정하는 CLI 예시",
       "실습 프로젝트의 확인된 사실, 합리적 추정과 다음 제안을 구분해 작성해.",
       "```",
-      "#### 플러그인이 선택하는 작업 순서",
+      "##### 플러그인이 선택하는 작업 순서",
       entry.skill_chain.map((skill) => `\`${skill}\``).join(" → "),
       "",
       "앞의 스킬을 순서대로 실행해 필요한 기획 판단과 검토를 연결합니다.",
-      "#### 받게 되는 결과",
+      "##### 받게 되는 결과",
       entry.minimum_outputs.map((output) => `\`${output}\``).join(" → "),
       "",
       "표시한 결과를 함께 보존해 다음 검토와 수정에 사용합니다.",
-      "#### 읽는 순서",
+      "##### 읽는 순서",
       entry.read_order.map((step) => `\`${step}\``).join(" → "),
       "",
       "본문부터 근거와 결정 기록을 차례로 읽어 작업 맥락을 확인합니다.",
-      "#### 사람 검토",
+      "##### 담당자 검토",
       entry.human_review_boundary,
       "",
-      "사람이 공개 범위와 다음 결정을 확인한 뒤 승인 또는 보류를 선택합니다.",
-      "#### 다음 요청",
+      "담당자가 공개 범위와 다음 결정을 확인한 뒤 승인 또는 보류를 선택합니다.",
+      "##### 다음 요청",
       entry.resume_prompt,
       "",
       "보류된 항목과 확인할 질문을 남긴 뒤 필요한 작업부터 다시 요청합니다.",
@@ -1499,17 +1531,17 @@ async function buildValidStructuredReadmeFixture() {
     ].join("\n");
   });
   const caseGroups = [
-    "### Studio 기획 사례 7개",
+    "#### Studio 기획 사례 7개",
     caseGroupIntroductions.get("Studio 기획 사례 7개"),
     "",
     ...cards.slice(0, representativeCards.studio.length),
     "",
-    "### Career 학습·취업 사례 7개",
+    "#### Career 학습·취업 사례 7개",
     caseGroupIntroductions.get("Career 학습·취업 사례 7개"),
     "",
     ...cards.slice(representativeCards.studio.length, representativeCards.studio.length + representativeCards.career.length),
     "",
-    "### Studio와 Career 연계 사례 4개",
+    "#### Studio와 Career 연계 사례 4개",
     caseGroupIntroductions.get("Studio와 Career 연계 사례 4개"),
     "",
     ...cards.slice(representativeCards.studio.length + representativeCards.career.length),
@@ -1544,12 +1576,12 @@ async function buildValidStructuredReadmeFixture() {
     inventoryTables.push(
       `${productLabel}는 제품 스킬 ${sourceSkillCount}개와 공통 스킬 ${inventory.skillIds.length - sourceSkillCount}개로 총 ${inventory.skillIds.length}개를 설치합니다.`,
       "",
-      `### ${productLabel} 설치 스킬 ${inventory.skillIds.length}개`,
+      `#### ${productLabel} 설치 스킬 ${inventory.skillIds.length}개`,
       "| 스킬 이름과 ID | 사용하는 때 | 핵심 결과 | 직접 호출 | 상세 가이드 |",
       "| --- | --- | --- | --- | --- |",
       ...skillRows,
       "",
-      `### ${productLabel} 에이전트 ${product === "game-design-studio" ? 12 : 10}개`,
+      `#### ${productLabel} 에이전트 ${product === "game-design-studio" ? 12 : 10}개`,
       "| 에이전트 역할과 ID | 쉬운 역할 설명 | 검토 초점 | 호출 경계 | 역할 문서 |",
       "| --- | --- | --- | --- | --- |",
       ...agentRows,
@@ -1580,43 +1612,76 @@ async function buildValidStructuredReadmeFixture() {
     "",
     ];
   }))).flat();
-  const expectedToc = requiredRootHeadings.slice(1).map((heading, index) => `${index + 1}. [${heading}](#${visibleMarkdownHeadings(`## ${heading}`)[0].anchor})`);
+  const fixtureTocHeadings = [
+    ...requiredRootHeadings.flatMap((heading) => {
+      const children = {
+        "🚀 빠른 시작": requiredRootSubheadings.slice(0, 4),
+        "🧭 제품 이해와 시작": requiredRootSubheadings.slice(4, 8),
+        "🧰 활용 사례와 스킬": requiredRootSubheadings.slice(8, 10),
+        "🏗️ 아키텍처와 결과물": requiredRootSubheadings.slice(10, 13),
+        "📚 운영과 참고": requiredRootSubheadings.slice(13),
+      }[heading];
+      return [{ level: 2, label: heading }, ...children.map((label) => ({ level: 3, label }))];
+    }),
+  ];
+  let majorIndex = 0;
+  const expectedToc = fixtureTocHeadings.map(({ level, label }) => {
+    if (level === 2) majorIndex += 1;
+    const prefix = level === 2 ? `${majorIndex}.` : "   -";
+    const anchor = visibleMarkdownHeadings(`${"#".repeat(level)} ${label}`)[0].anchor;
+    return `${prefix} [${label}](#${anchor})`;
+  });
   return [
     "# Structured README fixture",
     "",
-    "## 목차",
+    "**📑 목차**",
     ...expectedToc,
     "",
-    "## 플러그인 소개",
+    "---",
+    "",
+    "## 🚀 빠른 시작",
+    "### 1분 설치",
+    "설치 안내",
+    "### 대표·업데이트·핵심 스킬",
+    "대표 스킬 안내",
+    "### 한 문장으로 시작하기",
+    "한 문장 안내",
+    "### 전체 아키텍처 바로보기",
+    "아키텍처 안내",
+    "",
+    "## 🧭 제품 이해와 시작",
+    "### 플러그인 소개",
     "소개 안내",
     "",
-    "## 30초 안에 플러그인 선택하기",
+    "### 30초 안에 플러그인 선택하기",
     "선택 안내",
     "",
-    "## 설치하기",
+    "### 설치하기",
     "설치 안내",
     "",
-    "### 업데이트·재설치하기",
+    "#### 업데이트·재설치하기",
     "Codex App Plugins에서 앱을 다시 시작한 뒤 제품을 다시 적용합니다. 설치 확인 후 새 채팅을 엽니다.",
     "Codex CLI에서 npm run build와 npm run validate를 실행합니다.",
     "codex plugin add game-design-studio@game-design-suite",
     "codex plugin add game-design-career@game-design-suite",
     "codex plugin list로 확인하고 새 세션을 엽니다.",
-    "#### 설치 복구",
+    "##### 설치 복구",
     "codex plugin remove game-design-studio@game-design-suite",
     "codex plugin add game-design-studio@game-design-suite",
     "codex plugin remove game-design-career@game-design-suite",
     "codex plugin add game-design-career@game-design-suite",
     "",
-    "## 5분 안에 첫 결과 만들기",
+    "### 5분 안에 첫 결과 만들기",
     "첫 결과 안내",
     "",
-    "## 케이스별 프롬프트로 시작하기",
+    "## 🧰 활용 사례와 스킬",
+    "### 케이스별 프롬프트로 시작하기",
     ...caseGroups,
     "",
-    "## 스킬별로 바로 실행하기",
+    "### 스킬별로 바로 실행하기",
     ...inventoryTables,
-    "## 요청 뒤에 생성되는 결과물",
+    "## 🏗️ 아키텍처와 결과물",
+    "### 요청 뒤에 생성되는 결과물",
     "```text",
     "artifact/",
     "├── content.md",
@@ -1626,26 +1691,27 @@ async function buildValidStructuredReadmeFixture() {
     "└── export-manifest.yml",
     "```",
     "",
-    "### 결과 예시 6종",
+    "#### 결과 예시 6종",
     "| 결과 이름과 ID | 핵심 파일 | 선택 자산 | 읽는 순서 | 승인 전 보류 경계 |",
     "| --- | --- | --- | --- | --- |",
-    ...resultExampleIds.map((id) => `| ${readableResultLabels.get(id)} (\`${id}\`) | \`content.md\` | 선택 자산 | \`content.md\` → \`evidence.yml\` → \`decisions/\` → \`assets/\` → \`export-manifest.yml\` | 사람 승인 전 보류하며 자동 승인되지 않습니다. |`),
+    ...resultExampleIds.map((id) => `| ${readableResultLabels.get(id)} (\`${id}\`) | \`content.md\` | 선택 자산 | \`content.md\` → \`evidence.yml\` → \`decisions/\` → \`assets/\` → \`export-manifest.yml\` | 담당자 승인 전 보류하며 자동 승인되지 않습니다. |`),
     "",
-    "## 플러그인 구조와 전체 시스템 아키텍처",
+    "### 플러그인 구조와 전체 시스템 아키텍처",
     ...trees,
-    "## 이미지·도식·문서 내보내기",
+    "### 이미지·도식·문서 내보내기",
     "이미지와 문서 출력은 사람이 검토합니다.",
     "",
-    "## 상세 가이드에서 더 알아보기",
+    "## 📚 운영과 참고",
+    "### 상세 가이드에서 더 알아보기",
     "상세 가이드",
     "",
-    "## 안전·권리·사람 승인 경계",
+    "### 안전·권리·담당자 승인 경계",
     "이미지·파생 문서·검토 결과는 자동 승인되지 않습니다.",
     "",
-    "## 문제를 해결하고 작업 재개하기",
+    "### 문제를 해결하고 작업 재개하기",
     "재개 안내",
     "",
-    "## 기술 문서·기여·라이선스",
+    "### 기술 문서·기여·라이선스",
     "기술 문서",
     "",
   ].join("\n");
@@ -1713,7 +1779,11 @@ async function validateVisibleLocalLink(sourcePath, link, boundary) {
   if (anchor) {
     assert.equal(extension, ".md", `anchors require Markdown targets: ${target}`);
     const targetMarkdown = await readFile(targetPath, "utf8");
-    assert.ok(visibleMarkdownHeadings(targetMarkdown).some((heading) => heading.anchor === anchor), `missing visible Markdown anchor: ${target}`);
+    const explicitAnchors = [...targetMarkdown.matchAll(/<a\s+(?:id|name)="([^"]+)"\s*><\/a>/giu)].map((match) => match[1]);
+    assert.ok(
+      visibleMarkdownHeadings(targetMarkdown).some((heading) => heading.anchor === anchor) || explicitAnchors.includes(anchor),
+      `missing visible Markdown anchor: ${target}`,
+    );
   }
   return targetPath;
 }
@@ -1906,7 +1976,7 @@ async function assertReadmeSkillsteadDiagrams(markdown) {
   for (const diagram of readmeSkillsteadDiagrams) {
     const { section: sectionHeading, id, alt, pngFile = `${id}.png` } = diagram;
     const sectionBody = exactSection(markdown, sectionHeading);
-    const body = diagram.subsection ? exactSection(sectionBody, diagram.subsection, 3) : sectionBody;
+    const body = diagram.subsection ? exactSection(sectionBody, diagram.subsection, 4) : sectionBody;
     const png = `guides/assets/readme/${pngFile}`;
     const svg = `guides/assets/readme/${id}.svg`;
     const embed = `[![${alt}](${png})](${svg})`;
@@ -2286,7 +2356,7 @@ test("root README explains the plugin purpose, audience, evidence, and honest li
     ["wrong source count", readme.replaceAll("원문 49편", "원문 50편")],
     ["false official transcript claim", readme.replace("공식 자막이나 채널 운영자의 검수본은 아닙니다", "공식 자막이며 채널 운영자가 검수한 자료입니다")],
     ["missing freshness boundary", readme.replace("최신 공식 자료를 다시 확인", "기존 자료만 확인")],
-    ["skill-ID-only first prompt", readme.replace(pluginIntroductionPrompts[0], "$game-design-studio:define-game-vision")],
+    ["skill-ID-only first prompt", readme.replaceAll(pluginIntroductionPrompts[0], "$game-design-studio:define-game-vision")],
     ["missing Skillstead upstream", readme.replace("https://github.com/kyungseo/skillstead", "")],
     ["missing Archify upstream", readme.replace("https://github.com/tt-a1i/archify", "")],
     ["missing im-not-ai upstream", readme.replace("https://github.com/epoko77-ai/im-not-ai", "")],
@@ -2301,33 +2371,33 @@ test("root README explains the plugin purpose, audience, evidence, and honest li
 test("root README makes project memory, reference, glossary, image, and cutscene workflows easy to find", async () => {
   const readme = await readFile(path.join(root, "README.md"), "utf8");
   const introductionBlocks = [
-    "#### 🤝 두 제품이 함께 쓰는 기능\n\n두 제품에서는 **경쟁작·레퍼런스 분석**, **한국어·영어 용어 사전**, **프로젝트 기억** 기능을 모두 사용할 수 있습니다. LLM Wiki는 대화와 문서에서 다시 쓸 만한 정보를 모아 두고, 나중에 필요한 내용을 찾아 쓰는 지식 기록 방식입니다. 프로젝트 기억은 이 방식을 게임 기획 작업에 맞게 제한적으로 적용합니다.\n\n**모든 대화와 문서를 자동으로 저장하지 않습니다.** 출처와 적용 범위, 검토 시점, 사람의 승인 여부를 확인한 기록만 다음 작업에 활용합니다.",
-    "#### 🎬 Studio에서 준비하는 이미지\n\n**Game Design Studio**에는 컷씬 이미지 제작을 준비하는 전용 기능도 있습니다. 장면 구성, 마스터 이미지, 생성 순서와 검토 기준을 먼저 정한 뒤 이미지 제작으로 넘어갑니다. 일반 게임 이미지는 **프롬프트와 예상 비용을 먼저 확인한 후 생성합니다.** 완성된 결과는 사람이 검토합니다.",
-    "#### ✅ 요청과 검토 원칙\n\n원하는 작업을 평소 쓰는 말로 설명하면 플러그인이 요청 목적에 맞는 스킬과 검토 역할을 고릅니다. 상세 가이드의 스킬 ID와 실행 순서는 작업 흐름을 직접 조정할 때만 지정합니다. **결과물을 자동으로 승인하지는 않습니다.** 검토 담당자의 이름을 기록한 뒤, 그 담당자가 사실과 권리, 적용 범위를 확인해 승인하거나 보류합니다.",
+    "##### 두 제품이 함께 쓰는 기능\n\n두 제품에서는 **경쟁작·레퍼런스 분석**, **한국어·영어 용어 사전**, **프로젝트 기억** 기능을 모두 사용할 수 있습니다. LLM Wiki는 대화와 문서에서 다시 쓸 만한 정보를 모아 두고, 나중에 필요한 내용을 찾아 쓰는 지식 기록 방식입니다. 프로젝트 기억은 이 방식을 게임 기획 작업에 맞게 제한적으로 적용합니다.\n\n**모든 대화와 문서를 자동으로 저장하지 않습니다.** 출처와 적용 범위, 검토 시점, 담당자의 승인 여부를 확인한 기록만 다음 작업에 활용합니다.",
+    "##### Studio에서 준비하는 이미지\n\n**Game Design Studio**에는 컷씬 이미지 제작을 준비하는 전용 기능도 있습니다. 장면 구성, 마스터 이미지, 생성 순서와 검토 기준을 먼저 정한 뒤 이미지 제작으로 넘어갑니다. 일반 게임 이미지는 **프롬프트와 예상 비용을 먼저 확인한 후 생성합니다.** 완성된 결과는 검토 담당자가 확인합니다.",
+    "##### 요청과 검토 원칙\n\n원하는 작업을 평소 쓰는 말로 설명하면 플러그인이 요청 목적에 맞는 스킬과 검토 역할을 고릅니다. 상세 가이드의 스킬 ID와 실행 순서는 작업 흐름을 직접 조정할 때만 지정합니다. **결과물을 자동으로 승인하지는 않습니다.** 검토 담당자의 이름을 기록한 뒤, 그 담당자가 사실과 권리, 적용 범위를 확인해 승인하거나 보류합니다.",
   ];
   const assertFeatureFindability = (markdown) => {
-    const introduction = subsection(markdown, "🧩 어떤 플러그인인가요?");
+    const introduction = subsection(markdown, "어떤 플러그인인가요?");
     assert.ok(
       introduction.includes(introductionBlocks.join("\n\n")),
       "plugin introduction separates and emphasizes shared capabilities, Studio image work, and review rules",
     );
     for (const phrase of [
-      "#### 🤝 두 제품이 함께 쓰는 기능",
+      "##### 두 제품이 함께 쓰는 기능",
       "**경쟁작·레퍼런스 분석**, **한국어·영어 용어 사전**, **프로젝트 기억**",
       "LLM Wiki는 대화와 문서에서 다시 쓸 만한 정보를 모아 두고, 나중에 필요한 내용을 찾아 쓰는 지식 기록 방식입니다",
       "**모든 대화와 문서를 자동으로 저장하지 않습니다.**",
-      "#### 🎬 Studio에서 준비하는 이미지",
+      "##### Studio에서 준비하는 이미지",
       "일반 게임 이미지는 **프롬프트와 예상 비용을 먼저 확인한 후 생성합니다.**",
-      "#### ✅ 요청과 검토 원칙",
+      "##### 요청과 검토 원칙",
       "**결과물을 자동으로 승인하지는 않습니다.**",
       "검토 담당자의 이름을 기록한 뒤, 그 담당자가 사실과 권리, 적용 범위를 확인해 승인하거나 보류합니다",
     ]) assert.ok(introduction.includes(phrase), `plugin introduction names the capability: ${phrase}`);
 
-    const routing = subsection(markdown, "⚙️ 짧게 요청해도 체계가 작동합니다");
+    const routing = subsection(markdown, "짧게 요청해도 체계가 작동합니다");
     assert.match(routing, /공통 스킬은 레퍼런스 분석, 용어 사전 관리와 프로젝트 기억을 담당합니다/u);
     assert.match(routing, /컷씬 장면·이미지 사전 설계는 Studio 전용 스킬입니다/u);
 
-    const capabilities = subsection(markdown, "🛠️ 이 플러그인으로 할 수 있는 일");
+    const capabilities = subsection(markdown, "이 플러그인으로 할 수 있는 일");
     for (const phrase of [
       "게임 이미지 계획·프롬프트·생성·검토",
       "guides/game-design-studio/image-assets.md",
@@ -2403,7 +2473,7 @@ test("each case group tells the reader the entry skill resolves a case ID", asyn
     ["Career 학습·취업 사례 7개", "game-design-career"],
     ["Studio와 Career 연계 사례 4개", "game-design-studio"],
   ]) {
-    const group = exactSection(markdown, heading, 3);
+    const group = exactSection(markdown, heading, 4);
     const intro = group.slice(0, group.indexOf("<details data-prompt-id="));
     // 사례 ID는 카탈로그의 키다. 대표 진입 스킬이 그 키를 실행 경로로 바꾼다는 사실이 카드보다 먼저 보여야
     // 사용자가 ID를 외운 사람만 쓰는 것으로 오해하지 않는다.
@@ -2419,7 +2489,7 @@ test("each case group tells the reader the entry skill resolves a case ID", asyn
 test("root README keeps Korean meanings before English helper terms outside canonical commands", async () => {
   const readme = await readFile(path.join(root, "README.md"), "utf8");
   assert.doesNotThrow(() => assertKoreanFirstReadmeTerms(readme), "baseline README is Korean-first");
-  const EnglishFirst = readme.replace("제작용 요청문 목록 (Production catalog)", "Production catalog (제작용 요청문 목록)");
+  const EnglishFirst = readme.replace("제작용 요청문 목록(Production catalog)", "Production catalog(제작용 요청문 목록)");
   assert.notEqual(EnglishFirst, readme, "English-first terminology mutation changes README");
   assert.throws(() => assertKoreanFirstReadmeTerms(EnglishFirst), /Production catalog/u, "English-first terminology is rejected");
 });
@@ -2436,8 +2506,8 @@ test("Suite architecture embed rejects missing, unwrapped, stale, and wrong targ
     ["missing preview", readme.replace(exactEmbed, "")],
     ["unwrapped preview", readme.replace(exactEmbed, `![${suiteArchitectureEmbed.alt}](${suiteArchitectureEmbed.png})`)],
     ["wrong Skillstead SVG", readme.replace(suiteArchitectureEmbed.svg, "guides/assets/readme/wrong-system-overview.svg")],
-    ["wrong HTML ID", readme.replace(suiteArchitectureEmbed.html, "guides/assets/archify/suite/wrong-system-architecture.html")],
-    ["stale receipt link", readme.replace(suiteArchitectureEmbed.html, "guides/assets/archify/suite/suite-plugin-system-architecture.receipt.json")],
+    ["wrong HTML ID", readme.replaceAll(suiteArchitectureEmbed.html, "guides/assets/archify/suite/wrong-system-architecture.html")],
+    ["stale receipt link", readme.replaceAll(suiteArchitectureEmbed.html, "guides/assets/archify/suite/suite-plugin-system-architecture.receipt.json")],
   ];
   for (const [label, mutated] of mutations) {
     assert.notEqual(mutated, readme, `${label}: mutation changes the README`);
@@ -2590,10 +2660,10 @@ test("structured README contracts reject card, inventory, and generated-tree mut
   const card = renderedPromptCards(readme).find((candidate) => candidate.id === affectedCard);
   assert.ok(card, `${affectedCard}: baseline representative card exists before mutation checks`);
   const replaceCard = (replacement) => readme.replace(card.raw, replacement);
-  const missingLabel = replaceCard(card.raw.replace("#### 준비 입력\n", ""));
+  const missingLabel = replaceCard(card.raw.replace("##### 준비 입력\n", ""));
   const duplicateId = readme.replace(card.raw, `${card.raw}\n${card.raw}`);
   const changedSkill = replaceCard(card.raw.replace("`apply-document-quality-profile`", "`invented-skill`"));
-  const reversedReadOrder = replaceCard(card.raw.replace(/(#### 읽는 순서\n)([^\n]+)\n/u, (_, prefix, order) => `${prefix}${order.split(" → ").reverse().join(" → ")}\n`));
+  const reversedReadOrder = replaceCard(card.raw.replace(/(##### 읽는 순서\n)([^\n]+)\n/u, (_, prefix, order) => `${prefix}${order.split(" → ").reverse().join(" → ")}\n`));
   const removedApproval = replaceCard(card.raw.replace(/사람 결정/g, "자동 결정"));
   const inventedCard = readme.replace(card.raw, card.raw.replace(affectedCard, "studio:case:INVENTED"));
   const idFirstSummary = replaceCard(card.raw.replace(
@@ -2692,7 +2762,7 @@ test("structured README contracts reject card, inventory, and generated-tree mut
   const directManifestEdit = readme.replace(`plugins/${product}/`, `plugins/${product}/\nBUILD-MANIFEST.json을 직접 수정합니다.\n`);
   await assertRejectedForId(() => assertPluginTreeContract(directManifestEdit, product), product, "direct BUILD-MANIFEST edit instruction");
 
-  const autoApprovedResult = readme.replace("사람 승인 전 보류하며 자동 승인되지 않습니다.", "이미지와 파생 문서, 검토 결과는 자동 승인됩니다.");
+  const autoApprovedResult = readme.replace("담당자 승인 전 보류하며 자동 승인되지 않습니다.", "이미지와 파생 문서, 검토 결과는 자동 승인됩니다.");
   await assertRejectedForId(() => assertResultExamples(autoApprovedResult), "game-design-brief", "automatic approval in result example");
   const EnglishFirstResult = readme.replace(
     "게임 기획 요약서 (`game-design-brief`)",
