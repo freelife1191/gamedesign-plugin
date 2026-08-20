@@ -22,6 +22,8 @@ test("the repository registers only the bounded release note gate", async () => 
   const source = await readFile(path.join(workflowRoot, workflows[0]), "utf8");
   assert.match(source, /^name: Release note gate$/mu);
   assert.match(source, /^\s*runs-on: ubuntu-latest$/mu);
+  assert.match(source, /uses: actions\/checkout@v7/u);
+  assert.match(source, /uses: actions\/setup-node@v7/u);
   assert.match(source, /npm run validate:release-notes/u);
   assert.match(source, /persist-credentials: false/u);
   assert.doesNotMatch(source, /windows-latest|npm test|npm run validate:release(?:\s|$)|gh release (?:create|edit)|update:vendors/u);
