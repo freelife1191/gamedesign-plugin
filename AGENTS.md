@@ -2,7 +2,7 @@
 
 ## 검증 운영 정책
 
-- 이 저장소에서는 GitHub Actions를 비롯한 원격 CI를 실행하지 않습니다. `.github/workflows`에 워크플로를 추가하거나 되살리지 않습니다.
+- 전체 테스트와 플랫폼 검증을 위한 원격 CI는 실행하지 않습니다. 예외로 `.github/workflows/release-notes.yml`의 Release note gate만 `ubuntu-latest`에서 실행하며, 릴리스 노트 형식과 태그 연결만 검증합니다. 다른 GitHub Actions 워크플로를 추가하거나 되살리지 않습니다.
 - 변경 사항은 저장소 소유자의 macOS 환경에서 확인합니다. 먼저 변경 범위에 맞는 테스트를 실행하고, 통합 확인에는 `npm test`, 릴리스 전 최종 확인에는 `npm run validate:release`를 사용합니다.
 - 설치 수명주기는 `npm run verify:install-roundtrip`, 인증이 필요한 실제 Codex 오케스트레이션은 `npm run smoke:marketplace`로 따로 확인합니다.
 - 2026-08-20에 완료된 Ubuntu·Windows 원격 실행은 과거 호환성 증거입니다. 이후 macOS 로컬 테스트 결과를 새로운 Windows 실제 환경 검증처럼 표현하지 않습니다.

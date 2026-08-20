@@ -309,7 +309,7 @@ codex plugin list
 npm run verify:install-roundtrip
 ```
 
-자동 GitHub Actions는 2026-08-20 실행을 끝으로 중단했습니다. 이후 변경은 macOS에서 로컬로 검증합니다. 기본 통합 확인에는 `npm test`, 릴리스 전 전체 확인에는 `npm run validate:release`를 사용합니다. `npm run verify:install-roundtrip`은 현재 macOS 환경의 설치·제거 수명주기를 검증하지만, 그 결과를 새로운 Windows 실제 환경 검증으로 간주하지 않습니다.
+전체 테스트와 플랫폼 검증을 수행하던 GitHub Actions는 2026-08-20 실행을 끝으로 중단했습니다. 이후 변경은 macOS에서 로컬로 검증합니다. 다만 Release note gate는 `ubuntu-latest`에서 릴리스 노트 형식과 태그 연결만 확인하며, 전체 테스트나 플랫폼 호환성 검증으로 간주하지 않습니다. 기본 통합 확인에는 `npm test`, 릴리스 전 전체 확인에는 `npm run validate:release`를 사용합니다. `npm run verify:install-roundtrip`은 현재 macOS 환경의 설치·제거 수명주기를 검증하지만, 그 결과를 새로운 Windows 실제 환경 검증으로 간주하지 않습니다.
 
 ### 업데이트·재설치하기
 

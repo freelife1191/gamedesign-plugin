@@ -182,9 +182,9 @@ plugin manifest에는 hook 필드를 추가하지 않고 기본 발견 경로 `h
 
 기본 검증은 `npm run validate`, release gate는 `npm run validate:release`입니다. marketplace smoke는 로컬 인증이 필요한 별도 장기 검증이므로 `npm run smoke:marketplace`로 분리합니다.
 
-### 로컬 macOS 검증 정책
+### 로컬 macOS 검증과 Release note gate 정책
 
-2026-08-20 원격 검증을 끝으로 GitHub Actions 워크플로를 제거했습니다. 이후 테스트와 릴리스 판정은 저장소 소유자의 macOS 환경에서 수행합니다.
+2026-08-20 원격 검증을 끝으로 전체 테스트와 플랫폼 검증을 수행하던 GitHub Actions 워크플로를 제거했습니다. 이후 테스트와 릴리스 판정은 저장소 소유자의 macOS 환경에서 수행합니다. 예외로 Release note gate 하나만 `ubuntu-latest`에서 실행해 릴리스 노트 형식과 태그 연결을 확인합니다. 이 게이트는 전체 테스트, 설치 수명주기, Windows 호환성이나 GitHub Release 게시를 수행하지 않습니다.
 
 | 목적 | 명령 | 판정 |
 | --- | --- | --- |

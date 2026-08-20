@@ -22,3 +22,5 @@
 8. 원격 태그를 확인한 뒤 `gh release create vX.Y.Z --title "<release-title>" --notes-file "<임시 파일>" --verify-tag`로 게시합니다. 기존 Release를 고칠 때는 `gh release edit`을 사용한 다음, 공개된 내용을 다시 읽어 확인합니다.
 
 `tooling/validate-release-notes.mjs`는 로컬 SemVer 태그와 `shared/updates/suite-release.lock.json`을 함께 읽습니다. 태그에 맞는 파일이나 색인 링크가 없을 때, 공개일·대상 커밋이 어긋날 때, GitHub 게시 경계가 중복되거나 상세 섹션이 빠졌을 때 릴리스 게이트가 실패합니다. `render:github-release-note`는 검증을 먼저 통과한 노트에서 게시 경계 안의 내용만 꺼내므로 상세 기록이 GitHub 요약에 섞이지 않습니다.
+
+같은 검증은 `.github/workflows/release-notes.yml`에서도 실행합니다. 이 워크플로는 `ubuntu-latest`에서 릴리스 노트만 검사하며, 전체 테스트·플랫폼 검증·자동 게시 작업은 수행하지 않습니다.
