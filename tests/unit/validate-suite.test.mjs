@@ -241,24 +241,19 @@ test("the isolation smoke inherits the official validator's skip rather than fai
   }
 });
 
-// CI runs the shards as separate jobs and reads four green checks as one green suite. That reading is only
-// true while the shards partition the stages: a stage in no shard runs nowhere and still shows green, and a
-// stage in two burns a runner twice for the same answer.
+// Shards remain useful for narrowing a local rerun to the failing area. Their union must still equal the
+// full suite so a diagnostic shard cannot silently lose a stage when the stage list changes.
 test("the shards partition every stage exactly once", () => {
   const assigned = Object.values(STAGE_SHARDS).flat();
   assert.deepEqual([...assigned].sort(), [...expectedStages].sort(), "every stage belongs to exactly one shard");
   assert.equal(new Set(assigned).size, assigned.length, "no stage is claimed by two shards");
 });
 
-test("the offline adversarial suite has a dedicated script, stage, and CI shard", async () => {
-  const [packageSource, workflow] = await Promise.all([
-    readFile(path.join(repositoryRoot, "package.json"), "utf8"),
-    readFile(path.join(repositoryRoot, ".github", "workflows", "ci.yml"), "utf8"),
-  ]);
+test("the offline adversarial suite has a dedicated local script and diagnostic shard", async () => {
+  const packageSource = await readFile(path.join(repositoryRoot, "package.json"), "utf8");
   const packageJson = JSON.parse(packageSource);
   assert.equal(packageJson.scripts["test:suite-adversarial"], "node tooling/run-test-group.mjs e2e/suite");
   assert.deepEqual(STAGE_SHARDS["suite-adversarial"], ["suite adversarial tests"]);
-  assert.match(workflow, /^\s+- suite-adversarial$/mu, "the offline matrix runs the dedicated shard on every configured OS");
 
   const root = await mkdtemp(path.join(os.tmpdir(), "validate-suite-adversarial-"));
   try {

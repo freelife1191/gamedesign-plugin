@@ -44,17 +44,12 @@ const STAGES = Object.freeze([
   { name: "format smoke", command: [process.execPath, "tests/formats/run-format-gate.mjs"], rerun: "npm run test:formats" },
 ]);
 
-// CI cannot run these four. The official plugin and skill validators ship with a Codex install; the
-// format smoke imports a host-provided module that is not a dependency of this package; and the diagram
-// render drift compares PNG bytes produced by a headless Chromium against the host's fonts, so it only
-// means something on a machine whose renderer matches the one that committed them. Leaving them out is
-// legitimate; leaving them out quietly is not, because a green run would then read as "everything was
-// checked". The set is closed here, and a skip prints on its own line, never as PASS.
-// CI runs the stages as five jobs instead of one queue, because the whole run is roughly eight minutes
-// and the independent test stages have nothing to say to each other. Splitting them costs
-// runner minutes and buys back wall clock. The partition is total and disjoint — a stage in no shard would
-// be a stage CI silently stopped running, which is the exact failure this file's other comments guard
-// against — and `tests/unit/validate-suite.test.mjs` holds it to that.
+// Local diagnostic runs may skip a host capability while narrowing a failure. Leaving a stage out quietly
+// would make a partial run look complete, so the set is closed here and every skip prints on its own line,
+// never as PASS. Release mode refuses every skip.
+//
+// Shards also remain available for focused local reruns. Their partition is total and disjoint so a new
+// stage cannot disappear between groups; `tests/unit/validate-suite.test.mjs` holds that contract.
 export const STAGE_SHARDS = Object.freeze({
   checks: Object.freeze([
     "reference drift", "evidence audit", "vendor hash", "vendor references", "vendor catalog entries",

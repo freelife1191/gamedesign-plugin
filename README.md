@@ -303,13 +303,13 @@ codex plugin add game-design-career@game-design-suite
 codex plugin list
 ```
 
-Windows CI는 `.cmd` 파일을 셸 없이 직접 실행하는 대신 Codex의 JavaScript 진입점을 Node로 실행합니다. 한글·공백 경로에서 설치와 재설치, Studio만 제거했을 때 Career가 유지되는지, Studio 재설치와 두 제품·마켓플레이스의 전체 제거까지 확인합니다. 로컬에서도 같은 수명주기를 실행할 수 있습니다.
+설치 수명주기 검증은 Codex의 JavaScript 진입점을 Node로 실행합니다. 한글·공백 경로에서 설치와 재설치, Studio만 제거했을 때 Career가 유지되는지, Studio 재설치와 두 제품·마켓플레이스의 전체 제거까지 확인합니다.
 
 ```powershell
 npm run verify:install-roundtrip
 ```
 
-전체 `npm test`에는 macOS 렌더러와 헤드리스 Chromium처럼 Windows 판정 범위 밖인 테스트가 포함됩니다. Windows에서는 CI의 오프라인 샤드, Windows 하드닝과 설치 왕복 검증 결과를 기준으로 판단합니다.
+자동 GitHub Actions는 2026-08-20 실행을 끝으로 중단했습니다. 이후 변경은 macOS에서 로컬로 검증합니다. 기본 통합 확인에는 `npm test`, 릴리스 전 전체 확인에는 `npm run validate:release`를 사용합니다. `npm run verify:install-roundtrip`은 현재 macOS 환경의 설치·제거 수명주기를 검증하지만, 그 결과를 새로운 Windows 실제 환경 검증으로 간주하지 않습니다.
 
 ### 업데이트·재설치하기
 

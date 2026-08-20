@@ -182,25 +182,26 @@ plugin manifest에는 hook 필드를 추가하지 않고 기본 발견 경로 `h
 
 기본 검증은 `npm run validate`, release gate는 `npm run validate:release`입니다. marketplace smoke는 로컬 인증이 필요한 별도 장기 검증이므로 `npm run smoke:marketplace`로 분리합니다.
 
-### CI 레인
+### 로컬 macOS 검증 정책
 
-`.github/workflows/ci.yml`이 pull request와 `main` push에서 두 레인을 실행합니다. 레인마다 결과가 의미를 갖는 운영체제가 다르므로 매트릭스도 다릅니다.
+2026-08-20 원격 검증을 끝으로 GitHub Actions 워크플로를 제거했습니다. 이후 테스트와 릴리스 판정은 저장소 소유자의 macOS 환경에서 수행합니다.
 
-| 레인 | 내용 | 러너 | 인증 |
-| --- | --- | --- | --- |
-| 오프라인 게이트 | `node tooling/validate-suite.mjs`를 다섯 샤드로 나누고 네 호스트 의존 스테이지를 명시적 `--skip`과 함께 실행 | `ubuntu-latest`, `windows-latest` | 불필요 |
-| Windows 하드닝 게이트 | `node --test tests/unit/platform-file-hardening.test.mjs` | `windows-latest` | 불필요 |
-| 설치 게이트 | `@openai/codex` 설치 후 `node tooling/install-roundtrip.mjs --require-codex` | `ubuntu-latest`, `windows-latest` | 불필요 |
+| 목적 | 명령 | 판정 |
+| --- | --- | --- |
+| 변경 범위 회귀 | 관련 `node --test …` 또는 `npm run test:*` | 실패 0건 |
+| 저장소 통합 확인 | `npm test` | 전체 로컬 테스트 성공 |
+| 릴리스 준비 | `npm run validate:release` | 스킵 없이 `COMPLETE` |
+| 설치·재설치·제거 | `npm run verify:install-roundtrip` | 현재 macOS 환경에서 흔적 없이 완료 |
+| 대표 진입 스킬의 실제 Codex 실행 | `npm run smoke:marketplace` | 인증된 격리 환경에서 시나리오와 정리 검증 |
+| 번들 업데이트 확인 | `npm run check:updates` | `current`, `outdated`, `unknown`을 로컬에서 확인 |
 
-설치 게이트는 한글과 공백을 포함한 `CODEX_HOME`·작업 공간, `LANG=C`, `LC_ALL=C` 아래에서 두 제품을 실제 설치·재설치하고 전체 설치 트리의 바이트와 파일 권한(`mode`) 지문을 원본과 대조합니다. 이어서 Studio만 제거해 Career가 유지되는지 확인하고, Studio를 다시 설치한 뒤 두 제품과 마켓플레이스를 모두 제거합니다. 마지막 `plugin list`와 `marketplace list`, 제품 캐시와 Codex JSON 상태에도 제품 ID·원본 경로·캐시 경로가 남지 않아야 합니다. 작업 공간 표식, 운영 Codex 상태와 임시 루트도 처음 상태로 돌아와야 합니다. 경로는 NFC 정규화 후 비교하며, 명령 출력에 `U+FFFD`가 있으면 실패합니다. 모델을 호출하지 않으므로 인증이 필요 없습니다. 로컬에서는 `npm run verify:install-roundtrip`으로 같은 검증을 돌리며, `codex`가 없으면 `SKIPPED`를 보고하고 종료합니다.
+`validate-suite`의 샤드와 `--skip`은 실패 범위를 좁히는 로컬 진단 기능으로만 남깁니다. 릴리스 모드는 샤드와 `--skip`을 모두 거부하므로 일부 결과를 전체 통과로 오해할 수 없습니다. 공식 plugin·skill validator, macOS Quick Look 기반 format smoke, 로컬 브라우저와 폰트를 쓰는 diagram render drift도 `npm run validate:release`에서 함께 실행합니다.
 
-`suite-adversarial` 샤드는 `tests/e2e/suite` 전체를 Ubuntu와 Windows에서 실행합니다. 손상된 영수증, 경로 이탈, 프롬프트 주입, 중단·재개, 변경된 작업 공간, 멈춘 자식 프로세스와 성공 문구가 섞인 실패 출력을 릴리스 검증과 CI가 같은 계약으로 다룹니다. 플랫폼에서 표현할 수 없는 개별 사례만 테스트 자체가 이유를 기록해 건너뛰며, 디렉터리 전체를 샤드에서 제외하지 않습니다.
+설치 수명주기 검증은 한글과 공백을 포함한 `CODEX_HOME`·작업 공간에서 두 제품을 실제 설치·재설치하고 전체 설치 트리의 바이트와 파일 권한(`mode`) 지문을 원본과 대조합니다. 이어서 Studio만 제거해 Career가 유지되는지 확인하고, Studio를 다시 설치한 뒤 두 제품과 마켓플레이스를 모두 제거합니다. 마지막 `plugin list`와 `marketplace list`, 제품 캐시와 Codex JSON 상태에도 제품 ID·원본 경로·캐시 경로가 남지 않아야 합니다. 작업 공간 표식, 운영 Codex 상태와 임시 루트도 처음 상태로 돌아와야 합니다. 경로는 NFC 정규화 후 비교하며, 명령 출력에 `U+FFFD`가 있으면 실패합니다. 모델을 호출하지 않으므로 인증이 필요 없습니다.
 
-CI에서 실행할 수 없는 스테이지는 네 개입니다. 공식 plugin 검증기와 skill quick 검증기는 Codex 설치 산출물을 요구하고, format smoke는 `package.json`에 없는 호스트 제공 모듈을 임포트하며, diagram render drift는 headless Chromium이 호스트 폰트로 그린 PNG 바이트를 비교하므로 그 PNG를 커밋한 기계에서만 의미가 있습니다. SVG 비교는 결정적이므로 모든 환경에서 그대로 유지됩니다. `validate-suite`는 이 넷을 조용히 통과시키지 않고 `SKIPPED`로 기록하며, 스킵이 하나라도 있으면 release readiness를 `INCOMPLETE`로 끝냅니다.
+마지막 Ubuntu·Windows 원격 실행은 두 운영체제에서 설치·제거, 적대적 시나리오, 계약, 단위, 제품 검증이 통과한 과거 증거입니다. 이후 macOS 로컬 결과는 현재 코드의 macOS 동작만 증명하며, 새로운 Windows 실제 환경 결과로 확대 해석하지 않습니다.
 
-**릴리스 전에 이 네 스테이지는 로컬에서 반드시 실행합니다.** `npm run validate:release`는 `--skip`을 거부하므로 스킵한 채로 release gate를 통과할 수 없습니다. 인증이 필요한 라이브 스모크 `npm run smoke:marketplace`도 로컬 수동 실행으로 남습니다.
-
-#### 오프라인 게이트가 Windows로 돌아온 경로
+#### 마지막 원격 검증에서 확인한 Windows 이력
 
 Windows 오프라인 레인은 만들어 돌려 보고 결과를 읽은 뒤 한 번 뺐다가 다시 넣었습니다. 실패 272건은 한 가지 문제가 아니라 성격이 다른 세 부류였고, 셋 다 답을 받았습니다.
 
@@ -239,7 +240,7 @@ Windows 오프라인 레인은 만들어 돌려 보고 결과를 읽은 뒤 한 
 
 `tests/unit/platform-assumptions.test.mjs`가 이 가정들이 다시 들어오는 것을 막습니다. `tests/`와 `tooling/` 전체를 훑어 하드코딩된 shell 경로, `/tmp` 임시 루트, 맨 `O_NOFOLLOW`·`O_DIRECTORY`를 찾고, 면제는 glob이 아니라 정확한 파일 경로 목록입니다 — 면제를 추가하는 diff가 곧 이유를 적는 자리입니다. 유효하지 않게 된 면제도 같은 파일이 잡습니다.
 
-**이 레인이 덮지 않는 것.** `tests/formats/`는 macOS Quick Look과 headless Chromium을 구동하므로 모든 CI 플랫폼에서 `SKIPPED`이고, 위 게이트의 탐색 대상에서도 빠져 있습니다. 그래서 `npm test`(트리 전체 순회)는 여전히 Windows에서 끝까지 돌지 않고, 오프라인 게이트가 실행하는 네 shard만 돕니다.
+**마지막 원격 검증이 덮지 않은 것.** `tests/formats/`는 macOS Quick Look과 headless Chromium을 구동하므로 당시 원격 실행에서 `SKIPPED`였습니다. 현재는 macOS 로컬 `npm run validate:release`가 이 검증까지 포함합니다.
 
 **Windows 판정.** 레인이 Windows에서 돌았고, 여섯 번의 실행이 걸렸습니다. 첫 실행은 약 160건을 보고했고 마지막 실행은 Windows 여섯 잡 전부 통과입니다. 예고한 대로 보고된 것은 되돌아온 결함이 아니라 목록에 없던 부류였고, 처리 방식도 예고한 대로 위 표에 줄을 추가하는 것이었습니다.
 
@@ -247,7 +248,7 @@ Windows 오프라인 레인은 만들어 돌려 보고 결과를 읽은 뒤 한 
 
 스냅숏 트랜잭션 작업 프로세스는 부모 응답과 `process.send` 콜백을 서로 다른 비동기 신호로 취급합니다. Windows에서는 부모 응답이 먼저 도착하고 전송 콜백 오류가 뒤늦게 도착할 수 있습니다. 예전 구현은 첫 응답만으로 성공을 확정해 그 오류를 놓쳤습니다. 이제 요청은 대응 응답과 전송 콜백 성공을 모두 확인한 뒤에만 완료되며, 응답 뒤 콜백 오류가 오면 실패와 복구 경로로 전환합니다. 계약 테스트는 이 순서를 지연 주입으로 재현해 성공 오판을 막습니다.
 
-이 회귀는 로컬의 결정적 순서 테스트와 정상 스냅숏 교체 테스트로 검증합니다. 실제 Windows 스케줄러 증거는 다음 `windows-latest` 계약 샤드가 제공하며, 원격 실행 전에는 로컬 모사가 실제 플랫폼 통과를 대신한다고 기록하지 않습니다.
+이 회귀는 로컬의 결정적 순서 테스트와 정상 스냅숏 교체 테스트로 검증합니다. 실제 Windows 스케줄러 증거는 2026-08-20 마지막 원격 계약 실행에서 확인했습니다. 이후 로컬 모사는 새로운 Windows 실제 환경 통과로 기록하지 않습니다.
 
 그 과정에서 나온 것 중 **테스트가 아니라 제품이 틀린** 항목이 다섯 개입니다. 스냅숏 스테이징이 Windows의 OS 임시 디렉터리를 사용자 홈으로 판정해 모든 빌드를 거부한 것, 존재하지 않는 `C:\tmp` 후보를 `realpath`해 죽은 것, 업데이트 캐시 경로가 인자로 받은 플랫폼이 아니라 호스트의 구분자로 조립된 것, SessionStart 능력 탐지가 Windows 브라우저를 영원히 찾지 못한 것(`--version`이 stdout에 답하지 않고, 문서화된 설치 경로 비교가 대소문자를 구분했습니다), 그리고 예약 슬롯이 심링크가 선점한 이름에 배타적 생성을 시도한 것입니다. 마지막 것은 Windows에서 링크를 따라가 **링크의 대상**을 만들기 때문에, 저장소 바깥의 남이 고른 경로에 이 저장소의 바이트를 쓰는 결함이었습니다. 다섯 건 모두 고쳤고, 각각 두 플랫폼 형태를 한 호스트에서 확인하는 테스트가 붙어 있습니다.
 
@@ -276,7 +277,7 @@ Windows 오프라인 레인은 만들어 돌려 보고 결과를 읽은 뒤 한 
 
 검증은 POSIX 호스트에서 실제 원시 함수를 Windows 입력으로 구동하고 그 결과를 실제 소비자에게 물려서 합니다. `tests/unit/platform-file-hardening.test.mjs`는 `noFollowOpenFlag`가 `0`을 돌려주고 `syncDirectory`가 아무것도 열지 않는 상태로 `load-workspace-env`와 `safe-memory-store`를 재배치해 실행합니다. dotenv는 그대로 읽히고 심링크는 그대로 거부되며, 봉인된 memory event는 커밋되고 스토어 자신의 identity 고정 리더로 되읽힙니다. 원시 함수를 우회해 맨 상수를 쓰는 출하 모듈이 하나라도 생기면 같은 파일의 소스 게이트가 잡습니다.
 
-이 파일 자체는 이제 **Windows에서 실제로 돕니다.** 전용 레인 하나가 `windows-latest`에서 이 파일만 `node --test`로 실행합니다 — shard도 스테이지 회계도 없으므로 스킵이 숨을 자리가 없습니다. 오프라인 게이트의 Windows 절반도 같은 파일을 `unit` shard 안에서 돌리지만, 좁은 레인은 따로 남깁니다. 이것은 넓은 레인이 무슨 상태이든 성립해야 하는 바닥이고, 넓은 레인 안에 들어가는 순간 그 성질을 잃습니다.
+이 파일은 2026-08-20 마지막 원격 검증에서 **Windows에서 실제로 실행되어 통과했습니다.** 이후에는 macOS 로컬 회귀가 플랫폼별 분기를 검사하지만, Windows 스케줄러와 파일시스템에서 다시 실행한 증거로 보지는 않습니다.
 
 `O_DIRECTORY`도 같은 계열이라 같은 자리로 옮겼습니다. POSIX에서 디렉터리 핸들은 `readdir` 한 번 동안 inode를 고정하는 수단이고, Windows에는 그 상수도 그 핸들도 없습니다(libuv가 `FILE_FLAG_BACKUP_SEMANTICS` 없이 열기 때문에 `fs.open`이 디렉터리에서 실패합니다). `openDirectoryHandle`은 그런 호스트에서 `null`을 돌려주고, 호출자는 이미 앞뒤로 걸어 둔 `lstat` 쌍으로 같은 대조를 합니다. 여기서도 잃는 것은 탐지가 아니라 원자성입니다.
 
@@ -298,7 +299,7 @@ Windows에서 실제로 성립해야 하는 계약은 Windows checkout과 설치
 
 `update:vendors`는 승인 뒤 벤더 트리 갱신, 제품 문서 재작성(`tooling/sync-vendor-references.mjs`), 업데이트 매니페스트 재생성, 패키지 스냅샷 재빌드, Archify 카탈로그 항목 재작성(`tooling/sync-vendor-catalog-entries.mjs`)까지 한 번에 합니다. 대화형 터미널이 아니면 `--yes` 없이는 적용하지 않고 멈춥니다. `--validate`를 주면 릴리스 검증까지 이어서 돌립니다.
 
-주간 워크플로(`.github/workflows/check-bundled-skill-updates.yml`)는 검사만 하고 요약에 권고문을 남깁니다. 상류에 새 릴리스가 있다는 사실은 빌드 실패가 아니라 권고이므로 `outdated`로는 실패하지 않고, 검사 자체가 답을 못 낸 `unknown`에서만 실패합니다. 권한은 `contents: read`로 닫혀 있고 워크플로는 어떤 업데이트 명령도 실행하지 않습니다.
+자동 주간 검사는 더 이상 실행하지 않습니다. 필요할 때 macOS에서 `npm run check:updates` 또는 `npm run check:updates:report`를 실행하고, 적용은 `npm run update:vendors`에서 사람이 승인한 뒤에만 진행합니다.
 
 버전 리터럴은 한 곳에서만 움직입니다. 벤더 락이 원천이고, 나머지는 락에서 씁니다.
 
