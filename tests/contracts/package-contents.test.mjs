@@ -848,6 +848,37 @@ test("snapshot worker interruption always restores or reports every original", a
   });
 });
 
+test("snapshot IPC treats a delayed send callback failure as fatal after the phase response arrives", async (t) => {
+  const { fixtureRepo } = await createSnapshotFixture(t);
+  for (const productName of productNames) {
+    const destination = path.join(fixtureRepo, "plugins", productName);
+    await mkdir(destination, { recursive: true });
+    await writeFile(path.join(destination, "IRREPLACEABLE.txt"), `${productName} original\n`);
+  }
+  let workerPid;
+  const error = await buildSnapshots({
+    repoRoot: fixtureRepo,
+    mode: "clean",
+    operations: {
+      afterFork: ({ workerPid: pid }) => { workerPid = pid; },
+      protocolFaults: [{
+        action: "send-callback-error-after-reply",
+        phase: "afterBackup",
+        productName: "game-design-career",
+      }],
+      deadlines: { rollbackGraceMs: 40 },
+    },
+  }).then(() => undefined, (caught) => caught);
+  assert.match(error?.message ?? "", /send callback|phase reply failed|worker/i);
+  assert.equal(error?.preserveStaging, true);
+  assert.match(error?.message ?? "", /SNAPSHOT_RECOVERY=/u);
+  await assertCanonicalExisting(error?.recovery?.recoveryRoot);
+  await assertCanonicalExisting(error?.recovery?.stagingRoot);
+  await assertProcessExited(workerPid);
+  await rm(error.recovery.recoveryRoot, { recursive: true, force: true });
+  await rm(error.recovery.stagingRoot, { recursive: true, force: true });
+});
+
 test("snapshot transaction preserves originals or an external recovery copy across injected filesystem failures", async (t) => {
   async function fixtureWithOriginals(t) {
     const fixture = await createSnapshotFixture(t);

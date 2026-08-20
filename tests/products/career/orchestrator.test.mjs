@@ -36,8 +36,8 @@ function assertCareerMemoryOrchestration({ skill, intake, gates, routing }) {
   assert.match(intake, /no project ID[\s\S]*?skipped-project-id-missing[\s\S]*?continue/iu);
   assert.match(intake, /previous memory[\s\S]*?memoryDisabledForRequest\s*=\s*true/iu);
   assert.match(intake, /Memory unavailability never blocks/u);
-  assert.match(skill, /intake and configuration[\s\S]*?retrieve approved memory[\s\S]*?specialist workflow[\s\S]*?completion gates[\s\S]*?allowed-event candidates[\s\S]*?summary/iu);
-  assert.match(skill, /6\. [^\n]*completion gates[^\n]*\n7\. [^\n]*Capture only allowed-event candidates/u);
+  assert.match(skill, /intake and configuration[\s\S]*?retrieve approved memory[\s\S]*?specialist workflow[\s\S]*?polish-game-design-writing[\s\S]*?completion gates[\s\S]*?allowed-event candidates[\s\S]*?summary/iu);
+  assert.match(skill, /7\. [^\n]*completion gates[^\n]*\n8\. [^\n]*Capture only allowed-event candidates/u);
   assert.match(skill, /no dedicated memory agent/iu);
   assert.match(skill, /maximum of three primary review roles/iu);
   assert.match(skill, /memory text[\s\S]*?evidence and input only/iu);
@@ -95,7 +95,7 @@ test("Career orchestrator preserves the memory workflow order and rejects unsafe
   assert.doesNotThrow(() => assertCareerMemoryOrchestration(contract));
   const mutations = [
     { key: "skill", from: "2. Retrieve approved memory", to: "2. Specialist workflow before memory retrieval" },
-    { key: "skill", from: "7. Capture only allowed-event candidates", to: "6. Capture only allowed-event candidates" },
+    { key: "skill", from: "8. Capture only allowed-event candidates", to: "7. Capture only allowed-event candidates" },
     { key: "skill", from: "Never auto-approve memory candidates", to: "Automatically approve memory candidates" },
     { key: "skill", from: "no dedicated memory agent", to: "a dedicated memory agent" },
     { key: "intake", from: "Memory unavailability never blocks", to: "Memory unavailability stops the Career Stage & Goal Brief" },

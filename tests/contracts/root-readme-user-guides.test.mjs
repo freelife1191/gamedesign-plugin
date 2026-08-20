@@ -1147,15 +1147,21 @@ function assertSafetyBoundary(markdown) {
 
 function assertUpdateAndReinstallInstructions(markdown) {
   const instructions = exactSection(markdown, "업데이트·재설치하기", 3);
-  for (const phrase of ["Codex App", "Plugins", "Uninstall plugin", "다시 시작", "다시 설치", "설치 확인", "새 채팅"]) {
+  const recoveryStart = instructions.indexOf("#### 설치 복구");
+  assert.notEqual(recoveryStart, -1, "update instructions separate normal update from install recovery");
+  const normalUpdate = instructions.slice(0, recoveryStart);
+  const recovery = instructions.slice(recoveryStart);
+  for (const phrase of ["Codex App", "Plugins", "다시 시작", "다시 적용", "설치 확인", "새 채팅"]) {
     assert.ok(instructions.includes(phrase), `App update instructions include ${phrase}`);
   }
   for (const phrase of ["Codex CLI", "npm run build", "npm run validate", "codex plugin list", "새 세션"]) {
     assert.ok(instructions.includes(phrase), `CLI update instructions include ${phrase}`);
   }
+  assert.doesNotMatch(normalUpdate, /codex plugin remove/u, "normal update never removes an installed product first");
   for (const product of products) {
-    assert.ok(instructions.includes(`codex plugin remove ${product}@game-design-suite`), `${product}: CLI removal command`);
-    assert.ok(instructions.includes(`codex plugin add ${product}@game-design-suite`), `${product}: CLI reinstall command`);
+    assert.ok(normalUpdate.includes(`codex plugin add ${product}@game-design-suite`), `${product}: normal CLI update reapplies the product`);
+    assert.ok(recovery.includes(`codex plugin remove ${product}@game-design-suite`), `${product}: recovery removal command`);
+    assert.ok(recovery.includes(`codex plugin add ${product}@game-design-suite`), `${product}: recovery reinstall command`);
   }
 }
 
@@ -1345,7 +1351,7 @@ async function assertSuiteArchitectureEmbed(markdown) {
   );
   assert.match(
     readablePreview,
-    /시작점부터 두 제품, 기준 기획 결과물, 자동 검증과 사람 결정을 잇는 큰 경계/u,
+    /시작점부터 설치·업데이트·전체 정리, 두 제품의 대표 진입, 기준 기획 결과물, 한국어 최종 편집, 자동 검증과 사람 결정을 잇는 큰 경계/u,
     "architecture preview explains the overall system purpose without repeating a route question",
   );
   assert.match(
@@ -1591,13 +1597,16 @@ async function buildValidStructuredReadmeFixture() {
     "설치 안내",
     "",
     "### 업데이트·재설치하기",
-    "Codex App Plugins에서 Uninstall plugin을 선택하고 앱을 다시 시작한 뒤 다시 설치합니다. 설치 확인 후 새 채팅을 엽니다.",
+    "Codex App Plugins에서 앱을 다시 시작한 뒤 제품을 다시 적용합니다. 설치 확인 후 새 채팅을 엽니다.",
     "Codex CLI에서 npm run build와 npm run validate를 실행합니다.",
+    "codex plugin add game-design-studio@game-design-suite",
+    "codex plugin add game-design-career@game-design-suite",
+    "codex plugin list로 확인하고 새 세션을 엽니다.",
+    "#### 설치 복구",
     "codex plugin remove game-design-studio@game-design-suite",
     "codex plugin add game-design-studio@game-design-suite",
     "codex plugin remove game-design-career@game-design-suite",
     "codex plugin add game-design-career@game-design-suite",
-    "codex plugin list로 확인하고 새 세션을 엽니다.",
     "",
     "## 5분 안에 첫 결과 만들기",
     "첫 결과 안내",
@@ -2698,9 +2707,9 @@ test("structured README contracts reject card, inventory, and generated-tree mut
   await assertRejectedForId(() => assertResultExamples(incompleteResultReadOrder), "game-design-brief", "incomplete result read order");
   const autoApprovedSafety = readme.replace("이미지·파생 문서·검토 결과는 자동 승인되지 않습니다.", "이미지·파생 문서·검토 결과는 자동 승인됩니다.");
   await assertRejectedForId(() => Promise.resolve(assertSafetyBoundary(autoApprovedSafety)), "safety-boundary", "automatic approval in safety boundary");
-  const incompleteUpdate = readme.replace("Uninstall plugin", "Remove later");
+  const incompleteUpdate = readme.replace("다시 적용", "나중에 처리");
   assert.notEqual(incompleteUpdate, readme, "incomplete App update mutation changes the fixture");
-  assert.throws(() => assertUpdateAndReinstallInstructions(incompleteUpdate), /Uninstall plugin/u, "incomplete App update instructions are rejected");
+  assert.throws(() => assertUpdateAndReinstallInstructions(incompleteUpdate), /다시 적용/u, "incomplete App update instructions are rejected");
 });
 
 test("global and product indexes reach the cutscene guide and frozen inventories", async () => {

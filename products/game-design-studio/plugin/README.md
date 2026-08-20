@@ -49,7 +49,7 @@ codex plugin add game-design-studio@game-design-suite
 
 아래는 스킬 없이 손으로 처리할 때의 명령입니다.
 
-`codex plugin list --available --json`은 설치하지 않은 플러그인 목록만 보여 줍니다. Codex 0.147.0에서는 이미 설치한 Studio의 새 원천 버전을 판별하지 않습니다. 알림을 본 뒤에만 아래 명령을 명시적으로 실행하고, 재설치가 끝나면 새 채팅 또는 새 세션을 열어 새 설치본을 사용하세요.
+`codex plugin list --available --json`은 설치하지 않은 플러그인 목록만 보여 줍니다. 설치한 Studio의 새 원본 버전을 판단하는 근거로 사용하지 마세요. 이 절차는 Codex CLI 0.148.0에서 다시 확인했지만 특정 부 버전에 고정하지 않습니다. 알림을 받은 뒤에만 아래 명령을 직접 실행하고, 다시 적용한 뒤 새 채팅이나 새 세션을 열어 새 설치본을 사용하세요.
 
 Git marketplace로 등록한 경우 snapshot을 갱신하고 플러그인을 다시 설치합니다.
 
@@ -58,10 +58,9 @@ codex plugin marketplace upgrade game-design-suite
 codex plugin add game-design-studio@game-design-suite
 ```
 
-로컬 marketplace(저장소 경로 등록)는 Git fetch 대상이 아닙니다. 저장소를 갱신하고 suite build로 `plugins/game-design-studio`를 다시 만든 뒤, 설치된 snapshot을 명시적으로 제거하고 다시 추가합니다.
+저장소 경로로 등록한 로컬 마켓플레이스는 Git fetch 대상이 아닙니다. 저장소를 갱신하고 스위트 빌드로 `plugins/game-design-studio`를 다시 만든 뒤 설치된 스냅숏을 다시 적용합니다. 정상 업데이트에서는 플러그인을 먼저 제거하지 않습니다.
 
 ```bash
-codex plugin remove game-design-studio@game-design-suite
 codex plugin add game-design-studio@game-design-suite
 ```
 
@@ -75,6 +74,8 @@ codex plugin remove game-design-studio@game-design-suite
 
 ```bash
 codex plugin marketplace remove game-design-suite
+codex plugin list
+codex plugin marketplace list
 ```
 
 ## 플러그인 구조
@@ -737,7 +738,7 @@ node --test tests/products/studio/readme.test.mjs
 node --test tests/products/studio/*.test.mjs tests/e2e/studio/*.test.mjs
 ```
 
-11개 source skill의 공식 구조를 확인합니다.
+원본 스킬 17개의 공식 구조를 확인합니다.
 
 ```bash
 CODEX_ROOT="${CODEX_HOME:-$HOME/.codex}"

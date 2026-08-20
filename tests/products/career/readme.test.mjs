@@ -610,6 +610,22 @@ test("README inventories the exact packaged runtime scripts and shared quality s
       .map(({ name }) => name)
       .sort();
     assert.deepEqual(builtScripts, [...topLevelScriptIds].sort());
+    for (const relativePath of [
+      "examples/intent-invocation-contract/README.md",
+      "examples/intent-invocation-contract/README.ko.md",
+    ]) {
+      await access(path.join(pluginRoot, relativePath));
+      await access(path.join(build.outputDir, relativePath));
+    }
+    for (const relativePath of [
+      "skills/svg-infographic/README.md",
+      "skills/svg-infographic/README.ko.md",
+    ]) {
+      const vendoredReadme = await readFile(path.join(build.outputDir, relativePath), "utf8");
+      for (const target of [...vendoredReadme.matchAll(/\[[^\]]+\]\((\.\.\/\.\.\/examples\/intent-invocation-contract[^)]*)\)/gu)].map((match) => match[1])) {
+        await access(path.resolve(path.dirname(path.join(build.outputDir, relativePath)), target));
+      }
+    }
     for (const relativePath of documentQualityPaths) {
       await access(path.join(repoRoot, "shared/document-quality", relativePath));
       await access(path.join(build.outputDir, "references/shared/document-quality", relativePath));

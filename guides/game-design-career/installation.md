@@ -43,6 +43,24 @@ codex plugin list
 
 `PLUGIN@MARKETPLACE` 선택자인 `game-design-career@game-design-suite`를 그대로 사용합니다. 또는 Codex CLI 세션에서 `/plugins`를 열고 `game-design-suite` 탭의 Career 항목을 설치할 수 있습니다. `/plugins`의 `Space` 키는 설치된 항목의 활성화 상태를 전환하는 CLI 전용 조작입니다. 설치 뒤에는 **새 세션**을 시작합니다.
 
+### Windows PowerShell
+
+한글이나 공백이 들어간 체크아웃 경로는 PowerShell에서 절대 경로를 따옴표로 감싸 등록합니다. Codex는 사용자 홈을 `%USERPROFILE%`, 로컬 앱 데이터를 `%LOCALAPPDATA%`에서 찾으므로 `HOME` 환경 변수를 따로 만들 필요가 없습니다.
+
+```powershell
+$repoRoot = (Resolve-Path .).Path
+codex plugin marketplace add "$repoRoot"
+codex plugin marketplace list
+codex plugin add game-design-career@game-design-suite
+codex plugin list
+```
+
+Windows에서는 `.cmd` 실행 파일을 셸 없이 직접 실행한 결과나 POSIX 권한 비트, 디렉터리 `fsync`를 검증 근거로 삼지 않습니다. 대신 JavaScript 진입점을 Node로 실행하고 파일 정체성과 설치된 바이트를 대조합니다. 브라우저는 표준 설치 경로를 대소문자 구분 없이 확인합니다. 저장소 검증은 전체 `npm test`가 아니라 CI와 같은 오프라인 샤드, Windows 하드닝과 설치 왕복 검증을 기준으로 합니다.
+
+```powershell
+npm run verify:install-roundtrip
+```
+
 ## 설치 확인
 
 - App: 새 채팅의 Plugins 목록에서 Game Design Career가 설치되어 있는지 확인한 뒤 `@Game Design Career`를 선택합니다.
@@ -72,14 +90,13 @@ codex plugin list
 
 업데이트가 끝나면 이전 버전, 새 버전, 바뀐 제품, 번들 구성 요소 변화, 검증 결과를 요약하고 새 세션에서 이어가는 방법을 알려 줍니다. 새 스킬 목록은 세션을 다시 시작한 뒤에 반영됩니다.
 
-### 손으로 제거하고 다시 설치하기
+### 손으로 업데이트하기
 
-로컬 marketplace는 Git refresh 대상이 아닙니다. checkout을 갱신하고 저장소 루트에서 다음 검증을 마친 뒤 Career를 제거하고 다시 설치합니다.
+로컬 마켓플레이스는 Git으로 갱신하지 않습니다. 체크아웃을 갱신하고 저장소 루트에서 다음 검증을 마친 뒤 Career를 다시 적용합니다. 정상 업데이트에서는 플러그인을 먼저 제거하지 않습니다.
 
 ```bash
 npm run build
 npm run validate
-codex plugin remove game-design-career@game-design-suite
 codex plugin add game-design-career@game-design-suite
 ```
 
@@ -88,9 +105,10 @@ Git marketplace를 등록했다면 설치 가능한 snapshot을 확인하기 전
 ```bash
 codex plugin marketplace upgrade game-design-suite
 codex plugin list --marketplace game-design-suite --available --json
+codex plugin add game-design-career@game-design-suite
 ```
 
-`codex plugin marketplace upgrade`는 구성된 **Git marketplace**를 refresh하는 명령입니다. 다음 명령은 그 marketplace의 설치 가능 항목을 확인합니다. 같은 확인은 `/plugins`의 `game-design-suite` 탭에서도 할 수 있습니다. 기본 `codex plugin list`는 설치 상태 확인용이며 설치 가능 snapshot 조회를 대신하지 않습니다. refresh는 설치된 Career 자체를 새 snapshot으로 교체하지 않으므로, 필요한 버전을 확인한 뒤 명시적으로 다시 설치합니다.
+`codex plugin marketplace upgrade`는 등록한 **Git 마켓플레이스**를 갱신하는 명령입니다. 다음 명령으로 해당 마켓플레이스에서 설치할 수 있는 항목을 확인합니다. 같은 내용은 `/plugins`의 `game-design-suite` 탭에서도 볼 수 있습니다. 기본 `codex plugin list`는 설치 상태를 확인하는 명령이며, 설치 가능한 스냅숏 조회를 대신하지 않습니다. 마켓플레이스를 갱신해도 설치된 Career가 새 스냅숏으로 자동 교체되지는 않습니다. 필요한 버전을 확인한 뒤 `plugin add`로 다시 적용하세요. `plugin add`가 실패해 설치본을 복구해야 할 때만 아래 제거 절차로 상태를 확인한 뒤 재설치합니다.
 
 ## 제거
 
@@ -104,6 +122,13 @@ marketplace 등록은 플러그인과 별도입니다. 두 제품 모두 더 이
 
 ```bash
 codex plugin marketplace remove game-design-suite
+```
+
+제거한 뒤에는 두 목록을 다시 확인합니다. Career만 제거했다면 Studio는 그대로 남아 있어야 하며, 두 제품과 마켓플레이스를 모두 제거했다면 두 목록에 `game-design-suite` 항목이 없어야 합니다. `%USERPROFILE%` 아래 Codex 설치 캐시와 `%LOCALAPPDATA%`의 임시 상태에도 제거한 제품 ID나 체크아웃 경로가 남지 않았는지 확인합니다.
+
+```bash
+codex plugin list
+codex plugin marketplace list
 ```
 
 App에서는 Plugins의 설치된 Career 상세 화면에서 **Uninstall plugin**을 사용합니다. workspace 설치 또는 관리자가 제공한 기본 플러그인은 사용자가 제거할 수 없을 수 있으므로 관리자에게 문의합니다. 플러그인을 제거해도 번들 connector 연결은 남을 수 있습니다. connector 연결 해제는 ChatGPT의 연결 관리에서 별도로 처리합니다.

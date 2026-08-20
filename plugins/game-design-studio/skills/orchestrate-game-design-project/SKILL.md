@@ -15,10 +15,11 @@ Users do not need to name a skill or case ID. Read an ordinary natural-language 
 
 1. Complete intake and configuration. Read [intake.md](references/intake.md), capture the brief, record safe assumptions, and ask only questions that can materially change the result.
 2. Retrieve approved memory with `retrieve-approved-design-memory` after intake and configuration, before any specialist routing. Memory unavailability never blocks the Canonical Artifact.
-3. Read [workflow.md](references/workflow.md). Run the specialist workflow: select exact domain routes, artifacts, profiles, quality/image work, and no more than three relevant review roles; then create or update the Canonical Artifact, dispatch the declared envelopes, merge findings deterministically, and use the optional writing pass.
-4. Read [completion-gates.md](references/completion-gates.md). Apply completion gates before claiming completion.
-5. Capture only allowed-event candidates with `capture-game-design-memory` after completion gates.
-6. Emit one nonzero summary only when applied, candidate, or excluded counts are nonzero.
+3. Read [workflow.md](references/workflow.md). Run the specialist workflow: select exact domain routes, artifacts, profiles, quality/image work, and no more than three relevant review roles; then create or update the Canonical Artifact, dispatch the declared envelopes, and merge findings deterministically.
+4. When the output writes or revises Korean prose, run `polish-game-design-writing` as the final editorial pass. The wrapper must run its bundled `$humanize-korean`, protect IDs, numbers, links, paths, claims, uncertainty, and approval states, and leave the canonical original untouched until human review. After this pass, run only deterministic protected-content, link, contract, and diagram-drift validation; do not edit prose again. On failure, preserve the original and return a blocked, resumable handoff.
+5. Read [completion-gates.md](references/completion-gates.md). Apply completion gates before claiming completion.
+6. Capture only allowed-event candidates with `capture-game-design-memory` after completion gates.
+7. Emit one nonzero summary only when applied, candidate, or excluded counts are nonzero.
 
 ## Optional Archify structural-diagram route
 

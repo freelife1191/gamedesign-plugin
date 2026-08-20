@@ -172,7 +172,7 @@ codex plugin add game-design-career@game-design-suite
 
 아래는 스킬 없이 손으로 처리할 때의 명령입니다.
 
-`codex plugin list --available --json`은 설치하지 않은 플러그인 목록만 보여 줍니다. Codex 0.147.0에서는 이미 설치한 Career의 새 원천 버전을 판별하지 않습니다. 알림을 본 뒤에만 아래 명령을 명시적으로 실행하고, 재설치가 끝나면 새 채팅 또는 새 세션을 열어 새 설치본을 사용하세요.
+`codex plugin list --available --json`은 설치하지 않은 플러그인 목록만 보여 줍니다. 설치한 Career의 새 원본 버전을 판단하는 근거로 사용하지 마세요. 이 절차는 Codex CLI 0.148.0에서 다시 확인했지만 특정 부 버전에 고정하지 않습니다. 알림을 받은 뒤에만 아래 명령을 직접 실행하고, 다시 적용한 뒤 새 채팅이나 새 세션을 열어 새 설치본을 사용하세요.
 
 Git marketplace로 등록했다면 스냅샷을 갱신한 뒤 다시 설치합니다.
 
@@ -181,7 +181,11 @@ codex plugin marketplace upgrade game-design-suite
 codex plugin add game-design-career@game-design-suite
 ```
 
-로컬 marketplace(저장소 경로 등록)는 Git fetch 대상이 아닙니다. 저장소를 갱신하고 배포 스냅샷을 다시 만든 다음, 설치된 Career를 제거하고 다시 추가합니다. `marketplace.json`, Codex 설정 또는 설치된 캐시를 손으로 수정하지 마십시오.
+저장소 경로로 등록한 로컬 마켓플레이스는 Git fetch 대상이 아닙니다. 저장소를 갱신하고 배포 스냅숏을 다시 만든 다음 설치된 Career를 다시 적용합니다. 정상 업데이트에서는 플러그인을 먼저 제거하지 않습니다. `marketplace.json`, Codex 설정이나 설치된 캐시는 직접 수정하지 마세요.
+
+```bash
+codex plugin add game-design-career@game-design-suite
+```
 
 제거 명령은 다음과 같습니다.
 
@@ -193,6 +197,8 @@ marketplace 자체도 더 이상 사용하지 않을 때만 별도로 제거합�
 
 ```bash
 codex plugin marketplace remove game-design-suite
+codex plugin list
+codex plugin marketplace list
 ```
 
 ## 플러그인 구조
@@ -611,7 +617,7 @@ PPTX는 Markdown 제목을 기계적으로 나누지 않습니다. Preflight의 
 | 증상 | 확인 및 복구 |
 | --- | --- |
 | marketplace가 보이지 않음 | `codex plugin marketplace list`로 `game-design-suite`와 루트를 확인하고, 저장소 루트를 다시 등록합니다. |
-| 업데이트가 반영되지 않음 | 올바른 로컬 marketplace가 설치되어 있는지 `codex plugin list`로 확인하고, cachebuster 갱신 후 재설치한 다음 새 작업을 시작합니다. |
+| 업데이트가 반영되지 않음 | `codex plugin list`로 올바른 로컬 marketplace가 설치됐는지 확인하고 `codex plugin add game-design-career@game-design-suite`로 다시 적용한 뒤 새 작업을 시작합니다. |
 | 현재 채용 주장을 만들 수 없음 | 공식 공고 URL, 게시일, 검색일, 지역을 제공하거나 조사 범위를 좁힙니다. 근거가 없으면 검증 과제로 남깁니다. |
 | PNG가 생성되지 않음 | SVG lint 결과를 보존하고 Chromium probe 실패 근거를 기록합니다. SVG만 전달하고 PNG 검증을 주장하지 않습니다. |
 | 내보내기가 `blocked`임 | Canonical validation과 형식별 capability evidence를 확인합니다. renderer가 준비되면 같은 preflight manifest를 trusted downstream 생성·QA 단계로 넘기고, 검증된 terminal 결과는 별도 증거로 기록합니다. |
@@ -626,7 +632,7 @@ node --test tests/products/career/readme.test.mjs
 node --test tests/products/career/*.test.mjs tests/e2e/career/*.test.mjs
 ```
 
-11개 source skill의 공식 구조를 확인합니다.
+원본 스킬 16개의 공식 구조를 확인합니다.
 
 ```bash
 CODEX_SKILL_CREATOR_ROOT="${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-creator"

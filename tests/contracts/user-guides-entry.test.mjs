@@ -25,7 +25,7 @@ function parseUpdateGuide(markdown, heading) {
     advisory: prose.includes("알림") && prose.includes("자동으로 업데이트") && prose.includes("다시 설치하지 않"),
     firstRunAndInterval: prose.includes("처음") && prose.includes("7일"),
     optOut: prose.includes("GAME_DESIGN_UPDATE_CHECKS=false"),
-    localAndGit: prose.includes("Git marketplace") && prose.includes("로컬 marketplace"),
+    localAndGit: /Git (?:marketplace|마켓플레이스)/u.test(prose) && /로컬 (?:marketplace|마켓플레이스)/u.test(prose),
     handoff: prose.includes("새 채팅") || prose.includes("새 세션"),
     pinnedBundles: prose.includes("고정") && prose.includes("suite release"),
     cacheBoundary: prose.includes("설치된 캐시") && prose.includes("직접 편집하지 마"),
@@ -71,6 +71,17 @@ for (const product of ["game-design-studio", "game-design-career"]) {
     assert.doesNotMatch(installation, /ChatGPT 데스크톱 앱에 로컬 marketplace를 등록/);
     assert.match(installation, /https:\/\/developers\.openai\.com\/plugins\/build\/plugins#install-a-local-plugin-manually/);
     assert.match(installation, /codex plugin list --marketplace game-design-suite --available --json/);
+    for (const phrase of ["Windows", "PowerShell", "USERPROFILE", "LOCALAPPDATA", "npm run verify:install-roundtrip"]) {
+      assert.match(installation, new RegExp(phrase), `${product}: Windows install and cleanup guidance includes ${phrase}`);
+    }
+    const update = section(installation, "업데이트").join("\n");
+    assert.doesNotMatch(update, /codex plugin remove/u, `${product}: normal update is add-only; removal belongs to recovery or uninstall`);
+    assert.match(update, /codex plugin add/u, `${product}: normal update reapplies the selected product`);
+    const removal = section(installation, "제거").join("\n");
+    assert.match(removal, /codex plugin remove/u, `${product}: uninstall keeps an explicit product removal command`);
+    assert.match(removal, /codex plugin marketplace remove/u, `${product}: full cleanup keeps an explicit marketplace removal command`);
+    assert.match(removal, /codex plugin list/u, `${product}: removal is verified through the installed plugin list`);
+    assert.match(removal, /codex plugin marketplace list/u, `${product}: removal is verified through the marketplace list`);
     assert.match(quickStart, /복사 가능한 요청문/);
     assert.match(quickStart, /예상 결과/);
     assert.equal(quickStart.match(/export-manifest\.yml/g)?.length, 2);

@@ -26,14 +26,36 @@ const PRODUCTS = Object.freeze([
   {
     name: "game-design-career",
     displayName: "Game Design Career",
-    request: "게임 기획 입문자가 먼저 준비할 역량과 4주 학습 계획을 짧게 정리해 주세요.",
-    contentPatterns: [/4주/u, /(?:학습|주차)/u, /(?:역량|능력)/u],
+    request: "신입 게임 기획자의 4주 학습 계획을 주차별 목표와 점검 기준이 있는 한 장 계획으로 정리해 주세요. 본문에 '4주 학습 계획'을 그대로 한 번 포함하세요.",
+    contentPatterns: [/4주 학습 계획/u, /주차/u, /(?:목표|점검 기준)/u],
+    expectedRoute: "junior-growth-plan",
+    expectedSkill: "plan-junior-growth",
+    representative: {
+      id: "career-entry-orchestration",
+      entrySkill: "game-design-career",
+      request: "게임 기획 입문자가 어떤 역할을 먼저 검토하고, 4주 학습 계획과 포트폴리오 증거를 어떻게 연결할지 함께 정리해 주세요.",
+      contentPatterns: [/4주/u, /(?:학습|주차)/u, /(?:역할|직무)/u, /(?:포트폴리오|증거)/u],
+      expectedRoute: "entry-intake",
+      expectedSkill: "orchestrate-game-design-career",
+      mergeKeys: ["severity", "evidence-gap-id", "artifact-section-id", "role-priority"],
+    },
   },
   {
     name: "game-design-studio",
     displayName: "Game Design Studio",
-    request: "모바일 협동 RPG의 핵심 재미를 짧은 기획 요약서로 정리해 주세요.",
-    contentPatterns: [/모바일/u, /(?:협동|협력)/u, /RPG/u, /(?:재미|핵심 경험)/u],
+    request: "모바일 협동 RPG의 핵심 재미를 짧은 기획 요약서로 정리해 주세요. 본문 문장에 '모바일 협동 RPG의 핵심 재미'를 그대로 한 번 포함하세요.",
+    contentPatterns: [/모바일 협동 RPG의 핵심 재미/u],
+    expectedRoute: "vision",
+    expectedSkill: "define-game-vision",
+    representative: {
+      id: "studio-entry-orchestration",
+      entrySkill: "game-design-studio",
+      request: "모바일 협동 RPG의 핵심 경험, 첫 튜토리얼, 출시 범위를 함께 정리해 주세요. 핵심 경험과 출시 범위는 서로 영향을 주므로 하나의 복합 기획으로 다뤄야 합니다.",
+      contentPatterns: [/모바일/u, /(?:협동|협력)/u, /RPG/u, /(?:튜토리얼|첫 세션)/u, /(?:출시 범위|범위)/u],
+      expectedRoute: "project-orchestration",
+      expectedSkill: "orchestrate-game-design-project",
+      mergeKeys: ["severity", "affectedSectionId", "rolePriority"],
+    },
   },
 ]);
 export const PROOF_HARNESS_PATH = fileURLToPath(new URL("./lib/marketplace-proof-harness.mjs", import.meta.url));
@@ -69,6 +91,217 @@ export function buildMarketplacePrompt(product, artifactPath) {
     "검증용 작업이므로 필요한 파일만 짧게 작성하세요. 외부 조사, 이미지 생성, 추가 형식 생성, 사용자 질문은 하지 마세요.",
     "작업을 마친 뒤 짧게 완료만 보고하세요.",
   ].join("\n");
+}
+
+export function buildRepresentativeMarketplacePrompt(product, artifactPath) {
+  return [
+    `설치된 ${product.displayName} 플러그인의 대표 진입점 \`${`$${product.name}:${product.entrySkill}`}\`으로 다음 복합 요청을 처리하세요.`,
+    `요청: ${product.request}`,
+    "대표 진입점이 선택한 실제 스킬 또는 오케스트레이터를 실행하고, 설치된 routing registry 밖의 경로를 만들지 마세요.",
+    "첫 번째 최종 메시지는 분석이나 조언보다 먼저 아래 형식을 그대로 복사해 줄마다 한 항목씩 출력하세요. 각 줄 앞의 `- `는 선택 사항이지만, 항목 이름과 순서는 바꾸지 마세요.",
+    `소유 제품: ${product.name}`,
+    `선택 스킬: ${product.expectedSkill}`,
+    `선택 스킬 줄에는 대표 진입점 ${product.entrySkill} 자체가 아니라, route-receipt.json이 가리키는 실제 전달 대상 ${product.expectedSkill}만 적으세요.`,
+    "교차 제품 핸드오프: 없음 또는 확인한 handoff 경로",
+    `결과물 경로: ${artifactPath}`,
+    "현재 사실·가정·차단 요인: 확인한 사실과 미정 항목",
+    "다음 사람 결정: 사람이 결정할 다음 항목",
+    "검토 역할: <1명 이상 3명 이하의 역할 ID>",
+    "역할 근거: <역할 ID> | evidence: <검토한 경로> | findings: <한 줄 결과>",
+    `결정적 병합: ${product.mergeKeys.join(" > ")}`,
+    "검증: route-receipt.json 요청 바인딩과 artifact validator를 통과",
+    "선택 스킬과 역할은 실제로 실행한 설치본 경로만 적으세요. 위 형식의 값이 실제 route-receipt.json과 다르면 검증이 실패합니다.",
+    "검토 역할은 1명 이상 3명 이하로 지정하고, 모든 역할에 역할 근거 줄을 하나씩 남기세요.",
+    `검토할 수 있는 게임 기획 결과물을 ${artifactPath} 에 생성하세요.`,
+    "설치 플러그인의 assets/shared/templates/canonical-artifact 기준 템플릿은 실행 도구가 결과물 루트에 미리 복사했습니다.",
+    "파일을 새로 만들거나 구조를 다시 쓰지 말고 content.md의 본문만 요청에 맞게 짧게 고치세요. frontmatter, 제목, 소제목과 {#heading-id}는 그대로 둡니다.",
+    "export-manifest.yml의 artifact_id, formats, status 구조와 evidence.yml, decisions/, assets/는 바꾸지 마세요.",
+    "기존 route-receipt.json의 schemaVersion, requestSha256, bindingNonce는 그대로 보존하고 설치된 routing registry에서 선택한 routeId만 채운 뒤 결과물을 작성하세요.",
+    "검증용 작업이므로 필요한 파일만 짧게 작성하세요. 외부 조사, 이미지 생성, 추가 형식 생성, 사용자 질문은 하지 마세요.",
+  ].join("\n");
+}
+
+const REPRESENTATIVE_RECEIPT_LABELS = Object.freeze([
+  "소유 제품:",
+  "선택 스킬:",
+  "교차 제품 핸드오프:",
+  "결과물 경로:",
+  "현재 사실·가정·차단 요인:",
+  "다음 사람 결정:",
+]);
+
+export function describeRepresentativeReceiptFormat(message) {
+  if (typeof message !== "string") return [];
+  return message.split(/\r?\n/u).filter(Boolean).slice(0, 6).map((line) => {
+    const trimmed = line.trim();
+    const bullet = /^(?:[-*+]|\d+\.)\s+/u.test(trimmed);
+    const normalized = trimmed.replace(/^(?:[-*+]|\d+\.)\s+/u, "");
+    const label = REPRESENTATIVE_RECEIPT_LABELS.find((candidate) => normalized.startsWith(candidate)) ?? "unrecognized";
+    return `${bullet ? "bullet" : "plain"}:${label}`;
+  });
+}
+
+export function describeRepresentativeReceiptIdentity(message, { product, selectedSkill, entrySkill }) {
+  if (typeof message !== "string") return { product: "missing", skill: "missing" };
+  const lines = message.split(/\r?\n/u)
+    .map((line) => line.trim().replace(/^(?:[-*+]|\d+\.)\s+/u, "")).filter(Boolean);
+  const valueFor = (label) => {
+    const line = lines.find((candidate) => candidate.startsWith(label));
+    return line ? line.slice(label.length).trim() : "";
+  };
+  const unwrap = (value) => {
+    const code = /^`([^`\r\n]+)`$/u.exec(value);
+    if (code) return code[1];
+    const emphasis = /^(?:\*\*|__)([^\r\n]+)(?:\*\*|__)$/u.exec(value);
+    return emphasis ? emphasis[1] : value;
+  };
+  const classify = (value, expected, entry, namespace) => {
+    const normalized = unwrap(value);
+    if (!normalized) return "missing";
+    if (normalized === expected) return "expected";
+    if (normalized === entry) return "entry-skill";
+    if ([`${namespace}:${expected}`, `$${namespace}:${expected}`].includes(normalized)) return "namespaced-expected";
+    if ([`${namespace}:${entry}`, `$${namespace}:${entry}`].includes(normalized)) return "namespaced-entry-skill";
+    if (normalized.includes(expected)) return "contains-expected";
+    if (normalized.includes(entry)) return "contains-entry-skill";
+    return "other";
+  };
+  return {
+    product: classify(valueFor("소유 제품:"), product, product, product),
+    skill: classify(valueFor("선택 스킬:"), selectedSkill, entrySkill, product),
+  };
+}
+
+export function summarizeCodexExecEvents(source) {
+  const events = source.split(/\r?\n/u).filter(Boolean).map((line) => safeJson(line, "codex exec"));
+  const messages = events.filter((event) => event.type === "item.completed" && event.item?.type === "agent_message"
+    && typeof event.item.text === "string").map((event) => event.item.text);
+  const installedSkillRead = events.some((event) => event.type === "item.completed" && event.item?.type === "command_execution"
+    && typeof event.item.command === "string" && /(?:^|[/\\])skills[/\\][a-z0-9-]+[/\\]SKILL\.md\b/iu.test(event.item.command));
+  return {
+    agentMessageCount: messages.length,
+    agentMessageFormats: messages.map((message) => describeRepresentativeReceiptFormat(message)),
+    installedSkillRead,
+  };
+}
+
+function representativeReceiptError(kind) {
+  return new Error(`representative ${kind} contract mismatch`);
+}
+
+function normalizeReceiptIdentifier(value) {
+  const match = /^`([^`\r\n]+)`$/u.exec(value);
+  return match ? match[1] : value;
+}
+
+export function assertRepresentativeReceipt(message, {
+  product, productDisplayName, selectedSkill, allowedRoles, mergeKeys,
+}) {
+  if (typeof message !== "string") throw representativeReceiptError("routing receipt");
+  const lines = message.split(/\r?\n/u)
+    .map((line) => line.trim().replace(/^(?:[-*+]|\d+\.)\s+/u, "")).filter(Boolean);
+  if (lines.length < REPRESENTATIVE_RECEIPT_LABELS.length
+      || REPRESENTATIVE_RECEIPT_LABELS.some((label, index) => !lines[index].startsWith(label))) {
+    throw representativeReceiptError("routing receipt");
+  }
+  const values = REPRESENTATIVE_RECEIPT_LABELS.map((label, index) => lines[index].slice(label.length).trim());
+  if (values.some((value) => value.length === 0)) throw representativeReceiptError("routing receipt values");
+  const productValue = normalizeReceiptIdentifier(values[0]);
+  const skillValue = normalizeReceiptIdentifier(values[1]);
+  const normalizedSkillValue = [
+    `${product}:${selectedSkill}`,
+    `$${product}:${selectedSkill}`,
+  ].includes(skillValue) ? selectedSkill : skillValue;
+  if (productValue !== product) {
+    if (productValue === productDisplayName) throw representativeReceiptError("routing product display name");
+    throw representativeReceiptError("routing product");
+  }
+  if (normalizedSkillValue !== selectedSkill) throw representativeReceiptError("routing skill");
+
+  const roleLine = lines.find((line) => line.startsWith("검토 역할:"));
+  if (!roleLine) throw representativeReceiptError("role");
+  const roleValue = roleLine.slice("검토 역할:".length).trim();
+  const roles = allowedRoles.filter((role) => new RegExp(`(?:^|[^a-z0-9-])${role}(?:$|[^a-z0-9-])`, "u").test(roleValue));
+  const unknownRoleIds = (roleValue.match(/[a-z][a-z0-9]*(?:-[a-z0-9]+)+/gu) ?? [])
+    .filter((role) => role !== product && !allowedRoles.includes(role));
+  if (roles.length < 1 || roles.length > 3 || new Set(roles).size !== roles.length
+      || unknownRoleIds.length > 0) throw representativeReceiptError("role");
+  const evidenceLines = lines.filter((line) => line.startsWith("역할 근거:"));
+  for (const role of roles) {
+    const evidenceLine = evidenceLines.find((line) => new RegExp(`(?:^|[^a-z0-9-])${role}(?:$|[^a-z0-9-])`, "u").test(line));
+    if (!evidenceLine || !/\| evidence: (?!미정(?:\s|$))\S+/u.test(evidenceLine)
+        || !/\| findings: \S+/u.test(evidenceLine)) throw representativeReceiptError("role evidence");
+  }
+
+  const expectedMerge = mergeKeys.join(" > ");
+  if (!lines.includes(`결정적 병합: ${expectedMerge}`)) throw representativeReceiptError("merge");
+  const proofLine = lines.find((line) => line.startsWith("검증:"));
+  if (!proofLine || !/route-receipt\.json/u.test(proofLine) || !/artifact validator/u.test(proofLine)) {
+    throw representativeReceiptError("proof");
+  }
+  return {
+    roles,
+    receipt: Object.fromEntries(REPRESENTATIVE_RECEIPT_LABELS.map((label, index) => [
+      label.slice(0, -1),
+      index === 0 ? normalizeReceiptIdentifier(values[index])
+        : index === 1 ? normalizedSkillValue : values[index],
+    ])),
+  };
+}
+
+export function firstAgentMessage(source) {
+  const events = source.split(/\r?\n/u).filter(Boolean).map((line) => safeJson(line, "codex exec"));
+  const message = events.find((event) => event.type === "item.completed" && event.item?.type === "agent_message"
+    && typeof event.item.text === "string" && event.item.text.trim().length > 0)?.item.text;
+  if (!message) throw representativeReceiptError("agent message");
+  return message;
+}
+
+export function firstRoutingReceiptMessage(source) {
+  const events = source.split(/\r?\n/u).filter(Boolean).map((line) => safeJson(line, "codex exec"));
+  const messages = events.filter((event) => event.type === "item.completed" && event.item?.type === "agent_message"
+    && typeof event.item.text === "string").map((event) => event.item.text);
+  const receipt = messages.find((message) => {
+    const lines = message.split(/\r?\n/u)
+      .map((line) => line.trim().replace(/^(?:[-*+]|\d+\.)\s+/u, "")).filter(Boolean);
+    return REPRESENTATIVE_RECEIPT_LABELS.every((label, index) => lines[index]?.startsWith(label));
+  });
+  if (!receipt) throw representativeReceiptError("routing receipt");
+  return receipt;
+}
+
+export function selectSmokeScenarios(scenarios, scenarioIds) {
+  if (scenarioIds === undefined) return scenarios;
+  if (!Array.isArray(scenarioIds) || scenarioIds.length === 0
+      || scenarioIds.some((id) => typeof id !== "string" || id.length === 0)
+      || new Set(scenarioIds).size !== scenarioIds.length) throw new Error("scenario selection contract mismatch");
+  const selected = scenarios.filter((scenario) => scenarioIds.includes(scenario.id));
+  if (selected.length !== scenarioIds.length) throw new Error("scenario selection contract mismatch");
+  return selected;
+}
+
+export function representativeReceiptExpectation(product, scenario) {
+  if (typeof product?.name !== "string" || product.name.length === 0
+      || typeof product?.displayName !== "string" || product.displayName.length === 0
+      || scenario === null || typeof scenario !== "object" || Array.isArray(scenario)) {
+    throw new Error("representative receipt expectation mismatch");
+  }
+  return {
+    ...scenario,
+    product: product.name,
+    productDisplayName: product.displayName,
+    selectedSkill: scenario.expectedSkill,
+  };
+}
+
+export async function installedRoleIds(cacheRoot) {
+  const routing = safeJson(await readFile(path.join(cacheRoot, "references/routing.json"), "utf8"), "installed routing registry");
+  if (!Array.isArray(routing.roleIds) || routing.roleIds.length === 0
+      || routing.roleIds.some((role) => typeof role !== "string" || !/^[a-z][a-z0-9-]*$/u.test(role))
+      || new Set(routing.roleIds).size !== routing.roleIds.length) {
+    throw new Error("installed role registry mismatch");
+  }
+  return routing.roleIds;
 }
 
 function simpleShellWords(source) {
@@ -321,6 +554,9 @@ function failureCode(error, stage) {
     return /ETIMEDOUT|timed out|timeout/iu.test(source) ? "natural-language-exec-timeout" : "natural-language-exec-failed";
   }
   if (stage === "route-receipt") {
+    if (/scenario route selection mismatch/iu.test(source)) return "route-selection-mismatch";
+    const representative = /representative (routing receipt(?: values)?|routing product display name|routing product|routing skill|role evidence|role|merge|proof|agent message) contract mismatch/iu.exec(source)?.[1];
+    if (representative) return `representative-${representative.replaceAll(" ", "-")}-invalid`;
     if (/exact proof command missing/iu.test(source)) return "route-proof-command-missing";
     if (/proof receipt malformed/iu.test(source)) return "route-proof-receipt-malformed";
     if (/proof receipt mismatch/iu.test(source)) return "route-proof-receipt-mismatch";
@@ -669,7 +905,12 @@ export async function runMarketplaceSmoke({
   repoRoot = fileURLToPath(new URL("..", import.meta.url)),
   tempParent = tmpdir(),
   findExecutableImpl = findExecutable,
+  scenarioIds,
 } = {}) {
+  const validScenarioIds = PRODUCTS.flatMap((product) => [
+    `${product.name}-direct`, product.representative.id,
+  ]).map((id) => ({ id }));
+  selectSmokeScenarios(validScenarioIds, scenarioIds);
   const before = await fingerprintProductionState();
   const registration = await createGuardedTempRoot({ parent: tempParent, prefix: "game-design-marketplace-" });
   const env = isolatedEnvironment(registration);
@@ -725,46 +966,93 @@ export async function runMarketplaceSmoke({
         "pluginList", run(codex, ["plugin", "list", "--json"], { cwd: repoRoot, env, json: true }), cliContext,
       ));
 
-      const workspace = path.join(registration.root, `workspace-${product.name}`);
-      await mkdir(workspace);
-      const artifactPath = path.join(workspace, `${product.name}-artifact`);
-      const starter = await runStage(
-        { product: product.name, stage: "artifact-scaffold" },
-        () => seedArtifactStarter(cacheRoot, artifactPath),
-      );
-      const bindingNonce = await runStage({ product: product.name, stage: "route-receipt" }, () => seedRouteReceipt(artifactPath, product));
-      const packageValidator = path.join(cacheRoot, "scripts/validate-artifact.mjs");
-      const validatorSha256 = sha256(await readFile(packageValidator));
-      const requestSha256 = sha256(Buffer.from(product.request, "utf8"));
-      const prompt = buildMarketplacePrompt(product, artifactPath);
-      const jsonl = await runStage({ product: product.name, stage: "natural-language-exec" }, () => runCodexExec(
-        codex, ["exec", "--ephemeral", "--json", "--sandbox", "workspace-write", "--skip-git-repo-check", "-C", workspace, prompt], { cwd: workspace, env },
-      ));
-      await runStage({ product: product.name, stage: "natural-language-exec" }, () => parseExecJsonl(jsonl, {
-        cacheRoot, workspaceRoot: workspace, proofIdentity, trustedShellPaths, nodePath: process.execPath,
-        validatorPath: packageValidator, validatorSha256, artifactPath, requestSha256, requireProofHarness: false,
-      }));
-      await runStage(
-        { product: product.name, stage: "artifact-missing" },
-        () => assertArtifactDirectory(artifactPath),
-      );
-      const selectedRoute = await runStage({ product: product.name, stage: "route-receipt" }, () => validateRouteReceipt({
-        cacheRoot, artifactPath, requestSha256, bindingNonce,
-      }));
-      await runStage({ product: product.name, stage: "artifact-validation" }, () => {
-        runArtifactValidation(packageValidator, artifactPath, { cwd: workspace, env });
-      });
-      await runStage({ product: product.name, stage: "artifact-validation" }, () => assertGeneratedContent(
-        artifactPath,
-        { ...starter, requiredPatterns: product.contentPatterns },
-      ));
-      const proof = await runStage({ product: product.name, stage: "route-proof" }, () => runMarketplaceProof([
-        cacheRoot, workspace, packageValidator, validatorSha256, artifactPath, requestSha256,
-      ], { bindingNonce }));
-      if (selectedRoute.selectedSkill !== proof.selectedSkill || JSON.stringify(selectedRoute.routeReceipt) !== JSON.stringify(proof.routeReceipt)) {
-        throw new SmokeStageError(new Error("route proof selection mismatch"), { product: product.name, stage: "route-proof" });
+      const scenarios = [
+        {
+          ...product, id: `${product.name}-direct`, representative: false,
+        },
+        { ...product.representative, representative: true },
+      ];
+      for (const scenario of (scenarioIds === undefined ? scenarios : scenarios.filter((candidate) => scenarioIds.includes(candidate.id)))) {
+        const workspace = path.join(registration.root, `workspace-${scenario.id}`);
+        await mkdir(workspace);
+        const artifactPath = path.join(workspace, `${product.name}-artifact`);
+        const starter = await runStage(
+          { product: product.name, stage: "artifact-scaffold", scenarioId: scenario.id },
+          () => seedArtifactStarter(cacheRoot, artifactPath),
+        );
+        const bindingNonce = await runStage(
+          { product: product.name, stage: "route-receipt", scenarioId: scenario.id },
+          () => seedRouteReceipt(artifactPath, scenario),
+        );
+        const packageValidator = path.join(cacheRoot, "scripts/validate-artifact.mjs");
+        const validatorSha256 = sha256(await readFile(packageValidator));
+        const requestSha256 = sha256(Buffer.from(scenario.request, "utf8"));
+        const prompt = scenario.representative
+          ? buildRepresentativeMarketplacePrompt({ ...product, ...scenario }, artifactPath)
+          : buildMarketplacePrompt(scenario, artifactPath);
+        const jsonl = await runStage({ product: product.name, stage: "natural-language-exec", scenarioId: scenario.id }, () => runCodexExec(
+          codex, ["exec", "--ephemeral", "--json", "--sandbox", "workspace-write", "--skip-git-repo-check", "-C", workspace, prompt], { cwd: workspace, env },
+        ));
+        await runStage({ product: product.name, stage: "natural-language-exec", scenarioId: scenario.id }, () => parseExecJsonl(jsonl, {
+          cacheRoot, workspaceRoot: workspace, proofIdentity, trustedShellPaths, nodePath: process.execPath,
+          validatorPath: packageValidator, validatorSha256, artifactPath, requestSha256, requireProofHarness: false,
+        }));
+        await runStage(
+          { product: product.name, stage: "artifact-missing", scenarioId: scenario.id },
+          () => assertArtifactDirectory(artifactPath),
+        );
+        const selectedRoute = await runStage({ product: product.name, stage: "route-receipt", scenarioId: scenario.id }, () => validateRouteReceipt({
+          cacheRoot, artifactPath, requestSha256, bindingNonce,
+        }));
+        if (selectedRoute.selectedSkill !== scenario.expectedSkill || selectedRoute.routeReceipt.routeId !== scenario.expectedRoute) {
+          process.stderr.write(`[marketplace-smoke] route-selection=${JSON.stringify({ scenario: scenario.id, expectedRoute: scenario.expectedRoute, actualRoute: selectedRoute.routeReceipt.routeId, expectedSkill: scenario.expectedSkill, actualSkill: selectedRoute.selectedSkill })}\n`);
+          throw new SmokeStageError(new Error("scenario route selection mismatch"), {
+            product: product.name, stage: "route-receipt", scenarioId: scenario.id,
+          });
+        }
+        if (scenario.representative) {
+          const allowedRoles = await runStage(
+            { product: product.name, stage: "route-receipt", scenarioId: scenario.id },
+            () => installedRoleIds(cacheRoot),
+          );
+          await runStage({ product: product.name, stage: "route-receipt", scenarioId: scenario.id }, () => {
+            const message = firstRoutingReceiptMessage(jsonl);
+            try {
+              return assertRepresentativeReceipt(message, {
+                ...representativeReceiptExpectation(product, scenario),
+                allowedRoles,
+              });
+            }
+            catch (error) {
+              process.stderr.write(`[marketplace-smoke] event-summary=${JSON.stringify({
+                ...summarizeCodexExecEvents(jsonl),
+                receiptIdentity: describeRepresentativeReceiptIdentity(message, {
+                  product: product.name,
+                  selectedSkill: scenario.expectedSkill,
+                  entrySkill: scenario.entrySkill,
+                }),
+              })}\n`);
+              throw error;
+            }
+          });
+        }
+        await runStage({ product: product.name, stage: "artifact-validation", scenarioId: scenario.id }, () => {
+          runArtifactValidation(packageValidator, artifactPath, { cwd: workspace, env });
+        });
+        await runStage({ product: product.name, stage: "artifact-validation", scenarioId: scenario.id }, () => assertGeneratedContent(
+          artifactPath,
+          { ...starter, requiredPatterns: scenario.contentPatterns },
+        ));
+        const proof = await runStage({ product: product.name, stage: "route-proof", scenarioId: scenario.id }, () => runMarketplaceProof([
+          cacheRoot, workspace, packageValidator, validatorSha256, artifactPath, requestSha256,
+        ], { bindingNonce }));
+        if (selectedRoute.selectedSkill !== proof.selectedSkill || JSON.stringify(selectedRoute.routeReceipt) !== JSON.stringify(proof.routeReceipt)) {
+          throw new SmokeStageError(new Error("route proof selection mismatch"), {
+            product: product.name, stage: "route-proof", scenarioId: scenario.id,
+          });
+        }
+        results.push({ scenario: scenario.id, product: product.name, pluginId: added.pluginId, selectedSkill: proof.selectedSkill, route: proof.routeReceipt.routeId, skills: packagedSkillCount, artifact: "validated-md", exec: "completed" });
       }
-      results.push({ product: product.name, pluginId: added.pluginId, selectedSkill: proof.selectedSkill, route: proof.routeReceipt.routeId, skills: packagedSkillCount, artifact: "validated-md", exec: "completed" });
       const removedPlugin = await runStage({ product: product.name, stage: "plugin-remove" }, () => run(
         codex, ["plugin", "remove", `${product.name}@${MARKETPLACE}`, "--json"], { cwd: repoRoot, env, json: true },
       ));
@@ -783,6 +1071,9 @@ export async function runMarketplaceSmoke({
     ));
     status = "PASS";
   } catch (error) {
+    if (error instanceof SmokeStageError && typeof error.context.scenarioId === "string") {
+      process.stderr.write(`[marketplace-smoke] scenario=${error.context.scenarioId}\n`);
+    }
     failure = error instanceof SmokeStageError
       ? createSmokeFailure(error.cause, error.context)
       : createSmokeFailure(error, { product: null, stage: "command" });
@@ -813,10 +1104,14 @@ export async function runMarketplaceSmoke({
 
 async function main() {
   let tempParent = tmpdir();
+  const scenarioIds = [];
   const args = process.argv.slice(2);
-  if (args.length === 2 && args[0] === "--temp-parent") tempParent = args[1];
-  else if (args.length !== 0) throw new Error("Usage: node tooling/marketplace-smoke.mjs [--temp-parent <directory>]");
-  const result = await runMarketplaceSmoke({ tempParent });
+  for (let index = 0; index < args.length; index += 1) {
+    if (args[index] === "--temp-parent" && typeof args[index + 1] === "string") tempParent = args[++index];
+    else if (args[index] === "--scenario" && typeof args[index + 1] === "string") scenarioIds.push(args[++index]);
+    else throw new Error("Usage: node tooling/marketplace-smoke.mjs [--temp-parent <directory>] [--scenario <id>]...");
+  }
+  const result = await runMarketplaceSmoke({ tempParent, scenarioIds: scenarioIds.length === 0 ? undefined : scenarioIds });
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
   if (result.status !== "PASS") process.exitCode = 1;
 }

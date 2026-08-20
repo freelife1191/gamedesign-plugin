@@ -244,6 +244,31 @@ test("the routing receipt is published before the work and never sheds an item",
   }
 });
 
+test("the routing receipt records the routed target instead of the representative entry skill", async () => {
+  for (const { product } of ENTRY_SKILLS) {
+    const skill = await entrySkill(product);
+    const receipt = skill.slice(skill.indexOf("## Routing receipt"), skill.indexOf("## Cross-product handoff"));
+    assert.ok(receipt.includes("대표 진입점의 ID인 `" + product + "`를 적지 않습니다"), product);
+    assert.match(receipt, /route-receipt\.json.*routeId.*전문 스킬이나 오케스트레이터 ID/us, product);
+  }
+});
+
+test("Korean documents finish with the protected humanize workflow before export", async () => {
+  for (const { product } of ENTRY_SKILLS) {
+    const skill = await entrySkill(product);
+    const operatingRules = skill.slice(skill.indexOf("## Operating rules"), skill.indexOf("## Completion report"));
+    for (const phrase of [
+      "`polish-game-design-writing` as the final editorial pass",
+      "bundled `$humanize-korean`",
+      "only deterministic validation may follow",
+      "preserve the canonical original",
+      "blocked, resumable handoff",
+    ]) {
+      assert.ok(operatingRules.includes(phrase), `${product}: missing mandatory Korean writing rule: ${phrase}`);
+    }
+  }
+});
+
 // 1차 수정은 조회 의무를 references/handoff.md 안에만 적었다. 재검증에서 에이전트는 그 파일을 아예
 // 열지 않았고 — SKILL.md, 오케스트레이터, routing.json만 읽었다 — Studio가 설치되지 않은 환경에서
 // "교차 제품 인계: 필요"라고 적었다. 참조 파일에만 있는 의무는 참조를 읽은 실행에만 걸린다. 의무는

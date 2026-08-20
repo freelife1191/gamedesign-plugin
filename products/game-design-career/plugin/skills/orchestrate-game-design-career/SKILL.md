@@ -35,9 +35,10 @@ Users do not need to name a skill or case ID. Read an ordinary natural-language 
 ```
 
 5. In parallel mode, dispatch independent envelopes. In sequential fallback, filter the fixed `rolePriority` to the selected roles and run the same roles with the same `questionsByRole` entries. Do not rewrite or broaden questions between modes. Merge findings by `severity`, `evidence-gap-id`, `artifact-section-id`, then `role-priority` and preserve conflicting recommendations as explicit decisions.
-6. Apply every applicable evidence and responsible-design completion gates. Missing evidence remains a visible gap and never becomes approval.
-7. Capture only allowed-event candidates with `capture-game-design-memory` after completion gates.
-8. Emit one nonzero summary only when applied, candidate, or excluded counts are nonzero.
+6. When the output writes or revises Korean prose, run `polish-game-design-writing` as the final editorial pass. The wrapper must run its bundled `$humanize-korean`, protect IDs, numbers, links, paths, claims, uncertainty, and approval states, and leave the canonical original untouched until human review. After this pass, run only deterministic protected-content, link, contract, and diagram-drift validation; do not edit prose again. On failure, preserve the original and return a blocked, resumable handoff.
+7. Apply every applicable evidence and responsible-design completion gates. Missing evidence remains a visible gap and never becomes approval.
+8. Capture only allowed-event candidates with `capture-game-design-memory` after completion gates.
+9. Emit one nonzero summary only when applied, candidate, or excluded counts are nonzero.
 
 ## Natural-Language Routing Rules
 

@@ -139,8 +139,8 @@ function assertStudioMemoryOrchestration({ skill, intake, workflow, gates, routi
   assert.match(intake, /no project ID[\s\S]*?skipped-project-id-missing[\s\S]*?continue/u);
   assert.match(intake, /previous memory[\s\S]*?memoryDisabledForRequest\s*=\s*true/iu);
   assert.match(intake, /Memory unavailability never blocks/u);
-  assert.match(skill, /intake and configuration[\s\S]*?retrieve approved memory[\s\S]*?specialist[\s\S]*?completion gates[\s\S]*?allowed[- ]event[\s\S]*?summary/iu);
-  assert.match(skill, /4\. [^\n]*completion gates[^\n]*\n5\. [^\n]*Capture only allowed-event candidates/u);
+  assert.match(skill, /intake and configuration[\s\S]*?retrieve approved memory[\s\S]*?specialist[\s\S]*?polish-game-design-writing[\s\S]*?completion gates[\s\S]*?allowed[- ]event[\s\S]*?summary/iu);
+  assert.match(skill, /5\. [^\n]*completion gates[^\n]*\n6\. [^\n]*Capture only allowed-event candidates/u);
   assert.match(workflow, /retrieve-approved-design-memory[\s\S]*?before specialist routing/iu);
   assert.match(workflow, /after completion gates[\s\S]*?capture-game-design-memory/iu);
   assert.match(`${skill}\n${workflow}`, /no dedicated memory agent/iu);
@@ -183,7 +183,7 @@ test("Studio orchestrator preserves the memory workflow order and rejects unsafe
   assert.doesNotThrow(() => assertStudioMemoryOrchestration(contract));
   const mutations = [
     { key: "skill", from: "2. Retrieve approved memory", to: "2. Specialist workflow before memory retrieval" },
-    { key: "skill", from: "5. Capture only allowed-event candidates", to: "4. Capture only allowed-event candidates" },
+    { key: "skill", from: "6. Capture only allowed-event candidates", to: "5. Capture only allowed-event candidates" },
     { key: "skill", from: "Never auto-approve memory candidates", to: "Automatically approve memory candidates" },
     { key: "workflow", from: "no dedicated memory agent", to: "a dedicated memory agent" },
     { key: "intake", from: "Memory unavailability never blocks", to: "Memory unavailability stops the Canonical Artifact" },

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-career",
   "sourceDateEpoch": 0,
-  "treeSha256": "7e24b126aa4bb92ebd1afa50c6162a66d52f6e6410297583706f15148b9f8dce",
+  "treeSha256": "a06fbeb363cc7e0172be68f062f37eeb7ff33aed72bf986647e3b3aeb01d204e",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -21,8 +21,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "58090521f11eb9d4ded8e820de7b83390b6c07cb3c9a529b2a607102a05ef098",
-      "size": 64471
+      "sha256": "09bd8137994bdf990aa5240ed0d7ff10531b7dd765b873871846b1b459ece8bb",
+      "size": 64776
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -525,6 +525,16 @@
       "size": 454
     },
     {
+      "path": "examples/intent-invocation-contract/README.ko.md",
+      "sha256": "1e4833d9aa1dbf66f3538b4a15511450f33400cf4e4f4dea88905ebd287b486a",
+      "size": 581
+    },
+    {
+      "path": "examples/intent-invocation-contract/README.md",
+      "sha256": "a57765552370843e2a3b0bb24e6509c1f0f6d907eb70e72a17f7e65476cc6c4e",
+      "size": 577
+    },
+    {
       "path": "hooks/hooks.json",
       "sha256": "429b6f49103d32354b6cd2909836af5fddf3bfaa906ba21ef454c46ca388ef50",
       "size": 643
@@ -616,8 +626,8 @@
     },
     {
       "path": "references/routing.json",
-      "sha256": "278b73c45f245f35934bf023c699e0ffe15eacf86abd4a9f85841524a4a5b3db",
-      "size": 52668
+      "sha256": "8d7f713a7ccd7d03271b815de2009efc7950c22e80d406616ba13def136244e8",
+      "size": 52910
     },
     {
       "path": "references/shared/document-quality/game-design-writing-style.md",
@@ -2231,8 +2241,8 @@
     },
     {
       "path": "skills/game-design-career/SKILL.md",
-      "sha256": "db93fd726a6d750f66a5753df7817db0ff97ce900f20ccca5c32d6b806ca1a38",
-      "size": 5001
+      "sha256": "2aea48808340e721fc5a3b2d8f4ed5678bdf658bf48253db991459062fbacd09",
+      "size": 6108
     },
     {
       "path": "skills/game-design-career/references/handoff.md",
@@ -2351,8 +2361,8 @@
     },
     {
       "path": "skills/orchestrate-game-design-career/SKILL.md",
-      "sha256": "523c1957b4addbef85dcac9a57a3a4e0df96a1cf83e9b84b000757d32a3d0bd0",
-      "size": 5022
+      "sha256": "3d191d71c3fb3df95a2f5b22e4a133bc242c5520133219209c8b8975d691f637",
+      "size": 5534
     },
     {
       "path": "skills/orchestrate-game-design-career/agents/openai.yaml",

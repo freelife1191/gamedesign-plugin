@@ -16,7 +16,7 @@
       "scope": "shared",
       "svg": "shared/app-cli-install-flow.svg",
       "png": "shared/app-cli-install-flow.png",
-      "alt": "설치 전에 marketplace JSON의 UTF-8 인코딩과 marketplace 종류를 확인한 뒤, Codex App과 Codex CLI의 서로 다른 설치 표면을 선택하고 새 채팅 또는 새 세션으로 검증하는 흐름.",
+      "alt": "설치 전에 marketplace JSON의 UTF-8 인코딩과 marketplace 종류를 확인한 뒤, Codex App과 Codex CLI에서 설치·재설치·선택 제거·전체 정리를 검증하는 흐름.",
       "sources": ["../game-design-studio/installation.md", "../game-design-career/installation.md"],
       "usedBy": ["../game-design-studio/installation.md", "../game-design-career/installation.md"]
     },
@@ -79,7 +79,7 @@
       "scope": "shared",
       "svg": "shared/suite-entry-routing-flow.svg",
       "png": "shared/suite-entry-routing-flow.png",
-      "alt": "자연어 요청이나 사례 ID를 소유 제품 하나와 route 하나로 좁히고 라우팅 영수증에 남긴 뒤 전문 스킬로 위임하거나 단방향 인계 후보로 분리하는 흐름.",
+      "alt": "자연어 요청이나 사례 ID를 소유 제품 하나와 route 하나로 좁히고 여섯 줄 라우팅 영수증을 먼저 공개한 뒤 전문 스킬 또는 오케스트레이터와 최대 세 개 검토 역할을 실행하거나 단방향 인계 후보로 분리하는 흐름.",
       "sources": ["../game-design-studio/skills/game-design-studio.md", "../game-design-career/skills/game-design-career.md"],
       "usedBy": ["../../README.md", "../game-design-studio/skills/game-design-studio.md", "../game-design-career/skills/game-design-career.md"]
     },

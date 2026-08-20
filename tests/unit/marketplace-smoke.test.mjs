@@ -8,19 +8,28 @@ import test from "node:test";
 import * as marketplaceSmoke from "../../tooling/marketplace-smoke.mjs";
 import {
   assertArtifactDirectory,
+  assertRepresentativeReceipt,
   bridgeLocalAuth,
   buildMarketplacePrompt,
+  buildRepresentativeMarketplacePrompt,
   buildProofCommand,
   captureFileIdentity,
   createSmokeFailure,
+  describeRepresentativeReceiptFormat,
+  describeRepresentativeReceiptIdentity,
+  firstRoutingReceiptMessage,
   findTrustedShells,
+  installedRoleIds,
   PACKAGED_SKILL_COUNTS,
   parseExecJsonl,
   preservePrimarySmokeFailure,
   PROOF_HARNESS_PATH,
   redactFailure,
+  representativeReceiptExpectation,
   resolveExpectedPluginVersion,
   runArtifactValidation,
+  selectSmokeScenarios,
+  summarizeCodexExecEvents,
   validateCliJson,
 } from "../../tooling/marketplace-smoke.mjs";
 import { artifactTreeIdentity, runMarketplaceProof } from "../../tooling/lib/marketplace-proof-harness.mjs";
@@ -71,6 +80,220 @@ test("marketplace smoke starts from an ordinary Korean request without naming a 
   assert.match(prompt, /artifact_id.*formats.*status/u);
   assert.match(prompt, /runner가 설치본에서 직접 수행/u);
   assert.doesNotMatch(prompt, /\$game-design|orchestrate-game-design|skillPath|skills\/orchestrate/u);
+});
+
+test("representative smoke explicitly invokes the installed entry skill and requires the six-line routing receipt first", () => {
+  const prompt = buildRepresentativeMarketplacePrompt({
+    name: "game-design-studio",
+    displayName: "Game Design Studio",
+    entrySkill: "game-design-studio",
+    request: "모바일 협동 RPG의 핵심 경험, 튜토리얼, 출시 범위를 함께 정리해 주세요.",
+    expectedSkill: "orchestrate-game-design-project",
+    mergeKeys: ["severity", "affectedSectionId", "rolePriority"],
+  }, "/tmp/artifact");
+
+  assert.match(prompt, /\$game-design-studio:game-design-studio/u);
+  assert.match(prompt, /복합 요청/u);
+  assert.match(prompt, /첫 번째 최종 메시지/u);
+  assert.match(prompt, /소유 제품.*선택 스킬.*교차 제품 핸드오프.*결과물 경로.*현재 사실.*다음 사람 결정/us);
+  assert.match(prompt, /검토 역할은 1명 이상 3명 이하/u);
+  assert.match(prompt, /결정적 병합/u);
+  assert.match(prompt, /route-receipt\.json/u);
+  assert.match(prompt, /소유 제품: game-design-studio/u);
+  assert.match(prompt, /선택 스킬: orchestrate-game-design-project/u);
+  assert.match(prompt, /대표 진입점.*자체가 아니라.*실제 전달 대상/u);
+  assert.match(prompt, /검토 역할: <1명 이상 3명 이하의 역할 ID>/u);
+});
+
+test("representative receipt accepts the ordered six-line route contract with bounded role evidence and deterministic merge proof", () => {
+  const message = [
+    "소유 제품: game-design-studio",
+    "선택 스킬: orchestrate-game-design-project",
+    "교차 제품 핸드오프: 없음",
+    "결과물 경로: /tmp/artifact",
+    "현재 사실·가정·차단 요인: 제공된 플랫폼과 장르는 확인했고 출시 범위는 미정",
+    "다음 사람 결정: 범위 승인",
+    "검토 역할: lead-game-designer, production-feasibility-critic",
+    "역할 근거: lead-game-designer | evidence: content.md#core-fun | findings: 핵심 경험과 플레이어 목표를 분리",
+    "역할 근거: production-feasibility-critic | evidence: content.md#scope | findings: 출시 범위를 미정으로 유지",
+    "결정적 병합: severity > affectedSectionId > rolePriority",
+    "검증: route-receipt.json 요청 바인딩과 artifact validator를 통과",
+  ].join("\n");
+
+  assert.doesNotThrow(() => assertRepresentativeReceipt(message, {
+    product: "game-design-studio",
+    selectedSkill: "orchestrate-game-design-project",
+    routeId: "project-orchestration",
+    allowedRoles: ["lead-game-designer", "production-feasibility-critic", "system-economy-designer"],
+    mergeKeys: ["severity", "affectedSectionId", "rolePriority"],
+  }));
+  assert.doesNotThrow(() => assertRepresentativeReceipt(message.replace(/^/gmu, "- "), {
+    product: "game-design-studio",
+    selectedSkill: "orchestrate-game-design-project",
+    routeId: "project-orchestration",
+    allowedRoles: ["lead-game-designer", "production-feasibility-critic", "system-economy-designer"],
+    mergeKeys: ["severity", "affectedSectionId", "rolePriority"],
+  }));
+});
+
+test("representative receipt rejects reordered route fields, extra roles, missing evidence, or a non-deterministic merge", () => {
+  const valid = [
+    "소유 제품: game-design-career",
+    "선택 스킬: orchestrate-game-design-career",
+    "교차 제품 핸드오프: 없음",
+    "결과물 경로: /tmp/artifact",
+    "현재 사실·가정·차단 요인: 포트폴리오 증거는 미정",
+    "다음 사람 결정: 목표 역할 확인",
+    "검토 역할: career-strategist",
+    "역할 근거: career-strategist | evidence: content.md#career-stage | findings: 증거 공백을 기록",
+    "결정적 병합: severity > evidence-gap-id > artifact-section-id > role-priority",
+    "검증: route-receipt.json 요청 바인딩과 artifact validator를 통과",
+  ].join("\n");
+  const options = {
+    product: "game-design-career",
+    productDisplayName: "Game Design Career",
+    selectedSkill: "orchestrate-game-design-career",
+    routeId: "entry-intake",
+    allowedRoles: ["career-strategist", "game-design-mentor", "portfolio-reviewer"],
+    mergeKeys: ["severity", "evidence-gap-id", "artifact-section-id", "role-priority"],
+  };
+
+  assert.doesNotThrow(() => assertRepresentativeReceipt(valid, options));
+  assert.doesNotThrow(() => assertRepresentativeReceipt(
+    valid
+      .replace("검토 역할: career-strategist", "검토 역할: `career-strategist` / `game-design-mentor`")
+      .replace(
+        "역할 근거: career-strategist | evidence: content.md#career-stage | findings: 증거 공백을 기록",
+        [
+          "역할 근거: `career-strategist` | evidence: content.md#career-stage | findings: 증거 공백을 기록",
+          "역할 근거: `game-design-mentor` | evidence: content.md#plan | findings: 학습 순서를 검토",
+        ].join("\n"),
+      ),
+    options,
+  ));
+  assert.doesNotThrow(() => assertRepresentativeReceipt(
+    valid
+      .replace("소유 제품: game-design-career", "소유 제품: `game-design-career`")
+      .replace("선택 스킬: orchestrate-game-design-career", "선택 스킬: `orchestrate-game-design-career`"),
+    options,
+  ));
+  assert.doesNotThrow(() => assertRepresentativeReceipt(
+    valid.replace(
+      "선택 스킬: orchestrate-game-design-career",
+      "선택 스킬: $game-design-career:orchestrate-game-design-career",
+    ),
+    options,
+  ));
+  assert.throws(() => assertRepresentativeReceipt(valid.replace("선택 스킬", "선택한 스킬"), options), /routing receipt/u);
+  assert.throws(() => assertRepresentativeReceipt(valid.replace("game-design-career", "Game Design Career"), options), /routing product display name/u);
+  assert.throws(() => assertRepresentativeReceipt(valid.replace("orchestrate-game-design-career", "game-design-career"), options), /routing skill/u);
+  assert.throws(() => assertRepresentativeReceipt(valid.replace("career-strategist", "career-strategist, game-design-mentor, portfolio-reviewer, evidence-auditor"), options), /role contract/u);
+  assert.throws(() => assertRepresentativeReceipt(valid.replace("evidence: content.md#career-stage", "evidence: 미정"), options), /role evidence/u);
+  assert.throws(() => assertRepresentativeReceipt(valid.replace("severity > evidence-gap-id > artifact-section-id > role-priority", "arrival order"), options), /merge contract/u);
+});
+
+test("representative receipt diagnostics retain only six safe line shapes", () => {
+  assert.deepEqual(describeRepresentativeReceiptFormat([
+    "- 소유 제품: game-design-career",
+    "- 선택 스킬: orchestrate-game-design-career",
+    "- 교차 제품 핸드오프: 없음",
+    "- 결과물 경로: /private/secret/artifact",
+    "- 현재 사실·가정·차단 요인: 비공개 입력",
+    "- 다음 사람 결정: 승인",
+  ].join("\n")), [
+    "bullet:소유 제품:",
+    "bullet:선택 스킬:",
+    "bullet:교차 제품 핸드오프:",
+    "bullet:결과물 경로:",
+    "bullet:현재 사실·가정·차단 요인:",
+    "bullet:다음 사람 결정:",
+  ]);
+});
+
+test("representative receipt identity diagnostics classify values without returning their text", () => {
+  const options = {
+    product: "game-design-career",
+    selectedSkill: "orchestrate-game-design-career",
+    entrySkill: "game-design-career",
+  };
+  const receipt = (skill) => [
+    "소유 제품: game-design-career",
+    `선택 스킬: ${skill}`,
+  ].join("\n");
+  assert.deepEqual(describeRepresentativeReceiptIdentity(receipt("orchestrate-game-design-career"), options), {
+    product: "expected", skill: "expected",
+  });
+  assert.equal(describeRepresentativeReceiptIdentity(receipt("$game-design-career:game-design-career"), options).skill, "namespaced-entry-skill");
+  assert.equal(describeRepresentativeReceiptIdentity(receipt("orchestrate-game-design-career (entry-intake)"), options).skill, "contains-expected");
+  assert.equal(describeRepresentativeReceiptIdentity(receipt("비공개 값"), options).skill, "other");
+});
+
+test("Codex JSONL diagnostics distinguish agent-message ordering from installed-skill reads without exposing text", () => {
+  const source = [
+    { type: "item.completed", item: { type: "agent_message", text: "완료했습니다." } },
+    { type: "item.completed", item: { type: "command_execution", command: "sed -n '1,80p' /tmp/cache/skills/game-design-career/SKILL.md" } },
+    { type: "item.completed", item: { type: "agent_message", text: [
+      "소유 제품: game-design-career",
+      "선택 스킬: orchestrate-game-design-career",
+      "교차 제품 핸드오프: 없음",
+      "결과물 경로: artifact",
+      "현재 사실·가정·차단 요인: 미정",
+      "다음 사람 결정: 승인",
+    ].join("\n") } },
+  ].map(JSON.stringify).join("\n");
+  assert.deepEqual(summarizeCodexExecEvents(source), {
+    agentMessageCount: 2,
+    agentMessageFormats: [["plain:unrecognized"], ["plain:소유 제품:", "plain:선택 스킬:", "plain:교차 제품 핸드오프:", "plain:결과물 경로:", "plain:현재 사실·가정·차단 요인:", "plain:다음 사람 결정:"]],
+    installedSkillRead: true,
+  });
+  assert.equal(firstRoutingReceiptMessage(source).startsWith("소유 제품: game-design-career"), true);
+});
+
+test("both entry skills prescribe the six literal Korean routing-receipt labels", async () => {
+  for (const productName of ["game-design-studio", "game-design-career"]) {
+    const skill = await readFile(path.join("products", productName, "plugin", "skills", productName, "SKILL.md"), "utf8");
+    for (const label of ["소유 제품:", "선택 스킬:", "교차 제품 핸드오프:", "결과물 경로:", "현재 사실·가정·차단 요인:", "다음 사람 결정:"]) {
+      assert.equal(skill.includes(`\`${label}`), true, `${productName}: ${label}`);
+    }
+    assert.equal(skill.includes(`\`소유 제품: ${productName}\``), true, `${productName}: literal product ID`);
+  }
+});
+
+test("targeted smoke selection preserves only requested scenario IDs and rejects unknown IDs", () => {
+  const scenarios = [{ id: "career-direct" }, { id: "career-entry" }, { id: "studio-entry" }];
+  assert.deepEqual(selectSmokeScenarios(scenarios, ["studio-entry", "career-entry"]), [
+    { id: "career-entry" }, { id: "studio-entry" },
+  ]);
+  assert.throws(() => selectSmokeScenarios(scenarios, ["missing"]), /scenario selection/u);
+});
+
+test("representative receipt expectations keep the owning product after scenario flattening", () => {
+  const representative = { expectedSkill: "orchestrate-game-design-career", allowedRoles: ["career-strategist"] };
+  assert.deepEqual(representativeReceiptExpectation({
+    name: "game-design-career",
+    displayName: "Game Design Career",
+  }, representative), {
+    ...representative,
+    product: "game-design-career",
+    productDisplayName: "Game Design Career",
+    selectedSkill: "orchestrate-game-design-career",
+  });
+  assert.throws(() => representativeReceiptExpectation({}, representative), /expectation mismatch/u);
+});
+
+test("representative role validation reads the exact installed routing registry", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "marketplace-role-registry-"));
+  try {
+    await mkdir(path.join(root, "references"));
+    await writeFile(path.join(root, "references/routing.json"), JSON.stringify({
+      roleIds: ["lead-game-designer", "ux-accessibility-reviewer"],
+    }));
+    assert.deepEqual(await installedRoleIds(root), ["lead-game-designer", "ux-accessibility-reviewer"]);
+    await writeFile(path.join(root, "references/routing.json"), JSON.stringify({ roleIds: ["duplicate", "duplicate"] }));
+    await assert.rejects(installedRoleIds(root), /role registry mismatch/u);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
 
 test("marketplace runner owns the canonical artifact scaffold and verifies a real content edit", async () => {
@@ -646,6 +869,11 @@ test("marketplace smoke failure receipts expose only exact safe code, product, a
     [new Error("codex exec unverifiable: route receipt mismatch"), { code: "route-receipt-mismatch", product: "game-design-career", stage: "route-receipt" }],
     [new Error("game-design-career artifact validation failed"), { code: "artifact-validation-failed", product: "game-design-career", stage: "artifact-validation" }],
     [new Error("game-design-studio cache mismatch"), { code: "plugin-package-invalid", product: "game-design-studio", stage: "plugin-package" }],
+    [new Error("representative routing receipt contract mismatch"), { code: "representative-routing-receipt-invalid", product: "game-design-career", stage: "route-receipt" }],
+    [new Error("representative routing product contract mismatch"), { code: "representative-routing-product-invalid", product: "game-design-career", stage: "route-receipt" }],
+    [new Error("representative routing skill contract mismatch"), { code: "representative-routing-skill-invalid", product: "game-design-career", stage: "route-receipt" }],
+    [new Error("scenario route selection mismatch"), { code: "route-selection-mismatch", product: "game-design-career", stage: "route-receipt" }],
+    [new Error("representative role evidence contract mismatch"), { code: "representative-role-evidence-invalid", product: "game-design-career", stage: "route-receipt" }],
   ];
   for (const [error, expected] of cases) {
     assert.deepEqual(createSmokeFailure(error, { product: expected.product, stage: expected.stage }), expected);

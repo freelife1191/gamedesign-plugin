@@ -3,64 +3,63 @@
   "diagram_type": "architecture",
   "meta": {
     "title": "게임 기획 플러그인 모음 전체 시스템 구조",
-    "subtitle": "사용자 진입점에서 두 기획 플러그인의 작업, 기준 결과물, 자동 검증과 사람 검토·승인을 거쳐 전달 결과로 이어집니다.",
+    "subtitle": "설치·업데이트·정리부터 대표 스킬 라우팅, 전문 검토, 한국어 최종 편집, 자동 검증과 사람 승인까지 한 흐름으로 보여 줍니다.",
     "output": "guides/assets/archify/suite/suite-plugin-system-architecture.html",
     "animation": "none",
     "visual_preset": "editorial",
     "quality_profile": "showcase",
     "views": [
-      { "id": "plugin-boundaries", "label": "플러그인 선택과 경계", "focus": ["app_cli", "marketplace", "studio_plugin", "career_plugin"], "note": "사용자는 Codex App·CLI에서 저장소·마켓플레이스를 거쳐 Studio 또는 Career 플러그인을 선택합니다." },
-      { "id": "artifact-validation", "label": "기준 결과물과 자동 검증", "focus": ["studio_artifact", "visual_lane", "export_lane", "automated_validation", "held_lane"], "note": "시각화 작업과 문서 내보내기는 서로 다른 경로로 자동 검증에 들어가며, 보류되면 기준 기획 결과물을 수정합니다." },
-      { "id": "human-approval", "label": "사람 검토·승인과 재개", "focus": ["studio_plugin", "studio_artifact", "visual_lane", "export_lane", "automated_validation", "held_lane", "human_approval", "career_evidence", "career_plugin", "delivered_result"], "note": "사람 검토·승인 전에는 전달하지 않습니다. 검토 보류는 수정과 재검토를 거쳐 자동 검증으로 다시 돌아옵니다." }
+      { "id": "install-lifecycle", "label": "설치·업데이트·정리", "focus": ["app_cli", "marketplace", "studio_plugin", "career_plugin"], "note": "Windows와 Ubuntu에서 한글·공백 경로 설치, 선택 제거, 재설치와 전체 정리를 확인합니다." },
+      { "id": "representative-routing", "label": "대표 스킬 라우팅", "focus": ["studio_plugin", "career_plugin", "representative_routing"], "note": "대표 스킬이 여섯 줄 영수증을 먼저 공개하고 전문 스킬 또는 복합 경로와 검토 역할을 고릅니다." },
+      { "id": "artifact-validation", "label": "기준 결과물과 자동 검증", "focus": ["representative_routing", "studio_artifact", "career_artifact", "writing_pass", "automated_validation", "held_lane"], "note": "한국어 문장은 마지막 편집과 보호 검증을 거친 뒤 시각화·내보내기와 자동 검증으로 이어집니다." },
+      { "id": "human-approval", "label": "사람 검토·승인과 재개", "focus": ["studio_artifact", "career_artifact", "writing_pass", "automated_validation", "held_lane", "human_approval", "delivered_result"], "note": "자동 검증 실패는 원문과 수정 이유를 보존하며, 사람 승인 전에는 결과를 전달하지 않습니다." }
     ]
   },
-  "layout": { "mode": "grid", "cols": 11, "gapX": 84, "gapY": 60 },
+  "layout": { "mode": "grid", "cols": 12, "gapX": 76, "gapY": 56 },
   "components": [
-    { "id": "app_cli", "type": "external", "label": "사용자 진입점", "sublabel": "Codex App·CLI", "row": 0, "col": 0 },
-    { "id": "marketplace", "type": "cloud", "label": "플러그인 선택", "sublabel": "저장소·마켓플레이스", "row": 0, "col": 1 },
-    { "id": "studio_plugin", "type": "backend", "label": "게임 제작 기획 플러그인", "sublabel": "Studio 전문 작업·컷씬 프리프로덕션", "row": 0, "col": 2, "size": [180, 60] },
-    { "id": "career_plugin", "type": "backend", "label": "취업·학습 플러그인", "sublabel": "Career 전문 작업·역기획 근거", "row": 4, "col": 2 },
-    { "id": "studio_artifact", "type": "database", "label": "기준 기획 결과물", "sublabel": "Canonical Artifact · content.md·evidence.yml·decisions/", "row": 0, "col": 4, "size": [210, 64] },
-    { "id": "career_evidence", "type": "database", "label": "포트폴리오 활용용 검토 완료 자료", "sublabel": "승인된 공개 가능 내용만", "row": 4, "col": 4, "size": [230, 64] },
-    { "id": "visual_lane", "type": "cloud", "label": "시각화 작업", "sublabel": "도식·이미지 작업", "row": 0, "col": 6, "size": [120, 64] },
-    { "id": "export_lane", "type": "cloud", "label": "문서 내보내기", "sublabel": "문서·발표자료 준비", "row": 2, "col": 6 },
-    { "id": "automated_validation", "type": "security", "label": "자동 검증", "sublabel": "형식·근거·품질 검사", "row": 0, "col": 8, "size": [120, 64] },
-    { "id": "held_lane", "type": "messagebus", "label": "검토 보류", "sublabel": "수정할 이유를 기록", "row": 2, "col": 7 },
-    { "id": "human_approval", "type": "external", "label": "사람 검토·승인", "sublabel": "공개 범위와 전달을 결정", "row": 0, "col": 9, "size": [120, 64] },
-    { "id": "delivered_result", "type": "external", "label": "전달 결과", "sublabel": "승인된 결과만 전달", "row": 0, "col": 10, "size": [120, 64] }
+    { "id": "app_cli", "type": "external", "label": "사용자 진입점", "sublabel": "Codex App·CLI", "row": 2, "col": 0 },
+    { "id": "marketplace", "type": "security", "label": "마켓플레이스 수명주기", "sublabel": "Windows·Ubuntu · 한글·공백 · 설치·업데이트·전체 정리", "row": 2, "col": 2, "size": [210, 64] },
+    { "id": "studio_plugin", "type": "backend", "label": "게임 제작 기획 플러그인", "sublabel": "Studio 대표 스킬", "row": 0, "col": 4, "size": [180, 60] },
+    { "id": "career_plugin", "type": "backend", "label": "취업·학습 플러그인", "sublabel": "Career 대표 스킬", "row": 4, "col": 4, "size": [180, 60] },
+    { "id": "representative_routing", "type": "messagebus", "label": "대표 스킬 라우팅", "sublabel": "여섯 줄 영수증 · 전문/복합 경로 · 검토 역할 최대 세 개", "row": 2, "col": 5, "size": [210, 68] },
+    { "id": "studio_artifact", "type": "database", "label": "Studio 기준 기획 결과물", "sublabel": "Canonical Artifact · content.md·evidence.yml·decisions/", "row": 0, "col": 7, "size": [220, 64] },
+    { "id": "career_artifact", "type": "database", "label": "Career 기준 결과물", "sublabel": "단계·근거·포트폴리오·결정 기록", "row": 4, "col": 7, "size": [210, 64] },
+    { "id": "writing_pass", "type": "security", "label": "마지막 한국어 편집", "sublabel": "$humanize-korean · 보호 검증 · 문장 수정 종료", "row": 2, "col": 8, "size": [170, 64] },
+    { "id": "automated_validation", "type": "security", "label": "자동 검증", "sublabel": "시각화·내보내기·형식·근거·링크·계약 검사", "row": 2, "col": 9, "size": [170, 64] },
+    { "id": "held_lane", "type": "messagebus", "label": "검토 보류", "sublabel": "원문과 수정 이유를 보존", "row": 4, "col": 9, "size": [170, 60] },
+    { "id": "human_approval", "type": "external", "label": "사람 검토·승인", "sublabel": "공개 범위와 전달을 결정", "row": 2, "col": 10, "size": [140, 64] },
+    { "id": "delivered_result", "type": "external", "label": "전달 결과", "sublabel": "승인된 결과만 전달", "row": 2, "col": 11, "size": [130, 64] }
   ],
   "boundaries": [
     { "kind": "region", "label": "Studio 플러그인", "wraps": ["studio_plugin"] },
     { "kind": "region", "label": "Career 플러그인", "wraps": ["career_plugin"] },
+    { "kind": "region", "label": "대표 라우팅과 검토 역할", "wraps": ["representative_routing"] },
     { "kind": "security-group", "label": "Studio 결과물 저장소", "wraps": ["studio_artifact"] },
-    { "kind": "security-group", "label": "Career 활용 자료 저장소", "wraps": ["career_evidence"] },
-    { "kind": "security-group", "label": "검토·승인 경계", "wraps": ["automated_validation", "held_lane", "human_approval"] }
+    { "kind": "security-group", "label": "Career 결과물 저장소", "wraps": ["career_artifact"] },
+    { "kind": "security-group", "label": "검토·승인 경계", "wraps": ["writing_pass", "automated_validation", "held_lane", "human_approval"] }
   ],
   "connections": [
-    { "from": "app_cli", "to": "marketplace", "variant": "emphasis" },
-    { "from": "marketplace", "to": "studio_plugin", "variant": "emphasis", "route": "straight" },
+    { "from": "app_cli", "to": "marketplace", "variant": "security" },
+    { "from": "marketplace", "to": "studio_plugin", "variant": "emphasis" },
     { "from": "marketplace", "to": "career_plugin", "variant": "emphasis" },
-    { "from": "studio_plugin", "to": "studio_artifact", "variant": "emphasis" },
-    { "from": "career_plugin", "to": "career_evidence", "variant": "emphasis" },
-    { "from": "studio_artifact", "to": "visual_lane", "variant": "emphasis", "route": "straight" },
-    { "from": "studio_artifact", "to": "export_lane", "variant": "emphasis" },
-    { "from": "visual_lane", "to": "automated_validation", "fromSide": "right", "toSide": "left", "route": "straight" },
-    { "from": "export_lane", "to": "automated_validation", "fromSide": "right", "toSide": "bottom", "route": "auto" },
+    { "from": "studio_plugin", "to": "representative_routing", "variant": "emphasis" },
+    { "from": "career_plugin", "to": "representative_routing", "variant": "emphasis" },
+    { "from": "representative_routing", "to": "studio_artifact", "variant": "emphasis" },
+    { "from": "representative_routing", "to": "career_artifact", "variant": "emphasis" },
+    { "from": "studio_artifact", "to": "writing_pass", "variant": "security", "fromSide": "bottom", "toSide": "top", "route": "orthogonal-v" },
+    { "from": "career_artifact", "to": "writing_pass", "variant": "security", "fromSide": "top", "toSide": "bottom", "route": "orthogonal-v" },
+    { "from": "writing_pass", "to": "automated_validation", "variant": "security", "route": "straight" },
     { "from": "automated_validation", "to": "human_approval", "variant": "security", "route": "straight" },
-    { "from": "human_approval", "to": "delivered_result", "variant": "security" },
-    { "from": "studio_plugin", "to": "human_approval", "variant": "dashed", "fromSide": "top" },
-    { "from": "human_approval", "to": "career_evidence", "variant": "dashed", "fromSide": "bottom", "toSide": "right", "via": [[2026, 640], [1200, 640], [1200, 608]] },
-    { "from": "career_evidence", "to": "career_plugin", "variant": "dashed" },
-    { "from": "automated_validation", "to": "held_lane", "variant": "dashed", "fromSide": "bottom", "toSide": "right" },
-    { "from": "held_lane", "to": "studio_artifact", "variant": "dashed", "fromSide": "bottom", "toSide": "bottom", "via": [[1598, 520], [1001, 520]] }
+    { "from": "human_approval", "to": "delivered_result", "variant": "security", "route": "straight" },
+    { "from": "automated_validation", "to": "held_lane", "variant": "dashed", "fromSide": "bottom", "toSide": "top", "route": "orthogonal-v" }
   ],
   "cards": [
     {
       "dot": "cyan",
-      "title": "전문 작업 도구",
+      "title": "대표 스킬과 전문 작업",
       "items": [
-        "게임 제작 기획 플러그인(Studio)은 기획서를 만들고 전문 작업을 연결합니다.",
-        "취업·학습 플러그인(Career)은 승인된 자료만 포트폴리오와 학습에 활용합니다."
+        "Studio와 Career 대표 스킬은 요청을 한 번 분류하고 여섯 줄 라우팅 영수증을 먼저 공개합니다.",
+        "단일 요청은 전문 스킬로, 복합 요청은 오케스트레이터와 최대 세 개 검토 역할로 보냅니다."
       ]
     },
     {
@@ -69,6 +68,14 @@
       "items": [
         "기준 기획 결과물(Canonical Artifact)은 본문·근거·결정 기록을 함께 보관합니다.",
         "내보내기 목록(export-manifest.yml)은 전달 전 점검 맥락을 기록합니다."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "설치·업데이트·정리",
+      "items": [
+        "Windows와 Ubuntu에서 한글·공백 경로의 설치, 선택 제거, 재설치와 전체 제거를 같은 수명주기로 확인합니다.",
+        "업데이트는 제품을 다시 적용한 뒤 새 세션에서 확인하고, 제거 뒤에는 플러그인·마켓플레이스 목록과 캐시 잔재를 검사합니다."
       ]
     },
     {

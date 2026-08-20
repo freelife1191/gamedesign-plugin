@@ -7,7 +7,7 @@
 1. `catalog.json`에서 문서별 `selected` 또는 `excluded` 결정을 찾습니다.
 2. `selected`의 `question`, `diagram_type_reason`, `composition_rationale`가 실제로 어떤 질문을 도식으로 풀지 설명합니다.
 3. 현재 5개 `selected` spec은 모두 Archify showcase 9/9, 오류·경고 0을 통과했습니다.
-4. `published`는 5개입니다. 각 공개 HTML은 한국어 뷰어와 검증 영수증을 가지며, Chromium headless에서 원본 크기와 페이지 맞춤(fit) 화면을 검토했습니다. 아래 공개 도식 목록에서 바로 열 수 있습니다.
+4. `published`는 5개입니다. 각 공개 HTML은 한국어 뷰어와 검증 영수증을 가지며, 헤드리스 Chromium에서 원본 크기와 페이지 맞춤 화면을 검토했습니다. 아래 공개 도식 목록에서 바로 열 수 있습니다.
 
 ## 증거와 전수 범위
 
@@ -71,7 +71,7 @@ catalog은 이후 명세 작성과 검수에 쓰는 근거 장부입니다. 이 
 ### `suite-plugin-system-architecture`
 
 - 제품·유형·상태: `suite` · `architecture` · `published` (`visual_review: passed`)
-- 답하는 질문: 사용자 진입점에서 두 기획 플러그인의 작업, 기준 기획 결과물, 자동 검증과 사람 검토·승인을 거쳐 결과가 어떻게 전달되는가?
+- 답하는 질문: Codex App·CLI에서 설치·업데이트·전체 정리를 거쳐 대표 스킬이 전문 스킬 또는 오케스트레이터와 검토 역할을 고르고, 기준 결과물의 한국어 최종 편집·자동 검증·사람 승인을 거쳐 결과를 어떻게 전달하는가?
 - 원문 근거: 루트 `README.md`의 `플러그인 구조와 전체 시스템 아키텍처` 섹션
 - 공개물: [한국어 게임 기획 플러그인 모음 전체 시스템 구조](../assets/archify/suite/suite-plugin-system-architecture.html)
 - 명세·검증: [전체 시스템 구조 spec](specs/suite/suite-plugin-system-architecture.json) · [delivery receipt](../assets/archify/suite/suite-plugin-system-architecture.receipt.json) · [QA manifest](visual-qa/manifest.json)

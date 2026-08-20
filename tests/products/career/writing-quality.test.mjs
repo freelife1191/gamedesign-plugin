@@ -113,9 +113,12 @@ test("Career registry exposes bundled humanize-korean and a dedicated writing sp
   assert.deepEqual(routing.writingWorkflow, {
     skill: skillId,
     role: specialistId,
-    placement: "after-content-domain-review-before-export",
+    placement: "final-editorial-pass-after-content-domain-review-before-export",
+    requiredFor: "korean-prose-document",
     reviewerBound: "dedicated-specialist-pass-outside-primary-reviewer-cap",
     humanizeKoreanSkill: "humanize-korean",
+    postHumanizeValidation: ["protected-content", "links", "contracts", "diagram-drift"],
+    onFailure: "preserve-canonical-original-and-report-blocked-resumable-handoff",
   });
   for (const route of routing.routes) {
     assert.ok(route.roles.length <= 3, `${route.id}: primary reviewer cap`);

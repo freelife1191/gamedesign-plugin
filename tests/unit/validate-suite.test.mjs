@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
 import { FORMAT_RESULT_FILES, SKIPPABLE_STAGES, STAGE_SHARDS, runSuite } from "../../tooling/validate-suite.mjs";
 
@@ -13,9 +14,11 @@ const expectedStages = [
   "vendor references",
   "vendor catalog entries",
   "update manifest",
+  "release notes",
   "unit tests",
   "contract tests",
   "product tests",
+  "suite adversarial tests",
   "clean build drift",
   "official plugin validators",
   "skill quick validators",
@@ -23,6 +26,8 @@ const expectedStages = [
   "diagram render drift",
   "format smoke",
 ];
+
+const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
 test("suite runs the exact stage order and treats wholly absent Task 11 as incomplete", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "validate-suite-"));
@@ -243,6 +248,35 @@ test("the shards partition every stage exactly once", () => {
   const assigned = Object.values(STAGE_SHARDS).flat();
   assert.deepEqual([...assigned].sort(), [...expectedStages].sort(), "every stage belongs to exactly one shard");
   assert.equal(new Set(assigned).size, assigned.length, "no stage is claimed by two shards");
+});
+
+test("the offline adversarial suite has a dedicated script, stage, and CI shard", async () => {
+  const [packageSource, workflow] = await Promise.all([
+    readFile(path.join(repositoryRoot, "package.json"), "utf8"),
+    readFile(path.join(repositoryRoot, ".github", "workflows", "ci.yml"), "utf8"),
+  ]);
+  const packageJson = JSON.parse(packageSource);
+  assert.equal(packageJson.scripts["test:suite-adversarial"], "node tooling/run-test-group.mjs e2e/suite");
+  assert.deepEqual(STAGE_SHARDS["suite-adversarial"], ["suite adversarial tests"]);
+  assert.match(workflow, /^\s+- suite-adversarial$/mu, "the offline matrix runs the dedicated shard on every configured OS");
+
+  const root = await mkdtemp(path.join(os.tmpdir(), "validate-suite-adversarial-"));
+  try {
+    const ran = [];
+    const result = await runSuite({
+      repoRoot: root,
+      shard: "suite-adversarial",
+      runCommand: async (stage) => {
+        ran.push(stage.name);
+        return { status: 0, signal: null };
+      },
+    });
+    assert.deepEqual(ran, ["suite adversarial tests"]);
+    assert.equal(result.ok, true);
+    assert.equal(result.releaseReady, false);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
 
 test("a shard runs its own stages and never claims the whole suite passed", async () => {

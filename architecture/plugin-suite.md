@@ -177,7 +177,7 @@ plugin manifest에는 hook 필드를 추가하지 않고 기본 발견 경로 `h
 | clean build drift | 편집 원천과 committed snapshot 일치 |
 | official package/skill validation | plugin manifest와 모든 스킬 구조 |
 | isolation smoke | 저장소와 sibling 없이 단독 package 실행 |
-| marketplace smoke | 임시 Codex 환경에서 등록·설치·실제 installed skill 증거·제거 |
+| marketplace smoke | 임시 Codex 환경에서 등록·설치, 직접 호출·대표 진입 4개 시나리오, 실제 설치 스킬·검토 역할 증거와 제거 |
 | format verification | MD/PDF/DOCX/PPTX/SVG/PNG 구조와 렌더 QA |
 
 기본 검증은 `npm run validate`, release gate는 `npm run validate:release`입니다. marketplace smoke는 로컬 인증이 필요한 별도 장기 검증이므로 `npm run smoke:marketplace`로 분리합니다.
@@ -188,11 +188,13 @@ plugin manifest에는 hook 필드를 추가하지 않고 기본 발견 경로 `h
 
 | 레인 | 내용 | 러너 | 인증 |
 | --- | --- | --- | --- |
-| 오프라인 게이트 | `node tooling/validate-suite.mjs`를 네 스테이지 `--skip`과 함께 실행 | `ubuntu-latest`, `windows-latest` | 불필요 |
+| 오프라인 게이트 | `node tooling/validate-suite.mjs`를 다섯 샤드로 나누고 네 호스트 의존 스테이지를 명시적 `--skip`과 함께 실행 | `ubuntu-latest`, `windows-latest` | 불필요 |
 | Windows 하드닝 게이트 | `node --test tests/unit/platform-file-hardening.test.mjs` | `windows-latest` | 불필요 |
 | 설치 게이트 | `@openai/codex` 설치 후 `node tooling/install-roundtrip.mjs --require-codex` | `ubuntu-latest`, `windows-latest` | 불필요 |
 
-설치 게이트는 한글과 공백을 포함한 `CODEX_HOME`·workspace, `LANG=C`, `LC_ALL=C` 아래에서 두 제품을 실제 설치하고 재설치한 뒤 README, `plugin.json`, 대표 스킬을 source와 SHA-256으로 대조합니다. 경로는 NFC 정규화 후 비교하며, 명령 출력에 `U+FFFD`가 있으면 실패합니다. 모델을 호출하지 않으므로 인증이 필요 없습니다. 로컬에서는 `npm run verify:install-roundtrip`으로 같은 검증을 돌리며, `codex`가 없으면 `SKIPPED`를 보고하고 종료합니다.
+설치 게이트는 한글과 공백을 포함한 `CODEX_HOME`·작업 공간, `LANG=C`, `LC_ALL=C` 아래에서 두 제품을 실제 설치·재설치하고 전체 설치 트리의 바이트와 파일 권한(`mode`) 지문을 원본과 대조합니다. 이어서 Studio만 제거해 Career가 유지되는지 확인하고, Studio를 다시 설치한 뒤 두 제품과 마켓플레이스를 모두 제거합니다. 마지막 `plugin list`와 `marketplace list`, 제품 캐시와 Codex JSON 상태에도 제품 ID·원본 경로·캐시 경로가 남지 않아야 합니다. 작업 공간 표식, 운영 Codex 상태와 임시 루트도 처음 상태로 돌아와야 합니다. 경로는 NFC 정규화 후 비교하며, 명령 출력에 `U+FFFD`가 있으면 실패합니다. 모델을 호출하지 않으므로 인증이 필요 없습니다. 로컬에서는 `npm run verify:install-roundtrip`으로 같은 검증을 돌리며, `codex`가 없으면 `SKIPPED`를 보고하고 종료합니다.
+
+`suite-adversarial` 샤드는 `tests/e2e/suite` 전체를 Ubuntu와 Windows에서 실행합니다. 손상된 영수증, 경로 이탈, 프롬프트 주입, 중단·재개, 변경된 작업 공간, 멈춘 자식 프로세스와 성공 문구가 섞인 실패 출력을 릴리스 검증과 CI가 같은 계약으로 다룹니다. 플랫폼에서 표현할 수 없는 개별 사례만 테스트 자체가 이유를 기록해 건너뛰며, 디렉터리 전체를 샤드에서 제외하지 않습니다.
 
 CI에서 실행할 수 없는 스테이지는 네 개입니다. 공식 plugin 검증기와 skill quick 검증기는 Codex 설치 산출물을 요구하고, format smoke는 `package.json`에 없는 호스트 제공 모듈을 임포트하며, diagram render drift는 headless Chromium이 호스트 폰트로 그린 PNG 바이트를 비교하므로 그 PNG를 커밋한 기계에서만 의미가 있습니다. SVG 비교는 결정적이므로 모든 환경에서 그대로 유지됩니다. `validate-suite`는 이 넷을 조용히 통과시키지 않고 `SKIPPED`로 기록하며, 스킵이 하나라도 있으면 release readiness를 `INCOMPLETE`로 끝냅니다.
 
@@ -240,6 +242,12 @@ Windows 오프라인 레인은 만들어 돌려 보고 결과를 읽은 뒤 한 
 **이 레인이 덮지 않는 것.** `tests/formats/`는 macOS Quick Look과 headless Chromium을 구동하므로 모든 CI 플랫폼에서 `SKIPPED`이고, 위 게이트의 탐색 대상에서도 빠져 있습니다. 그래서 `npm test`(트리 전체 순회)는 여전히 Windows에서 끝까지 돌지 않고, 오프라인 게이트가 실행하는 네 shard만 돕니다.
 
 **Windows 판정.** 레인이 Windows에서 돌았고, 여섯 번의 실행이 걸렸습니다. 첫 실행은 약 160건을 보고했고 마지막 실행은 Windows 여섯 잡 전부 통과입니다. 예고한 대로 보고된 것은 되돌아온 결함이 아니라 목록에 없던 부류였고, 처리 방식도 예고한 대로 위 표에 줄을 추가하는 것이었습니다.
+
+#### Windows IPC 응답 순서
+
+스냅숏 트랜잭션 작업 프로세스는 부모 응답과 `process.send` 콜백을 서로 다른 비동기 신호로 취급합니다. Windows에서는 부모 응답이 먼저 도착하고 전송 콜백 오류가 뒤늦게 도착할 수 있습니다. 예전 구현은 첫 응답만으로 성공을 확정해 그 오류를 놓쳤습니다. 이제 요청은 대응 응답과 전송 콜백 성공을 모두 확인한 뒤에만 완료되며, 응답 뒤 콜백 오류가 오면 실패와 복구 경로로 전환합니다. 계약 테스트는 이 순서를 지연 주입으로 재현해 성공 오판을 막습니다.
+
+이 회귀는 로컬의 결정적 순서 테스트와 정상 스냅숏 교체 테스트로 검증합니다. 실제 Windows 스케줄러 증거는 다음 `windows-latest` 계약 샤드가 제공하며, 원격 실행 전에는 로컬 모사가 실제 플랫폼 통과를 대신한다고 기록하지 않습니다.
 
 그 과정에서 나온 것 중 **테스트가 아니라 제품이 틀린** 항목이 다섯 개입니다. 스냅숏 스테이징이 Windows의 OS 임시 디렉터리를 사용자 홈으로 판정해 모든 빌드를 거부한 것, 존재하지 않는 `C:\tmp` 후보를 `realpath`해 죽은 것, 업데이트 캐시 경로가 인자로 받은 플랫폼이 아니라 호스트의 구분자로 조립된 것, SessionStart 능력 탐지가 Windows 브라우저를 영원히 찾지 못한 것(`--version`이 stdout에 답하지 않고, 문서화된 설치 경로 비교가 대소문자를 구분했습니다), 그리고 예약 슬롯이 심링크가 선점한 이름에 배타적 생성을 시도한 것입니다. 마지막 것은 Windows에서 링크를 따라가 **링크의 대상**을 만들기 때문에, 저장소 바깥의 남이 고른 경로에 이 저장소의 바이트를 쓰는 결함이었습니다. 다섯 건 모두 고쳤고, 각각 두 플랫폼 형태를 한 호스트에서 확인하는 테스트가 붙어 있습니다.
 

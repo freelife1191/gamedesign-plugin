@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "794d67dafc0bca7d6629af96e50208ef8bc16fe30a79bd51cde8509a183d6ca9",
+  "treeSha256": "92f61a0af7fc6800014e69fbd1732258895152c7b4ed4ac3ff87bd20c3b5c1e7",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -21,8 +21,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "318c5c7e6151d232a6fd691dca0c49f31d57182d45bd6a1d992fba267f97aa66",
-      "size": 66498
+      "sha256": "d656d7a499722b28e64f1f9ab687230fa520972d08800409d2e7a10100f88a65",
+      "size": 66647
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -621,8 +621,8 @@
     },
     {
       "path": "references/routing.json",
-      "sha256": "348a347d2f54d8ad92b1f1963cecf698ba7334b1f39813355159366aabb1da44",
-      "size": 19738
+      "sha256": "c3eef7d128907a24c977184c49bced89c89af5ee4632a3c1ff0d88d767ed08fb",
+      "size": 19980
     },
     {
       "path": "references/shared/document-quality/game-design-writing-style.md",
@@ -2306,8 +2306,8 @@
     },
     {
       "path": "skills/game-design-studio/SKILL.md",
-      "sha256": "00978d798af25eeb95578224bcaefeaa2e530e338f31aa1bff49690cc5b83c2a",
-      "size": 4913
+      "sha256": "2d7ee05f7203b0428cfc6e16eed591e6d46bb95a662ea0f5c995118c2939bf29",
+      "size": 6020
     },
     {
       "path": "skills/game-design-studio/references/handoff.md",
@@ -2416,8 +2416,8 @@
     },
     {
       "path": "skills/orchestrate-game-design-project/SKILL.md",
-      "sha256": "8d073a4d3eb988aa02c3fec118c7d440fe170005a2ccf341430176a83f4670a2",
-      "size": 4037
+      "sha256": "b3c9fe1927bae5b5f14e2cf7538434b2b43a0068745f6cc14c683d8dc2f7b3fc",
+      "size": 4518
     },
     {
       "path": "skills/orchestrate-game-design-project/agents/openai.yaml",

@@ -268,8 +268,8 @@
     },
     {
       "id": "suite-plugin-system-architecture",
-      "specification_sha256": "6e0b5b757307dd462d1c6a3f7cee9718970833f2546c65a1fc3a52afa8a9680f",
-      "artifact_sha256": "6cca42d252db93c52526f1fe3306b4f79a6ffe1a0c2f8103dc01b97ec92ce4af",
+      "specification_sha256": "636861b55eb764b23dd11ad6529adbd4a29bc24fe6af860f4e03af32cf21b3f6",
+      "artifact_sha256": "36810102ba95b2ca92926ceed2a96a8680265376bca0e5f30f073f5f09233678",
       "reviewer": "Codex 헤드리스 시각 QA",
       "review_method": "headless-original-and-fit",
       "correction_rounds": 1,
@@ -277,41 +277,48 @@
       "renders": {
         "read": {
           "path": "renders/suite/suite-plugin-system-architecture/read.png",
-          "sha256": "014a13165ae0df536ea56605236dd23b2d1dc43a68faf394b7d5071b30bb883b",
+          "sha256": "54f64504a25cd1dedc40bf70a9cc4f30e75c7c8e470227f822e342f36d8077c2",
           "width": 1600,
           "height": 1200
         },
         "dark": {
           "path": "renders/suite/suite-plugin-system-architecture/dark.png",
-          "sha256": "014a13165ae0df536ea56605236dd23b2d1dc43a68faf394b7d5071b30bb883b",
+          "sha256": "54f64504a25cd1dedc40bf70a9cc4f30e75c7c8e470227f822e342f36d8077c2",
           "width": 1600,
           "height": 1200
         },
         "light": {
           "path": "renders/suite/suite-plugin-system-architecture/light.png",
-          "sha256": "60fcaf71e5e5544d31fc893dcecfea66c5efaeeeb9515053c27f22f517ff8ba2",
+          "sha256": "db0b11e1f2641dbdb37fb189233e524070a69d105d42dc3158b5e89c21fc81f6",
           "width": 1600,
           "height": 1200
         },
         "guided_views": [
           {
-            "id": "view-plugin-boundaries",
-            "path": "renders/suite/suite-plugin-system-architecture/view-plugin-boundaries.png",
-            "sha256": "5a15574c245a29a7ec433c6ca8e161eb63f45a465b369840e9d363aac3a9a8ef",
+            "id": "view-install-lifecycle",
+            "path": "renders/suite/suite-plugin-system-architecture/view-install-lifecycle.png",
+            "sha256": "5599a3b9eee93ac88157c822472bf9ff95c34684f3bc3fca3c3370ba232f51b2",
+            "width": 1600,
+            "height": 1200
+          },
+          {
+            "id": "view-representative-routing",
+            "path": "renders/suite/suite-plugin-system-architecture/view-representative-routing.png",
+            "sha256": "6381c584c2291e0a1adb6d068bb2cd721a124bf764019be3d60522061f03dbf5",
             "width": 1600,
             "height": 1200
           },
           {
             "id": "view-artifact-validation",
             "path": "renders/suite/suite-plugin-system-architecture/view-artifact-validation.png",
-            "sha256": "d2cadddbf4b3e098968d274c405c2b2489961605d12488b6b0f1734680c1d864",
+            "sha256": "9aaffaf840f67a486c8de253f6529b107036e8b3b8883bdcc72f3a4afd6924f6",
             "width": 1600,
             "height": 1200
           },
           {
             "id": "view-human-approval",
             "path": "renders/suite/suite-plugin-system-architecture/view-human-approval.png",
-            "sha256": "b84cc7555a324e9bf5cc9af17e550f07574191c39f6205bd30e54252b4c58654",
+            "sha256": "0d276c32f7c054b4bd8e2e03dd7a83761d8b8e523521591878472c1c10c0265d",
             "width": 1600,
             "height": 1200
           }
@@ -319,7 +326,7 @@
       },
       "readme_preview": {
         "path": "renders/suite/suite-plugin-system-architecture/readme-preview.png",
-        "sha256": "f6a5e428a3a5c08df670994cea6753a0a72369329cae9be3a027e8465c02a5fb",
+        "sha256": "fb93ab3efcdafbe552769e465726d1b5b926a0c53643880681983d49a27301b2",
         "width": 1200,
         "height": 630
       },
@@ -345,7 +352,7 @@
           "symptom": "이전 화면은 영어 우선 용어와 희미한 보류·재개 경로 때문에 사람 검토·승인 흐름을 빠르게 읽기 어려웠습니다.",
           "correction_outcome": "resolved",
           "round": 1,
-          "correction_evidence": "한국어 우선 사양을 Archify 9개 검사로 재검증하고, 1600px 원본과 맞춤 화면에서 자동 검증·검토 보류·수정·재검토·사람 검토·승인 경로를 확인했습니다."
+          "correction_evidence": "한국어 우선 사양을 Archify 9개 검사로 다시 검증했습니다. 1600px 원본 화면에서 설치 수명주기, 대표 스킬 라우팅, 자동 검증, 검토 보류와 사람 승인 경로도 각각 확인했습니다."
         }
       ]
     },
@@ -438,13 +445,13 @@
   "contact_sheets": [
     {
       "html": "all.html",
-      "html_sha256": "7a75948b50db7cafa2e766ff8ba06433a93f87b2706b5d460e6652ad45ea6057",
+      "html_sha256": "b4feb4ef95d076f36712f2f20633e5a65889aeb30952ab7013225ae16a349257",
       "png": "all.png",
-      "png_sha256": "ad8006aa68103ae786dffadd5a4507c8c9eee0488d4e30d1799002fa9504539c",
+      "png_sha256": "77fd048344ef42da5a49badece188b318a740169b225eb3e1216ace528c34c91",
       "width": 1800,
       "height": 8848,
       "source_read_sha256": [
-        "014a13165ae0df536ea56605236dd23b2d1dc43a68faf394b7d5071b30bb883b",
+        "54f64504a25cd1dedc40bf70a9cc4f30e75c7c8e470227f822e342f36d8077c2",
         "e5df98cc266b8a7cdc4ed4db9b17a48d694aa0ae48b1a47f1714e60a6d2c5c9d",
         "1cbcffa9a1021e609408cafa8a639ab9c6765108f00f27f8214e1c4c90d1b1c2",
         "2f9076142a6021eafc604515e21154f8988cae60fa1353c8c5c8a7c3b2063066",
@@ -455,7 +462,7 @@
       "html": "product-career.html",
       "html_sha256": "247b6c9ed094cd4b27ad18d740753cc06d7d080b86e7a07eaae5ea61cc758a13",
       "png": "product-career.png",
-      "png_sha256": "b504ccf5496a7dc35cb64a1d0b55f9c76edfc35728111b97f8d123a78f850996",
+      "png_sha256": "798732094ffdd3bda1187de96772e9b78f82ca2e77151feeef3db2a8e670e5ac",
       "width": 1800,
       "height": 2154,
       "source_read_sha256": [
@@ -466,7 +473,7 @@
       "html": "product-studio.html",
       "html_sha256": "ba7537b87027aa4403aaec9e79c955201f0fdc491a8692f31b8217a632f82dfb",
       "png": "product-studio.png",
-      "png_sha256": "df2e78657323cfb6ef09c8dbdc78b71978cbbb71201081954131fdfe93303c04",
+      "png_sha256": "8ba214233c30e340888a426beacc11d258340420b4b1aacc8775efa81f71330d",
       "width": 1800,
       "height": 2779,
       "source_read_sha256": [
@@ -475,33 +482,33 @@
     },
     {
       "html": "product-suite.html",
-      "html_sha256": "10254f9382800cef17434c6d9d9ca59ab25c996a503cfe33c90539b09c74ade3",
+      "html_sha256": "46e8028d2ab50fca640e4c03a824430658e24f243a40ee8e9b84df0c908d65e7",
       "png": "product-suite.png",
-      "png_sha256": "aba7ecd892ef4e82cde7b399179d817e7c791b9353e5d85459b25dd1f08afde4",
+      "png_sha256": "434d030d020bf596655a8ff189658367989cb88a344206a667e3bb96babee926",
       "width": 1800,
       "height": 4071,
       "source_read_sha256": [
-        "014a13165ae0df536ea56605236dd23b2d1dc43a68faf394b7d5071b30bb883b",
+        "54f64504a25cd1dedc40bf70a9cc4f30e75c7c8e470227f822e342f36d8077c2",
         "2f9076142a6021eafc604515e21154f8988cae60fa1353c8c5c8a7c3b2063066",
         "f88d4481c2feabdb79400cfd4a4f83495fde3b13af25bfc7d47e70cf6e246c83"
       ]
     },
     {
       "html": "type-architecture.html",
-      "html_sha256": "aba168bd542cf3dda2c57f2138926e703ca89b6559377435c93c30e62c017ade",
+      "html_sha256": "bad3245d9dbe2e63952ad96253070e4094803a6b65200cf9e391e9fdd38b85e1",
       "png": "type-architecture.png",
-      "png_sha256": "e0d53630d02dfcd995973e3720fe26a137cc353b951f143bbaa96995de72385c",
+      "png_sha256": "9bcd6847c805600065c9bae6f3bf9f4019e5596483b42b6ceaa7a8bf66bb5027",
       "width": 1800,
       "height": 1476,
       "source_read_sha256": [
-        "014a13165ae0df536ea56605236dd23b2d1dc43a68faf394b7d5071b30bb883b"
+        "54f64504a25cd1dedc40bf70a9cc4f30e75c7c8e470227f822e342f36d8077c2"
       ]
     },
     {
       "html": "type-dataflow.html",
       "html_sha256": "fa93bd122af0798527ebc84fe8ab5b94a8701b0a24a157a3ef4a2f9992081655",
       "png": "type-dataflow.png",
-      "png_sha256": "7576c51fcf0d3aa9df4aaadd1ec24aebc6b4de1f30ce21913ec91b26db421127",
+      "png_sha256": "0efa8cda5123632b588303aed515954d7fcdd741bc581082b3103a06406ba3dd",
       "width": 1800,
       "height": 1476,
       "source_read_sha256": [
@@ -512,7 +519,7 @@
       "html": "type-workflow.html",
       "html_sha256": "095c771f546508430cb018c22678523c02aeda9792d719146879e6da322ac666",
       "png": "type-workflow.png",
-      "png_sha256": "e4085b8c123219a246460562f7846f2f1badfd81ff8174da3d757dd441f82e44",
+      "png_sha256": "de440e74bbfb0470a017d381370078038aa7a57b23b839a41787a55798e3e8a1",
       "width": 1800,
       "height": 6052,
       "source_read_sha256": [

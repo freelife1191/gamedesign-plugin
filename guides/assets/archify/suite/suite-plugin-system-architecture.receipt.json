@@ -13,11 +13,11 @@
   "input": "guides/archify-diagrams/specs/suite/suite-plugin-system-architecture.json",
   "output": "guides/assets/archify/suite/suite-plugin-system-architecture.html",
   "specification": {
-    "sha256": "6e0b5b757307dd462d1c6a3f7cee9718970833f2546c65a1fc3a52afa8a9680f",
-    "bytes": 7035
+    "sha256": "636861b55eb764b23dd11ad6529adbd4a29bc24fe6af860f4e03af32cf21b3f6",
+    "bytes": 7810
   },
   "artifact": {
-    "sha256": "6cca42d252db93c52526f1fe3306b4f79a6ffe1a0c2f8103dc01b97ec92ce4af",
-    "bytes": 657101
+    "sha256": "36810102ba95b2ca92926ceed2a96a8680265376bca0e5f30f073f5f09233678",
+    "bytes": 657814
   }
 }

@@ -20,7 +20,7 @@ test("production visual QA manifest binds every published entry to passing headl
   assert.deepEqual(loaded.qa.entries.filter((entry) => entry.verdict === "failed").map((entry) => entry.id), []);
 });
 
-test("the Korean suite system architecture has six complete published visual QA views", async () => {
+test("the Korean suite system architecture has seven complete published visual QA views", async () => {
   const catalog = await loadArchifyCatalog({ repoRoot });
   const entry = catalog.entries.find((candidate) => candidate.id === "suite-plugin-system-architecture");
   assert.ok(entry, "suite system architecture catalog record exists");
@@ -35,7 +35,15 @@ test("the Korean suite system architecture has six complete published visual QA 
   assert.equal(qa.review_method, "headless-original-and-fit");
   assert.deepEqual(
     ["read", "light", "dark", ...qa.renders.guided_views.map((view) => view.id)].sort(),
-    ["read", "light", "dark", "view-plugin-boundaries", "view-artifact-validation", "view-human-approval"].sort(),
+    [
+      "read",
+      "light",
+      "dark",
+      "view-install-lifecycle",
+      "view-representative-routing",
+      "view-artifact-validation",
+      "view-human-approval",
+    ].sort(),
   );
   assert.ok(qa.readme_preview, "suite system architecture publishes a dedicated README preview capture");
   assert.equal(

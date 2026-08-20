@@ -290,6 +290,27 @@ codex plugin add game-design-career@game-design-suite
 codex plugin list
 ```
 
+#### Windows PowerShell
+
+한글이나 공백이 들어간 체크아웃 경로는 PowerShell에서 절대 경로를 따옴표로 감싸 등록합니다. Codex는 사용자 홈을 `%USERPROFILE%`, 로컬 앱 데이터를 `%LOCALAPPDATA%`에서 찾으므로 `HOME` 환경 변수를 따로 만들 필요가 없습니다.
+
+```powershell
+$repoRoot = (Resolve-Path .).Path
+codex plugin marketplace add "$repoRoot"
+codex plugin marketplace list
+codex plugin add game-design-studio@game-design-suite
+codex plugin add game-design-career@game-design-suite
+codex plugin list
+```
+
+Windows CI는 `.cmd` 파일을 셸 없이 직접 실행하는 대신 Codex의 JavaScript 진입점을 Node로 실행합니다. 한글·공백 경로에서 설치와 재설치, Studio만 제거했을 때 Career가 유지되는지, Studio 재설치와 두 제품·마켓플레이스의 전체 제거까지 확인합니다. 로컬에서도 같은 수명주기를 실행할 수 있습니다.
+
+```powershell
+npm run verify:install-roundtrip
+```
+
+전체 `npm test`에는 macOS 렌더러와 헤드리스 Chromium처럼 Windows 판정 범위 밖인 테스트가 포함됩니다. Windows에서는 CI의 오프라인 샤드, Windows 하드닝과 설치 왕복 검증 결과를 기준으로 판단합니다.
+
 ### 업데이트·재설치하기
 
 Marketplace refresh와 설치 패키지 교체는 서로 다른 작업입니다.
@@ -298,7 +319,7 @@ Marketplace refresh와 설치 패키지 교체는 서로 다른 작업입니다.
 
 `SessionStart`는 처음 시작할 때와 마지막 확인 뒤 7일이 지난 뒤에만 번들 업데이트를 확인합니다. 결과는 “플러그인 업데이트를 확인해 줘”라는 **알림**일 뿐이며, 플러그인을 자동으로 업데이트하거나 다시 설치하지 않습니다. 확인을 끄려면 Codex를 시작할 환경에 `GAME_DESIGN_UPDATE_CHECKS=false`를 설정하세요. Skillstead·Archify·im-not-ai 번들은 다음 suite release 전까지 현재 버전으로 고정됩니다. 설치된 캐시 폴더는 직접 편집하지 마세요.
 
-`codex plugin list --available --json`은 설치하지 않은 플러그인 목록을 보여 주는 용도입니다. Codex 0.147.0에서는 이미 설치한 플러그인의 더 새로운 원천 버전을 판별하지 않습니다. 알림을 본 뒤에는 아래처럼 marketplace 종류에 맞는 명시적 명령을 실행하고, 마지막에 새 채팅 또는 새 세션을 열어 새 설치본을 사용하세요.
+`codex plugin list --available --json`은 설치하지 않은 플러그인 목록을 보여 주는 명령입니다. 설치한 플러그인의 새 원본 버전을 판단하는 근거로 사용하지 마세요. 이 절차는 Codex CLI 0.148.0에서 다시 확인했지만 특정 부 버전에 고정하지 않습니다. 알림을 받은 뒤에는 아래와 같이 마켓플레이스 종류에 맞는 명령을 직접 실행하고, 마지막에 새 채팅이나 새 세션을 열어 새 설치본을 사용하세요.
 
 #### 업그레이드 스킬로 처리하기
 
@@ -317,17 +338,16 @@ $game-design-career:upgrade-game-design-suite
 
 App에서는 같은 스킬을 `@Game Design Studio` 또는 `@Game Design Career` 뒤에 "설치본을 최신 릴리스와 비교해 줘"라고 요청해 호출합니다.
 
-아래 두 절차는 스킬 없이 손으로 처리할 때의 순서입니다.
+아래 절차는 스킬 없이 정상 업데이트를 적용할 때의 순서입니다. 제품 제거는 정상 업데이트 단계가 아니라 설치 복구 또는 완전 제거 단계에서만 사용합니다.
 
 #### Codex App
 
 1. 로컬 checkout을 갱신하고 저장소 루트에서 `npm run build`와 `npm run validate`를 실행합니다.
 2. ChatGPT 데스크톱 앱을 다시 시작해 로컬 marketplace를 다시 읽습니다.
-3. **Plugins**의 설치된 Studio 또는 Career 상세 화면에서 **Uninstall plugin**을 선택합니다.
-4. **Plugins Directory**의 `game-design-suite`에서 제거한 제품을 다시 설치합니다.
-5. Plugins 목록에서 설치 확인을 마친 뒤 **새 채팅**을 열고 제품을 선택합니다.
+3. **Plugins Directory**의 `game-design-suite`에서 설치한 제품을 다시 적용합니다.
+4. Plugins 목록에서 설치 확인을 마친 뒤 **새 채팅**을 열고 제품을 선택합니다.
 
-관리자가 제공한 기본 플러그인처럼 제거할 수 없는 항목은 관리자에게 업데이트를 요청하세요.
+관리자가 제공한 기본 플러그인처럼 사용자가 다시 적용할 수 없는 항목은 관리자에게 업데이트를 요청하세요.
 
 #### Codex CLI
 
@@ -338,27 +358,45 @@ npm run build
 npm run validate
 ```
 
-2. 설치한 제품만 제거합니다. 둘 다 설치했다면 두 명령을 모두 실행합니다.
-
-```bash
-codex plugin remove game-design-studio@game-design-suite
-codex plugin remove game-design-career@game-design-suite
-```
-
-3. 제거한 제품만 다시 설치합니다.
+2. 설치한 제품만 다시 적용합니다. 둘 다 설치했다면 두 명령을 모두 실행합니다.
 
 ```bash
 codex plugin add game-design-studio@game-design-suite
 codex plugin add game-design-career@game-design-suite
 ```
 
-4. 설치 상태를 확인한 뒤 **새 세션**을 시작합니다.
+3. 설치 상태를 확인한 뒤 **새 세션**을 시작합니다.
 
 ```bash
 codex plugin list
 ```
 
-Git marketplace를 등록했다면 재설치 전에 `codex plugin marketplace upgrade game-design-suite`로 설치 가능한 snapshot을 refresh할 수 있습니다. 이 명령은 설치된 플러그인을 교체하지 않으므로 위 제거·재설치 단계를 계속 수행해야 합니다. 로컬 marketplace는 Git fetch 대상이 아니므로 checkout을 갱신하고 `npm run build`를 실행한 뒤 같은 제거·재설치 순서를 따릅니다.
+Git 마켓플레이스를 등록했다면 다시 적용하기 전에 `codex plugin marketplace upgrade game-design-suite`로 설치 가능한 스냅숏을 갱신할 수 있습니다. 이 명령은 설치된 플러그인을 교체하지 않으므로 위 `plugin add` 단계까지 실행해야 합니다. 로컬 마켓플레이스는 Git fetch 대상이 아니므로 체크아웃을 갱신하고 `npm run build`를 실행한 뒤 같은 `plugin add` 순서를 따릅니다.
+
+#### 설치 복구
+
+`plugin add`가 실패해 설치본을 복구해야 할 때만 문제가 난 제품을 제거한 뒤 다시 설치합니다. 제거 전에 `codex plugin list`로 대상을 확인하고, 두 제품을 모두 설치했다면 정상인 제품은 건드리지 않습니다.
+
+```bash
+codex plugin remove game-design-studio@game-design-suite
+codex plugin add game-design-studio@game-design-suite
+codex plugin remove game-design-career@game-design-suite
+codex plugin add game-design-career@game-design-suite
+```
+
+복구 뒤에는 `codex plugin list`로 설치 상태를 확인하고 새 세션을 시작합니다. 두 제품과 marketplace를 완전히 제거하려면 제품별 설치 가이드의 제거 절차를 따릅니다.
+
+#### 완전 제거 확인
+
+두 제품을 모두 사용하지 않을 때만 제품을 각각 제거한 뒤 마켓플레이스를 제거합니다. 제거한 뒤 두 목록에 `game-design-suite` 항목이 없는지 확인합니다. 제품 하나만 제거했다면 다른 제품은 목록과 캐시에 그대로 남아 있어야 합니다.
+
+```bash
+codex plugin remove game-design-studio@game-design-suite
+codex plugin remove game-design-career@game-design-suite
+codex plugin marketplace remove game-design-suite
+codex plugin list
+codex plugin marketplace list
+```
 
 ---
 
@@ -372,7 +410,10 @@ Git marketplace를 등록했다면 재설치 전에 `codex plugin marketplace up
 2. 한 분야가 분명하면 전문 스킬을 선택합니다.
 3. 여러 분야가 섞였거나 범위가 불명확하면 오케스트레이터가 필요한 경로만 고릅니다.
 4. 서로 다른 검토가 필요할 때만 전문 역할을 최대 세 개 선택합니다.
-5. 선택한 스킬과 검토 역할, 결과 파일, 남은 결정을 마지막에 알려 줍니다.
+5. 한국어 문서를 작성하거나 고쳤다면 `polish-game-design-writing`에서 번들 `$humanize-korean`을 마지막 문장 편집 단계로 실행하고, ID·수치·링크·근거·승인 상태를 다시 검증합니다.
+6. 선택한 스킬과 검토 역할, 결과 파일, 남은 결정을 마지막에 알려 줍니다.
+
+`$humanize-korean` 뒤에는 링크·계약·도식 변경 여부처럼 결과가 정해지는 검사만 실행하며 문장은 더 고치지 않습니다. 윤문이나 보호 검증이 실패하면 원문을 보존하고, 이어서 처리할 수 있는 보류 상태로 보고합니다.
 
 자동 선택은 자동 승인을 뜻하지 않습니다. 기획 결과와 파생 자료는 이름과 역할을 기록한 사람이 승인·수정·보류합니다.
 
@@ -1984,13 +2025,13 @@ MD는 항상 보존합니다. PDF, DOCX와 PPTX는 렌더러와 시각 품질 �
 
 ### 전체 시스템 구조를 먼저 확인하기
 
-두 플러그인을 함께 쓰는 흐름이 처음이라면, 먼저 전체 구조를 확인하세요. **시작점부터 두 제품, 기준 기획 결과물, 자동 검증과 사람 결정을 잇는 큰 경계**를 한 화면에서 보여 줍니다. **두 플러그인을 처음 함께 사용하거나 전체 승인 경계를 확인할 때** 열면, 어느 결과가 자동 검증을 거치고 어느 결정이 사람에게 남는지 빠르게 파악할 수 있습니다.
+두 플러그인을 함께 쓰는 흐름이 처음이라면, 먼저 전체 구조를 확인하세요. **시작점부터 설치·업데이트·전체 정리, 두 제품의 대표 진입, 기준 기획 결과물, 한국어 최종 편집, 자동 검증과 사람 결정을 잇는 큰 경계**를 한 화면에서 보여 줍니다. 대표 스킬은 여섯 줄 라우팅 영수증을 먼저 공개하고, 단일 요청은 전문 스킬로, 복합 요청은 오케스트레이터와 최대 세 개 검토 역할로 보냅니다. **두 플러그인을 처음 함께 사용하거나 전체 승인 경계를 확인할 때** 열면, 어느 결과가 자동 검증을 거치고 어느 결정이 사람에게 남는지 빠르게 파악할 수 있습니다.
 
 [![게임 기획 플러그인 모음 전체 시스템 구조](guides/assets/readme/plugin-system-overview.png)](guides/assets/readme/plugin-system-overview.svg)
 
 ▶ [Archify HTML에서 전체 시스템 구조 열기](guides/assets/archify/suite/suite-plugin-system-architecture.html) — 확대·축소, 밝은 화면과 어두운 화면, 단계별 집중 보기를 사용할 수 있습니다.
 
-Skillstead 미리보기는 **Studio·Career의 결과 경계와 사람 승인·보류**를 한눈에 보여 줍니다. 더 자세한 연결과 단계별 집중 보기는 위 Archify HTML에서 확인하세요.
+Skillstead 미리보기는 **Studio·Career의 결과 경계와 사람 승인·보류**를 한눈에 보여 줍니다. 설치 수명주기와 대표 라우팅은 설치 가이드와 대표 스킬 가이드의 Skillstead 흐름도에서 확인할 수 있습니다. 더 자세한 연결, 마지막 `$humanize-korean` 편집과 보호 검증, Windows·Ubuntu 전체 제거 경로는 위 Archify HTML의 단계별 집중 보기에서 확인하세요.
 
 ### Studio 설치 패키지 구조
 
@@ -2256,6 +2297,7 @@ Source tree, build·release·검증 명령과 패키지 내부 계약은 기술 
 - [플러그인 스위트 아키텍처](architecture/plugin-suite.md)
 - [지식·근거 아키텍처](architecture/knowledge-and-evidence.md)
 - [내보내기 파이프라인](architecture/export-pipeline.md)
+- [버전별 릴리스 노트](release/README.md)
 - [Studio 기술 README](plugins/game-design-studio/README.md)
 - [Career 기술 README](plugins/game-design-career/README.md)
 
@@ -2273,4 +2315,4 @@ Source tree, build·release·검증 명령과 패키지 내부 계약은 기술 
 
 </details>
 
-기여 전 `npm test`, `npm run validate`, `npm run build`로 독립 snapshot을 검증합니다. 프로젝트 코드·템플릿·문서는 MIT License이며, vendored Skillstead는 Apache-2.0입니다. 사용자 원문과 제3자 자료의 권리는 각 권리자에게 남습니다.
+기여 전 `npm test`, `npm run validate`, `npm run validate:release-notes`, `npm run build`로 독립 snapshot과 릴리스 기록을 검증합니다. 프로젝트 코드·템플릿·문서는 MIT License이며, vendored Skillstead는 Apache-2.0입니다. 사용자 원문과 제3자 자료의 권리는 각 권리자에게 남습니다.

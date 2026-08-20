@@ -111,7 +111,7 @@ test("project memory diagram keeps LLM Wiki reuse local, source-bound, and human
 
 test("entry routing diagram shows one route, the receipt, and the one-way handoff candidate", async () => {
   const svg = await readFile(path.join(root, "guides/assets/shared/suite-entry-routing-flow.svg"), "utf8");
-  for (const phrase of ["사례 ID", "소유 제품", "route-receipt.json", "routeId", "단방향 인계"]) {
+  for (const phrase of ["사례 ID", "소유 제품", "route-receipt.json", "routeId", "단방향 인계", "여섯 줄", "오케스트레이터", "최대 세 개"]) {
     assert.match(svg, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "u"), phrase);
   }
   // 대표 진입 스킬은 자기 파일을 만들지 않는다. 도식이 산출물을 약속하면 가이드 본문과 어긋난다.
@@ -138,7 +138,7 @@ test("update diagram gates every install change behind a user approval", async (
 
 test("install diagram carries the UTF-8 preflight and the marketplace kind before either lane", async () => {
   const svg = await readFile(path.join(root, "guides/assets/shared/app-cli-install-flow.svg"), "utf8");
-  for (const phrase of ["UTF-8 preflight", "BOM", "마켓플레이스 종류"]) {
+  for (const phrase of ["UTF-8 preflight", "BOM", "마켓플레이스 종류", "Windows·Ubuntu", "선택 제거", "전체 정리"]) {
     assert.match(svg, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "u"), phrase);
   }
   // 읽기 순서가 lane보다 앞서야 사용자가 설치 실패를 만나기 전에 인코딩을 확인한다.

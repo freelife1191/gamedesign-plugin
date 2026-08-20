@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
-import { chmod, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { chmod, cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
 import {
   DiagnosticError,
+  assertNoProductStateResidue,
   assertNoReplacementCharacter,
   compareInstalledFiles,
   redactInstallFailure,
@@ -123,4 +125,117 @@ test("a libuv error code survives redaction, because \"command failed\" costs a 
   const redacted = redactInstallFailure(spawnFailure);
   assert.equal(redacted, "EINVAL (details redacted)");
   assert.doesNotMatch(redacted, /Users|codex\.cmd/u);
+});
+
+test("state cleanup rejects a removed product ID or source path that survives in Codex JSON", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "install-roundtrip-stale-state-"));
+  try {
+    const source = path.join(root, "마켓플레이스 소스", "plugins", "game-design-studio");
+    await mkdir(path.join(root, "plugins"), { recursive: true });
+    await writeFile(
+      path.join(root, "plugins", "state.json"),
+      JSON.stringify({ installed: [{ pluginId: "game-design-studio@game-design-suite", source: { path: source } }] }),
+      "utf8",
+    );
+    await assert.rejects(
+      () => assertNoProductStateResidue(root, new Map([["game-design-studio", source]])),
+      /product identifier or source path remains/u,
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("the isolated round trip removes each plugin and marketplace without leaving state residue", async () => {
+  const tempParent = await mkdtemp(path.join(os.tmpdir(), "install-roundtrip-lifecycle-"));
+  const installed = new Map();
+  let marketplaceRoot = null;
+  const commandLog = [];
+  const pluginRecord = (product, source) => ({
+    pluginId: `${product}@game-design-suite`,
+    name: product,
+    marketplaceName: "game-design-suite",
+    source: { path: source },
+  });
+  const writeState = async (env) => {
+    await mkdir(path.join(env.CODEX_HOME, "plugins"), { recursive: true });
+    await writeFile(
+      path.join(env.CODEX_HOME, "plugins", "state.json"),
+      JSON.stringify({ installed: [...installed.values()] }),
+      "utf8",
+    );
+  };
+  const runImpl = async (_executable, args, { env }) => {
+    commandLog.push(args.slice(0, -1));
+    if (args[0] !== "plugin") throw new Error(`unexpected command: ${args.join(" ")}`);
+    if (args[1] === "marketplace" && args[2] === "add") {
+      marketplaceRoot = args[3];
+      await mkdir(path.join(env.CODEX_HOME, "marketplaces"), { recursive: true });
+      await writeFile(path.join(env.CODEX_HOME, "marketplaces", "game-design-suite.json"), JSON.stringify({ root: marketplaceRoot }), "utf8");
+      return { marketplace: "game-design-suite" };
+    }
+    if (args[1] === "marketplace" && args[2] === "list") {
+      return { marketplaces: marketplaceRoot ? [{ name: "game-design-suite", root: marketplaceRoot }] : [] };
+    }
+    if (args[1] === "marketplace" && args[2] === "remove") {
+      marketplaceRoot = null;
+      await rm(path.join(env.CODEX_HOME, "marketplaces", "game-design-suite.json"), { force: true });
+      await rm(path.join(env.CODEX_HOME, "plugins", "cache", "game-design-suite"), { recursive: true, force: true });
+      return { removed: true };
+    }
+    if (args[1] === "add") {
+      const [product] = args[2].split("@");
+      const version = JSON.parse(await readFile(path.join(marketplaceRoot, "plugins", product, ".codex-plugin", "plugin.json"), "utf8")).version;
+      const source = path.join(marketplaceRoot, "plugins", product);
+      const cache = path.join(env.CODEX_HOME, "plugins", "cache", "game-design-suite", product, version);
+      await rm(cache, { recursive: true, force: true });
+      await mkdir(path.dirname(cache), { recursive: true });
+      await cp(source, cache, { recursive: true });
+      installed.set(product, pluginRecord(product, source));
+      await writeState(env);
+      return { installed: true };
+    }
+    if (args[1] === "remove") {
+      const [product] = args[2].split("@");
+      installed.delete(product);
+      await writeState(env);
+      return { removed: true };
+    }
+    if (args[1] === "list") return { installed: [...installed.values()] };
+    throw new Error(`unexpected command: ${args.join(" ")}`);
+  };
+
+  try {
+    const result = await runInstallRoundtrip({
+      repoRoot: fileURLToPath(new URL("../..", import.meta.url)),
+      tempParent,
+      codexPath: "fake-codex.cmd",
+      runImpl,
+    });
+
+    assert.equal(result.status, "PASS");
+    assert.equal(result.failure, null);
+    assert.equal(result.productionStateUnchanged, true);
+    assert.equal(result.temporaryStateCleanup, true);
+    assert.deepEqual(commandLog.map((args) => args.slice(0, 3)), [
+      ["plugin", "marketplace", "add"],
+      ["plugin", "add", "game-design-career@game-design-suite"],
+      ["plugin", "add", "game-design-career@game-design-suite"],
+      ["plugin", "list"],
+      ["plugin", "add", "game-design-studio@game-design-suite"],
+      ["plugin", "add", "game-design-studio@game-design-suite"],
+      ["plugin", "list"],
+      ["plugin", "remove", "game-design-studio@game-design-suite"],
+      ["plugin", "list"],
+      ["plugin", "add", "game-design-studio@game-design-suite"],
+      ["plugin", "list"],
+      ["plugin", "remove", "game-design-career@game-design-suite"],
+      ["plugin", "remove", "game-design-studio@game-design-suite"],
+      ["plugin", "marketplace", "remove"],
+      ["plugin", "list"],
+      ["plugin", "marketplace", "list"],
+    ]);
+  } finally {
+    await rm(tempParent, { recursive: true, force: true });
+  }
 });

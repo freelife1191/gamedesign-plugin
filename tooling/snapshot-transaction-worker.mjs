@@ -7,12 +7,15 @@ import { runSnapshotTransaction } from "./lib/snapshot-transaction.mjs";
 
 let nextRequestId = 1;
 const replies = new Map();
+const deferredSendCallbackErrors = new Map();
 const startupFaults = JSON.parse(process.env.CODEX_SNAPSHOT_TRANSACTION_TEST_FAULTS ?? "[]");
 let sendCallbackFault;
 
 function rejectReplies(error) {
   for (const reply of replies.values()) reply.reject(error);
   replies.clear();
+  for (const reject of deferredSendCallbackErrors.values()) reject(error);
+  deferredSendCallbackErrors.clear();
 }
 
 function send(message) {
@@ -24,7 +27,10 @@ function send(message) {
     process.send(message, (error) => {
       const injected = sendCallbackFault;
       sendCallbackFault = undefined;
-      if (error || injected) reject(error ?? new Error(injected));
+      const callbackError = error ?? (injected ? new Error(injected.message) : undefined);
+      if (callbackError && injected?.afterReply && Number.isInteger(message.requestId)) {
+        deferredSendCallbackErrors.set(message.requestId, () => reject(callbackError));
+      } else if (callbackError) reject(callbackError);
       else resolve();
     });
   });
@@ -34,11 +40,34 @@ function request(type, payload) {
   const requestId = nextRequestId;
   nextRequestId += 1;
   return new Promise((resolve, reject) => {
-    replies.set(requestId, { resolve, reject });
-    send({ type, requestId, ...payload }).catch((error) => {
+    let completed = false;
+    let response;
+    let sendCompleted = false;
+    function fail(error) {
+      if (completed) return;
+      completed = true;
       replies.delete(requestId);
       reject(error);
+    }
+    function succeedWhenConfirmed() {
+      if (completed || !sendCompleted || !response) return;
+      completed = true;
+      replies.delete(requestId);
+      if (response.error) reject(new Error(response.error));
+      else resolve();
+    }
+    replies.set(requestId, {
+      receive(message) {
+        response = message;
+        if (response.error) fail(new Error(response.error));
+        else succeedWhenConfirmed();
+      },
+      reject: fail,
     });
+    send({ type, requestId, ...payload }).then(() => {
+      sendCompleted = true;
+      succeedWhenConfirmed();
+    }, fail);
   });
 }
 
@@ -48,9 +77,12 @@ process.on("message", async (message) => {
   if (message?.type === "registered-result" || message?.type === "phase-result") {
     const reply = replies.get(message.requestId);
     if (!reply) return;
-    replies.delete(message.requestId);
-    if (message.error) reply.reject(new Error(message.error));
-    else reply.resolve();
+    reply.receive(message);
+    const rejectDeferredCallback = deferredSendCallbackErrors.get(message.requestId);
+    if (rejectDeferredCallback) {
+      deferredSendCallbackErrors.delete(message.requestId);
+      rejectDeferredCallback();
+    }
     return;
   }
   if (message?.type === "rollback") {
@@ -73,8 +105,11 @@ process.on("message", async (message) => {
           throw new Error(`Injected malformed IPC at ${phaseName}`);
         } else if (fault.action === "disconnect") {
           process.disconnect();
-        } else if (fault.action === "send-failure" || fault.action === "send-callback-error") {
-          sendCallbackFault = `Injected process.send callback error at ${phaseName}`;
+        } else if (fault.action === "send-failure" || fault.action === "send-callback-error" || fault.action === "send-callback-error-after-reply") {
+          sendCallbackFault = {
+            message: `Injected process.send callback error at ${phaseName}`,
+            afterReply: fault.action === "send-callback-error-after-reply",
+          };
         }
       }
       return request("phase", { phase: phaseName, payload });

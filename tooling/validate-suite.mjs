@@ -19,12 +19,14 @@ const STAGES = Object.freeze([
   { name: "vendor references", command: [process.execPath, "tooling/sync-vendor-references.mjs", "--check"], rerun: "node tooling/sync-vendor-references.mjs --check" },
   { name: "vendor catalog entries", command: [process.execPath, "tooling/sync-vendor-catalog-entries.mjs", "--check"], rerun: "node tooling/sync-vendor-catalog-entries.mjs --check" },
   { name: "update manifest", command: [process.execPath, "tooling/generate-update-manifest.mjs", "--check"], rerun: "node tooling/generate-update-manifest.mjs --check" },
+  { name: "release notes", command: [process.execPath, "tooling/validate-release-notes.mjs"], rerun: "npm run validate:release-notes" },
   // These three call the group runner directly rather than through `npm run`. On Windows `npm` is a
   // .cmd shim, which spawnSync cannot execute without a shell, so the npm form failed instantly there
   // while looking like a test failure. The rerun hints stay in npm form because that is what a person types.
   { name: "unit tests", command: [process.execPath, "tooling/run-test-group.mjs", "unit"], rerun: "npm run test:unit" },
   { name: "contract tests", command: [process.execPath, "tooling/run-test-group.mjs", "contracts"], rerun: "npm run test:contracts" },
   { name: "product tests", command: [process.execPath, "tooling/run-test-group.mjs", "products", "e2e/career", "e2e/studio"], rerun: "npm run test:products" },
+  { name: "suite adversarial tests", command: [process.execPath, "tooling/run-test-group.mjs", "e2e/suite"], rerun: "npm run test:suite-adversarial" },
   { name: "clean build drift", command: [process.execPath, "tooling/validate-build-drift.mjs"], rerun: "node tooling/validate-build-drift.mjs" },
   { name: "official plugin validators", command: [process.execPath, "tooling/validate-packages.mjs", "plugins"], rerun: "node tooling/validate-packages.mjs plugins" },
   { name: "skill quick validators", command: [process.execPath, "tooling/validate-packages.mjs", "skills"], rerun: "node tooling/validate-packages.mjs skills" },
@@ -48,20 +50,21 @@ const STAGES = Object.freeze([
 // means something on a machine whose renderer matches the one that committed them. Leaving them out is
 // legitimate; leaving them out quietly is not, because a green run would then read as "everything was
 // checked". The set is closed here, and a skip prints on its own line, never as PASS.
-// CI runs the stages as four jobs instead of one queue, because the whole run is roughly eight minutes
-// and three quarters of it is three stages that have nothing to say to each other. Splitting them costs
+// CI runs the stages as five jobs instead of one queue, because the whole run is roughly eight minutes
+// and the independent test stages have nothing to say to each other. Splitting them costs
 // runner minutes and buys back wall clock. The partition is total and disjoint — a stage in no shard would
 // be a stage CI silently stopped running, which is the exact failure this file's other comments guard
 // against — and `tests/unit/validate-suite.test.mjs` holds it to that.
 export const STAGE_SHARDS = Object.freeze({
   checks: Object.freeze([
     "reference drift", "evidence audit", "vendor hash", "vendor references", "vendor catalog entries",
-    "update manifest", "clean build drift", "official plugin validators", "skill quick validators",
+    "update manifest", "release notes", "clean build drift", "official plugin validators", "skill quick validators",
     "isolation smoke", "diagram render drift", "format smoke",
   ]),
   unit: Object.freeze(["unit tests"]),
   contracts: Object.freeze(["contract tests"]),
   products: Object.freeze(["product tests"]),
+  "suite-adversarial": Object.freeze(["suite adversarial tests"]),
 });
 
 export const SKIPPABLE_STAGES = Object.freeze([

@@ -87,8 +87,8 @@ function assertActiveInventoryStatements({ guideIndex, studioUseCases, marketpla
   }
   assert.match(studioUseCases, /설치된 Studio 스킬 26개의 직접 호출 신호/u);
   assert.match(marketplaceSmoke, /플러그인마다 스킬 25개 이상과 공식 플러그인 검증기/u);
-  assert.equal((marketplaceSmoke.match(/"skills": 25,/gu) ?? []).length, 1, "marketplace success example uses the packaged Career skill count");
-  assert.equal((marketplaceSmoke.match(/"skills": 26,/gu) ?? []).length, 1, "marketplace success example uses the packaged Studio skill count");
+  assert.equal((marketplaceSmoke.match(/"skills": 25,/gu) ?? []).length, 2, "both Career smoke scenarios use the packaged skill count");
+  assert.equal((marketplaceSmoke.match(/"skills": 26,/gu) ?? []).length, 2, "both Studio smoke scenarios use the packaged skill count");
 
   const catalogSources = [
     { id: "excluded-649d189a8231", source: guideIndex, label: "guide index" },
@@ -215,7 +215,7 @@ test("active user documentation keeps the installed Studio 26 and Career 25 skil
     marketplaceSmoke: staleMarketplaceExample,
     archifyCatalog,
     careerWorkbench,
-  }), /Studio skill count/u, "stale marketplace example inventory is rejected");
+  }), /Studio smoke scenarios/u, "stale marketplace example inventory is rejected");
   const staleCatalog = { ...archifyCatalog, entries: archifyCatalog.entries.map((entry) => entry.id === "excluded-902c61df1537" ? { ...entry, decision_reason: entry.decision_reason.replace("스킬 25개", "스킬 21개") } : entry) };
   assert.notDeepEqual(staleCatalog, archifyCatalog, "catalog mutation changes the active statement");
   assert.throws(() => assertActiveInventoryStatements({

@@ -49,7 +49,7 @@ function assertNoRepeatedGenericReasonTemplates(entries) {
 // upstream release's business and changes on every bump. What must not move without review is the number
 // of documents this repository authored a decision about, so that is the count pinned here.
 const VENDOR_MIRROR_ROOTS = Object.freeze(["skills/svg-infographic", "skills/archify", "skills/humanize-korean"]);
-const AUTHORED_CATALOG_ENTRIES = 705;
+const AUTHORED_CATALOG_ENTRIES = 709;
 
 function isVendorMirrorEntry(entry) {
   const document = entry.source_document ?? "";
@@ -434,7 +434,7 @@ test("root README selects the Suite system architecture without changing corpus 
     product: "suite",
     source_document: "README.md",
     source_section: "플러그인 구조와 전체 시스템 아키텍처",
-    question: "사용자 진입점에서 두 기획 플러그인의 작업, 기준 기획 결과물, 자동 검증과 사람 검토·승인을 거쳐 결과가 어떻게 전달되는가?",
+    question: "Codex App·CLI에서 설치·업데이트·전체 정리를 거쳐 대표 스킬이 전문 스킬 또는 오케스트레이터와 검토 역할을 고르고, 기준 결과물의 한국어 최종 편집·자동 검증·사람 승인을 거쳐 결과를 어떻게 전달하는가?",
     decision: "selected",
     diagram_type: "architecture",
     priority: "primary",
@@ -485,10 +485,10 @@ test("Suite catalog cardinality rejects an appended record or duplicate README r
   const catalog = await loadArchifyCatalog({ repoRoot });
   const appended = structuredClone(catalog);
   appended.entries.push({ ...appended.entries[0], id: "unexpected-764th-record", source_document: "guides/README.md" });
-  assert.throws(() => assertSuiteCatalogCardinality(appended), /705/u);
+  assert.throws(() => assertSuiteCatalogCardinality(appended), /709/u);
   const duplicateReadme = structuredClone(catalog);
   duplicateReadme.entries.push({ ...duplicateReadme.entries[0], id: "duplicate-readme-record" });
-  assert.throws(() => assertSuiteCatalogCardinality(duplicateReadme), /705/u);
+  assert.throws(() => assertSuiteCatalogCardinality(duplicateReadme), /709/u);
   duplicateReadme.entries.pop();
   duplicateReadme.entries[1] = { ...duplicateReadme.entries[1], source_document: "README.md" };
   assert.throws(() => assertSuiteCatalogCardinality(duplicateReadme), /exactly one catalog record/u);

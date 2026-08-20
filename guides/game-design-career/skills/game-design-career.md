@@ -60,6 +60,8 @@ $game-design-career:game-design-career CA-C07을 실행 경로로 바꾸고 기�
 
 이 스킬은 자기 파일을 만들지 않습니다. 위임된 스킬이 만든 Canonical Artifact를 `content.md → evidence.yml → export-manifest.yml` 순서로 읽고, workspace에 `route-receipt.json`이 있으면 그 안의 `routeId`만 채웁니다.
 
+첫 응답은 본문 분석보다 먼저 여섯 줄 라우팅 영수증을 공개합니다. 순서는 `소유 제품 → 선택 스킬 → 교차 제품 핸드오프 → 결과물 경로 → 현재 사실·가정·차단 요인 → 다음 사람 결정`으로 고정합니다. 작업 공간의 `route-receipt.json`은 요청 바인딩을 검증하는 기계 영수증이며, 이 여섯 줄은 사용자가 같은 선택을 바로 확인하기 위한 요약입니다.
+
 상대 제품(Studio) 소유로 판정한 요청은 근거만 요청하는 단방향 인계로 나눕니다. 인계는 한 요청에 한 번이고, 상대 제품이 없거나 비활성이면 증거를 지어내지 않고 blocker로 남깁니다.
 
 [![최종 owner와 supplier evidence와 단방향 반환을 나눈 인계 흐름](../../assets/shared/suite-handoff-ownership-flow.png)](../../assets/shared/suite-handoff-ownership-flow.svg)
@@ -67,6 +69,8 @@ $game-design-career:game-design-career CA-C07을 실행 경로로 바꾸고 기�
 #### 다음 스킬 조건
 
 선택된 route가 여러 Career 단계를 함께 다뤄야 할 때만 `$game-design-career:orchestrate-game-design-career`로 넘기고, 그 밖에는 선택된 route가 지목한 `$game-design-career:<selected-skill>`을 직접 호출합니다.
+
+복합 경로는 설치된 전문 역할을 1~3개만 선택하고 역할별 검토 경로와 검토 결과를 남깁니다. 결과는 도착 순서가 아니라 `severity → evidence-gap-id → artifact-section-id → role-priority` 순서로 병합합니다. 한국어 문서를 작성하거나 고쳤다면 분야 검토 뒤 `polish-game-design-writing`과 번들 `$humanize-korean`을 마지막 문장 편집 단계로 실행하고, 이후에는 링크·계약·도식 변경 여부처럼 결과가 정해지는 검사만 수행합니다.
 
 ## 사용하지 않을 때
 
@@ -96,11 +100,11 @@ $game-design-career:game-design-career 포트폴리오와 면접 준비가 섞�
 
 ## 내부 진행 흐름
 
-요청 정규화 다섯 항목을 기록하고, route를 고르고, 사례 ID를 실행 경로로 바꾼 뒤 라우팅 영수증을 공개합니다. route 후보는 [스킬 선택표](README.md)에 실린 설치 스킬로 제한하며, 그 목록에 없는 스킬은 설치되지 않은 것으로 취급합니다.
+요청 정규화 다섯 항목을 기록하고, 경로를 고르고, 사례 ID를 실행 경로로 바꾼 뒤 여섯 줄 라우팅 영수증을 먼저 공개합니다. 경로 후보는 [스킬 선택표](README.md)에 실린 설치 스킬로 제한하며, 그 목록에 없는 스킬은 설치되지 않은 것으로 취급합니다. 단일 요청은 전문 스킬을 직접 실행하고, 복합 요청은 오케스트레이터가 검토 역할과 병합 순서를 기록합니다.
 
 ## 생성 파일과 결과 구조
 
-이 스킬이 만드는 파일은 없습니다. workspace에 `route-receipt.json`이 있으면 `schemaVersion`, `requestSha256`, `bindingNonce`를 그대로 두고 `routeId`만 채웁니다. 예상 결과 요약: 소유 제품, 선택된 스킬 ID, 인계 필요 여부, 생성될 Artifact 경로, 다음 사람 결정이 한 화면에 남습니다.
+이 스킬이 만드는 파일은 없습니다. 작업 공간에 `route-receipt.json`이 있으면 `schemaVersion`, `requestSha256`, `bindingNonce`를 그대로 두고 `routeId`만 채웁니다. 예상 결과 요약에는 여섯 줄 라우팅 영수증, 검토 역할 1~3개와 역할별 근거, 결정적 병합 순서, 위임된 스킬의 산출물 경로가 남습니다.
 
 ## 관련 템플릿·품질 프로필·전문 역할
 

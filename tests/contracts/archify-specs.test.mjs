@@ -215,10 +215,10 @@ function assertArchitectureConnection(spec, from, to) {
 
 const suiteInterfaceCards = [
   {
-    title: "전문 작업 도구",
+    title: "대표 스킬과 전문 작업",
     items: [
-      "게임 제작 기획 플러그인(Studio)은 기획서를 만들고 전문 작업을 연결합니다.",
-      "취업·학습 플러그인(Career)은 승인된 자료만 포트폴리오와 학습에 활용합니다.",
+      "Studio와 Career 대표 스킬은 요청을 한 번 분류하고 여섯 줄 라우팅 영수증을 먼저 공개합니다.",
+      "단일 요청은 전문 스킬로, 복합 요청은 오케스트레이터와 최대 세 개 검토 역할로 보냅니다.",
     ],
   },
   {
@@ -226,6 +226,13 @@ const suiteInterfaceCards = [
     items: [
       "기준 기획 결과물(Canonical Artifact)은 본문·근거·결정 기록을 함께 보관합니다.",
       "내보내기 목록(export-manifest.yml)은 전달 전 점검 맥락을 기록합니다.",
+    ],
+  },
+  {
+    title: "설치·업데이트·정리",
+    items: [
+      "Windows와 Ubuntu에서 한글·공백 경로의 설치, 선택 제거, 재설치와 전체 제거를 같은 수명주기로 확인합니다.",
+      "업데이트는 제품을 다시 적용한 뒤 새 세션에서 확인하고, 제거 뒤에는 플러그인·마켓플레이스 목록과 캐시 잔재를 검사합니다.",
     ],
   },
   {
@@ -302,32 +309,35 @@ function assertSuitePluginSystemArchitecture(spec) {
   assert.equal(spec.diagram_type, "architecture");
   assert.equal(spec.meta.quality_profile, "showcase");
   assert.equal(spec.meta.title, "게임 기획 플러그인 모음 전체 시스템 구조");
-  assert.deepEqual(spec.meta.views.map((view) => view.label), ["플러그인 선택과 경계", "기준 결과물과 자동 검증", "사람 검토·승인과 재개"]);
+  assert.deepEqual(spec.meta.views.map((view) => view.label), ["설치·업데이트·정리", "대표 스킬 라우팅", "기준 결과물과 자동 검증", "사람 검토·승인과 재개"]);
   const ids = new Set(semanticNodeIds(spec));
   for (const id of [
-    "app_cli", "marketplace", "studio_plugin", "career_plugin", "studio_artifact",
-    "career_evidence", "visual_lane", "export_lane", "automated_validation", "held_lane",
-    "human_approval", "delivered_result",
+    "app_cli", "marketplace", "studio_plugin", "career_plugin",
+    "representative_routing", "studio_artifact", "career_artifact", "writing_pass",
+    "automated_validation", "held_lane", "human_approval", "delivered_result",
   ]) assert.ok(ids.has(id), `${id} is required`);
   assert.equal(spec.components.length, 12, "architecture must retain exactly 12 primary components");
   const boundaryByLabel = new Map(spec.boundaries.map((boundary) => [boundary.label, boundary]));
-  for (const label of ["Studio 결과물 저장소", "Career 활용 자료 저장소", "검토·승인 경계"]) {
+  for (const label of ["Studio 결과물 저장소", "Career 결과물 저장소", "검토·승인 경계"]) {
     assert.ok(boundaryByLabel.has(label), `${label} is required`);
   }
   const studioStorage = new Set(boundaryByLabel.get("Studio 결과물 저장소").wraps);
-  const careerStorage = new Set(boundaryByLabel.get("Career 활용 자료 저장소").wraps);
+  const careerStorage = new Set(boundaryByLabel.get("Career 결과물 저장소").wraps);
   assert.equal(studioStorage.has("studio_artifact"), true, "Studio owns its Canonical Artifact");
-  assert.equal(careerStorage.has("career_evidence"), true, "Career owns its evidence candidate");
+  assert.equal(careerStorage.has("career_artifact"), true, "Career owns its Canonical Artifact");
   assert.deepEqual([...studioStorage], ["studio_artifact"], "Studio storage owns only its Artifact");
-  assert.deepEqual([...careerStorage], ["career_evidence"], "Career storage owns only its evidence candidate");
+  assert.deepEqual([...careerStorage], ["career_artifact"], "Career storage owns only its Artifact");
   assert.equal([...studioStorage].some((id) => careerStorage.has(id)), false, "Studio and Career storage must not overlap");
   const byId = new Map(spec.components.map((component) => [component.id, component]));
   assert.match(`${byId.get("app_cli").label} ${byId.get("app_cli").sublabel}`, /사용자 진입점.*Codex App·CLI/u);
   assert.match(`${byId.get("studio_plugin").label} ${byId.get("studio_plugin").sublabel}`, /게임 제작 기획 플러그인.*Studio/u);
   assert.match(`${byId.get("career_plugin").label} ${byId.get("career_plugin").sublabel}`, /취업·학습 플러그인.*Career/u);
+  assert.match(`${byId.get("marketplace").label} ${byId.get("marketplace").sublabel}`, /마켓플레이스 수명주기.*Windows.*Ubuntu.*설치.*업데이트.*전체 정리/u);
+  assert.match(`${byId.get("representative_routing").label} ${byId.get("representative_routing").sublabel}`, /대표 스킬.*여섯 줄.*전문.*복합 경로.*검토 역할 최대 세 개/u);
   assert.match(`${byId.get("studio_artifact").label} ${byId.get("studio_artifact").sublabel}`, /기준 기획 결과물.*Canonical Artifact/u);
   assert.match(`${byId.get("studio_artifact").label} ${byId.get("studio_artifact").sublabel}`, /content\.md.*evidence\.yml.*decisions\//u);
-  assert.match(`${byId.get("career_evidence").label} ${byId.get("career_evidence").sublabel}`, /포트폴리오 활용용 검토 완료 자료/u);
+  assert.match(`${byId.get("career_artifact").label} ${byId.get("career_artifact").sublabel}`, /Career 기준 결과물/u);
+  assert.match(`${byId.get("writing_pass").label} ${byId.get("writing_pass").sublabel}`, /마지막 한국어 편집.*humanize-korean.*보호 검증/u);
   const visibleText = JSON.stringify({
     meta: { title: spec.meta.title, subtitle: spec.meta.subtitle, views: spec.meta.views.map(({ label, note }) => ({ label, note })) },
     components: spec.components.map(({ label, sublabel }) => ({ label, sublabel })),
@@ -343,22 +353,19 @@ function assertSuitePluginSystemArchitecture(spec) {
   assert.equal(spec.components.some((component) => suiteInterfaceCards.some((card) => card.title === component.label)), false, "interface cards must not masquerade as topology nodes");
   for (const [from, to] of [
     ["app_cli", "marketplace"], ["marketplace", "studio_plugin"], ["marketplace", "career_plugin"],
-    ["studio_plugin", "studio_artifact"], ["career_plugin", "career_evidence"],
-    ["studio_artifact", "visual_lane"], ["studio_artifact", "export_lane"],
-    ["visual_lane", "automated_validation"], ["export_lane", "automated_validation"],
+    ["studio_plugin", "representative_routing"], ["career_plugin", "representative_routing"],
+    ["representative_routing", "studio_artifact"], ["representative_routing", "career_artifact"],
+    ["studio_artifact", "writing_pass"], ["career_artifact", "writing_pass"],
+    ["writing_pass", "automated_validation"],
     ["automated_validation", "human_approval"],
-    ["human_approval", "delivered_result"], ["studio_plugin", "human_approval"],
-    ["human_approval", "career_evidence"], ["career_evidence", "career_plugin"],
-    ["automated_validation", "held_lane"], ["held_lane", "studio_artifact"],
+    ["human_approval", "delivered_result"], ["automated_validation", "held_lane"],
   ]) assertArchitectureConnection(spec, from, to);
-  const visualValidation = spec.connections.find((connection) => connection.from === "visual_lane" && connection.to === "automated_validation");
-  const exportValidation = spec.connections.find((connection) => connection.from === "export_lane" && connection.to === "automated_validation");
-  assert.notEqual(visualValidation?.toSide, exportValidation?.toSide, "visual and export validation ingress must be distinguishable");
-  assert.equal(architecturePathExists(spec, "studio_plugin", "career_evidence", new Set(["human_approval"])), false, "Studio may reach Career evidence only after human approval");
-  assert.equal(architecturePathExists(spec, "automated_validation", "studio_artifact", new Set(["held_lane"])), false, "validation failure may return to the Artifact only through held_lane");
-  assert.equal(spec.connections.some((connection) => connection.from === "studio_artifact" && connection.to === "career_evidence"), false, "Artifact must not bypass approval into Career evidence");
-  assert.equal(spec.connections.some((connection) => connection.from === "studio_plugin" && connection.to === "career_evidence"), false, "Studio must not bypass approval into Career evidence");
+  for (const [product, artifact] of [["studio_plugin", "studio_artifact"], ["career_plugin", "career_artifact"]]) {
+    assert.equal(architecturePathExists(spec, product, artifact, new Set(["representative_routing"])), false, `${product} must not bypass representative routing`);
+    assert.match(`${byId.get("representative_routing").label} ${byId.get("representative_routing").sublabel}`, /검토 역할 최대 세 개/u, `${product} selected review roles remain visible in the routing boundary`);
+  }
   assert.equal(spec.connections.some((connection) => connection.from === "automated_validation" && connection.to === "studio_artifact"), false, "validation must not bypass held_lane");
+  assert.equal(spec.connections.some((connection) => connection.from === "held_lane" && connection.to === "studio_artifact"), false, "held work must stay preserved instead of silently rewriting the Studio Artifact");
   assert.equal(spec.connections.some((connection) => connection.to === "delivered_result" && connection.from !== "human_approval"), false, "derived output must not bypass human approval");
   const approvalView = spec.meta.views.find((view) => view.id === "human-approval");
   for (const id of ["human_approval", "held_lane", "studio_artifact", "automated_validation", "delivered_result"]) {
@@ -497,23 +504,23 @@ test("Suite plugin system architecture rejects approval and hold bypasses plus s
   };
   const directDelivery = {
     ...spec,
-    connections: [...spec.connections, { from: "visual_lane", to: "delivered_result" }],
+    connections: [...spec.connections, { from: "writing_pass", to: "delivered_result" }],
   };
   const swappedStorageOwnership = {
     ...spec,
     boundaries: spec.boundaries.map((boundary) => boundary.label === "Studio 결과물 저장소"
-      ? { ...boundary, wraps: ["career_evidence"] }
-      : boundary.label === "Career 활용 자료 저장소"
+      ? { ...boundary, wraps: ["career_artifact"] }
+      : boundary.label === "Career 결과물 저장소"
         ? { ...boundary, wraps: ["studio_artifact"] }
         : boundary),
   };
   const studioArtifactBypass = {
     ...spec,
-    connections: [...spec.connections, { from: "studio_artifact", to: "career_evidence" }],
+    connections: [...spec.connections, { from: "studio_plugin", to: "studio_artifact" }],
   };
-  const studioPluginBypass = {
+  const careerArtifactBypass = {
     ...spec,
-    connections: [...spec.connections, { from: "studio_plugin", to: "career_evidence" }],
+    connections: [...spec.connections, { from: "career_plugin", to: "career_artifact" }],
   };
   const validationBypass = {
     ...spec,
@@ -527,16 +534,16 @@ test("Suite plugin system architecture rejects approval and hold bypasses plus s
   assert.throws(() => assertSuitePluginSystemArchitecture(withoutApproval), /human_approval/u);
   assert.throws(() => assertSuitePluginSystemArchitecture(directDelivery), /bypass human approval/u);
   assert.throws(() => assertSuitePluginSystemArchitecture(swappedStorageOwnership), /Studio owns its Canonical Artifact/u);
-  assert.throws(() => assertSuitePluginSystemArchitecture(studioArtifactBypass), /Studio may reach Career evidence only after human approval/u);
-  assert.throws(() => assertSuitePluginSystemArchitecture(studioPluginBypass), /Studio may reach Career evidence only after human approval/u);
-  assert.throws(() => assertSuitePluginSystemArchitecture(validationBypass), /validation failure may return to the Artifact only through held_lane/u);
+  assert.throws(() => assertSuitePluginSystemArchitecture(studioArtifactBypass), /must not bypass representative routing/u);
+  assert.throws(() => assertSuitePluginSystemArchitecture(careerArtifactBypass), /must not bypass representative routing/u);
+  assert.throws(() => assertSuitePluginSystemArchitecture(validationBypass), /validation must not bypass held_lane/u);
   assert.throws(() => assertSuitePluginSystemArchitecture(withoutHeldLane), /held_lane/u);
 });
 
 test("Suite plugin system architecture rejects missing, swapped, merged, or sublabel-only interface cards", async () => {
   const { specsById } = await loadProductionSpecs(repoRoot, "suite");
   const spec = suitePluginSystemArchitecture(specsById);
-  const withoutSkillCard = { ...spec, cards: spec.cards.filter((card) => card.title !== "전문 작업 도구") };
+  const withoutSkillCard = { ...spec, cards: spec.cards.filter((card) => card.title !== "대표 스킬과 전문 작업") };
   const swappedCards = {
     ...spec,
     cards: suiteInterfaceCards.map((card, index) => ({ ...card, items: suiteInterfaceCards[(index + 1) % suiteInterfaceCards.length].items })),

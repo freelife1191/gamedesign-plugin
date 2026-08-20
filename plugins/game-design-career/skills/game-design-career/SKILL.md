@@ -58,6 +58,17 @@ Publish this first, before any analysis, advice, or draft. A receipt that arrive
 - current facts, assumptions, and blockers
 - the next step that needs a human decision
 
+Use these exact Korean labels in this exact order. A leading `- ` is allowed, but do not replace, translate, bold, or reorder the labels:
+
+- `소유 제품: game-design-career`
+- `선택 스킬: <actual-skill-or-orchestrator-id>`
+- `교차 제품 핸드오프: <없음-or-confirmed-handoff-path>`
+- `결과물 경로: <created-or-updated-artifact-paths>`
+- `현재 사실·가정·차단 요인: <facts-assumptions-blockers>`
+- `다음 사람 결정: <next-human-decision>`
+
+`선택 스킬`에는 이 대표 진입점의 ID인 `game-design-career`를 적지 않습니다. `route-receipt.json`의 `routeId`가 실제로 넘긴 전문 스킬이나 오케스트레이터 ID를 기록합니다.
+
 When the workspace carries a `route-receipt.json`, keep its `schemaVersion`, `requestSha256`, and `bindingNonce` exactly as written and fill `routeId` with the id of a route that exists in [routing.json](../../references/routing.json) `routes`. Never claim a skill ran that did not run.
 
 ## Cross-product handoff
@@ -70,6 +81,7 @@ One request carries at most one handoff, and only the owner starts it. The suppl
 - Never route to a skill that is absent from `skillIds`.
 - Never invent a value the user did not give. Unknown stays `미정`.
 - Never report a skill, an artifact, or a validation that did not actually run.
+- When the routed result writes or revises Korean prose, require `polish-game-design-writing` as the final editorial pass. Its bundled `$humanize-korean` run and protected-content validator must finish before export; only deterministic validation may follow, with no further prose editing. If the pass fails, preserve the canonical original and report a blocked, resumable handoff instead of silently falling back.
 
 ## Completion report
 

@@ -26,9 +26,9 @@ const HANGUL_DIRECTORIES = Object.freeze({
   temp: "임시 파일",
 });
 
-// The three files that must survive byte-for-byte: the Korean README is the largest Hangul payload in
-// the package, plugin.json is what the host parses, and the entry skill is what a user first runs. If
-// any of the three drifts between source and install cache, what got installed is not the package.
+// The report calls out these three user-critical files separately: the Korean README is the largest
+// Hangul payload, plugin.json is what the host parses, and the entry skill is what a user first runs.
+// A full-tree fingerprint below additionally proves every packaged file and mode survived unchanged.
 const COMPARED_FILES = Object.freeze(Object.fromEntries(PRODUCTS.map((product) => [
   product,
   Object.freeze(["README.md", ".codex-plugin/plugin.json", `skills/${product}/SKILL.md`]),
@@ -105,6 +105,76 @@ export async function compareInstalledFiles(sourceRoot, cacheRoot, relativePaths
     compared.push({ path: relative, sha256: digest });
   }
   return compared;
+}
+
+function installedPlugins(listing) {
+  if (!listing || typeof listing !== "object" || !Array.isArray(listing.installed)) {
+    throw new DiagnosticError("plugin list returned no installed collection");
+  }
+  return listing.installed;
+}
+
+function pluginIsListed(listing, product) {
+  return installedPlugins(listing).some((entry) => entry?.pluginId === `${product}@${MARKETPLACE}`
+    || (entry?.name === product && entry?.marketplaceName === MARKETPLACE));
+}
+
+function marketplaceIsListed(listing) {
+  if (!listing || typeof listing !== "object" || !Array.isArray(listing.marketplaces)) {
+    throw new DiagnosticError("marketplace list returned no marketplaces collection");
+  }
+  return listing.marketplaces.some((entry) => entry?.name === MARKETPLACE);
+}
+
+async function pathExists(target) {
+  return lstat(target).then(() => true).catch(() => false);
+}
+
+async function stateJsonFiles(root) {
+  const files = [];
+  const walk = async (directory) => {
+    const entries = await readdir(directory, { withFileTypes: true }).catch((error) => {
+      if (error?.code === "ENOENT") return [];
+      throw error;
+    });
+    for (const entry of entries) {
+      const absolute = path.join(directory, entry.name);
+      if (entry.isSymbolicLink()) throw new DiagnosticError("Codex state contains a symlink");
+      if (entry.isDirectory()) {
+        await walk(absolute);
+      } else if (entry.isFile() && entry.name.endsWith(".json")) {
+        files.push(absolute);
+      }
+    }
+  };
+  await walk(root);
+  return files;
+}
+
+export async function assertNoProductStateResidue(codexHome, productSources) {
+  const cacheRoot = path.join(codexHome, "plugins", "cache", MARKETPLACE);
+  for (const product of PRODUCTS) {
+    if (await pathExists(path.join(cacheRoot, product))) {
+      throw new DiagnosticError(`${product} cache remains after marketplace removal`);
+    }
+  }
+  const needles = PRODUCTS.flatMap((product) => [
+    `${product}@${MARKETPLACE}`,
+    ...(Array.isArray(productSources.get(product)) ? productSources.get(product) : [productSources.get(product)]),
+  ]);
+  for (const stateFile of await stateJsonFiles(codexHome)) {
+    const text = await readFile(stateFile, "utf8");
+    let parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      continue;
+    }
+    const serialized = JSON.stringify(parsed).normalize("NFC");
+    if (needles.some((needle) => needle && serialized.includes(needle.normalize("NFC")))) {
+      throw new DiagnosticError("product identifier or source path remains in Codex state JSON after removal");
+    }
+  }
 }
 
 // A launcher is either a native executable we spawn directly, or a JavaScript entry we hand to node.
@@ -191,6 +261,7 @@ export async function runInstallRoundtrip({
   requireCodex = false,
   codexPath = null,
   findExecutableImpl = findExecutable,
+  runImpl = run,
 } = {}) {
   const codex = codexPath ?? await findExecutableImpl("codex");
   if (!codex) {
@@ -214,6 +285,7 @@ export async function runInstallRoundtrip({
   const marketplaceRoot = path.join(registration.root, HANGUL_DIRECTORIES.marketplace);
   const workspace = path.join(registration.root, HANGUL_DIRECTORIES.workspace);
   const products = [];
+  const productSources = new Map();
   let status = "INCOMPLETE";
   let failure = null;
   let temporaryStateCleanup = false;
@@ -232,7 +304,7 @@ export async function runInstallRoundtrip({
     await stageMarketplaceSource(canonicalRepoRoot, marketplaceRoot);
 
     stage = "marketplace-add";
-    run(codex, ["plugin", "marketplace", "add", marketplaceRoot, "--json"], { cwd: workspace, env, json: true });
+    await runImpl(codex, ["plugin", "marketplace", "add", marketplaceRoot, "--json"], { cwd: workspace, env, json: true });
     stage = "workspace-fingerprint-before";
     const workspaceBefore = await treeFingerprint(workspace);
 
@@ -247,15 +319,16 @@ export async function runInstallRoundtrip({
       // second run to be a real no-op rather than a partial rewrite of the cache.
       for (const attempt of ["install", "reinstall"]) {
         stage = `plugin-add:${product}:${attempt}`;
-        run(codex, ["plugin", "add", `${product}@${MARKETPLACE}`, "--json"], { cwd: workspace, env, json: true });
+        await runImpl(codex, ["plugin", "add", `${product}@${MARKETPLACE}`, "--json"], { cwd: workspace, env, json: true });
         if (!samePathAfterNfc(await realpath(cacheRoot), cacheRoot)) {
           throw new DiagnosticError(`${attempt} resolved the plugin cache outside its declared path`);
         }
       }
 
       stage = `plugin-list:${product}`;
-      const listed = run(codex, ["plugin", "list", "--json"], { cwd: workspace, env, json: true });
+      const listed = await runImpl(codex, ["plugin", "list", "--json"], { cwd: workspace, env, json: true });
       assertNoReplacementCharacter(JSON.stringify(listed), "plugin list");
+      if (!pluginIsListed(listed, product)) throw new DiagnosticError(`${product} is absent from plugin list after reinstall`);
 
       stage = `compare-installed-files:${product}`;
       const compared = await compareInstalledFiles(
@@ -265,8 +338,54 @@ export async function runInstallRoundtrip({
         product,
       );
 
-      products.push({ product, version, compared });
+      stage = `compare-installed-tree:${product}`;
+      const sourceFingerprint = await treeFingerprint(path.join(marketplaceRoot, "plugins", product));
+      const cacheFingerprint = await treeFingerprint(cacheRoot);
+      if (sourceFingerprint !== cacheFingerprint) {
+        throw new DiagnosticError(`${product} tree differs between source and install cache`);
+      }
+
+      productSources.set(product, [path.join(marketplaceRoot, "plugins", product), cacheRoot]);
+      products.push({ product, version, compared, fingerprint: sourceFingerprint });
     }
+
+    stage = "plugin-remove:game-design-studio";
+    await runImpl(codex, ["plugin", "remove", `game-design-studio@${MARKETPLACE}`, "--json"], { cwd: workspace, env, json: true });
+    stage = "plugin-list:career-survives-studio-removal";
+    const studioRemoved = await runImpl(codex, ["plugin", "list", "--json"], { cwd: workspace, env, json: true });
+    assertNoReplacementCharacter(JSON.stringify(studioRemoved), "plugin list after Studio removal");
+    if (pluginIsListed(studioRemoved, "game-design-studio")) {
+      throw new DiagnosticError("game-design-studio remains listed after its removal");
+    }
+    if (!pluginIsListed(studioRemoved, "game-design-career")) {
+      throw new DiagnosticError("game-design-career did not survive game-design-studio removal");
+    }
+
+    stage = "plugin-readd:game-design-studio";
+    await runImpl(codex, ["plugin", "add", `game-design-studio@${MARKETPLACE}`, "--json"], { cwd: workspace, env, json: true });
+    const studioReadded = await runImpl(codex, ["plugin", "list", "--json"], { cwd: workspace, env, json: true });
+    if (!pluginIsListed(studioReadded, "game-design-studio") || !pluginIsListed(studioReadded, "game-design-career")) {
+      throw new DiagnosticError("both products are not listed after game-design-studio re-add");
+    }
+
+    for (const product of PRODUCTS) {
+      stage = `plugin-remove:${product}:final`;
+      await runImpl(codex, ["plugin", "remove", `${product}@${MARKETPLACE}`, "--json"], { cwd: workspace, env, json: true });
+    }
+    stage = "marketplace-remove";
+    await runImpl(codex, ["plugin", "marketplace", "remove", MARKETPLACE, "--json"], { cwd: workspace, env, json: true });
+    stage = "plugin-list:final";
+    const finalPlugins = await runImpl(codex, ["plugin", "list", "--json"], { cwd: workspace, env, json: true });
+    assertNoReplacementCharacter(JSON.stringify(finalPlugins), "final plugin list");
+    if (PRODUCTS.some((product) => pluginIsListed(finalPlugins, product))) {
+      throw new DiagnosticError("a removed product remains in the final plugin list");
+    }
+    stage = "marketplace-list:final";
+    const finalMarketplaces = await runImpl(codex, ["plugin", "marketplace", "list", "--json"], { cwd: workspace, env, json: true });
+    assertNoReplacementCharacter(JSON.stringify(finalMarketplaces), "final marketplace list");
+    if (marketplaceIsListed(finalMarketplaces)) throw new DiagnosticError("marketplace remains in the final marketplace list");
+    stage = "state-cleanup:final";
+    await assertNoProductStateResidue(env.CODEX_HOME, productSources);
 
     stage = "workspace-fingerprint-after";
     if (await treeFingerprint(workspace) !== workspaceBefore) {

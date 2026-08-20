@@ -41,9 +41,12 @@
   "writingWorkflow": {
     "skill": "polish-game-design-writing",
     "role": "game-design-writing-editor",
-    "placement": "after-content-domain-review-before-export",
+    "placement": "final-editorial-pass-after-content-domain-review-before-export",
+    "requiredFor": "korean-prose-document",
     "reviewerBound": "dedicated-specialist-pass-outside-primary-reviewer-cap",
-    "humanizeKoreanSkill": "humanize-korean"
+    "humanizeKoreanSkill": "humanize-korean",
+    "postHumanizeValidation": ["protected-content", "links", "contracts", "diagram-drift"],
+    "onFailure": "preserve-canonical-original-and-report-blocked-resumable-handoff"
   },
   "directUseReviewOwners": [
     {
