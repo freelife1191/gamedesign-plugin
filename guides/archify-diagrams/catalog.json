@@ -12462,7 +12462,7 @@
       "product": "suite",
       "source_document": "README.md",
       "source_section": "플러그인 구조와 전체 시스템 아키텍처",
-      "source_digest": "be8f5964b628016d8b5435a83a03a304bb9fd7a92f291fd6389f56f0b3ff26fa",
+      "source_digest": "42ac56e62674a858d7a5fa28de68b8450f094cf2d739cfa68e02a057a213ae5b",
       "question": "Codex App·CLI에서 설치·업데이트·전체 정리를 거쳐 대표 스킬이 전문 스킬 또는 오케스트레이터와 검토 역할을 고르고, 기준 결과물의 한국어 최종 편집·자동 검증·사람 승인을 거쳐 결과를 어떻게 전달하는가?",
       "decision": "selected",
       "decision_reason": "Windows·Ubuntu 설치 수명주기, Studio와 Career 대표 진입 경계, 전문 스킬·오케스트레이터·최대 세 개 검토 역할, Canonical Artifact, 마지막 한국어 편집과 사람 승인이 만나는 전체 전달 구조를 함께 설명한다.",

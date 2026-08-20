@@ -354,10 +354,8 @@ test("entry, install, quick-start, workflow, FAQ, and skill guides link to produ
   assert.match(rootReadme, /suite-project-memory-lifecycle\.html/u);
   assert.match(rootReadme, /guides\/game-design-studio\/memory\.md/u);
   assert.match(rootReadme, /guides\/game-design-career\/memory\.md/u);
-  assert.match(rootReadme, /@Game Design Studio 지난 플레이테스트 결과와 승인된 프로젝트 교훈/u);
-  assert.match(rootReadme, /이번 작업에서는 이전 기억을 사용하지 마/u);
-  assert.match(rootReadme, /기억 후보를 보여줘/u);
-  assert.match(rootReadme, /이 교훈은 앞으로 이 프로젝트에 적용해/u);
+  assert.match(rootReadme, /검토와 승인을 마친 기록만 다음 요청에서 다시 쓰는 방법/u);
+  assert.match(rootReadme, /모든 대화나 문서를 자동으로 모으지 않/u);
 
   for (const product of products) {
     const memoryGuide = await readFile(path.join(root, "guides", product, "memory.md"), "utf8");
@@ -371,16 +369,17 @@ test("entry, install, quick-start, workflow, FAQ, and skill guides link to produ
   }
 });
 
-test("root README keeps its H2 order, TOC, and 18 representative cards", async () => {
+test("root README keeps its H2 order, TOC, and compact prompt-guide handoff", async () => {
   const markdown = await readFile(path.join(root, "README.md"), "utf8");
   assert.deepEqual(headingNames(markdown, 2), rootH2);
   for (const heading of rootH2) {
     assert.match(markdown, new RegExp(`\\[${escapeRegExp(heading)}\\]\\(#`, "u"), heading);
   }
-  assert.equal((markdown.match(/<details data-prompt-id=/gu) ?? []).length, 18);
-  assert.equal((markdown.match(/data-prompt-id="studio:case:/gu) ?? []).length, 7);
-  assert.equal((markdown.match(/data-prompt-id="career:case:/gu) ?? []).length, 7);
-  assert.equal((markdown.match(/data-prompt-id="suite:[^"]+:case"/gu) ?? []).length, 4);
+  assert.equal((markdown.match(/<details data-prompt-id=/gu) ?? []).length, 0);
+  assert.match(markdown, /guides\/prompt-templates\/README\.md/u);
+  assert.match(markdown, /guides\/game-design-studio\/use-cases\/README\.md/u);
+  assert.match(markdown, /guides\/game-design-career\/use-cases\/README\.md/u);
+  assert.match(markdown, /전체 146개 요청문/u);
 });
 
 test("changed guides keep relative Markdown links resolvable", async () => {

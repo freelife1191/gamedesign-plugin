@@ -35,7 +35,6 @@ function parseUpdateGuide(markdown, heading) {
 
 test("update guides express advisory-only lifecycle semantics through their parsed sections", async () => {
   const sources = [
-    ["README.md", "업데이트·재설치하기"],
     ["products/game-design-studio/plugin/README.md", "업데이트와 제거"],
     ["products/game-design-career/plugin/README.md", "업데이트와 제거"],
     ["shared/contracts/README.md", "업데이트 알림 계약"],
@@ -51,6 +50,18 @@ test("update guides express advisory-only lifecycle semantics through their pars
     assert.equal(guide.cacheBoundary, true, `${filename}: never asks users to edit installed cache folders`);
     assert.equal(guide.explicitCommands.some((command) => command.includes("marketplace upgrade")), true, `${filename}: update execution stays an explicit command`);
   }
+});
+
+test("root README summarizes the safe update path and delegates lifecycle details", async () => {
+  const markdown = await readFile(path.join(root, "README.md"), "utf8");
+  const installation = section(markdown, "설치하기").join("\n");
+  assert.match(installation, /upgrade-game-design-suite/u);
+  assert.match(installation, /비교 단계에서는 설치본을 바꾸지 않습니다/u);
+  assert.match(installation, /사용자가 승인하면/u);
+  assert.match(installation, /새 세션에서 재개/u);
+  assert.match(installation, /guides\/game-design-studio\/installation\.md/u);
+  assert.match(installation, /guides\/game-design-career\/installation\.md/u);
+  assert.doesNotMatch(installation, /codex plugin remove/u);
 });
 
 for (const product of ["game-design-studio", "game-design-career"]) {

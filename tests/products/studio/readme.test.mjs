@@ -816,25 +816,15 @@ test("README inventories the exact packaged runtime scripts and shared quality s
   );
 });
 
-test("root README describes both packaged quality-profile catalogs without source attribution claims", async () => {
+test("root README summarizes packaged validation and delegates technical inventories", async () => {
   const readme = await readFile(path.join(repoRoot, "README.md"), "utf8");
-  assert.deepEqual(tableIds(readme, "설치된 최상위 스크립트 (top-level scripts)", 4), topLevelScriptIds);
-  assert.match(readme, /Studio 생성본.*최상위 실행 스크립트 32개/u);
-  assert.match(readme, /Career 생성본.*최상위 실행 스크립트 32개/u);
-  assert.match(readme, /업데이트 검사 2개로 모두 32개/u);
-  assert.deepEqual(tableIds(readme, "설치된 문서 품질 경로 (document-quality)", 4), documentQualityPaths);
-  for (const contract of [
-    /Studio 17개/u,
-    /Career 13개/u,
-    /추가형 오버레이\s*\(additive overlay\) 3개/u,
-    /중립 참고 사전 설정\s*\(neutral reference preset\) 7개/u,
-    /저작용 전용 출처\s*\(authoring-only source\)/u,
-    /추천·보증\s*\(공식 endorsement\)/u,
-    /plugins\/game-design-studio\/references\/shared\/document-quality\//u,
-    /plugins\/game-design-career\/references\/shared\/document-quality\//u,
-  ]) {
-    assert.match(readme, contract, `missing root quality-profile contract: ${contract}`);
-  }
+  assert.match(readme, /검증 스크립트 32개/u);
+  assert.match(readme, /architecture\/plugin-suite\.md/u);
+  assert.match(readme, /guides\/game-design-studio\/document-quality\.md/u);
+  assert.match(readme, /guides\/game-design-career\/document-quality\.md/u);
+  assert.match(readme, /im-not-ai/u);
+  assert.match(readme, /사실·수치·식별자.*승인 상태.*(?:재검증|다시 확인)/su);
+  assert.doesNotMatch(readme, /^####? 설치된 (?:최상위 스크립트|문서 품질 경로)/mu);
 });
 
 test("README local links resolve inside the source plugin root", async () => {
