@@ -70,6 +70,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Install the Codex CLI for installed lifecycle scenarios
+        if: matrix.shard == 'suite-adversarial'
+        run: npm install --no-save --no-fund --no-audit --prefix .codex-cli @openai/codex
       # Several contract tests validate their specs against a real Archify CLI resolved from the host.
       # This puts the copy this repository already vendors, and verifies by hash in the same run, where
       # the resolver looks — so the contracts assert against the real tool rather than being weakened.
@@ -85,6 +88,8 @@ jobs:
       # all four as SKIPPED, so a green run here is never read as a full one.
       - name: Validate suite
         shell: bash
+        env:
+          CODEX_PATH: ${{ github.workspace }}/.codex-cli/node_modules/@openai/codex/bin/codex.js
         run: >-
           node tooling/validate-suite.mjs
           --shard ${{ matrix.shard }}

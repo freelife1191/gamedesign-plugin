@@ -46,9 +46,18 @@ async function snapshotProjectTree(root) {
 }
 
 function localCodex() {
-  const probe = spawnSync("which", ["codex"], { encoding: "utf8" });
+  const configured = process.env.CODEX_PATH?.trim();
+  if (configured) return configured;
+  const locator = process.platform === "win32" ? "where.exe" : "which";
+  const probe = spawnSync(locator, ["codex"], { encoding: "utf8", shell: false });
   assert.equal(probe.status, 0, "local Codex CLI is required for the lifecycle E2E");
-  return probe.stdout.trim();
+  return probe.stdout.split(/\r?\n/u).find(Boolean)?.trim() ?? "";
+}
+
+function spawnCodex(codex, args, options) {
+  return /\.[cm]?js$/u.test(codex)
+    ? spawnSync(process.execPath, [codex, ...args], { ...options, shell: false })
+    : spawnSync(codex, args, { ...options, shell: false });
 }
 
 function isolatedEnvironment(root) {
@@ -67,11 +76,10 @@ function isolatedEnvironment(root) {
 
 function runPluginCommand({ codex, cwd, env, args, commands, stage }) {
   assert.equal(args.includes("exec"), false, `${stage}: advisory lifecycle must not run codex exec`);
-  const result = spawnSync(codex, ["plugin", ...args, "--json"], {
+  const result = spawnCodex(codex, ["plugin", ...args, "--json"], {
     cwd,
     env,
     encoding: "utf8",
-    shell: false,
     timeout: 30_000,
   });
   assert.equal(result.error, undefined, `${stage}: CLI launch error`);

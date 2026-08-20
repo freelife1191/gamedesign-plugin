@@ -109,6 +109,17 @@ test("the offline lane's shards are the tool's partition, so no stage falls betw
   assert.match(workflow, /--shard \$\{\{ matrix\.shard \}\}/u, "the lane has to pass the shard it was given");
 });
 
+test("the adversarial shard installs the cross-platform Codex JavaScript entry it exercises", async () => {
+  const workflow = await readFile(workflowPath, "utf8");
+  const body = laneBody(workflow, "offline-gate");
+  assert.match(body, /if: matrix\.shard == 'suite-adversarial'[\s\S]*?npm install --no-save[^\n]*--prefix \.codex-cli @openai\/codex/u);
+  assert.match(
+    body,
+    /CODEX_PATH: \$\{\{ github\.workspace \}\}\/\.codex-cli\/node_modules\/@openai\/codex\/bin\/codex\.js/u,
+    "the lifecycle tests must bypass the Windows .cmd shim",
+  );
+});
+
 test("the offline lane names every stage it skips, and skips only what CI genuinely cannot run", async () => {
   const workflow = await readFile(workflowPath, "utf8");
 

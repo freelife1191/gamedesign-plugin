@@ -78,11 +78,20 @@ async function assertIsolatedTreesPreserved(before, { workspace, home, codexHome
 }
 
 function localCodex() {
-  const probe = spawnSync("which", ["codex"], { encoding: "utf8" });
+  const configured = process.env.CODEX_PATH?.trim();
+  if (configured) return configured;
+  const locator = process.platform === "win32" ? "where.exe" : "which";
+  const probe = spawnSync(locator, ["codex"], { encoding: "utf8", shell: false });
   assert.equal(probe.status, 0, "local Codex CLI is required for the lifecycle E2E");
-  const executable = probe.stdout.trim();
+  const executable = probe.stdout.split(/\r?\n/u).find(Boolean)?.trim();
   assert.ok(executable, "local Codex CLI path is non-empty");
   return executable;
+}
+
+function spawnCodex(codex, args, options) {
+  return /\.[cm]?js$/u.test(codex)
+    ? spawnSync(process.execPath, [codex, ...args], { ...options, shell: false })
+    : spawnSync(codex, args, { ...options, shell: false });
 }
 
 function isolatedEnvironment(root) {
@@ -108,11 +117,10 @@ function hasExternalUrl(value) {
 function runLocalPluginCommand({ codex, cwd, args, env, evidence, stage }) {
   assert.equal(args.includes("exec"), false, `${stage}: lifecycle must not run codex exec`);
   assert.equal(hasExternalUrl(args), false, `${stage}: local marketplace input must not contain an external URL`);
-  const result = spawnSync(codex, ["plugin", ...args, "--json"], {
+  const result = spawnCodex(codex, ["plugin", ...args, "--json"], {
     cwd,
     env,
     encoding: "utf8",
-    shell: false,
     timeout: 30_000,
   });
   assert.equal(result.error, undefined, `${stage}: CLI launch error`);
@@ -284,7 +292,7 @@ test("explicit plugin update inspection and planning leave isolated Codex state 
 
   // Producing a plan must never be the same thing as applying one: the installed version is still
   // the built one and the cache still holds only that version after both read-only commands.
-  const stillInstalled = spawnSync(codex, ["plugin", "list", "--marketplace", marketplace, "--json"], { cwd: workspace, env, encoding: "utf8", shell: false, timeout: 30_000 });
+  const stillInstalled = spawnCodex(codex, ["plugin", "list", "--marketplace", marketplace, "--json"], { cwd: workspace, env, encoding: "utf8", timeout: 30_000 });
   assert.equal(stillInstalled.status, 0, stillInstalled.stderr);
   assert.deepEqual(JSON.parse(stillInstalled.stdout).installed.map(({ name, version }) => ({ name, version })), [{ name: "game-design-studio", version: builtVersion }], "the plan did not install anything");
   assert.equal(evidence.every((entry) => entry.args.every((argument) => argument !== "upgrade")), true, "test setup never upgrades the marketplace");

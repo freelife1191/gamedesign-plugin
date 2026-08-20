@@ -145,11 +145,18 @@ function defaultRunCommand(command, args, options) {
   return spawnSync(command, args, options);
 }
 
+function codexInvocation(codexPath, args) {
+  return /\.[cm]?js$/u.test(codexPath)
+    ? [process.execPath, [codexPath, ...args]]
+    : [codexPath, args];
+}
+
 function runMarketplaceInspection({ codexPath = "codex", marketplaceName = MARKETPLACE_NAME, runCommand = defaultRunCommand, readText = defaultReadText } = {}) {
   if (marketplaceName !== MARKETPLACE_NAME || typeof codexPath !== "string" || codexPath.length === 0 || typeof runCommand !== "function" || typeof readText !== "function") fail("marketplace inspection");
   let receipt;
   try {
-    receipt = runCommand(codexPath, ["plugin", "list", "--marketplace", MARKETPLACE_NAME, "--available", "--json"], {
+    const [command, args] = codexInvocation(codexPath, ["plugin", "list", "--marketplace", MARKETPLACE_NAME, "--available", "--json"]);
+    receipt = runCommand(command, args, {
       encoding: "utf8",
       shell: false,
       timeout: 30_000,

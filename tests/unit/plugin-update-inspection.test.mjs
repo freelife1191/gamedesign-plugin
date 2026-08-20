@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import process from "node:process";
 import test from "node:test";
 
 import {
@@ -60,6 +61,34 @@ test("inspects only the marketplace available-list command and removes cache pat
     }],
   });
   assert.equal(JSON.stringify(got).includes("/private/tmp"), false, "inspection result does not expose absolute cache or marketplace paths");
+});
+
+test("runs a Codex JavaScript entry through the current Node runtime", () => {
+  const calls = [];
+  const codexPath = "/opt/codex/node_modules/@openai/codex/bin/codex.js";
+  inspectPluginUpdates({
+    codexPath,
+    marketplaceName: marketplace,
+    runCommand(command, args, options) {
+      calls.push({ command, args, options });
+      return {
+        status: 0,
+        signal: null,
+        error: undefined,
+        stderr: "",
+        stdout: JSON.stringify({
+          installed: [localPlugin({ plugin: "game-design-studio", version: "0.1.0", installed: true })],
+          available: [],
+        }),
+      };
+    },
+  });
+
+  assert.deepEqual(calls, [{
+    command: process.execPath,
+    args: [codexPath, "plugin", "list", "--marketplace", marketplace, "--available", "--json"],
+    options: { encoding: "utf8", shell: false, timeout: 30_000 },
+  }]);
 });
 
 test("rejects unclosed marketplace list JSON before producing any update advice", () => {
