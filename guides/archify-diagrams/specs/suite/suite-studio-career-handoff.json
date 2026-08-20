@@ -5,7 +5,7 @@
     "title": "스튜디오에서 커리어로 전달하는 공개 근거",
     "subtitle": "공개 가능한 근거 요약은 이름이 있는 사람의 승인 뒤에만 제품 경계를 넘습니다.",
     "output": "guides/assets/archify/suite/suite-studio-career-handoff.html",
-    "viewBox": [1320, 720],
+    "viewBox": [1320, 480],
     "animation": "none",
     "visual_preset": "editorial",
     "quality_profile": "showcase",
@@ -20,13 +20,13 @@
         "id": "human-approval",
         "label": "승인 관문",
         "focus": ["public_evidence_summary", "decision_owner", "held_handoff"],
-        "note": "권리·근거·영수증이 없으면 이름이 있는 결정 담당자가 공개 범위를 승인하거나 전달을 보류합니다."
+        "note": "권리 확인 자료와 근거, 승인 기록이 없으면 담당자가 공개 범위 승인을 보류합니다."
       },
       {
         "id": "resume-held-review",
         "label": "보류 검토 재개",
         "focus": ["decision_owner", "held_handoff", "resume_receipt"],
-        "note": "차단 원인을 보존하고 새 영수증이 생긴 뒤 같은 공개 범위 검토를 재개합니다."
+        "note": "보류 사유를 남기고 새 승인 기록이 생기면 같은 공개 범위를 다시 검토합니다."
       }
     ]
   },
@@ -74,7 +74,7 @@
     {
       "id": "resume_receipt",
       "type": "messagebus",
-      "label": "승인 영수증",
+      "label": "승인 기록",
       "sublabel": "새 승인 근거",
       "stage": 4,
       "row": 1
@@ -178,9 +178,9 @@
       "dot": "violet",
       "title": "보류와 재개",
       "items": [
-        "권리·근거·승인 영수증이 없으면 보류합니다",
+        "권리 확인 자료·근거·승인 기록이 없으면 보류합니다",
         "차단된 공개 범위 맥락과 원인을 보존합니다",
-        "영수증이 생긴 뒤 같은 사람의 공개 범위 검토를 재개합니다"
+        "새 승인 기록이 생기면 같은 담당자가 공개 범위를 다시 검토합니다"
       ]
     }
   ]

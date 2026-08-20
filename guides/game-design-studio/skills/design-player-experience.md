@@ -35,7 +35,7 @@ $game-design-studio:design-player-experience artifact=game-design/island/first-s
 $game-design-studio:design-player-experience artifact=game-design/island/first-session 기존 관찰 evidence를 보존하고 UI feedback이 authoritative game state를 발명하는 지점을 finding으로 분리해.
 ```
 
-#### 예상 파일과 읽는 순서
+#### 예상 결과와 파일 읽는 순서
 
 `content.md → evidence.yml → export-manifest.yml` 순서로 읽고 `ui-ux-flow-state`, `accessibility-platform-matrix`는 별도 YAML 파일이 아니라 `content.md`의 안정 섹션과 stable ID로 검토합니다. `decisions/`은 실제 결정 기록이 있을 때만 그 뒤에 읽습니다.
 
@@ -94,7 +94,7 @@ interaction/UI states, onboarding, input, performance, cross-platform, accessibi
 
 critical action의 state, cue, input, recovery 또는 sensory alternative가 빠지면 `inaccessible-critical-action` blocker입니다. current 요구사항에 최신 1차 근거가 없으면 release를 승인하지 않습니다.
 
-## 실패·fallback·재개 방법
+## 실패했을 때와 재개 방법
 
 플랫폼 근거나 test participant 정보가 없으면 해당 target을 승인하지 않고 validation task를 보존합니다.
 

@@ -53,7 +53,7 @@ $game-design-career:plan-junior-growth requirementId=R-01 eventId=EV-01
 $game-design-career:plan-junior-growth requirementId=R-01 proofArtifact=portfolio-01
 ```
 
-#### 예상 파일과 읽는 순서
+#### 예상 결과와 파일 읽는 순서
 
 `content.md → evidence.yml → decisions/ → export-manifest.yml` 순서로 읽습니다. `junior-growth-review`, `transition-readiness`를 반환합니다. 검토 owner: `game-design-mentor`.
 
@@ -113,7 +113,7 @@ target requirement register, project-event evidence ledger, quarterly goal recor
 
 검색일·지역·표본의 freshness와 blind spot을 보여 줍니다. project fact, candidate interpretation, 성장 추론과 다음 행동 제안을 구분합니다. unverified plan은 승진·합격·전환 readiness를 보장하지 않습니다.
 
-## 실패·fallback·재개 방법
+## 실패했을 때와 재개 방법
 
 requirement source 또는 proof가 없으면 provisional ID와 verification task를 유지합니다. stale evidence의 기존 기록, stale 상태와 한계를 삭제하지 않고 보존합니다. `research-game-design-jobs`의 재수집·validator 재검증 뒤 새 evidence IDs가 downstream growth `requirementId`와 goal에 다시 결합된 후에만 재개합니다. contradictory feedback과 missing proof도 삭제하지 않습니다.
 

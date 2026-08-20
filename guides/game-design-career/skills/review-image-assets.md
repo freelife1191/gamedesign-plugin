@@ -53,7 +53,7 @@ $game-design-career:review-image-assets assetId=portfolio-proof-01 targetState=d
 $game-design-career:review-image-assets assetId=portfolio-proof-01 targetState=production-candidate reviewer="[이름 있는 검토자]" reviewedAt=2026-08-07T10:00:00+09:00 rightsDecision=approved evidencePaths=decisions/image-rights-review.yml decisionReceipt=<host-user-image-decision>
 ```
 
-#### 예상 파일과 읽는 순서
+#### 예상 결과와 파일 읽는 순서
 
 `content.md → evidence.yml → assets/image-assets.yml` 순서로 읽습니다. `image-asset-review`, `lifecycle-receipt`을 반환합니다. 검토 owner: `named-human-reviewer`. `visual-asset-reviewer`와 `art-brief-director`는 finding·recommendation만 제공합니다. `production-candidate`가 되려면 rightsDecision은 `approved`이고 결과 asset의 `rights.effective_status=active`여야 하며, `active`는 rights decision 값이 아닙니다.
 
@@ -112,7 +112,7 @@ stable asset ID, evidence-bounded findings, named-human decision record, targetS
 
 named reviewer가 없는 경우 transition하지 않습니다. `production-candidate`는 release, legal, 채용 제출 또는 production approval이 아닙니다. `document-approved` 미만 asset을 final MD/PDF/DOCX/PPTX에 binding하지 않습니다.
 
-## 실패·fallback·재개 방법
+## 실패했을 때와 재개 방법
 
 provenance, placement, alt text, rights, accessibility 또는 actual user receipt가 없으면 현재 state를 유지합니다. arbitrary disk JSON과 product specialist ID는 human evidence가 아닙니다.
 

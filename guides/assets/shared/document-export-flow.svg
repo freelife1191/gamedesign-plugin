@@ -1,35 +1,35 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900" role="img" aria-labelledby="title desc" style="font-family:Pretendard,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif">
-  <title id="title">내보내기 준비 상태는 renderer와 QA를 앞서가지 않습니다</title>
-  <desc id="desc">Canonical Artifact export preflight 뒤 모든 형식에 공통으로 적용되는 not-requested, blocked, pending, unavailable 상태와 MD, PDF, DOCX, PPTX의 형식별 검증 차이를 보여 줍니다.</desc>
+  <title id="title">내보내기 상태는 변환 도구와 품질 검사를 앞서가지 않습니다</title>
+  <desc id="desc">기준 결과 폴더를 먼저 확인한 뒤 요청 안 함, 보류, 준비 중, 사용 불가 상태를 기록하고 MD, PDF, DOCX, PPTX마다 필요한 검사를 이어 가는 흐름입니다.</desc>
   <style>svg{--ink:#1f2733;--muted:#5b6675;--hair:#d6e0ec;--blue:#1f6fb2;--purple:#534ab7;--green:#0f7a5f;--amber:#a86700}.title{fill:var(--ink);font-weight:700}.body{fill:var(--muted)}.card-title{font-weight:700}.line{stroke:#5b6675;stroke-width:2;fill:none}.on-accent{fill:#fff}</style>
   <defs><marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path d="M2 2 L10 6 L2 10" fill="none" stroke="#5b6675" stroke-width="2" stroke-linecap="round"/></marker></defs>
   <rect width="1400" height="900" fill="#fff"/>
   <rect x="40" y="48" width="6" height="72" rx="3" fill="var(--blue)"/>
-  <text x="70" y="74" class="title" font-size="42">내보내기 준비 상태는 renderer와 QA를 앞서가지 않습니다</text>
-  <text x="70" y="110" class="body" font-size="20">파일 생성이나 terminal 결과를 먼저 선언하지 않고, 공통 준비 상태와 형식별 다음 검증을 함께 보존합니다.</text>
+  <text x="70" y="74" class="title" font-size="42">내보내기 상태는 변환 도구와 품질 검사를 앞서가지 않습니다</text>
+  <text x="70" y="110" class="body" font-size="20">파일 생성이나 명령 실행 결과를 미리 단정하지 않고, 준비 상태와 형식별 다음 검사를 함께 기록합니다.</text>
   <rect x="40" y="180" width="1320" height="650" rx="20" fill="#f4f8fc" stroke="var(--hair)"/>
-  <g aria-label="읽기 순서 1: 내보내기 preflight">
+  <g aria-label="읽기 순서 1: 내보내기 사전 확인">
     <rect x="80" y="230" width="390" height="130" rx="12" fill="#e8f1fb" stroke="var(--blue)" stroke-width="2"/>
-    <text x="275" y="278" class="card-title" fill="#124267" font-size="25" text-anchor="middle" dominant-baseline="central">Canonical Artifact preflight</text>
-    <text x="275" y="316" class="body" font-size="18" text-anchor="middle">source · evidence · capability · safe output</text>
+    <text x="275" y="278" class="card-title" fill="#124267" font-size="25" text-anchor="middle" dominant-baseline="central">기준 결과 폴더 사전 확인</text>
+    <text x="275" y="316" class="body" font-size="18" text-anchor="middle">원본 · 근거 · 기능 · 안전한 출력</text>
   </g>
   <g aria-label="읽기 순서 2: 공통 준비 상태">
     <rect x="520" y="210" width="760" height="170" rx="16" fill="#f7f5fc" stroke="var(--hair)"/>
     <rect x="552" y="230" width="168" height="34" rx="17" fill="var(--purple)"/>
     <text x="636" y="247" class="on-accent" font-size="17" text-anchor="middle" dominant-baseline="central">공통 준비 상태</text>
-    <rect x="552" y="292" width="155" height="52" rx="26" fill="#fff" stroke="var(--hair)"/><text x="629" y="318" class="card-title" fill="var(--ink)" font-size="17" text-anchor="middle" dominant-baseline="central">not-requested</text>
-    <rect x="725" y="292" width="120" height="52" rx="26" fill="#fff7e8" stroke="#a86700"/><text x="785" y="318" class="card-title" fill="#774800" font-size="17" text-anchor="middle" dominant-baseline="central">blocked</text>
-    <rect x="863" y="292" width="120" height="52" rx="26" fill="#e7f5ef" stroke="var(--green)"/><text x="923" y="318" class="card-title" fill="#085041" font-size="17" text-anchor="middle" dominant-baseline="central">pending</text>
-    <rect x="1001" y="292" width="175" height="52" rx="26" fill="#ecebfb" stroke="var(--purple)"/><text x="1088" y="318" class="card-title" fill="#3c3489" font-size="17" text-anchor="middle" dominant-baseline="central">unavailable</text>
+    <rect x="542" y="292" width="180" height="52" rx="26" fill="#fff" stroke="var(--hair)"/><text x="632" y="318" class="card-title" fill="var(--ink)" font-size="13" text-anchor="middle" dominant-baseline="central">요청 안 함 (not-requested)</text>
+    <rect x="734" y="292" width="155" height="52" rx="26" fill="#fff7e8" stroke="#a86700"/><text x="811" y="318" class="card-title" fill="#774800" font-size="15" text-anchor="middle" dominant-baseline="central">보류 (blocked)</text>
+    <rect x="901" y="292" width="150" height="52" rx="26" fill="#e7f5ef" stroke="var(--green)"/><text x="976" y="318" class="card-title" fill="#085041" font-size="15" text-anchor="middle" dominant-baseline="central">준비 중 (pending)</text>
+    <rect x="1063" y="292" width="190" height="52" rx="26" fill="#ecebfb" stroke="var(--purple)"/><text x="1158" y="318" class="card-title" fill="#3c3489" font-size="15" text-anchor="middle" dominant-baseline="central">사용 불가 (unavailable)</text>
   </g>
   <path d="M700 392V488" class="line" marker-end="url(#arrow)"/>
   <g aria-label="읽기 순서 3: 형식별 다음 검증">
     <rect x="40" y="500" width="1320" height="270" rx="20" fill="#f7f5fc" stroke="var(--hair)"/>
     <path d="M205 540H1195" class="line"/>
     <path d="M205 540V578" class="line" marker-end="url(#arrow)"/><path d="M535 540V578" class="line" marker-end="url(#arrow)"/><path d="M865 540V578" class="line" marker-end="url(#arrow)"/><path d="M1195 540V578" class="line" marker-end="url(#arrow)"/>
-    <rect x="80" y="590" width="250" height="170" rx="12" fill="#e7f5ef" stroke="var(--green)" stroke-width="2"/><text x="205" y="633" class="card-title" fill="#085041" font-size="26" text-anchor="middle" dominant-baseline="central">MD</text><text x="205" y="680" class="body" font-size="19" text-anchor="middle">canonical text 유지</text><text x="205" y="710" class="body" font-size="17" text-anchor="middle">links · assets · NFC</text>
-    <rect x="410" y="590" width="250" height="170" rx="12" fill="#ecebfb" stroke="var(--purple)" stroke-width="2"/><text x="535" y="633" class="card-title" fill="#3c3489" font-size="26" text-anchor="middle" dominant-baseline="central">PDF</text><text x="535" y="680" class="body" font-size="19" text-anchor="middle">모든 page visual QA</text><text x="535" y="710" class="body" font-size="17" text-anchor="middle">source semantics 비교</text>
-    <rect x="740" y="590" width="250" height="170" rx="12" fill="#fff7e8" stroke="#a86700" stroke-width="2"/><text x="865" y="633" class="card-title" fill="#774800" font-size="26" text-anchor="middle" dominant-baseline="central">DOCX</text><text x="865" y="680" class="body" font-size="19" text-anchor="middle">OOXML 관계 QA</text><text x="865" y="710" class="body" font-size="17" text-anchor="middle">모든 page visual QA</text>
-    <rect x="1070" y="590" width="250" height="170" rx="12" fill="#fff" stroke="var(--hair)" stroke-width="2"/><text x="1195" y="633" class="card-title" fill="var(--ink)" font-size="26" text-anchor="middle" dominant-baseline="central">PPTX</text><text x="1195" y="680" class="body" font-size="19" text-anchor="middle">독립 story</text><text x="1195" y="710" class="body" font-size="17" text-anchor="middle">모든 slide visual QA</text>
+    <rect x="80" y="590" width="250" height="170" rx="12" fill="#e7f5ef" stroke="var(--green)" stroke-width="2"/><text x="205" y="633" class="card-title" fill="#085041" font-size="26" text-anchor="middle" dominant-baseline="central">MD</text><text x="205" y="680" class="body" font-size="19" text-anchor="middle">원문 유지</text><text x="205" y="710" class="body" font-size="17" text-anchor="middle">링크 · 자산 · NFC</text>
+    <rect x="410" y="590" width="250" height="170" rx="12" fill="#ecebfb" stroke="var(--purple)" stroke-width="2"/><text x="535" y="633" class="card-title" fill="#3c3489" font-size="26" text-anchor="middle" dominant-baseline="central">PDF</text><text x="535" y="680" class="body" font-size="19" text-anchor="middle">모든 페이지 화면 검사</text><text x="535" y="710" class="body" font-size="17" text-anchor="middle">원본 의미 비교</text>
+    <rect x="740" y="590" width="250" height="170" rx="12" fill="#fff7e8" stroke="#a86700" stroke-width="2"/><text x="865" y="633" class="card-title" fill="#774800" font-size="26" text-anchor="middle" dominant-baseline="central">DOCX</text><text x="865" y="680" class="body" font-size="19" text-anchor="middle">OOXML 연결 검사</text><text x="865" y="710" class="body" font-size="17" text-anchor="middle">모든 페이지 화면 검사</text>
+    <rect x="1070" y="590" width="250" height="170" rx="12" fill="#fff" stroke="var(--hair)" stroke-width="2"/><text x="1195" y="633" class="card-title" fill="var(--ink)" font-size="26" text-anchor="middle" dominant-baseline="central">PPTX</text><text x="1195" y="680" class="body" font-size="19" text-anchor="middle">독립된 이야기 구성</text><text x="1195" y="710" class="body" font-size="17" text-anchor="middle">모든 슬라이드 화면 검사</text>
   </g>
 </svg>

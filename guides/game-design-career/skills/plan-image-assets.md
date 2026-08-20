@@ -53,7 +53,7 @@ $game-design-career:plan-image-assets artifact=artifacts/portfolio mode=select n
 $game-design-career:plan-image-assets artifact=artifacts/roadmap mode=required needs=skillstead-portfolio-roadmap-dependency-diagram:1
 ```
 
-#### 예상 파일과 읽는 순서
+#### 예상 결과와 파일 읽는 순서
 
 `content.md → evidence.yml → export-manifest.yml → assets/image-assets.yml → assets/prompts/image-prompts.md` 순서로 읽습니다. `image-assets-manifest`, `image-prompts`를 반환합니다. 검토 owner: `art-brief-director`.
 
@@ -112,7 +112,7 @@ template의 declared image slot과 finite stable asset ID만 illustration lifecy
 
 planning state는 `concept-draft`입니다. 계획은 portfolio claim, 문서 삽입, 생성 비용 또는 production candidacy를 승인하지 않습니다. prompt와 manifest에는 외부 조직·source project identity를 노출하지 않습니다.
 
-## 실패·fallback·재개 방법
+## 실패했을 때와 재개 방법
 
 profile-slot mismatch나 count 누락이면 plan을 완성하지 않고 blocker와 placeholder를 남깁니다. 기존 stable IDs, human decisions, generated output과 provenance는 replanning 중에도 보존합니다.
 

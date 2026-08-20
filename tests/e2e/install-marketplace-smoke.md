@@ -32,9 +32,9 @@ npm run smoke:marketplace -- --scenario game-design-studio-direct --scenario stu
 | 시나리오 | 기대 경로 | 기대 설치 스킬 | 추가 증거 |
 | --- | --- | --- | --- |
 | `game-design-career-direct` | `junior-growth-plan` | `plan-junior-growth` | 스킬 이름을 모르는 자연어 요청 |
-| `career-entry-orchestration` | `entry-intake` | `orchestrate-game-design-career` | `$game-design-career:game-design-career`, 여섯 줄 영수증, 검토 역할 1~3개, 결정적 병합 |
+| `career-entry-orchestration` | `entry-intake` | `orchestrate-game-design-career` | `$game-design-career:game-design-career`, 여섯 줄의 경로 선택 기록, 검토 역할 1~3개, 결정적 병합 |
 | `game-design-studio-direct` | `vision` | `define-game-vision` | 스킬 이름을 모르는 자연어 요청 |
-| `studio-entry-orchestration` | `project-orchestration` | `orchestrate-game-design-project` | `$game-design-studio:game-design-studio`, 여섯 줄 영수증, 검토 역할 1~3개, 결정적 병합 |
+| `studio-entry-orchestration` | `project-orchestration` | `orchestrate-game-design-project` | `$game-design-studio:game-design-studio`, 여섯 줄의 경로 선택 기록, 검토 역할 1~3개, 결정적 병합 |
 
 1. `game-design-suite` 마켓플레이스와 플러그인 설치·목록·삭제 JSON 계약이 정확히 맞는지 확인합니다.
 2. 플러그인마다 스킬 25개 이상과 공식 플러그인 검증기를 확인합니다.

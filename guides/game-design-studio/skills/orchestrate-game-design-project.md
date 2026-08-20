@@ -35,13 +35,13 @@ $game-design-studio:orchestrate-game-design-project artifact=game-design/island/
 $game-design-studio:orchestrate-game-design-project artifact=game-design/island/brief 기존 Canonical Artifact를 보존하고 blocked gate만 재개하며 routing.json의 한 route씩만 실행해.
 ```
 
-#### 예상 파일과 읽는 순서
+#### 예상 결과와 파일 읽는 순서
 
 `content.md → evidence.yml → export-manifest.yml` 순서로 읽습니다. route·role·gate의 실제 보조 기록은 존재할 때만 `decisions/`, `assets/`에서 확인하며, `game-design-brief`와 `canonical-artifact`는 파일명이 아니라 Artifact의 논리 결과입니다. 사람의 승인과는 별개입니다.
 
 #### 다음 스킬 조건
 
-선택된 route가 vision·systems·content·player-experience·economy/liveops·production·review·visualization·export 중 하나일 때만 같은 route의 `$game-design-studio:<selected-skill>`을 호출합니다.
+선택한 실행 경로가 `vision`, `systems`, `content`, `player-experience`, `economy/liveops`, `production`, `review`, `visualization`, `export` 가운데 하나일 때만 같은 경로의 `$game-design-studio:<selected-skill>`을 호출합니다.
 
 ## 사용하지 않을 때
 
@@ -111,7 +111,7 @@ Canonical Artifact의 `content.md`, `evidence.yml`, `decisions/`, `assets/`, `ex
 
 가정, 미해결 질문, blocked gate, capability 부재를 그대로 보고합니다. profile은 질문과 gate를 추가할 뿐 사실을 발명하지 않으며, 모든 applicable gate는 승인되거나 명시적으로 blocked여야 합니다.
 
-## 실패·fallback·재개 방법
+## 실패했을 때와 재개 방법
 
 optional review, visualization, image 또는 export가 실패해도 canonical Markdown과 통과한 증거를 보존합니다.
 

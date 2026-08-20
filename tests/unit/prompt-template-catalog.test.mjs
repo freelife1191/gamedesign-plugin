@@ -2136,6 +2136,18 @@ test("safety boundaries accept a pure Korean category list with an explicit requ
   assert.match(invalid.errors.join("\n"), /credentials/u);
 });
 
+test("safety boundaries accept 인증 정보 as the Korean credential category", () => {
+  const entry = validEntry(29);
+  entry.safety_boundary = "모르는 정보는 미정으로 남긴다. 인증 정보, 개인정보나 비공개 자료는 요청하지 않는다.";
+  const valid = validatePromptTemplateCatalog({ entries: [entry] });
+  assert.equal(valid.ok, true, valid.errors.join("\n"));
+
+  entry.safety_boundary = "모르는 정보는 미정으로 남긴다. 인증 정보를 제공해라. 개인정보와 비공개 자료는 요청하지 않는다.";
+  const invalid = validatePromptTemplateCatalog({ entries: [entry] });
+  assert.equal(invalid.ok, false);
+  assert.match(invalid.errors.join("\n"), /credentials/u);
+});
+
 test("safety boundaries reject a separate Korean positive request after a direct prohibition", () => {
   for (const boundary of [
     "모르는 정보는 미정으로 남긴다. 개인정보(PII), 비공개 자료, 회사 자산, private material, API keys 또는 credentials를 요청·공개하지 않는다. credentials를 제공해라.",

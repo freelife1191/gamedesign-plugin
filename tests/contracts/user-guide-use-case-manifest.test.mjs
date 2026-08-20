@@ -1084,9 +1084,9 @@ const AUDIENCE_BOUNDARY_EXPECTATIONS = Object.freeze({
   },
   "AUD-05": {
     approver: "문서 책임자",
-    held: "handoff 패키지",
+    held: "인계 자료",
     condition: "내부 자료·팀 PII·권리 불명 자산이 있으면",
-    action: "공개 가능한 사실, 가정, 결정과 재검토 항목만 남겨 handoff 초안을 다시 만들어 줘.",
+    action: "공개 가능한 사실, 가정, 결정과 재검토 항목만 남겨 인계 초안을 다시 만들어 줘.",
     safety: "내부 자료·팀 PII·권리 불명 자산은 입력과 공개 evidence에서 제외",
   },
   "AUD-06": {
@@ -3953,14 +3953,14 @@ test("output catalog separates artifact-relative minimum files from their domain
     for (const row of tableRows(outputCatalog, section)) {
       assert.match(row["최소 파일 경로"], /`content\.md`/, `${section} content root`);
       assert.doesNotMatch(row["최소 파일 경로"], /문제|규칙|가정|관찰|개인 기여|review findings/u, `${section} path-only minimum files`);
-      assert.match(row["내용 범위"], /`content\.md` 내/u, `${section} content description`);
+      assert.match(row["내용 범위"], /`content\.md`(?:의| 내)/u, `${section} content description`);
     }
   }
 });
 
-test("output catalog preserves canonical reading order and renderer quality boundary", async () => {
+test("output catalog preserves canonical reading order and document conversion quality boundary", async () => {
   const { outputCatalog } = await readCommonGuides();
-  const readingOrder = sectionByHeading(outputCatalog, 2, "Canonical Artifact 읽는 순서");
+  const readingOrder = sectionByHeading(outputCatalog, 2, "기준 결과 폴더를 읽는 순서");
   const codeBlock = /```text\n([\s\S]*?)\n```/.exec(readingOrder);
 
   assert.ok(codeBlock, "canonical reading order text block");
@@ -3971,24 +3971,24 @@ test("output catalog preserves canonical reading order and renderer quality boun
     "→ assets/",
     "→ export-manifest.yml",
   ]);
-  assert.match(sectionByHeading(outputCatalog, 2, "최소 결과"), /renderer/);
+  assert.match(sectionByHeading(outputCatalog, 2, "최소 결과"), /문서 변환 도구/);
   assert.match(sectionByHeading(outputCatalog, 2, "선택 결과"), /`concept-draft`/);
   assert.match(
     sectionByHeading(outputCatalog, 2, "확장 결과"),
-    /PDF·DOCX·PPTX.*downstream renderer.*format\/visual QA/,
+    /PDF·DOCX·PPTX.*후속 변환.*형식·화면 검수/,
   );
-  assert.match(readingOrder, /MD.*renderer 부재/);
+  assert.match(readingOrder, /Markdown 원본.*문서 변환 도구/);
 });
 
 test("Studio to Career handoff transfers public evidence only and excludes unsafe material", async () => {
   const { outputCatalog } = await readCommonGuides();
-  const handoff = sectionByHeading(outputCatalog, 2, "Studio → Career handoff");
+  const handoff = sectionByHeading(outputCatalog, 2, "Studio에서 Career로 인계");
   const exclusions = handoff.split("\n").filter((line) => line.startsWith("- "));
 
-  assert.match(handoff, /Studio Canonical Artifact와 Career Canonical Artifact는 분리/);
-  assert.match(handoff, /공개 가능한.*문제.*결정.*검증 evidence/);
+  assert.match(handoff, /Studio와 Career의 기준 결과 폴더는 서로 분리/);
+  assert.match(handoff, /공개 가능한.*문제.*결정.*검증 근거/);
   assert.ok(exclusions.some((line) => /NDA/.test(line)), "excludes NDA material");
-  assert.ok(exclusions.some((line) => /팀 PII/.test(line)), "excludes team PII");
+  assert.ok(exclusions.some((line) => /팀원의.*개인정보/.test(line)), "excludes team PII");
   assert.ok(exclusions.some((line) => /소유권.*확인되지 않은/.test(line)), "excludes rights-unknown assets");
   assert.ok(exclusions.some((line) => /확인되지 않은 팀 성과/.test(line)), "excludes unverified team outcomes");
 });

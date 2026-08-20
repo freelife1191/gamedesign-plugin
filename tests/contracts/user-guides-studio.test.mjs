@@ -19,7 +19,7 @@ const requiredHeadings = [
   "관련 템플릿·품질 프로필·전문 역할",
   "이미지·도식화 조건",
   "검토·승인 기준",
-  "실패·fallback·재개 방법",
+  "실패했을 때와 재개 방법",
   "다음 작업 요청문",
   "관련 문서",
 ];
@@ -57,9 +57,9 @@ const DIRECT_USE_HANDOFFS = Object.freeze({
   "design-game-systems": [["rule precedence", "review-game-design"]],
   "design-player-experience": [["critical action", "review-game-design"]],
   "export-game-design-documents": [["정상적으로 검증된 preparation manifest의 요청 job이 `pending`", "downstream"], ["`unavailable` job의 capability가 `available`로 바뀌었", "export-game-design-documents"]],
-  "game-design-studio": [["선택된 route", "<selected-skill>"]],
+  "game-design-studio": [["선택한 실행 경로", "<selected-skill>"]],
   "generate-image-assets": [["named human approval", "review-image-assets"]],
-  "orchestrate-game-design-project": [["선택된 route", "<selected-skill>"]],
+  "orchestrate-game-design-project": [["선택한 실행 경로", "<selected-skill>"]],
   "plan-game-production": [["scope·risk", "review-game-design"]],
   "plan-image-assets": [["finite illustration job", "generate-image-assets"], ["Skillstead diagram slot", "visualize-game-design"]],
   "review-game-design": [["minimum fix", "review-game-design"], ["diagram gap", "visualize-game-design"], ["all blocker", "export-game-design-documents"]],
@@ -179,7 +179,7 @@ function expectedDirectUseHeadings(skillId) {
   const levels = PAIRED_REQUEST_SURFACE_SKILL_IDS.has(skillId)
     ? ["입문 App 요청문", "입문 CLI 요청문", "응용 App 요청문", "응용 CLI 요청문", "고급 App 요청문", "고급 CLI 요청문"]
     : ["입문 요청문", "응용 요청문", "고급 요청문"];
-  return ["직접 호출 조건", ...levels, "예상 파일과 읽는 순서", "다음 스킬 조건"];
+  return ["직접 호출 조건", ...levels, "예상 결과와 파일 읽는 순서", "다음 스킬 조건"];
 }
 
 function directUseFields(section, skillId) {
@@ -223,7 +223,7 @@ function assertDirectUseContract(markdown, skillId) {
       assert.doesNotMatch(request, /\$game-design-studio:/u, `${skillId}: App request must not paste a CLI selector`);
     }
   }
-  const readOrder = fields["예상 파일과 읽는 순서"];
+  const readOrder = fields["예상 결과와 파일 읽는 순서"];
   assert.match(readOrder, /content\.md\s*→\s*evidence\.yml\s*→\s*export-manifest\.yml/, `${skillId}: canonical read order`);
   for (const path of DIRECT_USE_OUTPUTS[skillId]) assert.ok(readOrder.includes(path), `${skillId}: real output path or state ${path}`);
   assert.doesNotMatch(readOrder, NONEXISTENT_DIRECT_USE_PATHS, `${skillId}: must not invent a logical output as a file`);
@@ -363,10 +363,10 @@ test("Studio direct-use boundaries preserve export preparation, image lifecycle,
   const exportFields = directUseFields(extractDirectUseSection(exportGuide, "export-game-design-documents"), "export-game-design-documents");
   const exportDirectUse = Object.values(exportFields).join("\n");
   assert.match(exportDirectUse, /pending|unavailable|blocked/);
-  assert.match(exportFields["예상 파일과 읽는 순서"], /generation.*not-run|not-run.*generation/i);
-  assert.match(exportFields["예상 파일과 읽는 순서"], /evidence는 비어 있음/);
+  assert.match(exportFields["예상 결과와 파일 읽는 순서"], /generation.*not-run|not-run.*generation/i);
+  assert.match(exportFields["예상 결과와 파일 읽는 순서"], /evidence는 비어 있음/);
   assert.doesNotMatch(
-    [exportFields["직접 호출 조건"], exportFields["입문 요청문"], exportFields["응용 요청문"], exportFields["고급 요청문"], exportFields["예상 파일과 읽는 순서"]].join("\n"),
+    [exportFields["직접 호출 조건"], exportFields["입문 요청문"], exportFields["응용 요청문"], exportFields["고급 요청문"], exportFields["예상 결과와 파일 읽는 순서"]].join("\n"),
     /terminal validation|format QA/i,
     "preparation must not claim downstream generation or QA",
   );
@@ -391,27 +391,27 @@ test("Studio direct-use boundaries preserve export preparation, image lifecycle,
   );
 
   const workbench = await readFile(path.join(root, "guides/game-design-studio/use-cases/skill-workbench.md"), "utf8");
-  assert.match(workbench, /`prompt-only`.*생성 없음/);
-  assert.match(workbench, /`select`.*사용자가 제공한 ordered exact stable IDs/);
-  assert.match(workbench, /host adapter.*immutable selection receipt/);
-  assert.doesNotMatch(workbench, /사용자가 제공한[^.\n]*selection receipt/);
-  assert.match(workbench, /`required`.*`all`.*finite generation/);
-  assert.match(workbench, /named human[\s\S]*concept-draft\s*→\s*document-approved\s*→\s*production-candidate/u);
+  assert.match(workbench, /`prompt-only`.*이미지를 만들지 않습니다/);
+  assert.match(workbench, /`select`.*사용자가 순서까지 정해 고른 자산 ID/);
+  assert.match(workbench, /호스트 기능이 바꿀 수 없는 선택 기록/);
+  assert.doesNotMatch(workbench, /사용자가 제공한[^.\n]*선택 기록/);
+  assert.match(workbench, /`required`.*`all`.*자산 목록에 미리 등록된 범위/);
+  assert.match(workbench, /지정된 담당자[\s\S]*concept-draft\s*→\s*document-approved\s*→\s*production-candidate/u);
   const exportRow = workbench.split("\n").find((line) => line.includes("`export-game-design-documents`"));
-  assert.match(exportRow, /pending.*downstream.*unavailable.*resume/i, "workbench separates normal export handoff from unavailable resume");
+  assert.match(exportRow, /준비 중.*후속 작업.*사용 불가.*재개 조건/u, "workbench separates normal export handoff from unavailable resume");
 
   const svgGuide = await readFile(path.join(root, "guides/game-design-studio/skills/svg-infographic.md"), "utf8");
   const svgFields = directUseFields(extractDirectUseSection(svgGuide, "svg-infographic"), "svg-infographic");
   const svgAdvanced = svgFields["고급 요청문"];
   assert.match(svgAdvanced, /Node 18\+.*부재[\s\S]*manual source checklist[\s\S]*Node-free Chromium[\s\S]*2× PNG/u);
   assert.match(svgAdvanced, /Chromium.*없[\s\S]*SVG-only/u);
-  assertVisualizationReadBranches(svgFields["예상 파일과 읽는 순서"], "svg-infographic");
+  assertVisualizationReadBranches(svgFields["예상 결과와 파일 읽는 순서"], "svg-infographic");
 
   const visualizationGuide = await readFile(path.join(root, "guides/game-design-studio/skills/visualize-game-design.md"), "utf8");
   const visualizationFields = directUseFields(extractDirectUseSection(visualizationGuide, "visualize-game-design"), "visualize-game-design");
-  assertVisualizationReadBranches(visualizationFields["예상 파일과 읽는 순서"], "visualize-game-design");
+  assertVisualizationReadBranches(visualizationFields["예상 결과와 파일 읽는 순서"], "visualize-game-design");
   assert.throws(
-    () => assertVisualizationReadBranches(svgFields["예상 파일과 읽는 순서"].replace("Node-free Chromium branch", "packaged wrapper branch"), "mutated svg branch"),
+    () => assertVisualizationReadBranches(svgFields["예상 결과와 파일 읽는 순서"].replace("Node-free Chromium branch", "packaged wrapper branch"), "mutated svg branch"),
     "Node-free branch relabeled as wrapper must fail",
   );
 });
@@ -698,27 +698,27 @@ test("Studio visualization guides preserve the no-Node Skillstead fallback", asy
 
   for (const guidePath of guidePaths) {
     const markdown = await readFile(path.join(root, guidePath), "utf8");
-    for (const phrase of [
-      "node --version",
-      "Node 18+",
-      "SVG authoring",
-      "machine-linted",
-      "신뢰 가능한 package manager",
-      "정확한 설치 명령",
-      "명시적 승인",
-      "curl | sh",
-      "elevated privilege",
-      "다른 source",
-      "manual source checklist",
-      "render.sh",
-      "Node-free Chromium",
-      "정확한 2× PNG",
-      "visual QA",
-      "SVG-only",
-      "automated source lint",
-      "PNG visual verification",
+    for (const pattern of [
+      /node --version/,
+      /Node(?:\.js)? (?:18\+|18 이상)/,
+      /SVG (?:authoring|작성)/,
+      /(?:machine-linted|자동 검사 완료)/,
+      /신뢰(?: 가능한|할 수 있는) (?:package manager|패키지 관리자)/,
+      /정확한 설치 명령/,
+      /명시적(?:인|으로)? 승인/,
+      /curl \| sh/,
+      /(?:elevated privilege|관리자 권한)/,
+      /다른 (?:source|경로)/,
+      /(?:manual source checklist|수동 원문 확인 목록)/,
+      /render\.sh/,
+      /(?:Node-free|Node\.js 없는) Chromium/,
+      /정확한 (?:2×|2배) PNG/,
+      /(?:visual QA|화면 품질)/,
+      /(?:SVG-only|SVG 초안)/,
+      /(?:automated source lint|원문 자동 검사)/,
+      /(?:PNG visual verification|PNG 화면 검사)/,
     ]) {
-      assert.ok(markdown.includes(phrase), `${guidePath}: missing no-Node contract: ${phrase}`);
+      assert.match(markdown, pattern, `${guidePath}: missing no-Node contract: ${pattern}`);
     }
   }
 });

@@ -53,7 +53,7 @@ $game-design-career:research-game-design-jobs role=systems region=KR retrievalDa
 $game-design-career:research-game-design-jobs role=systems reviewAfter=2026-09-07
 ```
 
-#### 예상 파일과 읽는 순서
+#### 예상 결과와 파일 읽는 순서
 
 `content.md → evidence.yml → decisions/ → export-manifest.yml` 순서로 읽습니다. `job-posting-evidence`, `evidence-gap-plan`을 반환합니다. 검토 owner: `evidence-auditor`.
 
@@ -112,7 +112,7 @@ schema-valid posting records, posting-specific required/preferred, repeated sign
 
 byte-exact source statement가 사실이고, repeated pattern·candidate fit은 별도 추론이며 exercise·proof artifact는 제안입니다. 표본 밖 prevalence나 합격을 보장하지 않습니다. 개인정보·공개 범위와 refresh owner는 사람이 승인합니다.
 
-## 실패·fallback·재개 방법
+## 실패했을 때와 재개 방법
 
 stale, undated, secondary, insecure, future-retrieved source나 count/denominator/geography mismatch는 completion blocker입니다. `reviewAfter` 이후에는 다시 검색하고 검증합니다.
 

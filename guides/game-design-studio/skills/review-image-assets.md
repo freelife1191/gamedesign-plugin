@@ -35,7 +35,7 @@ $game-design-studio:review-image-assets artifact=game-design/island/brief asset=
 $game-design-studio:review-image-assets artifact=game-design/island/brief assets=all named human approval, production candidacy, rejection·rework와 provenance를 asset별로 분리해.
 ```
 
-#### 예상 파일과 읽는 순서
+#### 예상 결과와 파일 읽는 순서
 
 `content.md → evidence.yml → export-manifest.yml → assets/image-assets.yml` 순서로 읽습니다. 실제 generation receipt가 있으면 `assets/receipts/image-generation-<asset-id>-<attempt-id>.json`, named human decision이 있으면 `decisions/image-review-<event-id>.json`을 그 뒤에 읽습니다. `image-asset-review`, `lifecycle-receipt`는 별도 파일명이 아니라 lifecycle의 논리 결과입니다.
 
@@ -94,7 +94,7 @@ asset ID, findings, named human decision, accepted/rejected transition, lifecycl
 
 순서는 `concept-draft → document-approved → production-candidate`입니다. 단계를 건너뛸 수 없고 specialist ID는 named human을 대신하지 않습니다. `production-candidate`도 release/legal/production approval이 아닙니다.
 
-## 실패·fallback·재개 방법
+## 실패했을 때와 재개 방법
 
 권리, 배치, 접근성 또는 user decision evidence가 빠지면 상태를 바꾸지 않고 blocker와 권고를 보존합니다.
 

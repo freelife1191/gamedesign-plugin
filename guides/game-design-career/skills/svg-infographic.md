@@ -53,7 +53,7 @@ $game-design-career:svg-infographic source=competency-matrix output=artifacts/ro
 $game-design-career:svg-infographic source=learning-roadmap fallback=chromium
 ```
 
-#### 예상 파일과 읽는 순서
+#### 예상 결과와 파일 읽는 순서
 
 `content.md → evidence.yml → decisions/ → export-manifest.yml` 순서로 읽습니다. `editable-svg`, `png-2x`, `render-evidence`를 반환합니다. 검토 owner: `game-design-mentor`.
 
@@ -112,7 +112,7 @@ editable SVG authority, derivative PNG, renderer executable/version, lint/render
 
 먼저 `node --version`으로 Node 18+인지 확인합니다. Node는 SVG authoring에는 필요하지 않지만 source lint와 machine-linted handoff에는 필요합니다. 없으면 OS와 신뢰 가능한 package manager, Node 18+ candidate를 확인하고 정확한 설치 명령을 제시한 뒤 명시적 승인을 받습니다. `curl | sh`를 쓰지 않으며 elevated privilege를 알립니다. 설치 실패·구버전이면 다른 source 재시도 전에 새 승인을 받습니다. SVG/PNG는 권리·career evidence·문서 승인이 아닙니다.
 
-## 실패·fallback·재개 방법
+## 실패했을 때와 재개 방법
 
 승인 거절 또는 안전한 route 부재 시 manual source checklist를 완료하고 `render.sh`를 호출하지 않습니다. Node-free Chromium으로 정확한 2× PNG와 visual QA를 수행하되 machine-linted라고 쓰지 않고 automated source lint 미실행을 기록합니다. Chromium도 없으면 SVG-only로 전달하고 automated source lint와 PNG visual verification이 모두 미실행이라고 명시합니다.
 

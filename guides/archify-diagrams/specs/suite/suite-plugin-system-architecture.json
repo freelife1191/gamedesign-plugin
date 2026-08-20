@@ -3,14 +3,14 @@
   "diagram_type": "architecture",
   "meta": {
     "title": "게임 기획 플러그인 모음 전체 시스템 구조",
-    "subtitle": "설치·업데이트·정리부터 대표 스킬 라우팅, 전문 검토, 한국어 윤문, 자동 검증과 담당자 승인까지 한 흐름으로 보여 줍니다.",
+    "subtitle": "설치·업데이트·정리부터 대표 스킬의 경로 선택, 전문 검토, 한국어 윤문, 자동 검증과 담당자 승인까지 한 흐름으로 보여 줍니다.",
     "output": "guides/assets/archify/suite/suite-plugin-system-architecture.html",
     "animation": "none",
     "visual_preset": "editorial",
     "quality_profile": "showcase",
     "views": [
       { "id": "install-lifecycle", "label": "설치·업데이트·정리", "focus": ["app_cli", "marketplace", "studio_plugin", "career_plugin"], "note": "Windows와 Ubuntu에서 한글·공백 경로 설치, 선택 제거, 재설치와 전체 정리를 확인합니다." },
-      { "id": "representative-routing", "label": "대표 스킬 라우팅", "focus": ["studio_plugin", "career_plugin", "representative_routing"], "note": "대표 스킬이 여섯 줄 영수증을 먼저 공개하고 전문 스킬 또는 복합 경로와 검토 역할을 고릅니다." },
+      { "id": "representative-routing", "label": "대표 스킬의 경로 선택", "focus": ["studio_plugin", "career_plugin", "representative_routing"], "note": "대표 스킬이 여섯 줄의 경로 선택 기록을 먼저 보여 주고 전문 스킬 또는 복합 경로와 검토 역할을 고릅니다." },
       { "id": "artifact-validation", "label": "기준 결과물과 자동 검증", "focus": ["representative_routing", "studio_artifact", "career_artifact", "writing_pass", "automated_validation", "held_lane"], "note": "한국어 문장은 마지막 편집과 보호 검증을 거친 뒤 시각화·내보내기와 자동 검증으로 이어집니다." },
       { "id": "human-approval", "label": "담당자 검토·승인과 재개", "focus": ["studio_artifact", "career_artifact", "writing_pass", "automated_validation", "held_lane", "human_approval", "delivered_result"], "note": "자동 검증에 실패하면 원문과 수정 이유를 보존하며, 담당자가 승인하기 전에는 결과를 전달하지 않습니다." }
     ]
@@ -21,7 +21,7 @@
     { "id": "marketplace", "type": "security", "label": "마켓플레이스 수명주기", "sublabel": "Windows·Ubuntu · 한글·공백 · 설치·업데이트·전체 정리", "row": 2, "col": 2, "size": [210, 64] },
     { "id": "studio_plugin", "type": "backend", "label": "게임 제작 기획 플러그인", "sublabel": "Studio 대표 스킬", "row": 0, "col": 4, "size": [180, 60] },
     { "id": "career_plugin", "type": "backend", "label": "취업·학습 플러그인", "sublabel": "Career 대표 스킬", "row": 4, "col": 4, "size": [180, 60] },
-    { "id": "representative_routing", "type": "messagebus", "label": "대표 스킬 라우팅", "sublabel": "여섯 줄 영수증 · 전문·복합 작업 · 검토 역할 최대 세 개", "row": 2, "col": 5, "size": [210, 68] },
+    { "id": "representative_routing", "type": "messagebus", "label": "대표 스킬의 경로 선택", "sublabel": "여섯 줄 기록 · 전문·복합 작업 · 검토 역할 최대 세 개", "row": 2, "col": 5, "size": [210, 68] },
     { "id": "studio_artifact", "type": "database", "label": "Studio 기준 기획 결과물", "sublabel": "Canonical Artifact · content.md·evidence.yml·decisions/", "row": 0, "col": 7, "size": [220, 64] },
     { "id": "career_artifact", "type": "database", "label": "Career 기준 결과물", "sublabel": "단계·근거·포트폴리오·결정 기록", "row": 4, "col": 7, "size": [210, 64] },
     { "id": "writing_pass", "type": "security", "label": "한국어 최종 윤문", "sublabel": "$humanize-korean · 보호 항목 검증 · 문장 확정", "row": 2, "col": 8, "size": [170, 64] },
@@ -33,7 +33,7 @@
   "boundaries": [
     { "kind": "region", "label": "Studio 플러그인", "wraps": ["studio_plugin"] },
     { "kind": "region", "label": "Career 플러그인", "wraps": ["career_plugin"] },
-    { "kind": "region", "label": "대표 라우팅과 검토 역할", "wraps": ["representative_routing"] },
+    { "kind": "region", "label": "경로 선택과 검토 역할", "wraps": ["representative_routing"] },
     { "kind": "security-group", "label": "Studio 결과물 저장소", "wraps": ["studio_artifact"] },
     { "kind": "security-group", "label": "Career 결과물 저장소", "wraps": ["career_artifact"] },
     { "kind": "security-group", "label": "검토·승인 경계", "wraps": ["writing_pass", "automated_validation", "held_lane", "human_approval"] }
@@ -58,7 +58,7 @@
       "dot": "cyan",
       "title": "대표 스킬과 전문 작업",
       "items": [
-        "Studio와 Career 대표 스킬은 요청을 한 번 분류하고 여섯 줄 라우팅 영수증을 먼저 공개합니다.",
+        "Studio와 Career 대표 스킬은 요청을 한 번 분류하고 여섯 줄의 경로 선택 기록을 먼저 보여 줍니다.",
         "단일 요청은 전문 스킬로, 복합 요청은 오케스트레이터와 최대 세 개 검토 역할로 보냅니다."
       ]
     },

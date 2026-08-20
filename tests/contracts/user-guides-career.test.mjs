@@ -28,7 +28,7 @@ const requiredHeadings = [
   "관련 템플릿·품질 프로필·전문 역할",
   "이미지·도식화 조건",
   "검토·승인 기준",
-  "실패·fallback·재개 방법",
+  "실패했을 때와 재개 방법",
   "다음 작업 요청문",
   "관련 문서",
 ];
@@ -225,7 +225,7 @@ function assertRepresentativeRouteTable(markdown, expected, label) {
   const { headers, rows } = extractMarkdownTable(markdown, "대표 사례");
   assert.deepEqual(
     headers,
-    ["사례 ID · 제목 · 대상", "정확한 준비 입력", "전체 스킬 경로", "명시적 직접 요청", "결과 ID · owner · root", "사례 읽는 순서"],
+    ["사례 ID · 제목 · 대상", "정확한 준비 입력", "전체 스킬 경로", "명시적 직접 요청", "결과 ID · 담당자 · 저장 위치", "사례 읽는 순서"],
     `${label}: representative table headers`,
   );
   assert.equal(rows.length, expected.length, `${label}: representative case count`);
@@ -519,7 +519,7 @@ test("Career entry guide shows the App and the CLI request side by side at every
     "입문 App 요청문", "입문 CLI 요청문",
     "응용 App 요청문", "응용 CLI 요청문",
     "고급 App 요청문", "고급 CLI 요청문",
-    "예상 파일과 읽는 순서", "다음 스킬 조건",
+    "예상 결과와 파일 읽는 순서", "다음 스킬 조건",
   ], "Career entry direct-use H4 order");
   const requests = [...section.matchAll(/```text\n([\s\S]*?)\n```/gu)].map((match) => match[1]);
   assert.equal(requests.length, 6, "three App requests and three CLI requests");
@@ -728,13 +728,13 @@ test("Career skill workbench inventories every installed skill once by lane", as
   const inventory = await collectProductInventory(root, "game-design-career");
   const workbench = await readFile(path.join(root, "guides/game-design-career/use-cases/skill-workbench.md"), "utf8");
   const expectedGroups = {
-    "역할·근거 lane": ["apply-document-quality-profile", "humanize-korean", "polish-game-design-writing", "game-design-career", "map-game-design-career", "orchestrate-game-design-career", "research-game-design-jobs", "analyze-game-design-references", "maintain-game-design-glossary"],
-    "역기획·포트폴리오 lane": ["reverse-engineer-game-design", "build-game-design-portfolio", "review-game-design-portfolio"],
-    "면접·성장 lane": ["practice-game-design-interview", "plan-junior-growth"],
-    "이미지·시각화 lane": ["plan-image-assets", "generate-image-assets", "review-image-assets", "svg-infographic", "archify", "visualize-career-roadmap"],
-    "export lane": ["export-career-documents"],
-    "프로젝트 기억 lane": [...SOURCE_BOUND_MEMORY_SKILL_IDS],
-    "설치·업데이트 lane": ["upgrade-game-design-suite"],
+    "역할·근거": ["apply-document-quality-profile", "humanize-korean", "polish-game-design-writing", "game-design-career", "map-game-design-career", "orchestrate-game-design-career", "research-game-design-jobs", "analyze-game-design-references", "maintain-game-design-glossary"],
+    "역기획·포트폴리오": ["reverse-engineer-game-design", "build-game-design-portfolio", "review-game-design-portfolio"],
+    "면접·성장": ["practice-game-design-interview", "plan-junior-growth"],
+    "이미지·시각화": ["plan-image-assets", "generate-image-assets", "review-image-assets", "svg-infographic", "archify", "visualize-career-roadmap"],
+    "문서 내보내기": ["export-career-documents"],
+    "프로젝트 기억": [...SOURCE_BOUND_MEMORY_SKILL_IDS],
+    "설치·업데이트": ["upgrade-game-design-suite"],
   };
   const observed = [];
   for (const [heading, skills] of Object.entries(expectedGroups)) {
@@ -760,7 +760,7 @@ test("Career skill workbench inventories every installed skill once by lane", as
   const mapLink = "[`map-game-design-career`](../skills/map-game-design-career.md)";
   assert.throws(() => assertWorkbenchInventory(workbench.replace(applyLink, "")), /workbench inventory mutation/, "workbench missing skill mutation");
   assert.throws(() => assertWorkbenchInventory(workbench.replace(applyLink, mapLink)), /workbench inventory mutation/, "workbench skill swap/duplicate mutation");
-  assert.match(workbench, /직접 스킬.*입력과 output이 하나로 확정/);
+  assert.match(workbench, /직접 스킬.*입력과 원하는 결과가 하나로 정해졌을 때/);
   assert.match(workbench, /여러 단계.*우선순위.*오케스트레이터|오케스트레이터.*여러 단계.*우선순위/);
 });
 
@@ -990,7 +990,7 @@ test("Career growth and interview guides refresh stale posting evidence before c
     const scopedContract = [
       "필수 입력과 선택 입력",
       "내부 진행 흐름",
-      "실패·fallback·재개 방법",
+      "실패했을 때와 재개 방법",
     ].map((heading) => extractSection(markdown, heading)).join("\n");
 
     for (const phrase of [
@@ -1099,27 +1099,27 @@ test("Career visualization guides preserve the no-Node Skillstead fallback", asy
 
   for (const guidePath of guidePaths) {
     const markdown = await readFile(path.join(root, guidePath), "utf8");
-    for (const phrase of [
-      "node --version",
-      "Node 18+",
-      "SVG authoring",
-      "machine-linted",
-      "신뢰 가능한 package manager",
-      "정확한 설치 명령",
-      "명시적 승인",
-      "curl | sh",
-      "elevated privilege",
-      "다른 source",
-      "manual source checklist",
-      "render.sh",
-      "Node-free Chromium",
-      "정확한 2× PNG",
-      "visual QA",
-      "SVG-only",
-      "automated source lint",
-      "PNG visual verification",
+    for (const pattern of [
+      /node --version/,
+      /Node(?:\.js)? (?:18\+|18 이상)/,
+      /SVG (?:authoring|작성)/,
+      /(?:machine-linted|자동 검사 완료)/,
+      /신뢰(?: 가능한|할 수 있는) (?:package manager|패키지 관리자)/,
+      /정확한 설치 명령/,
+      /명시적(?:인|으로)? 승인/,
+      /curl \| sh/,
+      /(?:elevated privilege|관리자 권한)/,
+      /다른 (?:source|경로)/,
+      /(?:manual source checklist|수동 원문 확인 목록)/,
+      /render\.sh/,
+      /(?:Node-free|Node\.js 없는) Chromium/,
+      /정확한 (?:2×|2배) PNG/,
+      /(?:visual QA|화면 품질)/,
+      /(?:SVG-only|SVG 초안)/,
+      /(?:automated source lint|원문 자동 검사)/,
+      /(?:PNG visual verification|PNG 화면 검사)/,
     ]) {
-      assert.ok(markdown.includes(phrase), `${guidePath}: missing no-Node contract: ${phrase}`);
+      assert.match(markdown, pattern, `${guidePath}: missing no-Node contract: ${pattern}`);
     }
   }
 });
@@ -1150,7 +1150,7 @@ test("Career entry indexes bind exploration links and representative case tables
     ["모든 Career 사용자", "사용 사례 색인", "use-cases/README.md#역량대상직접-스킬-선택"],
     ["역량을 비교하는 사용자", "역량 사례", "use-cases/competency-paths.md#ca-c01-기획-직무와-전문-분야-탐색"],
     ["역할 맥락을 고르는 사용자", "대상 사례", "use-cases/concept-scenarios.md#ca-t01-시스템-기획-입문-학생"],
-    ["입력과 결과가 확정된 사용자", "직접 스킬 작업대", "use-cases/skill-workbench.md#역할근거-lane"],
+    ["입력과 결과가 확정된 사용자", "직접 스킬 작업대", "use-cases/skill-workbench.md#역할근거"],
   ];
   assert.equal(exploration.rows.length, expectedExploration.length, "Career exploration document count");
   for (const [audience, label, target] of expectedExploration) {

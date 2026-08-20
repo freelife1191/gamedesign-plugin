@@ -35,7 +35,7 @@ $game-design-studio:design-game-content artifact=game-design/island/combat ST-C0
 $game-design-studio:design-game-content artifact=game-design/island/quest 기존 evidence와 scope decision을 보존하고 repeatability와 제작 cost가 충돌하는 content 후보를 비교해.
 ```
 
-#### 예상 파일과 읽는 순서
+#### 예상 결과와 파일 읽는 순서
 
 `content.md → evidence.yml → export-manifest.yml` 순서로 읽고 `narrative-quest-npc`, `character-skill-combat-monster`는 별도 YAML 파일이 아니라 `content.md`의 안정 섹션과 stable ID로 확인합니다. `decisions/`은 실제 결정 기록이 있을 때만 그 뒤에 읽습니다.
 
@@ -94,7 +94,7 @@ Canonical Artifact에 콘텐츠 계약, evidence, assumptions, validation tasks,
 
 연결되지 않은 system/data dependency와 근거 없는 비용은 blocker입니다. AI·UGC 자료는 provenance, rights, consent, moderation과 human approver 없이는 승인하지 않습니다.
 
-## 실패·fallback·재개 방법
+## 실패했을 때와 재개 방법
 
 시스템 ID나 pipeline rate가 없으면 추정치를 채우지 않고 해당 부분을 provisional로 보존합니다.
 

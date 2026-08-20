@@ -35,7 +35,7 @@ $game-design-studio:plan-game-production artifact=game-design/island/production 
 $game-design-studio:plan-game-production artifact=game-design/island/production 기존 결정 로그를 보존하고 변경 요청의 core-loop 기여, owner, done, kill criteria를 비교해.
 ```
 
-#### 예상 파일과 읽는 순서
+#### 예상 결과와 파일 읽는 순서
 
 `content.md → evidence.yml → export-manifest.yml` 순서로 읽고 `production-scope-risk`는 별도 YAML 파일이 아니라 `content.md`의 안정 섹션으로 검토합니다. 사람의 `decisions/` 기록이 존재할 때만 그 뒤에 읽습니다.
 
@@ -94,7 +94,7 @@ scope, dependency, maintenance, license/outsource risk, prototype, milestone, Do
 
 target experience, prototype evidence, capacity 근거 또는 owner가 없으면 큰 commitment를 승인하지 않습니다. 자동화는 procurement, staffing, outsourcing과 irreversible scope expansion을 승인하지 않습니다.
 
-## 실패·fallback·재개 방법
+## 실패했을 때와 재개 방법
 
 근거 부족 항목은 `missing-target-experience`, `missing-prototype-evidence`, `unsupported-large-estimate`로 보존합니다.
 

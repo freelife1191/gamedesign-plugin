@@ -114,7 +114,7 @@ Studio에서 검토한 전투 시스템 기획을 Career 포트폴리오 사례�
 
 ### 전체 아키텍처 바로보기
 
-[Archify 전체 플러그인 시스템 구조](guides/assets/archify/suite/suite-plugin-system-architecture.html)에서는 설치부터 대표 스킬 라우팅, 전문 스킬·에이전트 검토, 기준 결과물, 한국어 문장 검증과 담당자 승인까지 한 화면에서 확인합니다.
+[Archify 전체 플러그인 시스템 구조](guides/assets/archify/suite/suite-plugin-system-architecture.html)에서는 설치부터 대표 스킬의 경로 선택, 전문 스킬·에이전트 검토, 기준 결과물, 한국어 문장 검증과 담당자 승인까지 한 화면에서 확인합니다.
 
 [![대표 스킬이 요청을 읽고 담당 제품과 실행 방식을 정하는 흐름](guides/assets/shared/suite-entry-routing-flow.png)](guides/assets/shared/suite-entry-routing-flow.svg)
 
@@ -182,7 +182,7 @@ Studio에서 검토한 전투 시스템 기획을 Career 포트폴리오 사례�
 | Career | 취업 준비생·주니어·직무 전환자·멘토 | 역할 탐색·학습·역기획·포트폴리오·면접 | 게임 기획 경력 계획 (`game-design-career-plan`) |
 | 둘 다 | 검토한 기획을 취업 자료로 발전시킬 사람 | Studio 결과를 Career 사례로 정리 | 제품별 기준 결과 폴더와 인계 기록 |
 
-결정하기 어렵다면 두 제품을 모두 설치하고 원하는 결과만 말하세요. 대표 스킬이 한 제품을 소유자로 정하고 필요한 경우에만 다른 제품으로 인계합니다.
+결정하기 어렵다면 두 제품을 모두 설치하고 원하는 결과만 말하세요. 대표 스킬이 최종 결과를 맡을 제품을 하나 정하고, 필요한 경우에만 다른 제품에 근거를 요청합니다.
 
 ---
 
@@ -389,7 +389,7 @@ project-artifact/
 
 질문에 맞는 Archify 도식을 골라 열 수 있습니다.
 
-- [전체 플러그인 시스템 구조](guides/assets/archify/suite/suite-plugin-system-architecture.html): 설치·라우팅·결과물·검토·승인의 전체 연결
+- [전체 플러그인 시스템 구조](guides/assets/archify/suite/suite-plugin-system-architecture.html): 설치·경로 선택·결과물·검토·승인의 전체 연결
 - [Studio 기획 프로젝트 흐름](guides/assets/archify/studio/studio-project-workflow.html): 게임 비전부터 설계·검토·내보내기까지의 제작 순서
 - [Career 학습·취업 흐름](guides/assets/archify/career/career-evidence-workflow.html): 역할 탐색부터 학습·포트폴리오·면접까지의 연결
 - [Studio 결과를 Career로 정리하는 흐름](guides/assets/archify/suite/suite-studio-career-handoff.html): 검토한 제작 결과를 공개 가능한 사례로 바꾸는 인계 경계

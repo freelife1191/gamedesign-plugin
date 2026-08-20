@@ -35,7 +35,7 @@ $game-design-studio:plan-image-assets artifact=game-design/island/brief profile=
 $game-design-studio:plan-image-assets artifact=game-design/island/brief profile=game-design-brief needs=skillstead-design-flow-diagram:1 mode=required Skillstead diagram slot의 source mapping과 SVG/2× PNG QA handoff만 계획해.
 ```
 
-#### 예상 파일과 읽는 순서
+#### 예상 결과와 파일 읽는 순서
 
 `content.md → evidence.yml → export-manifest.yml → assets/image-assets.yml → assets/prompts/image-prompts.md → assets/prompts/image-prompts.json` 순서로 읽고 stable ID와 mode를 확인합니다. `image-assets-manifest`, `image-prompts`는 별도 파일명이 아니라 이 세 artifact-local 파일이 담는 논리 결과입니다.
 
@@ -94,7 +94,7 @@ template의 declared image slot과 finite stable asset ID만 illustration lifecy
 
 새 자산은 모두 `concept-draft`이며 계획은 승인 증거가 아닙니다. 문서 삽입이나 production candidacy에는 이름 있는 사람의 검토와 artifact-local evidence가 필요합니다.
 
-## 실패·fallback·재개 방법
+## 실패했을 때와 재개 방법
 
 slot mismatch나 필수 입력 누락 시 manifest를 억지로 완성하지 않고 기존 결과와 placeholder를 보존합니다.
 

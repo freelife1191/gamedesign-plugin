@@ -35,7 +35,7 @@ $game-design-studio:design-game-economy-and-liveops artifact=game-design/island/
 $game-design-studio:design-game-economy-and-liveops artifact=game-design/island/economy 기존 telemetry 정의와 owner를 보존하고 price·probability·pity의 근거 공백을 blocked로 남겨.
 ```
 
-#### 예상 파일과 읽는 순서
+#### 예상 결과와 파일 읽는 순서
 
 `content.md → evidence.yml → export-manifest.yml` 순서로 읽고 `economy-balance`, `liveops-experiment-event`는 별도 YAML 파일이 아니라 `content.md`의 안정 섹션으로 검토합니다. rollback 결정은 실제 `decisions/` 기록이 있을 때만 그 뒤에 읽습니다.
 
@@ -94,7 +94,7 @@ Canonical Artifact에 value flow, 실험 계약, assumptions, evidence, gates와
 
 실가격 누락은 `missing-real-price`, 확률 누락은 `missing-probability`, rollback 누락은 `missing-rollback`, 안전하지 않은 실험은 `unsafe-liveops-experiment` blocker입니다. 수치·법적 지위·guardrail은 만들지 않습니다.
 
-## 실패·fallback·재개 방법
+## 실패했을 때와 재개 방법
 
 blocker가 있으면 해당 release/experiment를 No-Go로 두고 관계없는 분석은 보존합니다.
 

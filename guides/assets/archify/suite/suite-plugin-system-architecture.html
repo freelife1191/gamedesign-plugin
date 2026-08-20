@@ -4838,10 +4838,10 @@
         <div class="pulse-dot"></div>
         <h1>게임 기획 플러그인 모음 전체 시스템 구조</h1>
       </div>
-      <p class="subtitle">설치·업데이트·정리부터 대표 스킬 라우팅, 전문 검토, 한국어 윤문, 자동 검증과 담당자 승인까지 한 흐름으로 보여 줍니다.</p>
+      <p class="subtitle">설치·업데이트·정리부터 대표 스킬의 경로 선택, 전문 검토, 한국어 윤문, 자동 검증과 담당자 승인까지 한 흐름으로 보여 줍니다.</p>
     </div>
 
-    <script id="archify-guided-views-data" type="application/json">[{"id":"install-lifecycle","label":"설치·업데이트·정리","focus":["app_cli","marketplace","studio_plugin","career_plugin"],"note":"Windows와 Ubuntu에서 한글·공백 경로 설치, 선택 제거, 재설치와 전체 정리를 확인합니다."},{"id":"representative-routing","label":"대표 스킬 라우팅","focus":["studio_plugin","career_plugin","representative_routing"],"note":"대표 스킬이 여섯 줄 영수증을 먼저 공개하고 전문 스킬 또는 복합 경로와 검토 역할을 고릅니다."},{"id":"artifact-validation","label":"기준 결과물과 자동 검증","focus":["representative_routing","studio_artifact","career_artifact","writing_pass","automated_validation","held_lane"],"note":"한국어 문장은 마지막 편집과 보호 검증을 거친 뒤 시각화·내보내기와 자동 검증으로 이어집니다."},{"id":"human-approval","label":"담당자 검토·승인과 재개","focus":["studio_artifact","career_artifact","writing_pass","automated_validation","held_lane","human_approval","delivered_result"],"note":"자동 검증에 실패하면 원문과 수정 이유를 보존하며, 담당자가 승인하기 전에는 결과를 전달하지 않습니다."}]</script>
+    <script id="archify-guided-views-data" type="application/json">[{"id":"install-lifecycle","label":"설치·업데이트·정리","focus":["app_cli","marketplace","studio_plugin","career_plugin"],"note":"Windows와 Ubuntu에서 한글·공백 경로 설치, 선택 제거, 재설치와 전체 정리를 확인합니다."},{"id":"representative-routing","label":"대표 스킬의 경로 선택","focus":["studio_plugin","career_plugin","representative_routing"],"note":"대표 스킬이 여섯 줄의 경로 선택 기록을 먼저 보여 주고 전문 스킬 또는 복합 경로와 검토 역할을 고릅니다."},{"id":"artifact-validation","label":"기준 결과물과 자동 검증","focus":["representative_routing","studio_artifact","career_artifact","writing_pass","automated_validation","held_lane"],"note":"한국어 문장은 마지막 편집과 보호 검증을 거친 뒤 시각화·내보내기와 자동 검증으로 이어집니다."},{"id":"human-approval","label":"담당자 검토·승인과 재개","focus":["studio_artifact","career_artifact","writing_pass","automated_validation","held_lane","human_approval","delivered_result"],"note":"자동 검증에 실패하면 원문과 수정 이유를 보존하며, 담당자가 승인하기 전에는 결과를 전달하지 않습니다."}]</script>
 
     <div class="guided-views no-print" id="guided-views" hidden aria-label="Guided diagram views">
       <button id="guided-view-prev" type="button" aria-label="Previous guided view" title="Previous guided view ([)">&#8592;</button>
@@ -4886,7 +4886,7 @@
     <div class="diagram-container" data-detail-level="read">
       <svg viewBox="0 0 2476 712" role="img" aria-labelledby="archify-diagram-title archify-diagram-description" data-preset="editorial" data-quality-profile="showcase">
         <title id="archify-diagram-title">게임 기획 플러그인 모음 전체 시스템 구조</title>
-        <desc id="archify-diagram-description">설치·업데이트·정리부터 대표 스킬 라우팅, 전문 검토, 한국어 윤문, 자동 검증과 담당자 승인까지 한 흐름으로 보여 줍니다.</desc>
+        <desc id="archify-diagram-description">설치·업데이트·정리부터 대표 스킬의 경로 선택, 전문 검토, 한국어 윤문, 자동 검증과 담당자 승인까지 한 흐름으로 보여 줍니다.</desc>
         <!-- Definitions -->
         <defs>
           <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
@@ -4917,7 +4917,7 @@
         <text x="842" y="548" class="t-cloud" font-size="9" font-weight="600">Career 플러그인</text>
 
         <rect data-graph-role="structural-frame" data-composition-frame-kind="region" data-composition-frame-id="2" x="1040" y="290" width="270" height="118" rx="12" class="c-region" stroke-width="1"/>
-        <text x="1048" y="308" class="t-cloud" font-size="9" font-weight="600">대표 라우팅과 검토 역할</text>
+        <text x="1048" y="308" class="t-cloud" font-size="9" font-weight="600">경로 선택과 검토 역할</text>
 
         <rect data-graph-role="structural-frame" data-composition-frame-kind="security-group" data-composition-frame-id="3" x="1452" y="50" width="280" height="114" rx="8" class="c-security-group" stroke-width="1"/>
         <text x="1460" y="68" class="t-security" font-size="9" font-weight="600">Studio 결과물 저장소</text>
@@ -4990,8 +4990,8 @@
         <text data-detail="context" x="954" y="604" class="t-muted" font-size="9" text-anchor="middle">Career 대표 스킬</text>
         </g>
 
-        <g id="node-representative_routing" data-node-id="representative_routing" data-node-label="대표 스킬 라우팅" tabindex="0" role="button" aria-label="Focus 대표 스킬 라우팅, 여섯 줄 영수증 · 전문·복합 작업 · 검토 역할 최대 세 개, 대표 라우팅과 검토 역할" aria-pressed="false" data-node-kind="messagebus" data-node-sublabel="여섯 줄 영수증 · 전문·복합 작업 · 검토 역할 최대 세 개" data-node-context="대표 라우팅과 검토 역할">
-          <title>대표 스킬 라우팅 · 여섯 줄 영수증 · 전문·복합 작업 · 검토 역할 최대 세 개 · 대표 라우팅과 검토 역할</title>
+        <g id="node-representative_routing" data-node-id="representative_routing" data-node-label="대표 스킬의 경로 선택" tabindex="0" role="button" aria-label="Focus 대표 스킬의 경로 선택, 여섯 줄 기록 · 전문·복합 작업 · 검토 역할 최대 세 개, 경로 선택과 검토 역할" aria-pressed="false" data-node-kind="messagebus" data-node-sublabel="여섯 줄 기록 · 전문·복합 작업 · 검토 역할 최대 세 개" data-node-context="경로 선택과 검토 역할">
+          <title>대표 스킬의 경로 선택 · 여섯 줄 기록 · 전문·복합 작업 · 검토 역할 최대 세 개 · 경로 선택과 검토 역할</title>
           <rect x="1070" y="320" width="210" height="68" rx="6" class="c-mask"/>
           <rect x="1070" y="320" width="210" height="68" rx="6" class="c-messagebus" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="messagebus" class="semantic-sigil s-messagebus" transform="translate(1076 326) scale(0.6875)">
@@ -5000,8 +5000,8 @@
             <circle cx="10.5" cy="8" r="1" class="sigil-fill"/>
             <circle cx="7" cy="11.5" r="1" class="sigil-fill"/>
           </g>
-          <text data-detail-anchor x="1175" y="352" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">대표 스킬 라우팅</text>
-        <text data-detail="context" x="1175" y="368" class="t-muted" font-size="6.2" text-anchor="middle">여섯 줄 영수증 · 전문·복합 작업 · 검토 역할 최대 세 개</text>
+          <text data-detail-anchor x="1175" y="352" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">대표 스킬의 경로 선택</text>
+        <text data-detail="context" x="1175" y="368" class="t-muted" font-size="6.4" text-anchor="middle">여섯 줄 기록 · 전문·복합 작업 · 검토 역할 최대 세 개</text>
         </g>
 
         <g id="node-studio_artifact" data-node-id="studio_artifact" data-node-label="Studio 기준 기획 결과물" tabindex="0" role="button" aria-label="Focus Studio 기준 기획 결과물, Canonical Artifact · content.md·evidence.yml·decisions/, Studio 결과물 저장소" aria-pressed="false" data-node-kind="database" data-node-sublabel="Canonical Artifact · content.md·evidence.yml·decisions/" data-node-context="Studio 결과물 저장소">
@@ -5318,7 +5318,7 @@
           <h3>대표 스킬과 전문 작업</h3>
         </div>
         <ul>
-          <li>&bull; Studio와 Career 대표 스킬은 요청을 한 번 분류하고 여섯 줄 라우팅 영수증을 먼저 공개합니다.</li>
+          <li>&bull; Studio와 Career 대표 스킬은 요청을 한 번 분류하고 여섯 줄의 경로 선택 기록을 먼저 보여 줍니다.</li>
           <li>&bull; 단일 요청은 전문 스킬로, 복합 요청은 오케스트레이터와 최대 세 개 검토 역할로 보냅니다.</li>
         </ul>
       </div>

@@ -309,7 +309,7 @@ apply-document-quality-profile: game-design-brief 템플릿으로 production 대
 
 | 스킬 ID | 사용하는 때 | 핵심 결과 |
 | --- | --- | --- |
-| `game-design-studio` | 어떤 스킬이 요청의 소유자인지 모를 때 | 소유 제품 하나, 실행 경로 하나, 라우팅 영수증 |
+| `game-design-studio` | 어떤 스킬이 요청을 맡아야 할지 모를 때 | 담당 제품 하나, 실행 경로 하나, 경로 선택 기록 |
 | `orchestrate-game-design-project` | 복합·불명확 요청과 전체 완료 조정 | 브리프, 최소 스킬 체인, 프로필, 검토 envelope, 완료 게이트 |
 | `apply-document-quality-profile` | 산출물 유형·대상·형식에 맞는 문서 품질 계약 적용 | 선택 기록, 요구사항 manifest, stable checklist와 상태 envelope |
 | `define-game-vision` | 목표 플레이어, 의도 경험, core fun과 pillars 정의 | `vision-pillars`, core/motivation loop, 측정 가능한 가설 |

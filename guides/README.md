@@ -1,6 +1,6 @@
 # Game Design Plugin 사용자 가이드
 
-이 가이드는 처음 사용하는 사람이 Game Design Studio와 Game Design Career 중 하나를 고르고, 지원되는 환경에 설치해 첫 Canonical Artifact(기준 작업 폴더)를 만드는 데 필요한 출발점입니다.
+이 가이드는 처음 사용하는 사람이 Game Design Studio와 Game Design Career 중 하나를 고르고, 지원되는 환경에 설치해 첫 기준 결과 폴더(Canonical Artifact)를 만드는 데 필요한 출발점입니다.
 
 > 🧭 처음이라면 아래에서 목표에 맞는 플러그인을 고른 뒤 `처음 시작하기` 순서만
 > 따라가세요. 나머지 문서는 필요한 작업이 생겼을 때 찾아보면 됩니다.
@@ -12,9 +12,9 @@
 | 목표 | 선택 | 첫 결과 |
 | --- | --- | --- |
 | 게임 아이디어를 실제 제작 가능한 기획으로 구체화 | Game Design Studio | 게임 방향, 핵심 재미, 설계 원칙과 검증 기준을 담은 기획 요약서 |
-| 시스템·콘텐츠·UX·경제·LiveOps·제작 계획을 연결 | Game Design Studio | 검토 가능한 게임 기획 Canonical Artifact |
+| 시스템·콘텐츠·UX·경제·LiveOps·제작 계획을 연결 | Game Design Studio | 검토 가능한 게임 기획 결과 폴더 |
 | 목표 직무와 현재 역량을 진단하고 취업을 준비 | Game Design Career | 역할 선택, 역량 격차와 학습·증거 로드맵 |
-| 역기획·포트폴리오·면접·주니어 성장을 관리 | Game Design Career | 근거가 연결된 Career Canonical Artifact |
+| 역기획·포트폴리오·면접·주니어 성장을 관리 | Game Design Career | 근거가 연결된 Career 결과 폴더 |
 
 - [Game Design Studio 가이드](game-design-studio/README.md)
 - [Studio 목적별 레시피 6개](game-design-studio/README.md#목적별-레시피)
@@ -22,9 +22,9 @@
 
 ---
 
-## Curated Archify 상태
+## 선별한 Archify 도식
 
-[Curated Archify 상태 인덱스](archify-diagrams/README.md)는 검증된 Archify HTML 공개물과 차단된 후보의 근거·재시도 경계를 분리해 기록합니다. 현재 공개된 한국어 Archify diagram은 **5개**입니다.
+[Archify 도식 목록](archify-diagrams/README.md)은 검증을 마친 HTML과 아직 공개하지 못한 후보의 근거·재시도 조건을 나눠 기록합니다. 현재 공개된 한국어 Archify 도식은 **5개**입니다.
 
 - [플러그인 모음 전체 시스템 구조](assets/archify/suite/suite-plugin-system-architecture.html)
 - [Studio 전체 프로젝트 워크플로](assets/archify/studio/studio-project-workflow.html)
@@ -32,7 +32,7 @@
 - [Studio → Career 공개 근거 인계](assets/archify/suite/suite-studio-career-handoff.html)
 - [프로젝트 기억 저장·승인·재사용 흐름](assets/archify/suite/suite-project-memory-lifecycle.html)
 
-두 플러그인은 독립적으로 설치합니다. 게임을 설계하면서 동시에 취업 증거를 만들려면 둘 다 설치할 수 있지만, 각 작업의 기준 Artifact와 승인 상태는 섞지 마세요.
+두 플러그인은 독립적으로 설치합니다. 게임을 설계하면서 취업용 근거도 함께 만들려면 둘 다 설치할 수 있지만, 각 작업의 기준 결과 폴더와 승인 상태는 섞지 마세요.
 
 ---
 
@@ -41,7 +41,7 @@
 | 목표 | 대표 문서 | 예상 결과 | 다음 상세 문서 |
 | --- | --- | --- | --- |
 | 작은 규칙·루프·시스템·UX를 학습 | [Studio 활용 사례 인덱스](game-design-studio/use-cases/README.md) | 작게 검토할 가정, 규칙 또는 UX 초안 | [Studio 스킬 워크벤치](game-design-studio/use-cases/skill-workbench.md) · [Studio FAQ](game-design-studio/faq.md) |
-| 전체 GDD와 제작 검토를 연결 | [Game Design Studio 가이드](game-design-studio/README.md) | 범위·검토 게이트가 있는 Studio Artifact | [결과물 카탈로그](use-cases/output-catalog.md) |
+| 전체 GDD와 제작 검토를 연결 | [Game Design Studio 가이드](game-design-studio/README.md) | 범위와 검토 조건을 기록한 Studio 결과물 | [결과물 카탈로그](use-cases/output-catalog.md) |
 | **승인된 프로젝트 교훈을 재사용** | [프로젝트 기억 공통 가이드](project-memory.md) | 출처·범위·만료가 확인된 적용 기록과 검토 대기 후보 | [Studio 기억](game-design-studio/memory.md) · [Career 기억](game-design-career/memory.md) |
 | **경쟁작·레퍼런스의 게임 시스템을 분석** | [Studio 레퍼런스 분석](game-design-studio/reference-analysis.md) 또는 [Career 레퍼런스 분석](game-design-career/reference-analysis.md) | 관찰 근거, 시스템 지도, 비교와 검토 대기 설계 전환 제안 | [공통 활용 허브](use-cases/README.md) |
 | **한국어·영어 기획 용어를 일관되게 관리** | [Studio 용어 사전](game-design-studio/glossary.md) 또는 [Career 용어 사전](game-design-career/glossary.md) | 문서 영향 목록, 승인 전 후보와 사람 승인 스냅샷 | [공통 활용 허브](use-cases/README.md) |
@@ -65,7 +65,7 @@ Studio 또는 Career 한 제품을 고른 뒤 다음 순서로 진행합니다.
 8. [Studio 내보내기](game-design-studio/exports.md) 또는 [Career 내보내기](game-design-career/exports.md)로 필요한 형식만 준비합니다.
 9. [Studio 문제 해결](game-design-studio/troubleshooting.md) 또는 [Career 문제 해결](game-design-career/troubleshooting.md)로 안전하게 재개합니다.
 
-무엇을 부를지 모르는 상태로 시작해도 됩니다. 대표 진입 스킬([Studio](game-design-studio/skills/game-design-studio.md) · [Career](game-design-career/skills/game-design-career.md))에 요청이나 사례 ID를 그대로 넘기면 소유 제품 하나와 실행 경로 하나를 고르고 라우팅 영수증을 남깁니다. 이 스킬 자체는 문서를 만들지 않습니다.
+무엇을 부를지 모르는 상태로 시작해도 됩니다. 대표 진입 스킬([Studio](game-design-studio/skills/game-design-studio.md) · [Career](game-design-career/skills/game-design-career.md))에 요청이나 사례 ID를 그대로 넘기면 담당 제품과 실행 경로를 하나씩 고르고 선택 근거를 기록합니다. 이 스킬 자체는 문서를 만들지 않습니다.
 
 설치본을 올릴 때는 `$upgrade-game-design-suite`를 먼저 부릅니다. 설치된 버전과 공개된 최신 릴리스를 비교해 보여 주고, 승인 전에는 어떤 설치도 바꾸지 않습니다. 절차와 손으로 하는 대안은 [Studio 설치의 업데이트](game-design-studio/installation.md#업데이트) 또는 [Career 설치의 업데이트](game-design-career/installation.md#업데이트)에 있습니다.
 
@@ -110,8 +110,8 @@ Studio 인덱스는 설치 스킬 26개, Career 인덱스는 설치 스킬 25개
 
 1. **입문:** [AUD-01 사용자 경로](use-cases/audience-paths.md#aud-01-게임-기획-입문-학생)에서 작은 관찰과 규칙 실습을 고릅니다.
 2. **기초·응용:** Studio 또는 Career의 역량·콘셉트·직접 스킬 중 현재 입력에 맞는 하나를 선택합니다.
-3. **포트폴리오:** [결과물 카탈로그](use-cases/output-catalog.md#studio-career-handoff)의 공개·권리·개인 기여 경계를 읽고, Studio 원본을 합치지 않은 별도 Career Artifact를 만듭니다.
-4. **전체 프로젝트:** 범위와 검토 게이트가 여러 개면 제품 오케스트레이터와 workflow로 돌아가 사람 결정을 남깁니다.
+3. **포트폴리오:** [결과물 카탈로그](use-cases/output-catalog.md#studio에서-career로-인계)의 공개·권리·개인 기여 경계를 읽고, Studio 원본과 분리된 Career 결과물을 만듭니다.
+4. **전체 프로젝트:** 범위와 검토 조건이 여러 개라면 제품 오케스트레이터와 전체 작업 흐름으로 돌아가 담당자의 결정을 남깁니다.
 
 ---
 
@@ -145,8 +145,8 @@ Studio 인덱스는 설치 스킬 26개, Career 인덱스는 설치 스킬 25개
 | --- | --- |
 | 플러그인 | 스킬, 참조 자료, 역할, hook과 자산을 함께 배포하는 설치 단위 |
 | 스킬 | 특정 결과를 만들기 위한 재사용 가능한 작업 절차 |
-| Canonical Artifact | `content.md`를 내용 기준으로 삼고 근거, 결정, 자산과 내보내기 상태를 함께 보존하는 작업 폴더 |
-| Quality Profile | 문서 목적과 청중에 맞춰 필수 섹션, 표, 검토 기준과 승인 게이트를 정하는 계약 |
+| 기준 결과 폴더 (`Canonical Artifact`) | `content.md`를 내용 기준으로 삼고 근거, 결정, 자산과 내보내기 상태를 함께 보존하는 작업 폴더 |
+| 문서 품질 기준 (`Quality Profile`) | 문서 목적과 독자에 맞춰 필수 섹션, 표, 검토 기준과 승인 조건을 정하는 규칙 |
 | 도식 | Skillstead로 만드는 구조적 SVG와 검증된 2× PNG 파생본 |
 | **프로젝트 기억** | 출처·적용 범위·검토 시점과 사람 승인 상태에 묶인 로컬 프로젝트 기록 |
 | **레퍼런스 분석** | 관찰 근거와 추론을 분리해 시스템 지도·비교·설계 전환 제안을 만드는 절차 |
@@ -155,16 +155,16 @@ Studio 인덱스는 설치 스킬 26개, Career 인덱스는 설치 스킬 25개
 | **이미지 승인** | 생성 또는 렌더 결과를 이름이 기록된 사람이 권리·품질 근거와 함께 승인하는 별도 결정 |
 | UX | 사용자가 화면·입력·피드백을 이해하고 작업을 마칠 수 있게 만드는 경험 설계입니다. |
 | LiveOps | 출시 뒤 이벤트·실험·밸런스 변경을 측정하고 되돌릴 수 있게 운영하는 일입니다. |
-| renderer capability | 현재 host가 PDF·문서·발표 파일을 실제로 만들고 검사할 수 있는지 probe가 알려 주는 기능 상태입니다. |
+| 문서 변환 기능 | 현재 실행 환경이 PDF·문서·발표 파일을 실제로 만들고 검사할 수 있는지 사전 점검에서 알려 주는 기능 상태입니다. |
 | QA | 결과가 요구 형식·내용·화면 품질을 충족하는지 확인하는 검사 기록입니다. |
 | 목록 (`manifest`) | 어떤 파일·형식·자산·검사를 준비했는지 안정 ID로 적는 작업 목록입니다. |
 | 안정 자산 ID (`stable asset ID`) | 계획·생성·검토를 거쳐도 바뀌지 않는 이미지 자산의 고유 이름입니다. |
-| 영수 기록 (`receipt`) | 호스트가 실제 사용자 선택·승인과 증거를 변경 불가능한 구조로 기록한 내역입니다. |
+| 검증 기록 (`receipt`) | 실행 환경이 사용자의 선택·승인과 근거를 변경할 수 없는 구조로 남긴 내역입니다. |
 | 자리 (`slot`) | 템플릿에서 이미지나 도식처럼 필요한 자산을 넣을 위치와 조건을 가리키는 항목입니다. |
 | 호스트 (`host`) | 지금 대화나 세션을 실행하며 파일 생성 기능을 제공할 수 있는 Codex 실행 환경입니다. |
 | 기능 확인 (`probe`) | 호스트가 PDF·문서·발표 파일 같은 기능을 실제로 쓸 수 있는지 먼저 확인하는 점검입니다. |
 | 사전 점검 (`preflight`) | 파일을 만들기 전에 결과물, 입력, 안전한 출력 경로와 기능 상태를 검사해 준비 목록을 만드는 단계입니다. |
 | 후속 작업 (`downstream workflow`) | 사전 점검 뒤 필요한 기능을 갖춘 별도 작업이 실제 파일 생성과 형식 품질 검사를 수행하는 단계입니다. |
-| `<artifact-path>` / `<export-manifest-path>` / `<selected-skill>` | 복사 전 사용자가 실제 artifact 경로, export manifest 경로, routing에서 선택한 skill ID로 바꿔야 하는 자리표시자입니다. shell redirection이나 실제 파일명으로 해석하지 않습니다. |
+| `<artifact-path>` / `<export-manifest-path>` / `<selected-skill>` | 요청문을 복사하기 전에 실제 결과물 경로, 내보내기 목록 경로, 선택된 스킬 ID로 바꿔야 하는 자리표시자입니다. 셸 리디렉션이나 실제 파일명으로 해석하지 않습니다. |
 
 플러그인은 합격, 흥행, 재미, 제작 가능성 또는 사람의 승인을 보장하지 않습니다. 사실, 추론, 가정, 미확정 결정과 차단 상태를 분리해 결과를 검토할 수 있게 합니다.

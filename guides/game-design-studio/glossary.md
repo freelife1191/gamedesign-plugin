@@ -36,7 +36,7 @@ $game-design-studio:maintain-game-design-glossary 후보 용어의 정의, 적�
 승인된 용어와 검사 결과는 결과 폴더의 다음 경로에 기록합니다:
 
 - `reference-intelligence/glossary/terms.json`: 승인된 용어와 상태
-- `reference-intelligence/glossary/glossary-receipt.json`: 문서·용어 선택·사람 결정에 묶인 스냅샷 영수증
+- `reference-intelligence/glossary/glossary-receipt.json`: 문서·용어 선택과 담당자의 결정을 함께 보존한 시점별 기록
 - `reference-intelligence/glossary/glossary.ko.md`: 한국어 조회용 목록
 - `reference-intelligence/glossary/glossary.en.md`: 영어 조회용 목록
 - `reference-intelligence/glossary/terminology-findings.md`: 문서 검사에서 찾은 항목

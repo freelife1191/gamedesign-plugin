@@ -342,8 +342,8 @@ test("the degrade section makes the counterpart lookup mandatory and gives a com
   const next = rest.indexOf("\n## ");
   const section = next === -1 ? rest : rest.slice(0, next);
 
-  assert.match(section, /확인은 선택이 아니다/u, "the lookup must be stated as required, not permitted");
-  assert.match(section, /인계가 필요하다고 적은 영수증은 이 조회를 실제로 돌린 뒤에만 공개한다/u,
+  assert.match(section, /이 확인은 반드시 거쳐야 한다/u, "the lookup must be stated as required, not permitted");
+  assert.match(section, /인계가 필요하다고 적은 기록은 조회를 실제로 마친 뒤에만 공개한다/u,
     "the receipt must not declare a handoff before the lookup actually ran");
   assert.match(section, /흡수/u, "silently absorbing the supplier step must be named as the failure it is");
 

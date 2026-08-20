@@ -1,6 +1,6 @@
 # Game Design Career 사용자 가이드
 
-Game Design Career는 목표 역할과 경력 단계를 진단하고, 현재 채용 근거와 역량 격차를 학습·증거 프로젝트·포트폴리오·면접·성장 계획으로 연결합니다. 사실, 추론, 공백과 다음 검증 작업을 보존하는 Canonical Artifact(기준 작업 폴더)를 사용하며, 합격이나 한 가지 정답 진로를 약속하지 않습니다. [공통 용어](../README.md#용어)를 먼저 확인하세요.
+Game Design Career는 목표 역할과 경력 단계를 진단하고, 현재 채용 근거와 역량 차이를 학습·증거 프로젝트·포트폴리오·면접·성장 계획으로 연결합니다. 사실, 추론, 정보 공백과 다음 검증 작업을 보존하는 기준 결과 폴더(Canonical Artifact)를 사용하며, 합격이나 하나뿐인 정답 진로를 약속하지 않습니다. [공통 용어](../README.md#용어)를 먼저 확인하세요.
 
 > 🎓 목표 직무, 학습 계획, 포트폴리오와 면접 준비를 연결하려면 여기서
 > 시작하세요. 처음에는 `처음 시작하기`와 목적별 레시피 하나만 읽으면 됩니다.
@@ -9,7 +9,7 @@ Game Design Career는 목표 역할과 경력 단계를 진단하고, 현재 채
 
 ## Curated Archify 상태
 
-[Curated Archify 상태 인덱스](../archify-diagrams/README.md)에서 Career 후보의 검증·시각 QA 근거를 확인합니다. [한국어 Career 증거·포트폴리오 워크플로](../assets/archify/career/career-evidence-workflow.html)는 단계 진단, 증거 프로젝트, 포트폴리오·면접·성장 분기와 사람 검토 후 재개를 대화형 HTML로 보여 줍니다.
+[Archify 도식 목록](../archify-diagrams/README.md)에서 Career 도식의 검증·화면 검사 근거를 확인합니다. [한국어 Career 증거·포트폴리오 작업 흐름](../assets/archify/career/career-evidence-workflow.html)은 단계 진단, 증거 프로젝트, 포트폴리오·면접·성장 분기와 담당자 검토 후 재개 과정을 대화형 HTML로 보여 줍니다.
 
 ---
 
@@ -22,7 +22,7 @@ Game Design Career는 목표 역할과 경력 단계를 진단하고, 현재 채
 | 모든 Career 사용자 | 사용 사례 색인 | [사용 사례 색인](use-cases/README.md#역량대상직접-스킬-선택) |
 | 역량을 비교하는 사용자 | 역량 사례 | [역량 사례](use-cases/competency-paths.md#ca-c01-기획-직무와-전문-분야-탐색) |
 | 역할 맥락을 고르는 사용자 | 대상 사례 | [대상 사례](use-cases/concept-scenarios.md#ca-t01-시스템-기획-입문-학생) |
-| 입력과 결과가 확정된 사용자 | 직접 스킬 작업대 | [직접 스킬 작업대](use-cases/skill-workbench.md#역할근거-lane) |
+| 입력과 결과가 확정된 사용자 | 직접 스킬 작업대 | [직접 스킬 작업대](use-cases/skill-workbench.md#역할근거) |
 
 ### 목표별 결과와 다음 문서
 
@@ -64,7 +64,7 @@ Career에는 사례 18개, 설치 스킬 25개, FAQ 19개와 도식 33쌍이 있
 
 각 행의 전체 스킬 경로는 canonical 사례의 순서를 모두 보존합니다. 명시적 직접 요청은 그 경로를 축약하지 않는 시작 명령 하나이며, 입력과 결과는 해당 사례 카드의 원문을 따릅니다.
 
-| 사례 ID · 제목 · 대상 | 정확한 준비 입력 | 전체 스킬 경로 | 명시적 직접 요청 | 결과 ID · owner · root | 사례 읽는 순서 |
+| 사례 ID · 제목 · 대상 | 정확한 준비 입력 | 전체 스킬 경로 | 명시적 직접 요청 | 결과 ID · 담당자 · 저장 위치 | 사례 읽는 순서 |
 | --- | --- | --- | --- | --- | --- |
 | `CA-T01` — 시스템 기획 입문 학생 — AUD-01 · AUD-02 | 공개적으로 관찰 가능한 기능 하나, 입력과 결과, 모르는 규칙, 개인 작업 범위와 시스템 기획 멘토를 준비합니다. | $game-design-career:map-game-design-career → $game-design-career:build-game-design-portfolio → $game-design-career:plan-junior-growth | $game-design-career:map-game-design-career artifact=game-design-career/system-student 규칙·상태·예외를 competency-matrix와 learning-roadmap으로 연결해. | `game-design-role-map` ($game-design-career:map-game-design-career) → `game-design-career/<career-id>/game-design-role-map`<br>`competency-matrix` ($game-design-career:map-game-design-career) → `game-design-career/<career-id>/competency-matrix`<br>`learning-roadmap` ($game-design-career:map-game-design-career) → `game-design-career/<career-id>/learning-roadmap` | 상태표 → 규칙표 → 반례 → 다음 질문 |
 | `CA-T04` — 경제·밸런스·LiveOps 준비생 — AUD-01 · AUD-02 | 공개적으로 보이는 재화 흐름, source·sink 가정, 이벤트 목적, guardrail, rollback과 검토자를 준비합니다. | $game-design-career:reverse-engineer-game-design → $game-design-career:build-game-design-portfolio → $game-design-career:review-game-design-portfolio | $game-design-career:reverse-engineer-game-design artifact=game-design-career/economy-prep 공개 관찰을 source, sink와 가설로 분리한 game-analysis-report로 정리해. | `game-analysis-report` ($game-design-career:reverse-engineer-game-design) → `game-design-career/<career-id>/game-analysis-report`<br>`portfolio-project-brief` ($game-design-career:build-game-design-portfolio) → `game-design-career/<career-id>/portfolio-project-brief`<br>`five-axis-review` ($game-design-career:review-game-design-portfolio) → `game-design-career/<career-id>/five-axis-review` | source·sink → 가설 → guardrail → rollback |
@@ -79,7 +79,7 @@ Career에는 사례 18개, 설치 스킬 25개, FAQ 19개와 도식 33쌍이 있
 
 1. [설치](installation.md)에서 App 또는 CLI 중 한 환경의 절차만 따라 설치합니다.
 2. [5분 빠른 시작](quick-start.md)의 요청문 하나를 복사합니다.
-3. [Canonical Artifact 템플릿](templates.md)에서 목적에 맞는 템플릿을 고르고, 필요하면 [설치 스킬 25개](skills/README.md)의 연결된 스킬을 직접 호출합니다.
+3. [기준 결과 폴더 템플릿](templates.md)에서 목적에 맞는 템플릿을 고르고, 필요하면 [설치 스킬 25개](skills/README.md)의 연결된 스킬을 직접 호출합니다.
 4. [목적별 레시피](#목적별-레시피) 하나를 선택합니다.
 5. [전체 워크플로](workflow.md)에서 현재 경력 단계와 다음 증거 작업을 확인합니다.
 6. [이미지 자산](image-assets.md)에서 proof image slot과 사람 승인 경계를 계획합니다.
@@ -87,7 +87,7 @@ Career에는 사례 18개, 설치 스킬 25개, FAQ 19개와 도식 33쌍이 있
 8. [MD·PDF·DOCX·PPTX 내보내기](exports.md)에서 필요한 형식만 준비합니다.
 9. 막히면 [문제 해결](troubleshooting.md)에서 보존된 결과로 재개합니다.
 
-어떤 스킬이 요청의 소유자인지 모르겠다면 [대표 진입 스킬](skills/game-design-career.md)에 요청이나 사례 ID를 그대로 넘깁니다. 소유 제품 하나와 실행 경로 하나를 고르고 라우팅 영수증을 남깁니다.
+어떤 스킬이 요청을 맡아야 할지 모르겠다면 [대표 진입 스킬](skills/game-design-career.md)에 요청이나 사례 ID를 그대로 넘깁니다. 담당 제품과 실행 경로를 하나씩 고르고 선택 근거를 기록합니다.
 
 설치본을 올릴 때는 `$upgrade-game-design-suite`를 먼저 부릅니다. 검사와 계획 단계에서는 설치를 바꾸지 않고, 승인 뒤에만 다시 설치합니다. 절차는 [설치의 업데이트](installation.md#업데이트)에 있습니다.
 
@@ -104,8 +104,8 @@ Career에는 사례 18개, 설치 스킬 25개, FAQ 19개와 도식 33쌍이 있
 
 대표 도식:
 
-- [![경력 단계 라우팅](../assets/game-design-career/career-stage-routing.png)](../assets/game-design-career/career-stage-routing.svg)
-- [경력 단계 라우팅 SVG 열기](../assets/game-design-career/career-stage-routing.svg)
+- [![경력 단계 선택 흐름](../assets/game-design-career/career-stage-routing.png)](../assets/game-design-career/career-stage-routing.svg)
+- [경력 단계 선택 흐름 SVG 열기](../assets/game-design-career/career-stage-routing.svg)
 - [![역할 gap과 학습 로드맵](../assets/game-design-career/role-gap-learning-roadmap.png)](../assets/game-design-career/role-gap-learning-roadmap.svg)
 - [역할 gap과 학습 로드맵 SVG 열기](../assets/game-design-career/role-gap-learning-roadmap.svg)
 
@@ -131,15 +131,15 @@ Career에는 사례 18개, 설치 스킬 25개, FAQ 19개와 도식 33쌍이 있
 - [직접 스킬 작업대](use-cases/skill-workbench.md)
 - [Career FAQ](faq.md)
 - [공통 결과물 카탈로그](../use-cases/output-catalog.md)
-- [Canonical Artifact 템플릿](templates.md)
-- [문서 품질 profile](document-quality.md)
+- [기준 결과 폴더 템플릿](templates.md)
+- [문서 품질 기준](document-quality.md)
 - [이미지 자산](image-assets.md)
 - [Career 시각화](visualization.md)
 - [MD·PDF·DOCX·PPTX 내보내기](exports.md)
 
 목적별 레시피의 안정 경로는 `recipes/`입니다. 각 레시피는 current evidence의 출처·검색일·지역·표본 경계·재검색 시점을 보존하며, 생성·렌더 결과와 사람 승인을 분리합니다.
 
-각 스킬 ID는 [스킬 레퍼런스](skills/README.md)에서 해당 상세 가이드로 직접 연결됩니다. 각 템플릿의 용도와 복사 가능한 요청문은 [Canonical Artifact 템플릿](templates.md)에 있습니다.
+각 스킬 ID는 [스킬 상세 목록](skills/README.md)에서 해당 가이드로 직접 연결됩니다. 각 템플릿의 용도와 복사 가능한 요청문은 [기준 결과 폴더 템플릿](templates.md)에 있습니다.
 
 ---
 

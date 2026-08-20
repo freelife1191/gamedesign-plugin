@@ -35,7 +35,7 @@ $game-design-studio:visualize-game-design artifact=game-design/workbench/system 
 $game-design-studio:visualize-game-design artifact=game-design/island/roadmap relationship=scope-risk Node 18+ 또는 Node-free Chromium fallback의 실제 lint·renderer·visual QA 상태를 evidence에 정확히 기록해.
 ```
 
-#### 예상 파일과 읽는 순서
+#### 예상 결과와 파일 읽는 순서
 
 `content.md → evidence.yml → export-manifest.yml` 순서로 읽고 `assets/ 아래 source-mapped editable SVG`를 확인합니다. Node 18+ packaged wrapper branch에서는 machine lint와 packaged wrapper Chromium render를 통과했을 때만 같은 assets 아래 2× PNG와 wrapper evidence를 읽습니다. Node-free Chromium branch에서는 manual source checklist를 완료하고 machine lint와 packaged wrapper를 실행하지 않습니다. 직접 Chromium으로 2× PNG를 렌더한 뒤 manual evidence와 visual QA를 읽습니다. Chromium도 없을 때만 SVG-only draft로 제한하며 PNG visual verification은 미실행으로 기록합니다. `editable-svg`, `png-2x`, `visualization-evidence`는 별도 파일명이 아닌 논리 결과입니다.
 
@@ -96,7 +96,7 @@ artifact `assets/`에 editable SVG, adjacent alt text, 검증 시 PNG와 executi
 
 SVG `<title>`/`<desc>`, lint, renderer identity, exact dimensions와 two-pass visual QA 없이는 verified가 아닙니다. 렌더와 reviewer 권고는 문서 승인도 아닙니다.
 
-## 실패·fallback·재개 방법
+## 실패했을 때와 재개 방법
 
 사용자가 Node 설치를 거절하거나 안전한 route가 없으면 manual source checklist를 완료하고 `render.sh`를 호출하지 않습니다. Node-free Chromium 경로로 정확한 2× PNG와 visual QA를 수행하되 machine-linted라고 표시하지 않습니다. automated source lint 미실행, manual source checklist, PNG render/visual QA의 실제 상태를 각각 명시합니다.
 

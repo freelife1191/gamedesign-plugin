@@ -1,4 +1,4 @@
-# Curated Archify inventory
+# 선별한 Archify 도식 목록
 
 이 디렉터리는 과거의 일괄 생성 Archify 가이드를 대신하는 **선별 목록**입니다. 문서마다 같은 형식의 HTML을 만들지 않고, 관계·분기·상태·책임 인계를 원문보다 쉽게 파악할 수 있는 경우만 후보로 남깁니다. 현재 5개 `selected` 항목은 모두 커밋된 `spec`과 검증 기록을 가지며, 검증과 시각 QA를 통과한 한국어 HTML 5개를 `published` 상태로 공개합니다.
 
@@ -7,7 +7,7 @@
 1. `catalog.json`에서 문서별 `selected` 또는 `excluded` 결정을 찾습니다.
 2. `selected`의 `question`, `diagram_type_reason`, `composition_rationale`가 실제로 어떤 질문을 도식으로 풀지 설명합니다.
 3. 현재 5개 `selected` spec은 모두 Archify showcase 9/9, 오류·경고 0을 통과했습니다.
-4. `published`는 5개입니다. 각 공개 HTML은 한국어 뷰어와 검증 영수증을 가지며, 헤드리스 Chromium에서 원본 크기와 페이지 맞춤 화면을 검토했습니다. 아래 공개 도식 목록에서 바로 열 수 있습니다.
+4. `published` 상태인 도식은 5개입니다. 각 공개 HTML은 한국어 화면과 검증 기록을 갖추고 있으며, 헤드리스 Chromium에서 원본 크기와 페이지 맞춤 화면을 확인했습니다. 아래 목록에서 바로 열 수 있습니다.
 
 ## 증거와 전수 범위
 
@@ -24,7 +24,7 @@ node tooling/validate-archify-catalog.mjs --json
 
 ## 선택 기준과 수량
 
-수량은 목표가 아닙니다. root 또는 `guides/**` 문서 중에서 의존 단계, 역할 handoff, 승인, hold·resume, retry·rollback, artifact 변환, 다중 구성 요소 또는 상태 전환을 도식이 실제로 더 명확하게 보여 줄 때만 선택합니다. 요청문 카드, 단일 참조, 설치 안내와 이미 Skillstead가 담당하는 스킬 설명은 텍스트로 남깁니다.
+수량 자체가 목표는 아닙니다. 저장소 루트나 `guides/**` 문서에서 의존 단계, 역할 인계, 승인, 보류·재개, 재시도·되돌리기, 결과물 변환, 여러 구성 요소나 상태 전환을 도식이 더 분명하게 보여 줄 때만 선택합니다. 요청문 카드, 단일 참조, 설치 안내와 이미 Skillstead가 담당하는 스킬 설명은 글로 남깁니다.
 
 문서마다 primary는 최대 하나이며, primary 질문으로 답할 수 없는 실제로 직교한 질문만 secondary 하나를 더할 수 있습니다. 같은 문서를 여러 도식으로 늘려 수량을 맞추지 않습니다.
 
@@ -36,7 +36,7 @@ node tooling/validate-archify-catalog.mjs --json
 
 선택된 entry의 `visual_system`은 반드시 product와 같아서 이후 저작 단계가 이 차이를 보존합니다.
 
-## delivery와 visual-review 상태
+## 공개·화면 검토 상태
 
 선택된 entry에는 다음 delivery 상태가 있습니다.
 
@@ -64,7 +64,7 @@ node tooling/validate-archify-catalog.mjs --json
 
 catalog은 이후 명세 작성과 검수에 쓰는 근거 장부입니다. 이 목록만으로 도식이 실제로 존재하거나 사람이 승인했다고 판단하지 않습니다.
 
-## Published diagrams (공개 도식)
+## 공개 도식
 
 **5개.** 아래 결과물은 모두 `published`이고 `visual_review: passed`이며, 공통 조작 UI와 사용자에게 보이는 설명을 한국어로 제공합니다. 제품별 수량은 Studio 1개, Career 1개, Suite 3개이며, 유형별 수량은 architecture 1개, workflow 3개, dataflow 1개입니다.
 
@@ -74,7 +74,7 @@ catalog은 이후 명세 작성과 검수에 쓰는 근거 장부입니다. 이 
 - 답하는 질문: Codex App·CLI에서 설치·업데이트·전체 정리를 거쳐 대표 스킬이 전문 스킬 또는 오케스트레이터와 검토 역할을 고르고, 기준 결과물의 한국어 최종 편집·자동 검증·사람 승인을 거쳐 결과를 어떻게 전달하는가?
 - 원문 근거: 루트 `README.md`의 `플러그인 구조와 전체 시스템 아키텍처` 섹션
 - 공개물: [한국어 게임 기획 플러그인 모음 전체 시스템 구조](../assets/archify/suite/suite-plugin-system-architecture.html)
-- 명세·검증: [전체 시스템 구조 spec](specs/suite/suite-plugin-system-architecture.json) · [delivery receipt](../assets/archify/suite/suite-plugin-system-architecture.receipt.json) · [QA manifest](visual-qa/manifest.json)
+- 명세·검증: [전체 시스템 구조 명세](specs/suite/suite-plugin-system-architecture.json) · [공개 검증 기록](../assets/archify/suite/suite-plugin-system-architecture.receipt.json) · [화면 검수 목록](visual-qa/manifest.json)
 
 ### `studio-project-workflow`
 
@@ -82,7 +82,7 @@ catalog은 이후 명세 작성과 검수에 쓰는 근거 장부입니다. 이 
 - 답하는 질문: 게임 비전부터 설계, 검토와 내보내기까지 Studio 작업을 어떤 순서로 확인하는가?
 - 원문 근거: [Studio 전체 워크플로 원문](../game-design-studio/workflow.md#game-design-studio-전체-워크플로)
 - 공개물: [한국어 Studio 전체 프로젝트 워크플로](../assets/archify/studio/studio-project-workflow.html)
-- 명세·검증: [Studio workflow spec](specs/studio/studio-project-workflow.json) · [delivery receipt](../assets/archify/studio/studio-project-workflow.receipt.json) · [QA manifest](visual-qa/manifest.json)
+- 명세·검증: [Studio 작업 흐름 명세](specs/studio/studio-project-workflow.json) · [공개 검증 기록](../assets/archify/studio/studio-project-workflow.receipt.json) · [화면 검수 목록](visual-qa/manifest.json)
 
 ### `career-evidence-workflow`
 
@@ -90,15 +90,15 @@ catalog은 이후 명세 작성과 검수에 쓰는 근거 장부입니다. 이 
 - 답하는 질문: 역할 탐색, 학습 과제, 포트폴리오와 면접 준비를 어떤 검토 순서로 연결하는가?
 - 원문 근거: [Career 전체 워크플로 원문](../game-design-career/workflow.md#game-design-career-전체-워크플로)
 - 공개물: [한국어 Career 증거·포트폴리오 워크플로](../assets/archify/career/career-evidence-workflow.html)
-- 명세·검증: [Career workflow spec](specs/career/career-evidence-workflow.json) · [delivery receipt](../assets/archify/career/career-evidence-workflow.receipt.json) · [QA manifest](visual-qa/manifest.json)
+- 명세·검증: [Career 작업 흐름 명세](specs/career/career-evidence-workflow.json) · [공개 검증 기록](../assets/archify/career/career-evidence-workflow.receipt.json) · [화면 검수 목록](visual-qa/manifest.json)
 
 ### `suite-studio-career-handoff`
 
 - 제품·유형·상태: `suite` · `dataflow` · `published` (`visual_review: passed`)
 - 답하는 질문: 검토한 Studio 결과에서 공개 가능한 내용만 Career 포트폴리오와 면접 준비로 어떻게 인계하는가?
 - 원문 근거: [Studio → Career 인계 원문](../prompt-templates/suite/studio-to-career-handoff.md#suitestudio-to-career-handoffcase)
-- 공개물: [한국어 Studio → Career 공개 근거 handoff](../assets/archify/suite/suite-studio-career-handoff.html)
-- 명세·검증: [Suite handoff spec](specs/suite/suite-studio-career-handoff.json) · [delivery receipt](../assets/archify/suite/suite-studio-career-handoff.receipt.json) · [QA manifest](visual-qa/manifest.json)
+- 공개물: [한국어 Studio → Career 공개 근거 인계](../assets/archify/suite/suite-studio-career-handoff.html)
+- 명세·검증: [제품 간 인계 명세](specs/suite/suite-studio-career-handoff.json) · [공개 검증 기록](../assets/archify/suite/suite-studio-career-handoff.receipt.json) · [화면 검수 목록](visual-qa/manifest.json)
 
 ### `suite-project-memory-lifecycle`
 
@@ -106,8 +106,8 @@ catalog은 이후 명세 작성과 검수에 쓰는 근거 장부입니다. 이 
 - 답하는 질문: `.env` 설정을 확인한 뒤 승인된 이전 기록을 어떻게 다시 쓰고, 새 후보를 사람 검토를 거쳐 다음 작업에 남기는가?
 - 원문 근거: [프로젝트 기억 공통 가이드](../project-memory.md#프로젝트-기억은-이전-작업을-어떻게-이어-주나요)
 - 공개물: [한국어 프로젝트 기억 저장·승인·재사용 흐름](../assets/archify/suite/suite-project-memory-lifecycle.html)
-- 명세·검증: [프로젝트 기억 수명주기 spec](specs/suite/suite-project-memory-lifecycle.json) · [delivery receipt](../assets/archify/suite/suite-project-memory-lifecycle.receipt.json) · [QA manifest](visual-qa/manifest.json)
+- 명세·검증: [프로젝트 기억 수명주기 명세](specs/suite/suite-project-memory-lifecycle.json) · [공개 검증 기록](../assets/archify/suite/suite-project-memory-lifecycle.receipt.json) · [화면 검수 목록](visual-qa/manifest.json)
 
-## Blocked diagrams
+## 공개가 보류된 도식
 
 **0개 (없음).** 현재 선택된 5개 도식에는 남은 `blocked-*` 상태가 없습니다. 이후 원문 digest, Archify 검증 또는 시각 QA가 실패하면 공개 상태를 유지하지 않고 이 섹션에 차단 이유·근거·재시도 조건을 기록합니다.

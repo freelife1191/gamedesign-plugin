@@ -3,15 +3,15 @@
     "id": "studio:game-design-studio:beginner",
     "kind": "skill-template",
     "product": "studio",
-    "title": "어떤 스킬을 부를지 모르는 요청을 route 하나로",
-    "purpose": "무엇을 써야 할지 모르는 요청을 route 하나와 영수증으로 바꾼다.",
+    "title": "어떤 스킬을 부를지 모르는 요청을 실행 경로 하나로",
+    "purpose": "무엇을 써야 할지 모르는 요청에서 담당 제품과 실행 경로를 하나씩 정하고 선택 근거를 남긴다.",
     "audiences": [
       "lead-game-designer",
       "game-designer"
     ],
     "intents": [
       "진입 경로 선택",
-      "요청 정규화"
+      "요청 항목 정리"
     ],
     "level": "beginner",
     "when_to_use": "게임 기획을 시작하고 싶지만 어떤 스킬이 그 요청을 맡는지 모를 때 사용한다.",
@@ -20,26 +20,26 @@
       "원하는 최종 결과",
       "이미 가진 자료",
       "공개 범위",
-      "사람 결정 담당자",
+      "최종 결정 담당자",
       "출력 형식"
     ],
     "optional_inputs": [
-      "기존 Artifact 경로",
+      "기존 기준 결과 폴더 경로",
       "대상 플랫폼",
       "마감 조건"
     ],
     "placeholders": [
       "[원하는 최종 결과]",
       "[이미 가진 자료]",
-      "[사람 결정 담당자]"
+      "[최종 결정 담당자]"
     ],
     "app_prompt": {
-      "example": "@Game Design Studio 게임 기획을 시작하고 싶은데 어떤 스킬을 불러야 할지 모르겠어. 요청을 다섯 항목으로 정리하고 담당 스킬 하나를 골라 라우팅 영수증을 남겨 줘. 모르는 정보는 미정으로 남겨 줘.",
-      "template": "@Game Design Studio [원하는 최종 결과]를 만들고 싶은데 지금은 [이미 가진 자료]만 있어. 요청을 다섯 항목으로 정리하고 담당 스킬 하나를 골라 [사람 결정 담당자]가 볼 라우팅 영수증을 남겨 줘. 모르는 정보는 미정으로 남겨 줘."
+      "example": "@Game Design Studio 게임 기획을 시작하고 싶은데 어떤 스킬을 불러야 할지 모르겠어. 요청을 다섯 항목으로 정리하고 담당 스킬 하나를 골라 경로 선택 기록을 남겨 줘. 모르는 정보는 미정으로 남겨 줘.",
+      "template": "@Game Design Studio [원하는 최종 결과]를 만들고 싶은데 지금은 [이미 가진 자료]만 있어. 요청을 다섯 항목으로 정리하고 담당 스킬 하나를 골라 [최종 결정 담당자]가 볼 경로 선택 기록을 남겨 줘. 모르는 정보는 미정으로 남겨 줘."
     },
     "cli_prompt": {
-      "example": "$game-design-studio:game-design-studio 협동 탐험 게임을 어디서부터 시작할지 모르겠어. 요청을 정규화하고 route 하나를 골라 라우팅 영수증으로 남겨.",
-      "template": "$game-design-studio:game-design-studio [원하는 최종 결과]와 [이미 가진 자료]를 정규화하고 route 하나를 골라 [사람 결정 담당자]가 확인할 라우팅 영수증으로 남겨."
+      "example": "$game-design-studio:game-design-studio 협동 탐험 게임을 어디서부터 시작할지 모르겠어. 요청을 다섯 항목으로 정리하고 실행 경로 하나를 골라 경로 선택 기록으로 남겨.",
+      "template": "$game-design-studio:game-design-studio [원하는 최종 결과]와 [이미 가진 자료]를 다섯 항목으로 정리하고 실행 경로 하나를 골라 [최종 결정 담당자]가 확인할 경로 선택 기록으로 남겨."
     },
     "skill": "game-design-studio",
     "skill_chain": [
@@ -53,9 +53,9 @@
       "game-design-brief"
     ],
     "minimum_outputs": [
-      "정규화된 요청 다섯 항목",
-      "선택된 route 하나",
-      "라우팅 영수증",
+      "목적·자료·공개 범위·결정 담당자·출력 형식",
+      "선택된 실행 경로 하나",
+      "경로 선택 기록",
       "다음 사람 결정"
     ],
     "optional_outputs": [
@@ -63,7 +63,7 @@
       "한 번만 묻는 확인 질문"
     ],
     "extended_outputs": [
-      "탈락한 route 후보",
+      "고르지 않은 실행 경로 후보",
       "보류 사유"
     ],
     "expected_file_tree": [
@@ -72,14 +72,14 @@
     "read_order": [
       "game-design/studio-entry/beginner/content.md"
     ],
-    "human_review_boundary": "lead-game-designer 결정 담당자가 선택된 route를 승인·수정·보류하며 라우팅은 승인이 아니고 위임된 스킬의 승인 규칙이 그대로 적용된다.",
+    "human_review_boundary": "`lead-game-designer` 역할을 맡은 최종 결정 담당자가 실행 경로를 승인·수정·보류한다. 경로 선택 자체는 승인이 아니며, 위임된 스킬의 승인 규칙은 그대로 적용된다.",
     "hold_conditions": [
       "원하는 최종 결과가 없음",
-      "사람 결정 담당자가 없음",
-      "고른 route가 설치된 스킬 목록에 없음"
+      "최종 결정 담당자가 없음",
+      "고른 실행 경로가 설치된 스킬 목록에 없음"
     ],
-    "resume_prompt": "studio-entry beginner의 정규화된 다섯 항목과 선택된 route를 보존하고 새로 확인된 입력만 반영해 라우팅 영수증 확인부터 재개해.",
-    "safety_boundary": "모르는 정보는 미정으로 남기고 라우팅을 승인으로 바꾸지 않는다. Do not request credentials, personal data, or private materials.",
+    "resume_prompt": "`studio-entry beginner`에서 정리한 다섯 항목과 선택한 실행 경로를 보존하고, 새로 확인된 입력만 반영해 경로 선택 기록 확인부터 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남기고 경로 선택을 승인으로 바꾸지 않는다. 인증 정보, 개인정보나 비공개 자료는 요청하지 않는다.",
     "diagram_binding": {
       "id": "st-s09",
       "svg": "guides/assets/game-design-studio/skills/orchestrate-game-design-project.svg",
@@ -93,32 +93,32 @@
       "guides/game-design-studio/skills/orchestrate-game-design-project.md"
     ],
     "display_title": "어떤 스킬을 부를지 모르는 요청을 실행 경로 하나로 정리",
-    "sample_result_excerpt": "요청을 게임 비전 정리 경로로 보내기로 하고 소유 제품과 실행 경로를 한 줄로 적었습니다. 공개 범위와 결정 담당자는 아직 미정이라 사람이 확인해야 합니다. (ID: studio:game-design-studio:beginner; 파일: game-design/studio-entry/beginner/content.md)"
+    "sample_result_excerpt": "요청을 게임 비전 정리 경로로 보내기로 하고 담당 제품과 실행 경로를 한 줄로 적었습니다. 공개 범위와 결정 담당자는 아직 미정이라 담당자가 확인해야 합니다. (ID: studio:game-design-studio:beginner; 파일: game-design/studio-entry/beginner/content.md)"
   },
   {
     "id": "studio:game-design-studio:standard",
     "kind": "skill-template",
     "product": "studio",
-    "title": "여러 도메인이 섞인 요청을 owner 하나로",
-    "purpose": "여러 도메인이 섞인 요청을 owner 하나와 route 하나로 좁힌다.",
+    "title": "여러 도메인이 섞인 요청을 담당 제품 하나로",
+    "purpose": "여러 도메인이 섞인 요청을 담당 제품 하나와 실행 경로 하나로 좁힌다.",
     "audiences": [
       "lead-game-designer",
       "production-feasibility-critic",
       "game-designer"
     ],
     "intents": [
-      "소유 제품 확정",
+      "담당 제품 선택",
       "혼합 요청 축소"
     ],
     "level": "standard",
-    "when_to_use": "시스템·경제·콘텐츠처럼 여러 도메인이 한 요청에 섞여 있어 소유자와 경로를 하나로 좁혀야 할 때 사용한다.",
-    "when_not_to_use": "섞인 요청을 여러 route로 동시에 펼치거나 도메인마다 다른 소유자를 동시에 지정할 때는 사용하지 않는다.",
+    "when_to_use": "시스템·경제·콘텐츠처럼 여러 분야가 한 요청에 섞여 있어 담당 제품과 실행 경로를 하나씩 골라야 할 때 사용한다.",
+    "when_not_to_use": "섞인 요청을 여러 실행 경로로 동시에 펼치거나 분야마다 다른 담당 제품을 동시에 지정할 때는 사용하지 않는다.",
     "required_inputs": [
       "요청에 섞인 도메인 목록",
       "원하는 최종 결과",
-      "기존 Artifact 목록",
+      "기존 기준 결과 폴더 목록",
       "공개 범위",
-      "사람 결정 담당자"
+      "최종 결정 담당자"
     ],
     "optional_inputs": [
       "우선순위가 높은 도메인",
@@ -128,15 +128,15 @@
     "placeholders": [
       "[요청에 섞인 도메인 목록]",
       "[원하는 최종 결과]",
-      "[기존 Artifact 목록]"
+      "[기존 기준 결과 폴더 목록]"
     ],
     "app_prompt": {
-      "example": "@Game Design Studio 전투, 경제, 콘텐츠 이야기가 한 번에 섞인 요청이야. 소유 제품 하나와 실행 경로 하나로 좁히고 나머지는 후속 결정으로 남긴 라우팅 영수증을 만들어 줘. 근거가 없는 항목은 미정으로 남겨 줘.",
-      "template": "@Game Design Studio [요청에 섞인 도메인 목록]이 한 번에 들어 있는 요청이야. [원하는 최종 결과]를 기준으로 소유 제품 하나와 실행 경로 하나로 좁히고 [기존 Artifact 목록]과의 관계를 라우팅 영수증에 적어 줘. 근거가 없는 항목은 미정으로 남겨 줘."
+      "example": "@Game Design Studio 전투, 경제, 콘텐츠 이야기가 한 번에 섞인 요청이야. 담당 제품과 실행 경로를 하나씩 고르고 나머지는 후속 결정으로 남겨 경로 선택 기록에 적어 줘. 근거가 없는 항목은 미정으로 남겨 줘.",
+      "template": "@Game Design Studio [요청에 섞인 도메인 목록]이 한 번에 들어 있는 요청이야. [원하는 최종 결과]를 기준으로 담당 제품과 실행 경로를 하나씩 고르고 [기존 기준 결과 폴더 목록]과의 관계를 경로 선택 기록에 적어 줘. 근거가 없는 항목은 미정으로 남겨 줘."
     },
     "cli_prompt": {
-      "example": "$game-design-studio:game-design-studio 전투·경제·콘텐츠가 섞인 요청을 소유 제품 하나와 route 하나로 좁히고 나머지는 후속 결정으로 라우팅 영수증에 적어.",
-      "template": "$game-design-studio:game-design-studio [요청에 섞인 도메인 목록]을 [원하는 최종 결과] 기준으로 좁히고 [기존 Artifact 목록]과의 관계를 라우팅 영수증에 적어."
+      "example": "$game-design-studio:game-design-studio 전투·경제·콘텐츠가 섞인 요청에서 담당 제품과 실행 경로를 하나씩 고르고 나머지는 후속 결정으로 경로 선택 기록에 적어.",
+      "template": "$game-design-studio:game-design-studio [요청에 섞인 도메인 목록]에서 [원하는 최종 결과]에 맞는 담당 제품과 실행 경로를 하나씩 골라 [기존 기준 결과 폴더 목록]과의 관계를 경로 선택 기록에 적어."
     },
     "skill": "game-design-studio",
     "skill_chain": [
@@ -151,17 +151,17 @@
       "decision-change-log"
     ],
     "minimum_outputs": [
-      "소유 제품 하나",
-      "선택된 route 하나",
+      "담당 제품 하나",
+      "선택된 실행 경로 하나",
       "후속 결정으로 미룬 도메인 목록",
-      "라우팅 영수증"
+      "경로 선택 기록"
     ],
     "optional_outputs": [
       "도메인별 우선순위 근거",
       "미정 항목 목록"
     ],
     "extended_outputs": [
-      "탈락한 route와 탈락 사유",
+      "고르지 않은 실행 경로와 탈락 사유",
       "다음 사람 결정 대기열"
     ],
     "expected_file_tree": [
@@ -170,14 +170,14 @@
     "read_order": [
       "game-design/studio-entry/standard/content.md"
     ],
-    "human_review_boundary": "lead-game-designer 결정 담당자가 소유 제품과 실행 경로를 승인·수정·보류하며 라우팅은 승인이 아니고 위임된 스킬의 승인 규칙이 그대로 적용된다.",
+    "human_review_boundary": "`lead-game-designer` 역할을 맡은 최종 결정 담당자가 담당 제품과 실행 경로를 승인·수정·보류한다. 경로 선택 자체는 승인이 아니며, 위임된 스킬의 승인 규칙은 그대로 적용된다.",
     "hold_conditions": [
       "도메인마다 결정 담당자가 다름",
       "원하는 최종 결과가 도메인별로 충돌함",
-      "고른 route가 설치된 스킬 목록에 없음"
+      "고른 실행 경로가 설치된 스킬 목록에 없음"
     ],
-    "resume_prompt": "studio-entry standard의 소유 제품과 좁힌 route를 보존하고 해소된 도메인 충돌 하나만 반영해 후속 결정 목록부터 재개해.",
-    "safety_boundary": "판단 근거가 없는 도메인 우선순위는 미정으로 남기고 라우팅을 승인으로 바꾸지 않는다. Do not request credentials, personal data, or private materials.",
+    "resume_prompt": "`studio-entry standard`에서 정한 담당 제품과 실행 경로를 보존하고, 해소된 분야 충돌 하나만 반영해 후속 결정 목록부터 재개해.",
+    "safety_boundary": "판단 근거가 없는 분야 우선순위는 미정으로 남기고 경로 선택을 승인으로 바꾸지 않는다. 인증 정보, 개인정보나 비공개 자료는 요청하지 않는다.",
     "diagram_binding": {
       "id": "st-s09",
       "svg": "guides/assets/game-design-studio/skills/orchestrate-game-design-project.svg",
@@ -199,7 +199,7 @@
     "kind": "skill-template",
     "product": "studio",
     "title": "사례 ID와 교차 제품 인계를 정리하는 진입",
-    "purpose": "사례 ID와 교차 제품 인계가 필요한 요청을 owner·supplier·영수증으로 정리한다.",
+    "purpose": "사례 ID와 교차 제품 인계가 필요한 요청을 담당 제품·근거 제공 제품·경로 선택 기록으로 정리한다.",
     "audiences": [
       "lead-game-designer",
       "document-quality-editor",
@@ -210,32 +210,32 @@
       "교차 제품 인계 판단"
     ],
     "level": "advanced",
-    "when_to_use": "사용자가 사례 ID를 부르거나 상대 제품의 근거가 있어야 결과가 나오는 요청에서 소유자와 공급자를 나눠야 할 때 사용한다.",
+    "when_to_use": "사용자가 사례 ID를 지정했거나 다른 제품의 근거가 있어야 결과를 완성할 수 있어, 담당 제품과 근거 제공 제품을 나눠야 할 때 사용한다.",
     "when_not_to_use": "존재하지 않는 사례 ID를 이웃 사례로 추측하거나 한 요청에서 인계를 두 번 이상 시작할 때는 사용하지 않는다.",
     "required_inputs": [
       "사례 ID",
       "원하는 최종 결과",
       "필요한 상대 제품 근거",
       "공개 범위",
-      "사람 결정 담당자"
+      "최종 결정 담당자"
     ],
     "optional_inputs": [
       "상대 제품 설치 여부",
-      "기존 라우팅 영수증",
+      "기존 경로 선택 기록",
       "출력 형식"
     ],
     "placeholders": [
       "[사례 ID]",
       "[필요한 상대 제품 근거]",
-      "[사람 결정 담당자]"
+      "[최종 결정 담당자]"
     ],
     "app_prompt": {
-      "example": "@Game Design Studio ST-G04 사례로 시작하고 싶고 커리어 쪽 근거도 필요해. 사례 ID를 실행 경로로 바꾸고 소유자와 공급자를 나눈 라우팅 영수증을 만들어 줘. 상대 제품이 없으면 그 사실을 그대로 적어 줘.",
-      "template": "@Game Design Studio [사례 ID]로 시작하고 [필요한 상대 제품 근거]도 있어야 해. 사례 ID를 실행 경로로 바꾸고 소유자와 공급자를 나눠 [사람 결정 담당자]가 볼 라우팅 영수증을 만들어 줘. 상대 제품이 없으면 그 사실을 그대로 적어 줘."
+      "example": "@Game Design Studio ST-G04 사례로 시작하고 싶고 커리어 쪽 근거도 필요해. 사례 ID를 실행 경로로 바꾸고 담당 제품과 근거 제공 제품을 구분해 경로 선택 기록에 적어 줘. 상대 제품이 없으면 그 사실을 그대로 적어 줘.",
+      "template": "@Game Design Studio [사례 ID]로 시작하고 [필요한 상대 제품 근거]도 있어야 해. 사례 ID를 실행 경로로 바꾸고 담당 제품과 근거 제공 제품을 구분해 [최종 결정 담당자]가 볼 경로 선택 기록에 적어 줘. 상대 제품이 없으면 그 사실을 그대로 적어 줘."
     },
     "cli_prompt": {
-      "example": "$game-design-studio:game-design-studio ST-G04를 실행 경로로 바꾸고 커리어 근거가 필요한 부분은 공급자 요청으로 나눠 라우팅 영수증에 적어.",
-      "template": "$game-design-studio:game-design-studio [사례 ID]를 실행 경로로 바꾸고 [필요한 상대 제품 근거]는 공급자 요청으로 나눠 라우팅 영수증에 적어."
+      "example": "$game-design-studio:game-design-studio ST-G04를 실행 경로로 바꾸고 커리어 근거가 필요한 부분은 근거 제공 요청으로 나눠 경로 선택 기록에 적어.",
+      "template": "$game-design-studio:game-design-studio [사례 ID]를 실행 경로로 바꾸고 [필요한 상대 제품 근거]는 근거 제공 요청으로 나눠 경로 선택 기록에 적어."
     },
     "skill": "game-design-studio",
     "skill_chain": [
@@ -251,9 +251,9 @@
     ],
     "minimum_outputs": [
       "사례 ID를 바꾼 실행 경로",
-      "소유 제품과 공급 제품 구분",
+      "담당 제품과 근거 제공 제품 구분",
       "인계 필요 여부",
-      "라우팅 영수증"
+      "경로 선택 기록"
     ],
     "optional_outputs": [
       "사례 ID를 찾지 못했을 때의 대체 경로",
@@ -269,14 +269,14 @@
     "read_order": [
       "game-design/studio-entry/advanced/content.md"
     ],
-    "human_review_boundary": "lead-game-designer 결정 담당자가 사례 해석과 인계 시작 여부를 승인·수정·보류하며 라우팅은 승인이 아니고 위임된 스킬의 승인 규칙이 그대로 적용된다.",
+    "human_review_boundary": "`lead-game-designer` 역할을 맡은 최종 결정 담당자가 사례 해석과 인계 시작 여부를 승인·수정·보류한다. 경로 선택 자체는 승인이 아니며, 위임된 스킬의 승인 규칙은 그대로 적용된다.",
     "hold_conditions": [
       "사례 ID가 카탈로그에 없음",
       "상대 제품이 설치되지 않음",
       "한 요청에서 인계를 두 번 시작하려 함"
     ],
-    "resume_prompt": "studio-entry advanced의 사례 해석과 소유자·공급자 구분을 보존하고 돌려받은 근거 하나만 반영해 인계 재검사부터 재개해.",
-    "safety_boundary": "찾지 못한 사례와 확인되지 않은 상대 제품 근거는 미정으로 남기고 라우팅을 승인으로 바꾸지 않는다. Do not request credentials, personal data, or private materials.",
+    "resume_prompt": "`studio-entry advanced`의 사례 해석과 담당·근거 제공 제품 구분을 보존하고, 돌려받은 근거 하나만 반영해 인계 재검사부터 재개해.",
+    "safety_boundary": "찾지 못한 사례와 확인되지 않은 상대 제품 근거는 미정으로 남기고 경로 선택을 승인으로 바꾸지 않는다. 인증 정보, 개인정보나 비공개 자료는 요청하지 않는다.",
     "diagram_binding": {
       "id": "st-s09",
       "svg": "guides/assets/game-design-studio/skills/orchestrate-game-design-project.svg",
@@ -291,6 +291,6 @@
       "guides/game-design-studio/workflow.md"
     ],
     "display_title": "사례 번호와 제품 사이 근거 요청을 함께 정리",
-    "sample_result_excerpt": "지정한 사례 번호는 경제 설계 경로로 풀었고, 지원자 눈높이 근거는 상대 제품에 요청할 항목으로 나눴습니다. 상대 제품 조회를 한 번 돌렸으나 목록을 읽지 못해 확인 불가로 적고, 자기 제품 몫만 완성한 뒤 빠진 근거를 blocker로 남겼습니다. (ID: studio:game-design-studio:advanced; 파일: game-design/studio-entry/advanced/content.md)"
+    "sample_result_excerpt": "지정한 사례 번호는 경제 설계 경로로 풀었고, 지원자 관점의 근거는 상대 제품에 요청할 항목으로 나눴습니다. 상대 제품을 한 번 확인했지만 목록을 읽지 못해 확인 불가로 적고, 담당 제품의 범위만 완성한 뒤 빠진 근거를 차단 요인으로 남겼습니다. (ID: studio:game-design-studio:advanced; 파일: game-design/studio-entry/advanced/content.md)"
   }
 ]

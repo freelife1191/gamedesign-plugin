@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "4bef3922fb8a393e29236dd119d8edd250786793fadd5354f859444dce23a5db",
+  "treeSha256": "2e0c9de16f077c17a7b6589769e73588365725a2af3632e69d2537554c4f1584",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -11,8 +11,8 @@
     },
     {
       "path": ".env.example",
-      "sha256": "3a1b20c15844c0612b1c495727f24f17c69e1b21b537e3c3760f486181d381b9",
-      "size": 3891
+      "sha256": "2ad7b45f9fafaf74fb60158b14332d018536ff3d5f0cfe362811a336e438af71",
+      "size": 4643
     },
     {
       "path": "LICENSE",
@@ -21,8 +21,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "d656d7a499722b28e64f1f9ab687230fa520972d08800409d2e7a10100f88a65",
-      "size": 66647
+      "sha256": "672ee12212e64ca2e6100e6ebad8af33a27fd68e9ae838bf8e354ef54b113c4a",
+      "size": 66649
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -616,8 +616,8 @@
     },
     {
       "path": "references/prompt-templates.json",
-      "sha256": "fecda1168b1a67ab535a677cf284a580fcc98d1779e7d474dffa135e856ad659",
-      "size": 409576
+      "sha256": "e0e10d820c6b4c23c87de77bbb09c65b2cbb9b03e96626288604e8ec8e7eab87",
+      "size": 410220
     },
     {
       "path": "references/routing.json",
@@ -626,8 +626,8 @@
     },
     {
       "path": "references/shared/document-quality/game-design-writing-style.md",
-      "sha256": "b5dc217b86f93c779d7c8a07ce07b41eca0ba12775d91c376eb4d48201604eec",
-      "size": 1281
+      "sha256": "998dd2273a5f3444ec393dd74193aa9c41a606dd997e1849bbde1c8345bef646",
+      "size": 1285
     },
     {
       "path": "references/shared/document-quality/indexes/career.json",
@@ -936,8 +936,8 @@
     },
     {
       "path": "references/shared/image-assets/.env.example",
-      "sha256": "3a1b20c15844c0612b1c495727f24f17c69e1b21b537e3c3760f486181d381b9",
-      "size": 3891
+      "sha256": "2ad7b45f9fafaf74fb60158b14332d018536ff3d5f0cfe362811a336e438af71",
+      "size": 4643
     },
     {
       "path": "references/shared/image-assets/prompt-patterns/base.json",
@@ -2311,8 +2311,8 @@
     },
     {
       "path": "skills/game-design-studio/references/handoff.md",
-      "sha256": "2ea085571dda5ae994c02f9972deffda03b879c82128c5b38de6fa07ad2a6dcd",
-      "size": 4684
+      "sha256": "887bd8b273388b15b4de1b75a0e0a46d100e03f136b224b89d044fa0cc2e418a",
+      "size": 4725
     },
     {
       "path": "skills/generate-image-assets/SKILL.md",
@@ -2481,8 +2481,8 @@
     },
     {
       "path": "skills/polish-game-design-writing/SKILL.md",
-      "sha256": "a2f114bf1f409e68d11e78bf2535af479ce6a1fa7bca57c633bb12be66b2a44b",
-      "size": 4282
+      "sha256": "409650f7c73296f7ea07ff0c213d2c6790aa6033282d08d4fb91fa30bdbf5d0a",
+      "size": 4294
     },
     {
       "path": "skills/polish-game-design-writing/agents/openai.yaml",

@@ -4841,7 +4841,7 @@
       <p class="subtitle">공개 가능한 근거 요약은 이름이 있는 사람의 승인 뒤에만 제품 경계를 넘습니다.</p>
     </div>
 
-    <script id="archify-guided-views-data" type="application/json">[{"id":"bounded-handoff","label":"공개 전달","focus":["studio_boundary","public_evidence_summary","career_boundary","career_portfolio_input"],"note":"스튜디오와 커리어 결과물은 분리하고, 공개 가능한 근거 요약만 전달 경로를 지납니다."},{"id":"human-approval","label":"승인 관문","focus":["public_evidence_summary","decision_owner","held_handoff"],"note":"권리·근거·영수증이 없으면 이름이 있는 결정 담당자가 공개 범위를 승인하거나 전달을 보류합니다."},{"id":"resume-held-review","label":"보류 검토 재개","focus":["decision_owner","held_handoff","resume_receipt"],"note":"차단 원인을 보존하고 새 영수증이 생긴 뒤 같은 공개 범위 검토를 재개합니다."}]</script>
+    <script id="archify-guided-views-data" type="application/json">[{"id":"bounded-handoff","label":"공개 전달","focus":["studio_boundary","public_evidence_summary","career_boundary","career_portfolio_input"],"note":"스튜디오와 커리어 결과물은 분리하고, 공개 가능한 근거 요약만 전달 경로를 지납니다."},{"id":"human-approval","label":"승인 관문","focus":["public_evidence_summary","decision_owner","held_handoff"],"note":"권리 확인 자료와 근거, 승인 기록이 없으면 담당자가 공개 범위 승인을 보류합니다."},{"id":"resume-held-review","label":"보류 검토 재개","focus":["decision_owner","held_handoff","resume_receipt"],"note":"보류 사유를 남기고 새 승인 기록이 생기면 같은 공개 범위를 다시 검토합니다."}]</script>
 
     <div class="guided-views no-print" id="guided-views" hidden aria-label="Guided diagram views">
       <button id="guided-view-prev" type="button" aria-label="Previous guided view" title="Previous guided view ([)">&#8592;</button>
@@ -4884,7 +4884,7 @@
 
     <!-- Main Diagram -->
     <div class="diagram-container" data-detail-level="read">
-      <svg viewBox="0 0 1320 720" role="img" aria-labelledby="archify-diagram-title archify-diagram-description" data-preset="editorial" data-quality-profile="showcase">
+      <svg viewBox="0 0 1320 480" role="img" aria-labelledby="archify-diagram-title archify-diagram-description" data-preset="editorial" data-quality-profile="showcase">
         <title id="archify-diagram-title">스튜디오에서 커리어로 전달하는 공개 근거</title>
         <desc id="archify-diagram-description">공개 가능한 근거 요약은 이름이 있는 사람의 승인 뒤에만 제품 경계를 넘습니다.</desc>
         <!-- Definitions -->
@@ -4910,19 +4910,19 @@
         <rect width="100%" height="100%" fill="url(#grid)" />
 
         <!-- Data Stages -->
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="stage" data-composition-frame-id="0" x="16" y="46" width="168" height="600" rx="10" class="c-lane" stroke-width="1"/>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="stage" data-composition-frame-id="0" x="16" y="46" width="168" height="360" rx="10" class="c-lane" stroke-width="1"/>
         <text x="100" y="68" class="t-dim" font-size="9" font-weight="600" text-anchor="middle">01 / 스튜디오</text>
 
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="stage" data-composition-frame-id="1" x="231" y="46" width="168" height="600" rx="10" class="c-lane" stroke-width="1"/>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="stage" data-composition-frame-id="1" x="231" y="46" width="168" height="360" rx="10" class="c-lane" stroke-width="1"/>
         <text x="315" y="68" class="t-dim" font-size="9" font-weight="600" text-anchor="middle">02 / 공개 요약</text>
 
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="stage" data-composition-frame-id="2" x="446" y="46" width="168" height="600" rx="10" class="c-lane" stroke-width="1"/>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="stage" data-composition-frame-id="2" x="446" y="46" width="168" height="360" rx="10" class="c-lane" stroke-width="1"/>
         <text x="530" y="68" class="t-dim" font-size="9" font-weight="600" text-anchor="middle">03 / 사람 승인</text>
 
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="stage" data-composition-frame-id="3" x="661" y="46" width="168" height="600" rx="10" class="c-lane" stroke-width="1"/>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="stage" data-composition-frame-id="3" x="661" y="46" width="168" height="360" rx="10" class="c-lane" stroke-width="1"/>
         <text x="745" y="68" class="t-dim" font-size="9" font-weight="600" text-anchor="middle">04 / 커리어</text>
 
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="stage" data-composition-frame-id="4" x="876" y="46" width="168" height="600" rx="10" class="c-lane" stroke-width="1"/>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="stage" data-composition-frame-id="4" x="876" y="46" width="168" height="360" rx="10" class="c-lane" stroke-width="1"/>
         <text x="960" y="68" class="t-dim" font-size="9" font-weight="600" text-anchor="middle">05 / 포트폴리오 입력</text>
 
         <!-- Flow paths -->
@@ -4986,8 +4986,8 @@
           <text data-detail="context" x="745" y="279" class="t-muted" font-size="7" text-anchor="middle">차단 원인 보존</text>
         </g>
 
-        <g id="node-resume_receipt" data-node-id="resume_receipt" data-node-label="승인 영수증" tabindex="0" role="button" aria-label="Focus 승인 영수증, 새 승인 근거, 05 / 포트폴리오 입력" aria-pressed="false" data-node-kind="messagebus" data-node-sublabel="새 승인 근거" data-node-context="05 / 포트폴리오 입력">
-          <title>승인 영수증 · 새 승인 근거 · 05 / 포트폴리오 입력</title>
+        <g id="node-resume_receipt" data-node-id="resume_receipt" data-node-label="승인 기록" tabindex="0" role="button" aria-label="Focus 승인 기록, 새 승인 근거, 05 / 포트폴리오 입력" aria-pressed="false" data-node-kind="messagebus" data-node-sublabel="새 승인 근거" data-node-context="05 / 포트폴리오 입력">
+          <title>승인 기록 · 새 승인 근거 · 05 / 포트폴리오 입력</title>
           <rect x="904" y="242" width="112" height="58" rx="6" class="c-mask"/>
           <rect x="904" y="242" width="112" height="58" rx="6" class="c-messagebus" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="messagebus" class="semantic-sigil s-messagebus" transform="translate(910 248) scale(0.6875)">
@@ -4996,7 +4996,7 @@
             <circle cx="10.5" cy="8" r="1" class="sigil-fill"/>
             <circle cx="7" cy="11.5" r="1" class="sigil-fill"/>
           </g>
-          <text data-detail-anchor x="960" y="263" class="t-primary" font-size="10" font-weight="600" text-anchor="middle">승인 영수증</text>
+          <text data-detail-anchor x="960" y="263" class="t-primary" font-size="10" font-weight="600" text-anchor="middle">승인 기록</text>
           <text data-detail="context" x="960" y="279" class="t-muted" font-size="7" text-anchor="middle">새 승인 근거</text>
         </g>
 
@@ -5062,22 +5062,22 @@
 
         <!-- Legend -->
         <g data-legend data-legend-bridge>
-          <text x="40" y="664" class="t-primary" font-size="12" font-weight="650">범례</text>
-          <g data-legend-semantic-kind="emphasis" data-legend-x="40" data-legend-baseline="684" data-legend-width="103">
-            <path d="M 40 681 L 74 681" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
-            <text x="83" y="684" class="t-muted" font-size="10" font-weight="500">primary data</text>
+          <text x="40" y="424" class="t-primary" font-size="12" font-weight="650">범례</text>
+          <g data-legend-semantic-kind="emphasis" data-legend-x="40" data-legend-baseline="444" data-legend-width="103">
+            <path d="M 40 441 L 74 441" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+            <text x="83" y="444" class="t-muted" font-size="10" font-weight="500">primary data</text>
           </g>
-          <g data-legend-semantic-kind="security" data-legend-x="165" data-legend-baseline="684" data-legend-width="103">
-            <path d="M 165 681 L 199 681" class="a-security" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
-            <text x="208" y="684" class="t-muted" font-size="10" font-weight="500">policy / PII</text>
+          <g data-legend-semantic-kind="security" data-legend-x="165" data-legend-baseline="444" data-legend-width="103">
+            <path d="M 165 441 L 199 441" class="a-security" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
+            <text x="208" y="444" class="t-muted" font-size="10" font-weight="500">policy / PII</text>
           </g>
-          <g data-legend-semantic-kind="dashed" data-legend-x="290" data-legend-baseline="684" data-legend-width="98">
-            <path d="M 290 681 L 324 681" class="a-dashed" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
-            <text x="333" y="684" class="t-muted" font-size="10" font-weight="500">async batch</text>
+          <g data-legend-semantic-kind="dashed" data-legend-x="290" data-legend-baseline="444" data-legend-width="98">
+            <path d="M 290 441 L 324 441" class="a-dashed" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
+            <text x="333" y="444" class="t-muted" font-size="10" font-weight="500">async batch</text>
           </g>
-          <g data-legend-semantic-kind="database" data-legend-kind="database" data-legend-label="data store" data-legend-x="410" data-legend-baseline="684" data-legend-width="93">
-            <rect x="410" y="676" width="14" height="9" rx="2" class="c-database" stroke-width="1"/>
-            <text x="432" y="684" class="t-muted" font-size="10" font-weight="500">data store</text>
+          <g data-legend-semantic-kind="database" data-legend-kind="database" data-legend-label="data store" data-legend-x="410" data-legend-baseline="444" data-legend-width="93">
+            <rect x="410" y="436" width="14" height="9" rx="2" class="c-database" stroke-width="1"/>
+            <text x="432" y="444" class="t-muted" font-size="10" font-weight="500">data store</text>
           </g>
         </g>
       </svg>
@@ -5296,9 +5296,9 @@
           <h3>보류와 재개</h3>
         </div>
         <ul>
-          <li>&bull; 권리·근거·승인 영수증이 없으면 보류합니다</li>
+          <li>&bull; 권리 확인 자료·근거·승인 기록이 없으면 보류합니다</li>
           <li>&bull; 차단된 공개 범위 맥락과 원인을 보존합니다</li>
-          <li>&bull; 영수증이 생긴 뒤 같은 사람의 공개 범위 검토를 재개합니다</li>
+          <li>&bull; 새 승인 기록이 생기면 같은 담당자가 공개 범위를 다시 검토합니다</li>
         </ul>
       </div>
     </div>

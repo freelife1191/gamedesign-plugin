@@ -35,7 +35,7 @@ $game-design-studio:generate-image-assets artifact=game-design/island/brief asse
 $game-design-studio:generate-image-assets artifact=game-design/island/brief mode=all declared image jobs만 실행하고 preserve/exclude, rights source, named human review 대기 상태를 provenance에 기록해.
 ```
 
-#### 예상 파일과 읽는 순서
+#### 예상 결과와 파일 읽는 순서
 
 `content.md → evidence.yml → export-manifest.yml → assets/image-assets.yml` 순서로 읽습니다. 실제 generation이 있었을 때만 `assets/receipts/image-generation-<asset-id>-<attempt-id>.json`을 읽어 stable ID별 receipt와 `concept-draft` 상태를 확인합니다. `image-generation-result`, `image-generation-provenance`는 별도 파일명이 아니라 논리 결과입니다.
 
@@ -94,7 +94,7 @@ manifest와 finite jobs를 검증합니다. 기본값은 `IMAGE_PROVIDER=codex-f
 
 API key, authorization, base64와 raw bytes를 출력하지 않습니다. OpenAI API/auth/quota/policy/network 실패는 Codex fallback을 일으키지 않습니다. host가 보고하지 않은 model/quality도 만들지 않습니다.
 
-## 실패·fallback·재개 방법
+## 실패했을 때와 재개 방법
 
 부분 성공, policy block, unavailable route를 asset별로 기록하고 통과한 file과 prompt를 보존합니다.
 

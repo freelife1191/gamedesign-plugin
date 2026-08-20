@@ -16,7 +16,7 @@ Studio는 기준 Markdown을 먼저 만들고 선택 기능을 뒤에 붙입니�
 → MD/PDF/DOCX/PPTX 내보내기
 ```
 
-[![Canonical Artifact 승인 흐름](../assets/shared/canonical-artifact-lifecycle.png)](../assets/shared/canonical-artifact-lifecycle.svg)
+[![기준 결과물의 검토와 승인 흐름](../assets/shared/canonical-artifact-lifecycle.png)](../assets/shared/canonical-artifact-lifecycle.svg)
 
 ## 1. 비전
 
@@ -52,7 +52,7 @@ Studio는 기준 Markdown을 먼저 만들고 선택 기능을 뒤에 붙입니�
 
 이미지와 구조적 도식을 구분합니다.
 
-- 이미지: Quality Profile 뒤에 `plan-image-assets`로 stable asset ID와 prompt를 만들고, 설정된 provider로만 생성한 뒤 `review-image-assets`에서 사람이 승인합니다.
+- 이미지: 문서 품질 기준을 정한 뒤 `plan-image-assets`로 고정 자산 ID와 프롬프트를 만들고, 설정한 이미지 생성 기능으로만 생성한 다음 `review-image-assets`에서 담당자가 승인합니다.
 - 컷씬: [컷씬 장면·이미지 사전 설계](cutscene-visual-preproduction.md)에서 `style-master → reference-masters → keyframes → storyboard` 순서로 진행합니다. 각 단계는 비용을 공개하고 이름이 기록된 사람의 승인을 받기 전까지 이미지 제공자를 호출하지 않습니다.
 - 도식: 흐름, 상태, 루프와 의존성은 Skillstead SVG로 만들고 Chromium이 있으면 정확한 2× PNG를 렌더합니다. SVG lint와 시각 QA 전에는 검증 완료가 아닙니다.
 
@@ -66,13 +66,13 @@ Studio는 기준 Markdown을 먼저 만들고 선택 기능을 뒤에 붙입니�
 
 중단할 때 다음을 보존합니다.
 
-- Canonical Artifact 경로와 버전
+- 기준 결과물 경로와 버전
 - 완료된 섹션과 검증된 자산
 - `pending`, `blocked`, `unavailable` 상태와 원인
 - 필요한 capability, 근거 또는 사람 결정
 - 다음 단일 작업 요청문
 
-재개할 때는 새 문서를 처음부터 만들지 말고 Artifact 경로와 차단 항목을 지정합니다.
+재개할 때는 새 문서를 처음부터 만들지 말고 결과물 경로와 차단 항목을 지정합니다.
 
 ```text
 mobile-coop-rpg-brief/content.md를 기준으로 보존된 결정을 유지하고, blocked인 이미지 승인 단계부터 재개해줘.

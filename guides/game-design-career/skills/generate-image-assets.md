@@ -53,7 +53,7 @@ $game-design-career:generate-image-assets artifact=artifacts/portfolio mode=requ
 $game-design-career:generate-image-assets artifact=artifacts/portfolio IMAGE_GEN_MODE=all
 ```
 
-#### 예상 파일과 읽는 순서
+#### 예상 결과와 파일 읽는 순서
 
 `content.md → evidence.yml → assets/image-assets.yml → assets/prompts/image-prompts.md` 순서로 읽습니다. `image-generation-result`, `image-generation-provenance`을 반환합니다. 검토 owner: `visual-asset-reviewer`.
 
@@ -112,7 +112,7 @@ packaged preflight로 private config를 내부에 유지한 채 manifest와 fini
 
 OpenAI API/auth/quota/policy/invalid-request/network 실패 뒤 Codex fallback을 사용하지 않습니다. host가 반환하지 않은 model/quality를 주장하지 않으며 생성은 ownership, 권리 또는 문서 사용 승인이 아닙니다.
 
-## 실패·fallback·재개 방법
+## 실패했을 때와 재개 방법
 
 부분 성공과 실패를 asset별로 보존합니다. provider가 unavailable이면 prompt와 placeholder를 유지하고 동일 stable ID로 재개합니다.
 

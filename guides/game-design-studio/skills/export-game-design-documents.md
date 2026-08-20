@@ -35,7 +35,7 @@ $game-design-studio:export-game-design-documents artifact=game-design/island/rev
 $game-design-studio:export-game-design-documents artifact=game-design/island/brief formats=PPTX audience=decision-owner 독립 story, capability snapshot, provenance와 미승인 이미지 경계를 유지해 export preparation을 작성해.
 ```
 
-#### 예상 파일과 읽는 순서
+#### 예상 결과와 파일 읽는 순서
 
 `content.md → evidence.yml → export-manifest.yml` 순서로 읽습니다. preparation의 format job은 `pending`·`unavailable`·`blocked`만 기록하고 generation·renderer·QA는 모두 `not-run`, output/digest/count는 null, format evidence는 비어 있음으로 유지합니다. `export-preparation-manifest`, `format-jobs`는 별도 파일명이 아니라 이 preparation의 논리 결과입니다.
 
@@ -94,7 +94,7 @@ preflight, recipe, capability snapshot, format jobs와 artifact preservation을 
 
 generation·renderer·QA는 모두 `not-run`, derivative path/digest/count는 null, format evidence는 빈 배열이어야 합니다. final derivative는 `document-approved` 이상 asset만 binding합니다. 이 단계는 format-level `passed`나 `failed`를 거부합니다.
 
-## 실패·fallback·재개 방법
+## 실패했을 때와 재개 방법
 
 unsafe traversal, symlink, overwrite와 canonical preflight 실패는 fail-closed이며 기존 source와 output을 바꾸지 않습니다.
 

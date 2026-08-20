@@ -35,7 +35,7 @@ $game-design-studio:design-game-systems artifact=game-design/workbench/system ST
 $game-design-studio:design-game-systems artifact=game-design/workbench/system 확인된 runtime mapping만 data-schema-table-contract에 넣고 unknown schema는 provisional로 보존해.
 ```
 
-#### 예상 파일과 읽는 순서
+#### 예상 결과와 파일 읽는 순서
 
 `content.md → evidence.yml → export-manifest.yml` 순서로 읽고 `system-specification`, `rule-exception-matrix`, `data-schema-table-contract`는 별도 YAML 파일이 아니라 `content.md`의 안정 섹션과 stable ID로 검토합니다. `decisions/`은 실제 결정 기록이 있을 때만 그 뒤에 읽습니다.
 
@@ -94,7 +94,7 @@ Canonical Artifact에 rule·state·exception·data ID와 validation task를 기�
 
 모든 transition에는 trigger, guard, source/target state, side effect, feedback이 필요합니다. precedence가 결정되지 않았거나 balance 근거가 없으면 완료를 막고 owner가 있는 결정·검증 항목으로 남깁니다.
 
-## 실패·fallback·재개 방법
+## 실패했을 때와 재개 방법
 
 권위 데이터나 precedence가 빠졌다면 구현 승인을 주장하지 않고 기존 섹션을 보존합니다.
 

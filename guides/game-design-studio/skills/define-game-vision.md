@@ -35,7 +35,7 @@ $game-design-studio:define-game-vision artifact=game-design/island/vision ST-C01
 $game-design-studio:define-game-vision artifact=game-design/island/vision 기존 evidence와 decision owner를 보존하고 상충하는 feature 제안을 pillar·non-goal 기준으로 비교해.
 ```
 
-#### 예상 파일과 읽는 순서
+#### 예상 결과와 파일 읽는 순서
 
 `content.md → evidence.yml → export-manifest.yml` 순서로 읽고 `vision-pillars`, `core-motivation-loop`은 `content.md`의 안정 섹션으로 확인합니다. `decisions/`은 사람이 남긴 보조 결정 기록이 있을 때만 그 뒤에 읽습니다.
 
@@ -94,7 +94,7 @@ Canonical Artifact의 `content.md`, `evidence.yml`, decisions와 검토 항목�
 
 claim은 `provided`, `sourced`, `assumption`, `provisional`로 구분합니다. 적용 가능한 responsible-design gate는 먼저 `pending`이며 missing evidence나 자동 생성 결과는 승인이 아닙니다.
 
-## 실패·fallback·재개 방법
+## 실패했을 때와 재개 방법
 
 대상 플레이어 근거나 owner가 부족해도 초안을 보존하고 질문과 validation task를 남깁니다.
 

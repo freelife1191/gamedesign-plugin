@@ -17,7 +17,7 @@ Career는 현재 단계를 진단한 뒤 필요한 근거만 조사하고, 작�
 → MD/PDF/DOCX/PPTX 내보내기
 ```
 
-[![Canonical Artifact 승인 흐름](../assets/shared/canonical-artifact-lifecycle.png)](../assets/shared/canonical-artifact-lifecycle.svg)
+[![기준 결과물의 검토와 승인 흐름](../assets/shared/canonical-artifact-lifecycle.png)](../assets/shared/canonical-artifact-lifecycle.svg)
 
 ## 1. 단계 진단
 
@@ -60,7 +60,7 @@ Canonical Artifact의 `content.md`에서 MD, PDF, DOCX 또는 PPTX 작업을 준
 
 ## 재개 계약
 
-중단할 때 Artifact 경로, 진단 단계, 사용한 근거 날짜, 완료된 증거, 차단 claim과 다음 검증 작업을 보존합니다.
+중단할 때는 결과물 경로, 진단 단계, 사용한 근거 날짜, 완료된 증거, 차단된 주장과 다음 검증 작업을 보존합니다.
 
 ```text
 system-designer-12-week-roadmap/content.md를 기준으로 기존 evidence ID를 유지하고, blocked인 채용공고 최신성 확인부터 재개해줘.

@@ -454,7 +454,7 @@ const readableSkillMetadata = new Map([
     ["design-game-systems", ["게임 시스템 설계", "규칙, 상태, 우선순위, 예외와 데이터 관계를 시스템 명세로 만듭니다."]],
     ["design-player-experience", ["플레이어 경험 설계", "정보 구조, 상호작용, 온보딩과 접근성 흐름을 정리합니다."]],
     ["export-game-design-documents", ["기획 문서 내보내기 준비", "검증된 기준 결과 폴더의 MD, PDF, DOCX, PPTX 준비 상태를 기록합니다."]],
-    ["game-design-studio", ["대표 진입", "요청을 소유 제품 하나와 실행 경로 하나로 정리하고 라우팅 영수증을 남깁니다."]],
+    ["game-design-studio", ["대표 진입", "요청에서 담당 제품과 실행 경로를 하나씩 고르고 선택 근거를 기록합니다."]],
     ["generate-image-assets", ["이미지 자산 생성", "승인된 목록의 선택 작업만 생성하고 이미지 제공자 상태를 기록합니다."]],
     ["humanize-korean", ["한국어 문장 다듬기", "사실과 수치, ID를 보존하며 기계적인 표현을 자연스러운 문장으로 다듬습니다."]],
     ["capture-game-design-memory", ["프로젝트 기억 후보 기록", "출처와 적용·제외 조건이 붙은 검토 대기 후보를 기록합니다."]],
@@ -477,7 +477,7 @@ const readableSkillMetadata = new Map([
     ["archify", ["경력 구조 도식 만들기", "경력 경로와 작업 흐름을 탐색 가능한 HTML 구조 도식으로 만듭니다."]],
     ["build-game-design-portfolio", ["기획 포트폴리오 만들기", "공개 가능한 판단, 개인 기여와 검증을 포트폴리오 사례로 만듭니다."]],
     ["export-career-documents", ["경력 문서 내보내기 준비", "경력 기준 결과 폴더의 MD, PDF, DOCX, PPTX 준비 상태를 기록합니다."]],
-    ["game-design-career", ["경력 대표 진입", "경력 요청을 소유 제품 하나와 실행 경로 하나로 정리하고 라우팅 영수증을 남깁니다."]],
+    ["game-design-career", ["경력 요청 정리", "경력 요청에서 담당 제품과 실행 경로를 하나씩 고르고 선택 근거를 기록합니다."]],
     ["generate-image-assets", ["경력 이미지 자산 생성", "승인된 이미지 목록의 선택 작업만 생성하고 이미지 제공자 상태를 기록합니다."]],
     ["humanize-korean", ["경력 문장 다듬기", "증거와 주장 경계를 보존하며 기계적인 표현을 자연스러운 문장으로 다듬습니다."]],
     ["capture-game-design-memory", ["프로젝트 기억 후보 기록", "출처와 적용·제외 조건이 붙은 검토 대기 후보를 기록합니다."]],
@@ -2515,6 +2515,37 @@ test("primary user-facing README hubs separate major sections and use purposeful
   }
 });
 
+test("representative skill documentation uses natural Korean for route selection records", async () => {
+  const files = [
+    "README.md",
+    "guides/README.md",
+    "guides/game-design-studio/README.md",
+    "guides/game-design-studio/quick-start.md",
+    "guides/game-design-studio/troubleshooting.md",
+    "guides/game-design-studio/skills/README.md",
+    "guides/game-design-studio/skills/game-design-studio.md",
+    "guides/game-design-studio/use-cases/skill-workbench.md",
+    "guides/game-design-career/README.md",
+    "guides/game-design-career/quick-start.md",
+    "guides/game-design-career/troubleshooting.md",
+    "guides/game-design-career/skills/README.md",
+    "guides/game-design-career/skills/game-design-career.md",
+    "guides/prompt-templates/catalog/studio-entry.json",
+    "guides/prompt-templates/catalog/career-entry.json",
+  ];
+  for (const filename of files) {
+    const source = await readFile(path.join(root, filename), "utf8");
+    assert.doesNotMatch(
+      source,
+      /라우팅 영수증|owner 하나|route 하나|영수증 하나|기계 영수증|어떤 스킬이 소유자인지|소유 제품 하나|소유자와 공급자|공급자 요청|사람 결정 담당자|기존 Artifact/u,
+      filename,
+    );
+  }
+  for (const filename of files.filter((entry) => entry.endsWith("game-design-studio.md") || entry.endsWith("game-design-career.md"))) {
+    assert.match(await readFile(path.join(root, filename), "utf8"), /경로 선택 기록/u, filename);
+  }
+});
+
 test("root README starts with simple natural-language requests and keeps explicit routes advanced", async () => {
   const readme = await readFile(path.join(root, "README.md"), "utf8");
   assertNaturalLanguageFirstRoot(readme);
@@ -2770,7 +2801,7 @@ test("beginner guides use repository-root CLI commands and the real visualizatio
     const visualization = await readFile(path.join(guideRoot, product, "visualization.md"), "utf8");
     assert.match(visualization, new RegExp(wrapper.replaceAll("/", "\\/")));
     assert.doesNotMatch(visualization, /<svg-path>|<png-path>/);
-    assert.match(visualization, /교체 placeholder/);
+    assert.match(visualization, /실제 파일 경로로 바꿔야 하는 자리표시자/);
     await assertRegularNonSymlinkFile(path.join(root, wrapper));
   }
 });

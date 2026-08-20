@@ -1,6 +1,6 @@
 # Game Design Studio 사용자 가이드
 
-Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스템·콘텐츠·플레이어 경험·경제·LiveOps·제작 계획, 검토, 자산과 내보내기까지 연결합니다. `content.md`를 기준으로 근거, 결정, 미해결 위험과 사람 승인 상태를 보존하는 Canonical Artifact(기준 작업 폴더)를 사용합니다. [공통 용어](../README.md#용어)를 먼저 확인하세요.
+Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스템·콘텐츠·플레이어 경험·경제·LiveOps·제작 계획, 검토, 자산과 내보내기까지 연결합니다. `content.md`를 기준으로 근거, 결정, 미해결 위험과 담당자 승인 상태를 보존하는 기준 결과 폴더(Canonical Artifact)를 사용합니다. [공통 용어](../README.md#용어)를 먼저 확인하세요.
 
 > 🎮 게임의 방향, 규칙, 콘텐츠, 화면 흐름과 제작 범위를 정리하려면 여기서
 > 시작하세요. 처음에는 `처음 시작하기`와 목적별 레시피 하나만 읽으면 됩니다.
@@ -19,7 +19,7 @@ Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스
 | --- | --- | --- | --- |
 | 작은 실습 | [Studio 활용 사례 인덱스](use-cases/README.md) | 10분 안에 설명할 플레이 경험의 약속, 플레이 흐름 또는 규칙 가정 | [역량 사례](use-cases/competency-paths.md) |
 | 단일 명세 | [스킬 워크벤치](use-cases/skill-workbench.md) | 상태·예외·UX·콘텐츠 중 하나의 검토 가능한 작업 초안 | [Studio FAQ](faq.md) |
-| 전체 프로젝트 | [새 게임 GDD 레시피](recipes/new-game-gdd.md) | 범위·검토 gate와 재개 조건이 있는 Studio Artifact | [결과물 카탈로그](../use-cases/output-catalog.md) |
+| 전체 프로젝트 | [새 게임 GDD 레시피](recipes/new-game-gdd.md) | 범위·검토 조건과 재개 방법을 기록한 Studio 결과물 | [결과물 카탈로그](../use-cases/output-catalog.md) |
 
 작은 실습과 단일 명세도 `content.md`와 근거를 남기며, 전체 프로젝트는 이를 대체하지 않고 범위와 사람 결정을 추가합니다. 최소·선택·확장 결과와 Studio → Career 인계는 [결과물 카탈로그](../use-cases/output-catalog.md)에서 확인합니다.
 
@@ -63,7 +63,7 @@ Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스
 - [용어 사전 검토](glossary.md): 후보 용어를 사람 승인과 스냅샷에 묶고 원문 자동 치환을 막습니다.
 - [컷씬 장면·이미지 사전 설계](cutscene-visual-preproduction.md): 장면, 프롬프트, 단계별 비용·승인과 연속성 검토를 나눕니다.
 - [Studio FAQ](faq.md): 현재 막힌 질문의 실행 요청과 관련 사례를 찾습니다.
-- [공통 결과물 카탈로그](../use-cases/output-catalog.md): 최소·선택·확장 결과와 Canonical Artifact 읽는 순서를 확인합니다.
+- [공통 결과물 카탈로그](../use-cases/output-catalog.md): 최소·선택·확장 결과와 기준 결과 폴더를 읽는 순서를 확인합니다.
 - [요청문 템플릿 허브](../prompt-templates/README.md): 사용자 유형·난이도별 요청과 예상 결과를 비교합니다.
 - 대표 카드: [비전 입문](../prompt-templates/studio/define-game-vision.md#studiodefine-game-visionbeginner), [시스템 표준](../prompt-templates/studio/design-game-systems.md#studiodesign-game-systemsstandard), [UX 표준](../prompt-templates/studio/design-player-experience.md#studiodesign-player-experiencestandard), [프로젝트 재개 고급](../prompt-templates/studio/orchestrate-game-design-project.md#studioorchestrate-game-design-projectadvanced)
 
@@ -82,7 +82,7 @@ Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스
 9. [MD·PDF·DOCX·PPTX 내보내기](exports.md)에서 필요한 형식만 준비합니다.
 10. 막히면 [문제 해결](troubleshooting.md)에서 보존된 결과로 재개합니다.
 
-어떤 스킬이 요청의 소유자인지 모르겠다면 [대표 진입 스킬](skills/game-design-studio.md)에 요청이나 사례 ID를 그대로 넘깁니다. 소유 제품 하나와 실행 경로 하나를 고르고 라우팅 영수증을 남깁니다.
+어떤 스킬이 요청을 맡아야 할지 모르겠다면 [대표 진입 스킬](skills/game-design-studio.md)에 요청이나 사례 ID를 그대로 넘깁니다. 담당 제품과 실행 경로를 하나씩 고르고 선택 근거를 기록합니다.
 
 설치본을 올릴 때는 `$upgrade-game-design-suite`를 먼저 부릅니다. 검사와 계획 단계에서는 설치를 바꾸지 않고, 승인 뒤에만 다시 설치합니다. 절차는 [설치의 업데이트](installation.md#업데이트)에 있습니다.
 
@@ -123,7 +123,7 @@ Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스
 
 - [스킬 26개](skills/README.md)
 - [템플릿 15개](templates.md)
-- [문서 품질 profile](document-quality.md)
+- [문서 품질 기준](document-quality.md)
 - [이미지 자산](image-assets.md)
 - [시각화](visualization.md)
 - [MD·PDF·DOCX·PPTX 내보내기](exports.md)

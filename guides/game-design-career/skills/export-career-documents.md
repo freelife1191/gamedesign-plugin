@@ -53,7 +53,7 @@ $game-design-career:export-career-documents artifact=artifacts/portfolio formats
 $game-design-career:export-career-documents artifact=artifacts/portfolio capability=unknown
 ```
 
-#### 예상 파일과 읽는 순서
+#### 예상 결과와 파일 읽는 순서
 
 `content.md → evidence.yml → decisions/ → export-manifest.yml` 순서로 읽습니다. `export-preparation-manifest`, `format-jobs`은 준비 논리 결과입니다. 검토 owner: `evidence-auditor`. `new-hire-reverse-design-export` route면 `reverse-design-critic`도 fact·inference review를 확인합니다. `evidence-auditor`는 source/evidence completion gate를 검토하지만 downstream renderer, format QA 또는 사람 승인 completion gate를 대체하지 않습니다.
 
@@ -112,7 +112,7 @@ prepared job manifest, 형식별 availability/status, probe evidence와 resumabl
 
 MD는 canonical frontmatter·한 H1·stable heading IDs·NFC·relative asset/alt text, PDF/DOCX는 semantics와 전 페이지 visual QA, PPTX는 독립 story·overflow·전 슬라이드 visual QA가 downstream에서 필요합니다. final derivative는 승인된 asset만 참조합니다.
 
-## 실패·fallback·재개 방법
+## 실패했을 때와 재개 방법
 
 canonical validation 실패는 `blocked`, probe 전은 `pending/unknown`, 실패한 probe는 `unavailable`입니다. 준비 단계의 `passed`, `failed`, generation·QA evidence는 거부하며 canonical artifact를 덮어쓰지 않습니다.
 

@@ -53,7 +53,7 @@ $game-design-career:reverse-engineer-game-design build=public observationId=O-01
 $game-design-career:reverse-engineer-game-design build=public validationMethod=playtest
 ```
 
-#### 예상 파일과 읽는 순서
+#### 예상 결과와 파일 읽는 순서
 
 `content.md → evidence.yml → decisions/ → export-manifest.yml` 순서로 읽습니다. `reverse-design-document`, `game-analysis-report`를 반환합니다. 검토 owner: `reverse-design-critic` · `evidence-auditor`; critic은 fact·inference·alternative·validation을, auditor는 source·provenance·rights evidence를 검토합니다.
 
@@ -112,7 +112,7 @@ scope를 고정하고 independently falsifiable claim record를 만듭니다. pl
 
 사실은 recorded scope의 관찰·인용에만 한정합니다. confidence는 수사적 확신이 아니라 evidence support입니다. 제3자 screenshot·게임 자료는 source, use purpose, rights와 privacy를 사람이 검토합니다.
 
-## 실패·fallback·재개 방법
+## 실패했을 때와 재개 방법
 
 접근 불가 surface와 모순 관찰은 삭제하지 않고 uncertainty와 validation task로 남깁니다. 내부 의도·data structure를 증거 없이 채우지 않습니다.
 

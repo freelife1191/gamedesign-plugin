@@ -53,7 +53,7 @@ $game-design-career:build-game-design-portfolio artifact=artifacts/portfolio evi
 $game-design-career:build-game-design-portfolio artifact=artifacts/portfolio review=portfolio-reviewer
 ```
 
-#### 예상 파일과 읽는 순서
+#### 예상 결과와 파일 읽는 순서
 
 `content.md → evidence.yml → decisions/ → export-manifest.yml` 순서로 읽습니다. `portfolio-project-brief`, `creative-design-portfolio`은 논리 결과입니다. 검토 owner: `portfolio-reviewer`.
 
@@ -112,7 +112,7 @@ $game-design-career:build-game-design-portfolio targetCompetency=system-design, 
 
 visual polish는 역량 증거가 아닙니다. source URL, section anchor, file/version, test record나 annotated image로 material claim을 찾을 수 있어야 하며 공개 전 권리·privacy owner가 결정합니다. portfolio가 합격을 보장하지 않습니다.
 
-## 실패·fallback·재개 방법
+## 실패했을 때와 재개 방법
 
 essential claim이 `inspectabilityGate`를 통과하지 못하면 incomplete로 유지하고 `strength: none`, `status: missing`, recovery owner와 action을 같은 record에 남깁니다.
 

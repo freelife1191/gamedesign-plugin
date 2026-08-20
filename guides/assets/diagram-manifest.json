@@ -7,7 +7,7 @@
       "scope": "shared",
       "svg": "shared/plugin-selection-flow.svg",
       "png": "shared/plugin-selection-flow.png",
-      "alt": "Game Design Studio와 Game Design Career를 목적에 따라 선택하고 공통 marketplace에서 설치하는 흐름.",
+      "alt": "Game Design Studio와 Game Design Career를 목적에 따라 선택하고 공통 마켓플레이스에서 설치하는 흐름.",
       "sources": ["../game-design-studio/installation.md", "../game-design-career/installation.md"],
       "usedBy": ["../game-design-studio/installation.md", "../game-design-career/installation.md"]
     },
@@ -16,7 +16,7 @@
       "scope": "shared",
       "svg": "shared/app-cli-install-flow.svg",
       "png": "shared/app-cli-install-flow.png",
-      "alt": "설치 전에 marketplace JSON의 UTF-8 인코딩과 marketplace 종류를 확인한 뒤, Codex App과 Codex CLI에서 설치·재설치·선택 제거·전체 정리를 검증하는 흐름.",
+      "alt": "설치 전에 마켓플레이스 설정 파일의 UTF-8 인코딩과 유형을 확인한 뒤 Codex App과 Codex CLI에서 설치·일부 제거·재설치·전체 정리를 확인하는 흐름.",
       "sources": ["../game-design-studio/installation.md", "../game-design-career/installation.md"],
       "usedBy": ["../game-design-studio/installation.md", "../game-design-career/installation.md"]
     },
@@ -25,7 +25,7 @@
       "scope": "shared",
       "svg": "shared/canonical-artifact-lifecycle.svg",
       "png": "shared/canonical-artifact-lifecycle.png",
-      "alt": "Canonical Artifact를 작성하고 검토·사람 결정을 거쳐 자산과 내보내기 준비로 연결하는 승인 흐름.",
+      "alt": "기준 결과 폴더를 작성하고 전문 검토와 담당자 결정을 거쳐 자산과 내보내기 준비로 연결하는 흐름.",
       "sources": ["../game-design-studio/workflow.md", "../game-design-career/workflow.md"],
       "usedBy": ["../game-design-studio/workflow.md", "../game-design-career/workflow.md"]
     },
@@ -34,7 +34,7 @@
       "scope": "shared",
       "svg": "shared/image-generation-mode-routing.svg",
       "png": "shared/image-generation-mode-routing.png",
-      "alt": "IMAGE_GEN_MODE의 prompt-only, select, required, all 모드가 생성 범위와 사용자 선택 경계를 결정하는 흐름.",
+      "alt": "IMAGE_GEN_MODE의 prompt-only, select, required, all 설정이 이미지 생성 범위와 사용자 선택 경계를 결정하는 흐름.",
       "sources": ["../game-design-studio/image-assets.md", "../game-design-career/image-assets.md"],
       "usedBy": ["../game-design-studio/image-assets.md", "../game-design-career/image-assets.md"]
     },
@@ -52,7 +52,7 @@
       "scope": "shared",
       "svg": "shared/image-asset-lifecycle.svg",
       "png": "shared/image-asset-lifecycle.png",
-      "alt": "이미지 자산이 concept-draft에서 named human review를 거쳐 document-approved와 production-candidate로 이동하는 단계 흐름.",
+      "alt": "이미지 자산이 콘셉트 초안에서 지정된 담당자의 검토를 거쳐 문서 승인 완료와 제작 검토 후보 상태로 이동하는 흐름.",
       "sources": ["../game-design-studio/image-assets.md", "../game-design-career/image-assets.md"],
       "usedBy": ["../game-design-studio/image-assets.md", "../game-design-career/image-assets.md"]
     },
@@ -61,7 +61,7 @@
       "scope": "shared",
       "svg": "shared/document-export-flow.svg",
       "png": "shared/document-export-flow.png",
-      "alt": "Canonical Artifact 내보내기 preflight 뒤 모든 형식에 공통인 not-requested·blocked·pending·unavailable 상태와 MD·PDF·DOCX·PPTX의 형식별 검증을 보여 주는 흐름.",
+      "alt": "기준 결과 폴더를 먼저 확인하고 요청 안 함·보류·준비 중·사용 불가 상태를 기록한 뒤 MD·PDF·DOCX·PPTX마다 필요한 검사를 이어 가는 흐름.",
       "sources": ["../game-design-studio/exports.md", "../game-design-career/exports.md"],
       "usedBy": ["../game-design-studio/exports.md", "../game-design-career/exports.md"]
     },
@@ -79,7 +79,7 @@
       "scope": "shared",
       "svg": "shared/suite-entry-routing-flow.svg",
       "png": "shared/suite-entry-routing-flow.png",
-      "alt": "자연어 요청이나 사례 ID를 소유 제품 하나와 route 하나로 좁히고 여섯 줄 라우팅 영수증을 먼저 공개한 뒤 전문 스킬 또는 오케스트레이터와 최대 세 개 검토 역할을 실행하거나 단방향 인계 후보로 분리하는 흐름.",
+      "alt": "자연어 요청이나 사례 ID에서 담당 제품과 실행 경로를 하나씩 고르고, 여섯 줄의 경로 선택 기록을 먼저 보여 준 뒤 전문 스킬 또는 오케스트레이터와 최대 세 개의 검토 역할을 실행하거나 단방향 인계 후보로 나누는 흐름.",
       "sources": ["../game-design-studio/skills/game-design-studio.md", "../game-design-career/skills/game-design-career.md"],
       "usedBy": ["../../README.md", "../game-design-studio/skills/game-design-studio.md", "../game-design-career/skills/game-design-career.md"]
     },
@@ -88,7 +88,7 @@
       "scope": "shared",
       "svg": "shared/suite-handoff-ownership-flow.svg",
       "png": "shared/suite-handoff-ownership-flow.png",
-      "alt": "최종 산출물을 내는 제품만 owner가 되고 supplier는 요청받은 증거만 한 번 돌려주며 상대 제품이 없으면 blocker를 남기고 멈추는 단방향 인계 흐름.",
+      "alt": "최종 결과를 맡은 제품을 하나 정하고 근거 제공 제품은 요청받은 자료만 한 번 돌려주며, 상대 제품이 없으면 차단 요인을 남기고 멈추는 단방향 인계 흐름.",
       "sources": ["../../shared/suite-handoff/references/handoff.md"],
       "usedBy": ["../../README.md", "../use-cases/output-catalog.md", "../game-design-studio/skills/game-design-studio.md", "../game-design-career/skills/game-design-career.md"]
     },

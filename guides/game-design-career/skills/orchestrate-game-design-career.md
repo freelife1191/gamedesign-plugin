@@ -53,7 +53,7 @@ $game-design-career:orchestrate-game-design-career goal=transition evidenceIds=E
 $game-design-career:orchestrate-game-design-career artifact=artifacts/career-stage resume=blocked
 ```
 
-#### 예상 파일과 읽는 순서
+#### 예상 결과와 파일 읽는 순서
 
 `content.md → evidence.yml → decisions/ → export-manifest.yml` 순서로 읽습니다. `career-stage-goal`, `career-stage-brief`을 반환합니다. 검토 owner: `career-strategist`.
 
@@ -126,7 +126,7 @@ normalized intake, stage rationale, assumptions, provisional paths, ordered skil
 
 검색일·지역·표본 한계를 포함한 current source, candidate fact, agent 추론과 실행 제안을 분리합니다. missing evidence는 approval이 아니며 portfolio, hiring, promotion 또는 transition 성공을 보장하지 않습니다.
 
-## 실패·fallback·재개 방법
+## 실패했을 때와 재개 방법
 
 optional review, visualization 또는 export가 unavailable이어도 canonical artifact를 보존하고 unavailable step과 resumable handoff를 기록합니다. stage나 role이 불명확하면 단일 답을 강제하지 않습니다.
 

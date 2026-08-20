@@ -35,7 +35,7 @@ $game-design-studio:apply-document-quality-profile artifact=game-design/island/s
 $game-design-studio:apply-document-quality-profile artifact=game-design/island/review template=game-design-review profile=design-review-decision-log 근거 상태와 named decision owner를 유지해 profile 충돌과 blocked requirement를 분리해.
 ```
 
-#### 예상 파일과 읽는 순서
+#### 예상 결과와 파일 읽는 순서
 
 `content.md → evidence.yml → export-manifest.yml` 순서로 canonical Artifact를 읽습니다. `selection-record`, `quality-checklist`, `requirement-manifest`은 trusted application이 반환하는 논리 결과이며 임의 artifact-local 파일명으로 가정하지 않습니다. profile 선택은 승인 자체가 아닙니다.
 
@@ -109,7 +109,7 @@ $game-design-studio:apply-document-quality-profile goal=live-service RPG 스태�
 
 근거와 가정을 분리하고 unknown override는 nearest profile 차이와 explicit fallback을 기록합니다. 상태는 `draft → structurally-complete → evidence-reviewed → visual-reviewed → document-approved` 순서이며 external inspection, evidence, renderer/rights/gate, 이름 있는 사람 receipt 없이는 전진하지 않습니다.
 
-## 실패·fallback·재개 방법
+## 실패했을 때와 재개 방법
 
 unknown ID, schema 오류, scalar conflict, raw object, symlink·path escape는 fail-closed입니다. 기존 artifact와 기록을 보존합니다.
 

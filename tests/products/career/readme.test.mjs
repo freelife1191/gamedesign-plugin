@@ -224,7 +224,7 @@ function representativeResultContract(caseId) {
 }
 
 function cardResultContracts(markdown, caseId) {
-  const expression = new RegExp(`^### ${caseId}[^\\n]*[\\s\\S]*?^- \\*\\*결과 ID · owner · root:\\*\\* (.+)$`, "mu");
+  const expression = new RegExp(`^### ${caseId}[^\\n]*[\\s\\S]*?^- \\*\\*결과 ID · 담당자 · 저장 위치:\\*\\* (.+)$`, "mu");
   const field = expression.exec(markdown)?.[1];
   assert.ok(field, `${caseId}: result owner/root card`);
   return [...field.matchAll(/`([a-z0-9-]+)` \(`\$game-design-career:([a-z0-9-]+)`\) → `([^`]+)`/gu)].map(([, id, owner, root]) => [id, owner, root]);
@@ -268,7 +268,7 @@ function assertRepresentativeRouteTable(markdown, expected, label) {
   const { headers, rows } = extractMarkdownTable(markdown, "활용 시작점");
   assert.deepEqual(
     headers,
-    ["사례 ID · 제목 · 대상", "정확한 준비 입력", "전체 스킬 경로", "명시적 직접 요청", "결과 ID · owner · root", "사례 읽는 순서"],
+    ["사례 ID · 제목 · 대상", "정확한 준비 입력", "전체 스킬 경로", "명시적 직접 요청", "결과 ID · 담당자 · 저장 위치", "사례 읽는 순서"],
     `${label}: representative route-table headers`,
   );
   const expectedRows = expected.map((route) => [route.case, route.input, route.skills, route.directRequest, route.results, route.readOrder]);
@@ -292,7 +292,7 @@ function assertRepresentativeRouteTable(markdown, expected, label) {
     assert.equal(normalizeCardField(field("준비 입력") ?? ""), normalizeCardField(route.input), `${route.caseId}: exact canonical input`);
     assert.equal(normalizeCardField(field("전체 스킬 경로") ?? ""), normalizeCardField(route.skills), `${route.caseId}: exact canonical skill order`);
     assert.equal(normalizeCardField(field("직접 요청문") ?? ""), normalizeCardField(route.directRequest), `${route.caseId}: exact canonical direct request`);
-    assert.equal(normalizeCardField(field("결과 ID · owner · root") ?? ""), normalizeCardField(route.results), `${route.caseId}: exact canonical result owner/root`);
+    assert.equal(normalizeCardField(field("결과 ID · 담당자 · 저장 위치") ?? ""), normalizeCardField(route.results), `${route.caseId}: exact canonical result owner/root`);
     assert.equal(normalizeCardField(field("읽는 순서") ?? ""), normalizeCardField(route.readOrder), `${route.caseId}: exact canonical reading order`);
   }
 }
@@ -425,7 +425,7 @@ function assertRepresentativeTableMutationFails(markdown, expected, label) {
 }
 
 function mutateRepresentativeCardResult(markdown, caseId, mutate) {
-  const expression = new RegExp(`(^### ${caseId}[^\\n]*[\\s\\S]*?^- \\*\\*결과 ID · owner · root:\\*\\* )(.+)$`, "mu");
+  const expression = new RegExp(`(^### ${caseId}[^\\n]*[\\s\\S]*?^- \\*\\*결과 ID · 담당자 · 저장 위치:\\*\\* )(.+)$`, "mu");
   assert.match(markdown, expression, `${caseId}: result card field`);
   return markdown.replace(expression, (_match, prefix, result) => prefix + mutate(result));
 }

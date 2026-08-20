@@ -217,7 +217,7 @@ const suiteInterfaceCards = [
   {
     title: "대표 스킬과 전문 작업",
     items: [
-      "Studio와 Career 대표 스킬은 요청을 한 번 분류하고 여섯 줄 라우팅 영수증을 먼저 공개합니다.",
+      "Studio와 Career 대표 스킬은 요청을 한 번 분류하고 여섯 줄의 경로 선택 기록을 먼저 보여 줍니다.",
       "단일 요청은 전문 스킬로, 복합 요청은 오케스트레이터와 최대 세 개 검토 역할로 보냅니다.",
     ],
   },
@@ -238,7 +238,7 @@ const suiteInterfaceCards = [
   {
     title: "공유 설계 안전망",
     items: [
-      "프로젝트 기억은 출처·범위가 맞고 사람이 승인한 기록만 다음 작업에 적용합니다.",
+      "프로젝트 기억은 출처·범위가 맞고 담당자가 승인한 기록만 다음 작업에 적용합니다.",
       "레퍼런스 분석은 관찰·추론·설계 전환 제안을 분리하고, 용어 사전은 승인 전 원문을 바꾸지 않습니다.",
       "Studio 컷씬은 프롬프트·비용·생성 승인을 분리하고, 승인 전에는 이미지 제공자를 호출하지 않습니다.",
     ],
@@ -309,7 +309,7 @@ function assertSuitePluginSystemArchitecture(spec) {
   assert.equal(spec.diagram_type, "architecture");
   assert.equal(spec.meta.quality_profile, "showcase");
   assert.equal(spec.meta.title, "게임 기획 플러그인 모음 전체 시스템 구조");
-  assert.deepEqual(spec.meta.views.map((view) => view.label), ["설치·업데이트·정리", "대표 스킬 라우팅", "기준 결과물과 자동 검증", "사람 검토·승인과 재개"]);
+  assert.deepEqual(spec.meta.views.map((view) => view.label), ["설치·업데이트·정리", "대표 스킬의 경로 선택", "기준 결과물과 자동 검증", "담당자 검토·승인과 재개"]);
   const ids = new Set(semanticNodeIds(spec));
   for (const id of [
     "app_cli", "marketplace", "studio_plugin", "career_plugin",
@@ -333,11 +333,11 @@ function assertSuitePluginSystemArchitecture(spec) {
   assert.match(`${byId.get("studio_plugin").label} ${byId.get("studio_plugin").sublabel}`, /게임 제작 기획 플러그인.*Studio/u);
   assert.match(`${byId.get("career_plugin").label} ${byId.get("career_plugin").sublabel}`, /취업·학습 플러그인.*Career/u);
   assert.match(`${byId.get("marketplace").label} ${byId.get("marketplace").sublabel}`, /마켓플레이스 수명주기.*Windows.*Ubuntu.*설치.*업데이트.*전체 정리/u);
-  assert.match(`${byId.get("representative_routing").label} ${byId.get("representative_routing").sublabel}`, /대표 스킬.*여섯 줄.*전문.*복합 경로.*검토 역할 최대 세 개/u);
+  assert.match(`${byId.get("representative_routing").label} ${byId.get("representative_routing").sublabel}`, /대표 스킬.*여섯 줄.*전문.*복합 작업.*검토 역할 최대 세 개/u);
   assert.match(`${byId.get("studio_artifact").label} ${byId.get("studio_artifact").sublabel}`, /기준 기획 결과물.*Canonical Artifact/u);
   assert.match(`${byId.get("studio_artifact").label} ${byId.get("studio_artifact").sublabel}`, /content\.md.*evidence\.yml.*decisions\//u);
   assert.match(`${byId.get("career_artifact").label} ${byId.get("career_artifact").sublabel}`, /Career 기준 결과물/u);
-  assert.match(`${byId.get("writing_pass").label} ${byId.get("writing_pass").sublabel}`, /마지막 한국어 편집.*humanize-korean.*보호 검증/u);
+  assert.match(`${byId.get("writing_pass").label} ${byId.get("writing_pass").sublabel}`, /한국어 최종 윤문.*humanize-korean.*보호 항목 검증/u);
   const visibleText = JSON.stringify({
     meta: { title: spec.meta.title, subtitle: spec.meta.subtitle, views: spec.meta.views.map(({ label, note }) => ({ label, note })) },
     components: spec.components.map(({ label, sublabel }) => ({ label, sublabel })),

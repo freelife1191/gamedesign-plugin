@@ -16,7 +16,7 @@
 | --- | --- | --- | --- | --- | --- |
 | [`apply-document-quality-profile`](apply-document-quality-profile.md) | 산출물에 결정적 품질 계약 적용 | `$game-design-studio:apply-document-quality-profile` | 요청에 맞는 설치 템플릿 | 목표, 청중, artifact 유형, 형식 | 선택 기록, checklist, requirement manifest |
 | [`analyze-game-design-references`](../reference-analysis.md) | 경쟁작 관찰을 시스템 비교와 검토 대기 설계 전환 제안으로 정리 | `$game-design-studio:analyze-game-design-references` | 레퍼런스 분석 | 결정 질문, 관찰 근거, 프로젝트 제약 | 시스템 지도, 심층 분석, `pending-review` 제안 |
-| [`archify`](archify.md) | 구조와 흐름을 탐색 가능한 HTML로 설명 | `$game-design-studio:archify` | 선택된 canonical artifact | 구성 요소, 관계, 독자 | JSON 원본, HTML, 검증 영수증 |
+| [`archify`](archify.md) | 구조와 흐름을 탐색 가능한 HTML로 설명 | `$game-design-studio:archify` | 선택한 기준 결과물 | 구성 요소, 관계, 독자 | JSON 원본, HTML, 검증 기록 |
 | [`capture-game-design-memory`](../memory.md#기본-작업-흐름) | 검증한 Studio 교훈을 후보로 기록 | `$game-design-studio:capture-game-design-memory` | 프로젝트 기억 | 출처가 연결된 결과, 적용·제외 조건 | 검토 대기 후보와 기록 결과 |
 | [`define-game-vision`](define-game-vision.md) | 플레이어 약속과 검증 가능한 비전 정의 | `$game-design-studio:define-game-vision` | `vision-pillars` | 대상 플레이어, 핵심 재미, 제약 | pillar, loop, 성공 기준 |
 | [`design-cutscene-visual-preproduction`](design-cutscene-visual-preproduction.md) | 컷씬 개요, 장면, 프롬프트, 비용 승인과 연속성을 순서대로 준비 | `$game-design-studio:design-cutscene-visual-preproduction` | 컷씬 장면·이미지 사전 설계 | 컷씬 개요, 조작 복귀 상태, 장면, 비용 상한 | 단계별 계획·비용 계산·승인·연속성 검토 |
@@ -25,7 +25,7 @@
 | [`design-game-systems`](design-game-systems.md) | 규칙·상태·예외·데이터 명세 | `$game-design-studio:design-game-systems` | `system-specification` | 규칙, 상태, 권위 데이터, 실패 기대 | 구현 가능한 시스템 계약 |
 | [`design-player-experience`](design-player-experience.md) | 첫 세션·UI state·접근성 설계 | `$game-design-studio:design-player-experience` | `ui-ux-flow-state` | critical action, 플랫폼, 입력, 측정값 | 상호작용과 접근성 계약 |
 | [`export-game-design-documents`](export-game-design-documents.md) | 승인 가능한 원본의 다중 형식 작업 준비 | `$game-design-studio:export-game-design-documents` | 선택된 canonical artifact | artifact, 형식, capability, 발표 story | renderer-neutral 준비 manifest |
-| [`game-design-studio`](game-design-studio.md) | 대표 진입: 요청을 소유 제품·실행 경로 하나와 라우팅 영수증으로 정리 | `$game-design-studio:game-design-studio` | 위임된 스킬의 산출물 | 원하는 결과, 가진 자료, 공개 범위, 결정 담당자, 출력 형식 | 라우팅 영수증과 선택된 스킬 |
+| [`game-design-studio`](game-design-studio.md) | 대표 진입: 요청에서 담당 제품과 실행 경로를 하나씩 고르고 선택 근거를 기록 | `$game-design-studio:game-design-studio` | 위임된 스킬의 산출물 | 원하는 결과, 가진 자료, 공개 범위, 결정 담당자, 출력 형식 | 경로 선택 기록과 선택된 스킬 |
 | [`generate-image-assets`](generate-image-assets.md) | 선택된 stable asset ID만 provider에 라우팅 | `$game-design-studio:generate-image-assets` | 선택된 canonical artifact | image manifest, prompt, mode, 선택 receipt | generation 결과와 검토 handoff |
 | [`humanize-korean`](humanize-korean.md) | 뜻과 수치·ID를 보존한 한국어 문체 검토 | `$game-design-studio:humanize-korean` | 선택된 canonical artifact | 원문, 독자, 보호 항목 | 자연스러운 수정안과 변경 요약 |
 | [`maintain-game-design-memory`](../memory.md#후보-확인승인거부폐기-예시) | 후보 확인과 사람 승인·거부·폐기 | `$game-design-studio:maintain-game-design-memory` | 프로젝트 기억 | 기억 ID, 이름 있는 사람, 결정 이유 | 상태 변경 이력 또는 충돌 안내 |

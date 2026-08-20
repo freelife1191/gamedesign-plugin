@@ -53,7 +53,7 @@ $game-design-career:review-game-design-portfolio artifact=artifacts/portfolio ax
 $game-design-career:review-game-design-portfolio artifact=artifacts/portfolio evidenceIds=E-19
 ```
 
-#### 예상 파일과 읽는 순서
+#### 예상 결과와 파일 읽는 순서
 
 `content.md → evidence.yml → decisions/ → export-manifest.yml` 순서로 읽습니다. `five-axis-review`, `portfolio-backlog`를 반환합니다. 검토 owner: `portfolio-reviewer`.
 
@@ -112,7 +112,7 @@ evidence inventory, five-axis records, typed findings, evidence-qualified scores
 
 `not-observed`는 `no-defect`가 아니고 score 0은 evidence completeness일 수 있으며 능력 0을 뜻하지 않습니다. 사람이 publication/privacy와 최종 수정 채택을 결정합니다. review는 합격을 보장하지 않습니다.
 
-## 실패·fallback·재개 방법
+## 실패했을 때와 재개 방법
 
 source가 inaccessible이면 score를 `not-scored`로 유지하고 exact verification task를 남깁니다. 기존 finding ID와 conflicting advice를 보존합니다.
 

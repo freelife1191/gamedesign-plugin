@@ -53,7 +53,7 @@ $game-design-career:map-game-design-career role=systems evidenceIds=E-01,E-02
 $game-design-career:map-game-design-career role=systems targetLevel=junior
 ```
 
-#### 예상 파일과 읽는 순서
+#### 예상 결과와 파일 읽는 순서
 
 `content.md → evidence.yml → decisions/ → export-manifest.yml` 순서로 읽습니다. `game-design-role-map`, `competency-matrix`를 반환합니다. 검토 owner: `career-strategist`.
 
@@ -112,7 +112,7 @@ $game-design-career:map-game-design-career roles=systems,content, targetLevel=en
 
 source의 검색일·지역·표본이 convenience sample이면 그 한계를 표시합니다. candidate statement는 사실과 다르며 agent의 추론과 학습 제안도 별도 label을 가집니다. 어떤 path도 합격을 보장하지 않습니다.
 
-## 실패·fallback·재개 방법
+## 실패했을 때와 재개 방법
 
 target role이나 current evidence가 부족하면 `unclear`와 multiple provisional paths를 유지하고 owner·source/exercise·decision date가 있는 verification task를 남깁니다.
 

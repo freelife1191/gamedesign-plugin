@@ -43,6 +43,23 @@ test("repository root publishes the canonical image configuration example", asyn
   assert.deepEqual(rootExample, canonicalExample);
 });
 
+test("image configuration examples explain every option in Korean", async () => {
+  const example = await readFile(path.join(repoRoot, "shared/image-assets/.env.example"), "utf8");
+  for (const phrase of [
+    "이미지 생성 방식",
+    "이미지 생성 경로",
+    "이미지에 넣을 글자의 언어",
+    "OpenAI Images API 모델",
+    "이미지 품질",
+    "요청별 OpenAI 제한 시간",
+    "API 키가 있다고 해서 비용 사용에 동의한 것은 아닙니다",
+  ]) assert.match(example, new RegExp(phrase, "u"), phrase);
+  assert.doesNotMatch(
+    example,
+    /Image generation mode|Provider choice|On-image text locale|Image quality|Per-request OpenAI timeout|Key presence is credential availability/u,
+  );
+});
+
 test("temporary product builds package exact image configuration examples without a real .env", async (t) => {
   const sourceExample = await readFile(path.join(repoRoot, "shared/image-assets/.env.example"));
   for (const productName of productNames) {

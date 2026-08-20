@@ -53,7 +53,7 @@ $game-design-career:practice-game-design-interview questionId=Q-02 portfolioEvid
 $game-design-career:practice-game-design-interview questionId=Q-03 review=interview-coach,evidence-auditor
 ```
 
-#### 예상 파일과 읽는 순서
+#### 예상 결과와 파일 읽는 순서
 
 `content.md → evidence.yml → decisions/ → export-manifest.yml` 순서로 읽습니다. `interview-question-answer-log`, `honest-answer-patterns`를 반환합니다. 검토 owner: `interview-coach` · `evidence-auditor`; 코치는 질문·feedback을, auditor는 posting·portfolio evidence trace를 각각 검토합니다.
 
@@ -113,7 +113,7 @@ evidence inventory, stable `questionId`로 결합된 question record와 answer-f
 
 검색일·지역·표본이 한정된 posting evidence임을 표시합니다. 관찰된 사실, candidate 해석, reviewer 추론과 답변 개선 제안을 구분합니다. 답변 연습은 합격을 보장하지 않습니다.
 
-## 실패·fallback·재개 방법
+## 실패했을 때와 재개 방법
 
 posting이 없으면 posting-specific claim을 `blocked`로 유지하고 role-general question과 posting 확보 task만 만듭니다. stale evidence의 기존 기록, stale 상태와 한계를 삭제하지 않고 보존합니다. `research-game-design-jobs`의 재수집·validator 재검증 뒤 새 evidence IDs가 downstream question의 `postingEvidenceIds`, 같은 `questionId`의 answer-feedback record와 claim에 다시 결합된 후에만 재개합니다. missing result에는 “확인할 수 없는 X 대신 내 결정 Y와 evidence E-12를 설명한다” 같은 honest boundary를 씁니다.
 

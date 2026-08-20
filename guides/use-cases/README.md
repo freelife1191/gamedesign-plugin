@@ -24,7 +24,7 @@
 1. [사용자 경로](audience-paths.md)에서 현재 목표와 작은 첫 과제를 고릅니다.
 2. [Studio 활용 사례](../game-design-studio/use-cases/README.md) 또는 [Career 활용 사례](../game-design-career/use-cases/README.md)에서 제품과 사례 관점을 선택합니다.
 3. 제품별 [Studio 스킬 워크벤치](../game-design-studio/use-cases/skill-workbench.md) 또는 [Career 스킬 워크벤치](../game-design-career/use-cases/skill-workbench.md)로 입력과 직접 실행 결과를 확인합니다.
-4. [결과물 카탈로그](output-catalog.md)에서 최소·선택·확장 결과와 handoff 경계를 확인합니다.
+4. [결과물 카탈로그](output-catalog.md)에서 최소·선택·확장 결과와 인계 경계를 확인합니다.
 5. 막히면 [Studio FAQ](../game-design-studio/faq.md), [Career FAQ](../game-design-career/faq.md)와 이 문서의 [공통 FAQ](#공통-faq)에서 재개 경로를 찾습니다.
 
 ## 설계 지능과 일관성 도구 선택하기
@@ -44,7 +44,7 @@
 
 ## 결과물 먼저 보기
 
-모든 요청은 renderer와 이미지 provider가 없어도 남는 **최소 결과**부터 확인합니다. 이미지·도식·파생 형식은 **선택 결과**이며, 검토와 형식별 QA를 통과해 전달 또는 공개에 쓸 수 있는 자료는 **확장 결과**입니다. 파일 읽기 순서와 각 경계는 [결과물 카탈로그](output-catalog.md)에 있습니다.
+모든 요청은 렌더러와 이미지 생성 기능이 없어도 남는 **최소 결과**부터 확인합니다. 이미지·도식·파생 형식은 **선택 결과**이며, 검토와 형식별 품질 검사를 통과해 전달하거나 공개할 수 있는 자료는 **확장 결과**입니다. 파일 읽기 순서와 각 경계는 [결과물 카탈로그](output-catalog.md)에 있습니다.
 
 ## 사용자 유형·난이도별 요청문
 
@@ -143,7 +143,7 @@
 **이유와 경계:** Studio와 Career의 Canonical Artifact는 결합하지 않으며, 팀 결과가 개인 기여를 증명하지 않습니다.\
 **지금 실행할 요청문:** `이 Studio 작업에서 공개 가능한 문제·결정·검증 evidence만 추출해 Career 포트폴리오 브리프 입력으로 정리해 줘.`\
 **예상 결과물:** 공개 가능성 확인 목록과 별도 portfolio brief 초안입니다.\
-**관련 가이드:** [Studio → Career handoff](output-catalog.md#studio-career-handoff), `CA-C06`\
+**관련 가이드:** [Studio에서 Career로 인계](output-catalog.md#studio에서-career로-인계), `CA-C06`\
 **권리·근거·승인:** NDA, 팀 PII, 권리 불명 자산, 검증되지 않은 팀 성과는 제외합니다.
 
 ### Q11. 학교·회사·팀 비공개 자료를 입력해도 되나요?
@@ -152,7 +152,7 @@
 **이유와 경계:** 익명화만으로 NDA·권리·개인정보 문제가 자동 해결되지는 않습니다.\
 **지금 실행할 요청문:** `비공개 자료 없이 같은 기획 문제를 설명할 수 있는 중립적 가정과 공개 가능한 예시 구조를 만들어 줘.`\
 **예상 결과물:** 비식별화된 문제 정의와 확인이 필요한 권한 목록입니다.\
-**관련 가이드:** [결과물 카탈로그](output-catalog.md#studio-career-handoff)\
+**관련 가이드:** [결과물 카탈로그](output-catalog.md#studio에서-career로-인계)\
 **권리·근거·승인:** 학교 AI 정책, 회사 보안 정책, 소유자 승인과 제3자 권리를 우선합니다.
 
 ### Q12. 플러그인 결과를 어디까지 믿고 어떻게 검증하나요?
@@ -169,4 +169,4 @@
 - [Game Design Studio 가이드](../game-design-studio/README.md): 게임 설계와 제작 검토의 상세 흐름입니다.
 - [Game Design Career 가이드](../game-design-career/README.md): 직무 탐색, 증거, 포트폴리오와 성장의 상세 흐름입니다.
 - [사용자 경로](audience-paths.md): 여섯 사용자군의 요청문과 결과 경계입니다.
-- [결과물 카탈로그](output-catalog.md): 파일 구조, 파생 형식, handoff 규칙입니다.
+- [결과물 카탈로그](output-catalog.md): 파일 구조, 파생 형식과 인계 규칙을 설명합니다.

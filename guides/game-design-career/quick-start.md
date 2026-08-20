@@ -33,7 +33,7 @@
 
 ### 예상 결과 요약
 
-경로를 지정했다면 다음 구조의 Canonical Artifact를 예상할 수 있습니다. 경로를 지정하지 않았다면 쓰기 전에 제안 경로를 확인하세요.
+경로를 지정했다면 다음 구조의 기준 결과 폴더를 예상할 수 있습니다. 경로를 지정하지 않았다면 파일을 쓰기 전에 제안된 경로를 확인하세요.
 
 ```text
 system-designer-12-week-roadmap/
@@ -46,13 +46,13 @@ system-designer-12-week-roadmap/
 
 - `content.md`: 단계 진단, 역할 선택, 역량 격차, 12주 학습·증거 계획과 검토 기준
 - `evidence.yml`: 채용공고와 역할 사실의 출처·날짜·한계
-- `decisions/`: 선택한 역할, 포기한 대안, 시간 배분과 검토 owner
-- `assets/`: 로드맵 도식 슬롯, prompt와 승인 상태
-- 내보내기 manifest: 요청 형식별 준비·renderer·QA 상태를 기록하며 파일 생성이나 QA 통과를 미리 약속하지 않음
+- `decisions/`: 선택한 역할, 포기한 대안, 시간 배분과 검토 담당자
+- `assets/`: 로드맵 도식 자리, 프롬프트와 승인 상태
+- 내보내기 목록: 요청 형식별 준비·변환 도구·품질 검사 상태를 기록하며 파일 생성이나 검사 통과를 미리 약속하지 않음
 
 ## 명시적 스킬 호출
 
-부를 스킬이 정해지지 않았다면 `$game-design-career:game-design-career`로 시작합니다. 대표 진입 스킬이 요청이나 사례 ID를 소유 제품 하나와 실행 경로 하나로 좁히고 라우팅 영수증을 남긴 뒤 아래 스킬로 넘깁니다. 아래는 그 경로를 손으로 고정하는 요청문입니다.
+부를 스킬이 정해지지 않았다면 `$game-design-career:game-design-career`로 시작합니다. 대표 진입 스킬이 요청이나 사례 ID에서 담당 제품과 실행 경로를 하나씩 고르고 선택 근거를 기록한 뒤 알맞은 스킬로 넘깁니다. 아래 요청문으로 실행 경로를 직접 지정할 수도 있습니다.
 
 ### 복사 가능한 요청문
 
@@ -75,10 +75,10 @@ $game-design-career:orchestrate-game-design-career 시스템 기획자 취업을
 
 - `system-designer-12-week-roadmap/content.md`: 기준 로드맵
 - `system-designer-12-week-roadmap/evidence.yml`: 역할·채용 근거와 공백
-- `system-designer-12-week-roadmap/export-manifest.yml`: 요청 형식별 작업·renderer·QA 상태. 생성과 QA 성공은 실제 검증 뒤에만 기록
+- `system-designer-12-week-roadmap/export-manifest.yml`: 요청 형식별 작업·변환 도구·품질 검사 상태. 생성과 검사 성공은 실제 검증 뒤에만 기록
 - `system-designer-12-week-roadmap/decisions/*.md`: 역할·범위·시간 결정
 - `system-designer-12-week-roadmap/assets/`: 검증 전 로드맵 도식과 이미지 계획
-- 차단 claim, 검증 작업, 다음 주 행동을 포함한 마지막 작업 보고
+- 차단된 주장, 검증 작업과 다음 주 행동을 포함한 마지막 작업 보고
 
 ## 다음 요청
 

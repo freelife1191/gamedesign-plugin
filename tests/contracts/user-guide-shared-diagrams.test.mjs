@@ -111,18 +111,20 @@ test("project memory diagram keeps LLM Wiki reuse local, source-bound, and human
 
 test("entry routing diagram shows one route, the receipt, and the one-way handoff candidate", async () => {
   const svg = await readFile(path.join(root, "guides/assets/shared/suite-entry-routing-flow.svg"), "utf8");
-  for (const phrase of ["사례 ID", "담당 제품", "route-receipt.json", "routeId", "한 번만 전달", "여섯 줄", "오케스트레이터", "최대 세 개"]) {
+  for (const phrase of ["사례 ID", "담당 제품", "경로 선택 기록", "route-receipt.json", "routeId", "한 번만 전달", "여섯 줄", "오케스트레이터", "최대 세 개"]) {
     assert.match(svg, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "u"), phrase);
   }
+  assert.doesNotMatch(svg, /라우팅 영수증/u, "entry routing uses natural Korean for the user-facing record");
   // 대표 진입 스킬은 자기 파일을 만들지 않는다. 도식이 산출물을 약속하면 가이드 본문과 어긋난다.
   assert.doesNotMatch(svg, /자동 적용|승인 없이 실행/u, "entry routing must not promise unattended execution");
 });
 
-test("handoff diagram names the final owner, the supplier evidence, and the one-way return", async () => {
+test("handoff diagram names the responsible products and the one-way return in natural Korean", async () => {
   const svg = await readFile(path.join(root, "guides/assets/shared/suite-handoff-ownership-flow.svg"), "utf8");
-  for (const phrase of ["최종 owner", "supplier", "단방향 반환", "blocker", "사람 승인"]) {
+  for (const phrase of ["최종 담당 제품", "근거 제공 제품", "단방향 반환", "차단 요인", "담당자 승인"]) {
     assert.match(svg, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "u"), phrase);
   }
+  assert.doesNotMatch(svg, />[^<]*(?:owner|supplier|blocker|gate)[^<]*</u, "visible handoff copy stays natural Korean");
   // 공급 제품은 다시 인계를 시작할 수 없다. 왕복을 그리면 계약과 어긋난다.
   assert.doesNotMatch(svg, /양방향|다시 인계합니다/u, "handoff must stay one-way");
 });
@@ -136,14 +138,15 @@ test("update diagram gates every install change behind a user approval", async (
   assert.doesNotMatch(svg, /자동 업데이트|자동 적용/u, "update must never read as unattended");
 });
 
-test("install diagram carries the UTF-8 preflight and the marketplace kind before either lane", async () => {
+test("install diagram carries the UTF-8 check and the marketplace type before either path", async () => {
   const svg = await readFile(path.join(root, "guides/assets/shared/app-cli-install-flow.svg"), "utf8");
-  for (const phrase of ["UTF-8 preflight", "BOM", "마켓플레이스 종류", "Windows·Ubuntu", "선택 제거", "전체 정리"]) {
+  for (const phrase of ["UTF-8 사전 확인", "BOM", "마켓플레이스 유형", "Windows와 Ubuntu", "선택 제거", "전체 정리"]) {
     assert.match(svg, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "u"), phrase);
   }
-  // 읽기 순서가 lane보다 앞서야 사용자가 설치 실패를 만나기 전에 인코딩을 확인한다.
+  assert.doesNotMatch(svg, />[^<]*(?:preflight|lane)[^<]*</u, "visible install copy stays natural Korean");
+  // 읽기 순서가 제품별 설치 경로보다 앞서야 사용자가 설치 실패를 만나기 전에 인코딩을 확인한다.
   assert.ok(
-    svg.indexOf('aria-label="읽기 순서 1: 설치 전 확인"') < svg.indexOf('aria-label="읽기 순서 2: Codex App lane"'),
+    svg.indexOf('aria-label="읽기 순서 1: 설치 전 확인"') < svg.indexOf('aria-label="읽기 순서 2: Codex App 설치 경로"'),
     "the preflight band precedes the App lane",
   );
 });
@@ -209,6 +212,28 @@ test("document export puts all shared preparation states on one rail", async () 
   const svg = await readFile(path.join(root, "guides/assets/shared/document-export-flow.svg"), "utf8");
   assert.match(svg, /aria-label="읽기 순서 2: 공통 준비 상태"/u);
   for (const status of ["not-requested", "blocked", "pending", "unavailable"]) {
-    assert.match(svg, new RegExp(">" + status + "<", "u"));
+    assert.match(svg, new RegExp("\\(" + status + "\\)<", "u"));
   }
+  for (const phrase of ["변환 도구와 품질 검사를 앞서가지 않습니다", "기준 결과 폴더 사전 확인", "모든 페이지 화면 검사"]) {
+    assert.match(svg, new RegExp(phrase, "u"), phrase);
+  }
+  assert.doesNotMatch(svg, />[^<]*(?:renderer|preflight|visual QA|terminal)[^<]*</u, "visible export copy stays natural Korean");
+});
+
+test("shared lifecycle and generation diagrams explain states in Korean while preserving state IDs", async () => {
+  const artifact = await readFile(path.join(root, "guides/assets/shared/canonical-artifact-lifecycle.svg"), "utf8");
+  for (const phrase of ["기준 결과 폴더", "검토 결과와 결정 항목", "담당자 확인"]) assert.match(artifact, new RegExp(phrase, "u"), phrase);
+  assert.doesNotMatch(artifact, />[^<]*(?:Canonical Artifact|finding|gate)[^<]*</u);
+
+  const imageLifecycle = await readFile(path.join(root, "guides/assets/shared/image-asset-lifecycle.svg"), "utf8");
+  for (const phrase of ["콘셉트 초안 (concept-draft)", "지정된 시각 검토자", "권리 검토 담당자", "제작 검토 후보", "production-candidate"]) {
+    assert.match(imageLifecycle, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "u"), phrase);
+  }
+  assert.doesNotMatch(imageLifecycle, />[^<]*(?:named visual reviewer|human rights reviewer|staged flow|provenance)[^<]*</u);
+
+  const generation = await readFile(path.join(root, "guides/assets/shared/image-generation-mode-routing.svg"), "utf8");
+  for (const phrase of ["아니요 / 기본값", "예", "하나의 생성 방식을 선택", "순서가 정해진 자산 ID", "바꿀 수 없는 선택 기록", "등록된 변형만"]) {
+    assert.match(generation, new RegExp(phrase, "u"), phrase);
+  }
+  assert.doesNotMatch(generation, />[^<]*(?:immutable receipt|provider routing|decision flow|declared variant)[^<]*</u);
 });

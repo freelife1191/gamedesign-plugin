@@ -26,14 +26,14 @@
 ### 진행 흐름
 
 1. 플러그인이 목표, 대상, 플랫폼과 제약을 정규화합니다.
-2. 게임 비전과 적합한 Quality Profile을 선택합니다.
+2. 게임 비전과 알맞은 문서 품질 기준을 선택합니다.
 3. 대상 플레이어, 핵심 재미, 세 가지 설계 원칙과 검증 기준을 `content.md`에 작성합니다.
 4. 사실·가정·미정 항목과 검토 게이트를 분리합니다.
 5. 사용자는 세 가지 원칙, 제외 범위와 검증 기준을 채택할지 결정합니다.
 
 ### 예상 결과 요약
 
-경로를 지정했다면 다음 구조의 Canonical Artifact를 예상할 수 있습니다. 경로를 지정하지 않았다면 쓰기 전에 제안 경로를 확인하세요.
+경로를 지정했다면 다음 구조의 기준 결과 폴더를 예상할 수 있습니다. 경로를 지정하지 않았다면 파일을 쓰기 전에 제안된 경로를 확인하세요.
 
 ```text
 mobile-coop-rpg-brief/
@@ -48,21 +48,21 @@ mobile-coop-rpg-brief/
 - `evidence.yml`: 외부 사실을 사용한 경우 출처·최신성·신뢰도
 - `decisions/`: 사용자가 채택하거나 보류한 원칙과 이유
 - `assets/`: 아직 생성하지 않은 이미지·도식 슬롯과 상태
-- 내보내기 manifest: 요청 형식별 준비·renderer·QA 상태를 기록하며 파일 생성이나 QA 통과를 미리 약속하지 않음
+- 내보내기 목록: 요청 형식별 준비·변환 도구·품질 검사 상태를 기록하며 파일 생성이나 검사 통과를 미리 약속하지 않음
 
 ## 명시적 스킬 호출
 
-부를 스킬이 정해지지 않았다면 `$game-design-studio:game-design-studio`로 시작합니다. 대표 진입 스킬이 요청이나 사례 ID를 소유 제품 하나와 실행 경로 하나로 좁히고 라우팅 영수증을 남긴 뒤 아래 스킬로 넘깁니다. 아래는 그 경로를 손으로 고정하는 요청문입니다.
+부를 스킬이 정해지지 않았다면 `$game-design-studio:game-design-studio`로 시작합니다. 대표 진입 스킬이 요청이나 사례 ID에서 담당 제품과 실행 경로를 하나씩 고르고 선택 근거를 기록한 뒤 알맞은 스킬로 넘깁니다. 아래 요청문으로 실행 경로를 직접 지정할 수도 있습니다.
 
 ### 복사 가능한 요청문
 
 ```text
-$game-design-studio:orchestrate-game-design-project 모바일 협동 RPG 아이디어를 game-design-brief부터 검토 가능한 Canonical Artifact까지 진행해줘.
+$game-design-studio:orchestrate-game-design-project 모바일 협동 RPG 아이디어를 game-design-brief부터 검토 가능한 기준 결과 폴더까지 진행해 줘.
 ```
 
 ### 진행 흐름
 
-오케스트레이터가 필요한 최소 스킬 순서를 정하고, 각 Artifact에 Quality Profile을 적용한 뒤 비전과 후속 도메인 범위를 연결합니다. 검토 역할은 필요한 질문에만 배정하며, 이미지 계획·생성·승인과 도식·내보내기는 각각 별도 단계로 유지합니다.
+오케스트레이터가 필요한 최소 스킬 순서를 정하고, 각 결과물에 문서 품질 기준을 적용한 뒤 비전과 후속 설계 범위를 연결합니다. 검토 역할은 필요한 질문에만 배정하며, 이미지 계획·생성·승인과 도식·내보내기는 각각 별도 단계로 유지합니다.
 
 사용자는 다음 결정을 맡습니다.
 
@@ -75,9 +75,9 @@ $game-design-studio:orchestrate-game-design-project 모바일 협동 RPG 아이�
 
 - `game-design-brief/content.md`: 기준 기획 내용
 - `game-design-brief/evidence.yml`: 근거와 공백
-- `game-design-brief/export-manifest.yml`: 요청 형식별 작업·renderer·QA 상태. 생성과 QA 성공은 실제 검증 뒤에만 기록
-- `game-design-brief/decisions/*.md`: 결정, 대안, 부작용과 owner
-- `game-design-brief/assets/`: 계획된 자산, prompt와 승인 상태
+- `game-design-brief/export-manifest.yml`: 요청 형식별 작업·변환 도구·품질 검사 상태. 생성과 검사 성공은 실제 검증 뒤에만 기록
+- `game-design-brief/decisions/*.md`: 결정, 대안, 부작용과 담당자
+- `game-design-brief/assets/`: 계획한 자산, 프롬프트와 승인 상태
 - 요청 형식 상태와 차단 사유를 포함한 마지막 작업 보고
 
 ## 다음 요청
@@ -89,7 +89,7 @@ $game-design-studio:orchestrate-game-design-project 모바일 협동 RPG 아이�
 ```
 
 ```text
-방금 만든 Canonical Artifact의 미정 항목과 차단 게이트를 우선순위로 정리하고, 다음에 확정할 한 가지 설계 결정을 제안해줘.
+방금 만든 기준 결과 폴더의 미정 항목과 차단 조건을 우선순위로 정리하고, 다음에 확정할 설계 결정 하나를 제안해 줘.
 ```
 
 반복해서 쓸 만한 교훈이 생겼다면 “기억 후보를 보여줘.”라고 요청한 뒤 출처와 적용·제외 조건을 확인하세요. 후보는 자동 승인되지 않습니다.

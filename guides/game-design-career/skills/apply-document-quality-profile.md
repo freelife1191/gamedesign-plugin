@@ -53,7 +53,7 @@ $game-design-career:apply-document-quality-profile artifact=artifacts/portfolio 
 $game-design-career:apply-document-quality-profile artifact=artifacts/career-review template=five-axis-review
 ```
 
-#### 예상 파일과 읽는 순서
+#### 예상 결과와 파일 읽는 순서
 
 `content.md → evidence.yml → export-manifest.yml` 순서로 읽습니다. `selection-record`, `quality-checklist`, `requirement-manifest`은 논리 결과이며 임의 파일 생성을 가정하지 않습니다. 검토 owner: `document-quality-editor`.
 
@@ -126,7 +126,7 @@ selection record, composed requirements, checklist, requirement manifest와 immu
 
 상태는 `draft → structurally-complete → evidence-reviewed → visual-reviewed → document-approved` 순서입니다. external artifact inspection, evidence audit, renderer/rights evidence와 이름 있는 사람의 receipt가 같은 digest에 묶여야 합니다. 생성 이미지, 렌더 파일, self-attestation은 승인 증거가 아닙니다.
 
-## 실패·fallback·재개 방법
+## 실패했을 때와 재개 방법
 
 unknown ID, raw object, schema 오류, scalar conflict, symlink·path escape는 fail-closed입니다. 기존 artifact와 기록을 보존하고 설치된 호환 profile로 다시 선택합니다.
 

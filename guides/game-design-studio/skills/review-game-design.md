@@ -35,7 +35,7 @@ $game-design-studio:review-game-design artifact=game-design/workbench/system ST-
 $game-design-studio:review-game-design artifact=game-design/island/review 모든 blocker를 evidence·impact·owner에 연결하고 최소 fix, diagram gap, export readiness를 분리해.
 ```
 
-#### 예상 파일과 읽는 순서
+#### 예상 결과와 파일 읽는 순서
 
 `content.md → evidence.yml → export-manifest.yml` 순서로 읽고 `game-design-review`는 별도 YAML 파일이 아니라 `content.md`의 안정 섹션에서 unresolved blocker를 확인합니다. 사람의 변경 결정이 실제로 있을 때만 `decisions/`을 그 뒤에 읽습니다.
 
@@ -94,7 +94,7 @@ review package와 decision log만 변경하고 원본은 별도 승인 없이는
 
 finding에는 id, severity, direct evidence, impact, affectedSectionId, minimalFix, owner, status, reviewerRole이 필요합니다. reviewer 권고와 self-attestation은 readiness 승인이나 gate 승인이 아닙니다.
 
-## 실패·fallback·재개 방법
+## 실패했을 때와 재개 방법
 
 source가 missing·unreadable·invalid·unversioned이면 `source-unavailable`로 blocked 상태를 남기고 finding을 만들지 않습니다.
 

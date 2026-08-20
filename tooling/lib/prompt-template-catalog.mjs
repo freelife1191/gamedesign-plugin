@@ -51,7 +51,7 @@ const ENTRY_KEYS = new Set([
 ]);
 const INDEX_KEYS = new Set(["version", "sources"]);
 const SENSITIVE_CATEGORIES = Object.freeze([
-  { name: "credentials", pattern: /(?:api[ _-]?keys?|secret(?:s)?|credential(?:s)?|password|access[ _-]?tokens?)/iu },
+  { name: "credentials", pattern: /(?:api[ _-]?keys?|secret(?:s)?|credential(?:s)?|password|access[ _-]?tokens?|인증\s*정보)/iu },
   { name: "personal data", pattern: /(?:personal(?:[ _-]?data|[ _-]?information)|개인\s*정보)/iu },
   { name: "private materials", pattern: /(?:private(?:[ _-]?(?:materials?|data|information))?|비공개\s*(?:자료|회사\s*자료))/iu },
 ]);

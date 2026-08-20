@@ -72,7 +72,7 @@ Prompt Only와 Estimate Only의 provider 호출은 0회입니다. Generate After
 
 각 wave는 `style-master → reference-masters → keyframes → storyboard` 순서입니다. `style-master`는 current estimate와 이름 있는 실시간 승인 뒤에 dispatch하고, 뒤의 wave는 같은 조건에 더해 선행 wave 완료가 필요합니다. 승인에는 승인자 이름·시각·wave·estimate snapshot이 묶여야 하며, 이전 wave의 승인이나 포괄 승인은 재사용하지 않습니다. continuity gate가 lineage, 인물·배경·소품, beat와 조작 반환을 확인한 뒤에만 사람이 `document-approved` 또는 제작 후보를 결정합니다.
 
-## 실패·fallback·재개 방법
+## 실패했을 때와 재개 방법
 
 승인·가격·선행 조건이 불일치하면 provider 호출 0회로 멈춥니다. provider 실패 뒤에는 최신 retryable stable ID만 같은 현재 full-wave estimate·pricing snapshot·request schedule에서 재시도하며, subset estimate나 새 epoch를 만들지 않습니다. terminal failure와 성공 asset은 덮어쓰지 않습니다.
 

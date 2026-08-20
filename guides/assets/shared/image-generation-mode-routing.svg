@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900" role="img" aria-labelledby="title desc" style="font-family:Pretendard,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif">
   <title id="title">IMAGE_GEN_MODE는 생성 요청과 범위를 함께 제한합니다</title>
-  <desc id="desc">생성 요청 여부를 먼저 결정하고 no/default는 prompt-only로, yes는 select, required, all 중 하나로 분기한 뒤 공통 경계로 합류하는 decision flow입니다.</desc>
+  <desc id="desc">이미지 생성이 필요하지 않으면 prompt-only를 사용하고, 생성 요청이 있으면 select, required, all 가운데 하나를 고른 뒤 공통 제한을 적용합니다.</desc>
   <style>svg{--ink:#1f2733;--muted:#5b6675;--hair:#d6e0ec;--blue:#1f6fb2;--purple:#534ab7;--green:#0f7a5f;--amber:#a86700}.title{fill:var(--ink);font-weight:700}.body{fill:var(--muted)}.card-title{font-weight:700}.line{stroke:#5b6675;stroke-width:2;fill:none}.on-accent{fill:#fff}</style>
   <defs><marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path d="M2 2 L10 6 L2 10" fill="none" stroke="#5b6675" stroke-width="2" stroke-linecap="round"/></marker></defs>
   <rect width="1400" height="900" fill="#fff"/>
@@ -12,24 +12,24 @@
     <polygon points="400,205 490,270 400,335 310,270" fill="#e8f1fb" stroke="var(--blue)" stroke-width="2"/>
     <text x="400" y="260" class="card-title" fill="#124267" font-size="24" text-anchor="middle" dominant-baseline="central">생성 요청?</text>
   </g>
-  <g aria-label="읽기 순서 2: no 또는 default prompt-only">
-    <text x="250" y="360" class="body" font-size="18" text-anchor="middle">no / default</text>
+  <g aria-label="읽기 순서 2: 기본값 prompt-only">
+    <text x="250" y="360" class="body" font-size="18" text-anchor="middle">아니요 / 기본값</text>
     <path d="M400 335V375H215V408" class="line" marker-end="url(#arrow)"/>
     <rect x="80" y="420" width="270" height="190" rx="12" fill="#e8f1fb" stroke="var(--blue)" stroke-width="2"/>
     <text x="215" y="480" class="card-title" fill="#124267" font-size="27" text-anchor="middle" dominant-baseline="central">prompt-only</text>
-    <text x="215" y="522" class="body" font-size="18" text-anchor="middle">외부 호출 0회</text><text x="215" y="554" class="body" font-size="17" text-anchor="middle">plan · prompt · placeholder</text>
+    <text x="215" y="522" class="body" font-size="18" text-anchor="middle">외부 호출 0회</text><text x="215" y="554" class="body" font-size="17" text-anchor="middle">계획 · 프롬프트 · 자리표시자</text>
   </g>
-  <g aria-label="읽기 순서 3: yes 생성 mode 선택">
-    <text x="535" y="252" class="body" font-size="18">yes</text><path d="M490 270H880V375H640M880 375H1120" class="line"/>
-    <text x="880" y="394" class="body" font-size="18" text-anchor="middle">하나의 mode를 선택</text>
+  <g aria-label="읽기 순서 3: 생성 방식 선택">
+    <text x="535" y="252" class="body" font-size="18">예</text><path d="M490 270H880V375H640M880 375H1120" class="line"/>
+    <text x="880" y="394" class="body" font-size="18" text-anchor="middle">하나의 생성 방식을 선택</text>
     <path d="M640 375V408" class="line" marker-end="url(#arrow)"/><path d="M880 375V408" class="line" marker-end="url(#arrow)"/><path d="M1120 375V408" class="line" marker-end="url(#arrow)"/>
-    <rect x="540" y="420" width="200" height="190" rx="12" fill="#fff7e8" stroke="#a86700" stroke-width="2"/><text x="640" y="480" class="card-title" fill="#774800" font-size="25" text-anchor="middle" dominant-baseline="central">select</text><text x="640" y="522" class="body" font-size="16" text-anchor="middle">ordered stable IDs</text><text x="640" y="554" class="body" font-size="16" text-anchor="middle">immutable receipt</text>
-    <rect x="780" y="420" width="200" height="190" rx="12" fill="#ecebfb" stroke="var(--purple)" stroke-width="2"/><text x="880" y="480" class="card-title" fill="#3c3489" font-size="25" text-anchor="middle" dominant-baseline="central">required</text><text x="880" y="522" class="body" font-size="16" text-anchor="middle">manifest required</text><text x="880" y="554" class="body" font-size="16" text-anchor="middle">finite asset만</text>
-    <rect x="1020" y="420" width="200" height="190" rx="12" fill="#e7f5ef" stroke="var(--green)" stroke-width="2"/><text x="1120" y="480" class="card-title" fill="#085041" font-size="25" text-anchor="middle" dominant-baseline="central">all</text><text x="1120" y="522" class="body" font-size="16" text-anchor="middle">required · recommended</text><text x="1120" y="554" class="body" font-size="16" text-anchor="middle">declared variant만</text>
+    <rect x="540" y="420" width="200" height="190" rx="12" fill="#fff7e8" stroke="#a86700" stroke-width="2"/><text x="640" y="480" class="card-title" fill="#774800" font-size="25" text-anchor="middle" dominant-baseline="central">select</text><text x="640" y="522" class="body" font-size="16" text-anchor="middle">순서가 정해진 자산 ID</text><text x="640" y="554" class="body" font-size="16" text-anchor="middle">바꿀 수 없는 선택 기록</text>
+    <rect x="780" y="420" width="200" height="190" rx="12" fill="#ecebfb" stroke="var(--purple)" stroke-width="2"/><text x="880" y="480" class="card-title" fill="#3c3489" font-size="25" text-anchor="middle" dominant-baseline="central">required</text><text x="880" y="522" class="body" font-size="16" text-anchor="middle">필수로 지정한 자산</text><text x="880" y="554" class="body" font-size="16" text-anchor="middle">목록에 있는 것만</text>
+    <rect x="1020" y="420" width="200" height="190" rx="12" fill="#e7f5ef" stroke="var(--green)" stroke-width="2"/><text x="1120" y="480" class="card-title" fill="#085041" font-size="25" text-anchor="middle" dominant-baseline="central">all</text><text x="1120" y="522" class="body" font-size="16" text-anchor="middle">필수 · 권장</text><text x="1120" y="554" class="body" font-size="16" text-anchor="middle">등록된 변형만</text>
   </g>
   <g aria-label="읽기 순서 4: 공통 경계">
     <path d="M215 622V660H1120M640 622V660M880 622V660M1120 622V660M700 660V688" class="line" marker-end="url(#arrow)"/>
     <rect x="80" y="700" width="1200" height="82" rx="12" fill="#fff" stroke="var(--hair)"/>
-    <text x="140" y="730" class="card-title" fill="var(--ink)" font-size="22" dominant-baseline="central">공통 경계</text><text x="270" y="730" class="body" font-size="19" dominant-baseline="central">선언 밖 variant 금지 · provider routing과 후속 승인은 별도 · 생성 성공은 승인 아님</text>
+    <text x="140" y="730" class="card-title" fill="var(--ink)" font-size="22" dominant-baseline="central">공통 경계</text><text x="270" y="730" class="body" font-size="19" dominant-baseline="central">등록되지 않은 변형은 만들지 않음 · 생성 경로 선택과 후속 승인은 별도 · 생성 성공은 승인 아님</text>
   </g>
 </svg>
