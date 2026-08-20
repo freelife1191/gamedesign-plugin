@@ -45,6 +45,43 @@ const requiredRootSubheadings = [
   "문제를 해결하고 작업 재개하기",
   "기술 문서·기여·라이선스",
 ];
+const rootReadmeHero = {
+  title: "게임 기획 플러그인 모음",
+  suiteName: "Game Design Plugin Suite",
+  tagline: "아이디어 한 줄을 검토 가능한 게임 기획 문서와 취업 준비 자료로 연결하는 Codex 플러그인 모음",
+  badges: [
+    [
+      "https://github.com/freelife1191/gamedesign-plugin/releases/latest",
+      "https://img.shields.io/github/v/release/freelife1191/gamedesign-plugin?style=flat-square&label=release",
+    ],
+    [
+      "https://github.com/freelife1191/gamedesign-plugin/actions/workflows/release-notes.yml",
+      "https://img.shields.io/github/actions/workflow/status/freelife1191/gamedesign-plugin/release-notes.yml?branch=main&style=flat-square&label=release%20note",
+    ],
+    [
+      "https://github.com/freelife1191/gamedesign-plugin/blob/main/LICENSE",
+      "https://img.shields.io/github/license/freelife1191/gamedesign-plugin?style=flat-square&label=license",
+    ],
+    [
+      "#1분-설치",
+      "https://img.shields.io/badge/Codex-App%20%7C%20CLI-111111?style=flat-square&logo=openai&logoColor=white",
+    ],
+  ],
+  tags: [
+    ["Game Design Studio", "#대표업데이트핵심-스킬"],
+    ["Game Design Career", "#대표업데이트핵심-스킬"],
+    ["대표 스킬", "#대표업데이트핵심-스킬"],
+    ["업데이트 스킬", "#대표업데이트핵심-스킬"],
+    ["Skillstead", "#대표업데이트핵심-스킬"],
+    ["Archify", "#전체-아키텍처-바로보기"],
+  ],
+  quickLinks: [
+    ["1분 설치", "#1분-설치"],
+    ["대표 스킬 사용법", "#대표업데이트핵심-스킬"],
+    ["전체 아키텍처", "#전체-아키텍처-바로보기"],
+    ["상세 가이드", "#상세-가이드에서-더-알아보기"],
+  ],
+};
 const pluginIntroductionHeadings = [
   "어떤 플러그인인가요?",
   "왜 만들었나요?",
@@ -711,7 +748,7 @@ function collectHardWrappedProseLines(markdown) {
       || /^#{1,6}\s/u.test(trimmed)
       || /^(?:-{3,}|\*{3,}|_{3,})$/u.test(trimmed)
       || /^\|.*\|$/u.test(trimmed)
-      || /^<\/?[A-Za-z][^>]*>$/u.test(trimmed)
+      || /^<\/?[A-Za-z].*>$/u.test(trimmed)
       || /^\[[^\]]+\]:\s/u.test(trimmed)
       || /^!\[[^\]]*\]\([^)]*\)$/u.test(trimmed)
       || /^ {4}\S/u.test(line);
@@ -1276,11 +1313,11 @@ function assertPortfolioQuickStart(markdown) {
 
 async function assertStructuredRootReadme(markdown, { validateLinks = true } = {}) {
   assert.deepEqual(h2Headings(markdown), requiredRootHeadings, "root README H2 order is exact");
-  const tocMarker = "**📑 목차**\n";
+  const tocMarker = "<details>\n<summary><strong>📑 목차 열기</strong></summary>\n";
   const tocStart = markdown.indexOf(tocMarker);
-  assert.notEqual(tocStart, -1, "root README exposes a visible table of contents before the first main section");
+  assert.notEqual(tocStart, -1, "root README keeps the long table of contents collapsed before the first main section");
   const tocBodyStart = tocStart + tocMarker.length;
-  const tocEnd = markdown.indexOf("\n---\n", tocBodyStart);
+  const tocEnd = markdown.indexOf("\n</details>\n", tocBodyStart);
   assert.notEqual(tocEnd, -1, "root README table of contents has a bounded end");
   const toc = markdown.slice(tocBodyStart, tocEnd);
   const tocLinks = visibleMarkdownLinks(toc);
@@ -1294,6 +1331,7 @@ async function assertStructuredRootReadme(markdown, { validateLinks = true } = {
     .filter(({ level }) => level === 2 || level === 3)
     .map(({ label, anchor }) => ({ label, target: `#${anchor}` }));
   assert.deepEqual(tocLinks.map(({ label, target }) => ({ label, target })), expectedToc, "목차 links every H2 and H3 section in document order");
+  assertRootReadmeHero(markdown);
   await assertRepresentativePromptCards(markdown);
   for (const product of products) {
     await assertPluginTreeContract(markdown, product);
@@ -1304,6 +1342,51 @@ async function assertStructuredRootReadme(markdown, { validateLinks = true } = {
   assertSafetyBoundary(markdown);
   assertUpdateAndReinstallInstructions(markdown);
   if (validateLinks) await assertRootLinks(markdown);
+}
+
+function assertRootReadmeHero(markdown) {
+  const firstSection = markdown.indexOf("## 🚀 빠른 시작");
+  assert.ok(firstSection > 0, "root README exposes the quick-start section after its hero");
+  const hero = markdown.slice(0, firstSection);
+  assert.match(hero, /^<a id="top"><\/a>\n\n<div align="center">\n/u, "hero starts at the stable top anchor and uses one centered container");
+  assert.ok(hero.includes(`<h1>${rootReadmeHero.title}</h1>`), "hero keeps one concise Korean title");
+  assert.ok(hero.includes(`<strong>${rootReadmeHero.suiteName}</strong>`), "hero keeps the suite product name");
+  assert.ok(hero.includes(rootReadmeHero.tagline), "hero states the suite value in one sentence");
+  for (const phrase of [
+    "Game Design Studio는 게임 방향·규칙·콘텐츠·UX·제작 범위를 설계합니다.",
+    "Game Design Career는 직무 탐색부터 학습·포트폴리오·면접 준비까지 돕습니다.",
+  ]) assert.ok(hero.includes(phrase), `hero explains the product boundary: ${phrase}`);
+  for (const [href, src] of rootReadmeHero.badges) {
+    assert.ok(hero.includes(`<a href="${href}"><img src="${src}"`), `hero badge has a truthful target and source: ${href}`);
+  }
+  for (const [label, href] of rootReadmeHero.tags) {
+    assert.ok(hero.includes(`<a href="${href}"><code>${label}</code></a>`), `hero exposes the product or capability tag: ${label}`);
+  }
+  for (const [label, href] of rootReadmeHero.quickLinks) {
+    assert.ok(hero.includes(`<a href="${href}"><strong>${label}</strong></a>`), `hero exposes the frequent route: ${label}`);
+  }
+  assert.doesNotMatch(hero, /기준 기획 결과물\(Canonical Artifact\)은/u, "artifact details live with the architecture content, not in the first screen");
+  assert.doesNotMatch(hero, /재미, 흥행, 매출, 채용·합격/u, "the full responsibility boundary lives in the safety section");
+
+  const lines = markdown.split("\n");
+  const dividerIndexes = lines.flatMap((line, index) => line === "---" ? [index] : []);
+  const h2Indexes = lines.flatMap((line, index) => /^## /u.test(line) ? [index] : []);
+  const topLinks = lines.filter((line) => line === "[⬆️ TOP](#top)");
+  assert.equal(dividerIndexes.length, requiredRootSubheadings.length, "README uses one divider per top-level or secondary section boundary");
+  assert.equal(h2Indexes.length, requiredRootHeadings.length, "README keeps the approved top-level section count");
+  assert.equal(topLinks.length, requiredRootHeadings.length, "README keeps one TOP link at the end of each top-level section");
+  for (const index of h2Indexes) {
+    let previous = index - 1;
+    while (previous >= 0 && lines[previous] === "") previous -= 1;
+    assert.equal(lines[previous], "---", `top-level section is preceded by one divider: ${lines[index]}`);
+  }
+  const h3Indexes = lines.flatMap((line, index) => /^### /u.test(line) ? [index] : []);
+  for (const index of h3Indexes) {
+    let previous = index - 1;
+    while (previous >= 0 && lines[previous] === "") previous -= 1;
+    if (/^## /u.test(lines[previous]) || /^> /u.test(lines[previous])) continue;
+    assert.equal(lines[previous], "---", `secondary section is preceded by one divider: ${lines[index]}`);
+  }
 }
 
 async function assertPluginIntroduction(markdown) {
@@ -1631,30 +1714,63 @@ async function buildValidStructuredReadmeFixture() {
     const anchor = visibleMarkdownHeadings(`${"#".repeat(level)} ${label}`)[0].anchor;
     return `${prefix} [${label}](#${anchor})`;
   });
-  return [
-    "# Structured README fixture",
+  const fixtureHero = [
+    '<a id="top"></a>',
     "",
-    "**📑 목차**",
+    '<div align="center">',
+    `<h1>${rootReadmeHero.title}</h1>`,
+    `<p><strong>${rootReadmeHero.suiteName}</strong><br>${rootReadmeHero.tagline}</p>`,
+    "<p>Game Design Studio는 게임 방향·규칙·콘텐츠·UX·제작 범위를 설계합니다.<br>Game Design Career는 직무 탐색부터 학습·포트폴리오·면접 준비까지 돕습니다.</p>",
+    ...rootReadmeHero.badges.map(([href, src]) => `<a href="${href}"><img src="${src}" alt="badge"></a>`),
+    ...rootReadmeHero.tags.map(([label, href]) => `<a href="${href}"><code>${label}</code></a>`),
+    ...rootReadmeHero.quickLinks.map(([label, href]) => `<a href="${href}"><strong>${label}</strong></a>`),
+    "</div>",
+  ];
+  return [
+    ...fixtureHero,
+    "",
+    "<details>",
+    "<summary><strong>📑 목차 열기</strong></summary>",
+    "",
     ...expectedToc,
+    "",
+    "</details>",
     "",
     "---",
     "",
     "## 🚀 빠른 시작",
     "### 1분 설치",
     "설치 안내",
+    "",
+    "---",
+    "",
     "### 대표·업데이트·핵심 스킬",
     "대표 스킬 안내",
+    "",
+    "---",
+    "",
     "### 한 문장으로 시작하기",
     "한 문장 안내",
+    "",
+    "---",
+    "",
     "### 전체 아키텍처 바로보기",
     "아키텍처 안내",
+    "",
+    "[⬆️ TOP](#top)",
+    "",
+    "---",
     "",
     "## 🧭 제품 이해와 시작",
     "### 플러그인 소개",
     "소개 안내",
     "",
+    "---",
+    "",
     "### 30초 안에 플러그인 선택하기",
     "선택 안내",
+    "",
+    "---",
     "",
     "### 설치하기",
     "설치 안내",
@@ -1671,15 +1787,27 @@ async function buildValidStructuredReadmeFixture() {
     "codex plugin remove game-design-career@game-design-suite",
     "codex plugin add game-design-career@game-design-suite",
     "",
+    "---",
+    "",
     "### 5분 안에 첫 결과 만들기",
     "첫 결과 안내",
+    "",
+    "[⬆️ TOP](#top)",
+    "",
+    "---",
     "",
     "## 🧰 활용 사례와 스킬",
     "### 케이스별 프롬프트로 시작하기",
     ...caseGroups,
     "",
+    "---",
+    "",
     "### 스킬별로 바로 실행하기",
     ...inventoryTables,
+    "[⬆️ TOP](#top)",
+    "",
+    "---",
+    "",
     "## 🏗️ 아키텍처와 결과물",
     "### 요청 뒤에 생성되는 결과물",
     "```text",
@@ -1696,23 +1824,40 @@ async function buildValidStructuredReadmeFixture() {
     "| --- | --- | --- | --- | --- |",
     ...resultExampleIds.map((id) => `| ${readableResultLabels.get(id)} (\`${id}\`) | \`content.md\` | 선택 자산 | \`content.md\` → \`evidence.yml\` → \`decisions/\` → \`assets/\` → \`export-manifest.yml\` | 담당자 승인 전 보류하며 자동 승인되지 않습니다. |`),
     "",
+    "---",
+    "",
     "### 플러그인 구조와 전체 시스템 아키텍처",
     ...trees,
+    "",
+    "---",
+    "",
     "### 이미지·도식·문서 내보내기",
     "이미지와 문서 출력은 사람이 검토합니다.",
+    "",
+    "[⬆️ TOP](#top)",
+    "",
+    "---",
     "",
     "## 📚 운영과 참고",
     "### 상세 가이드에서 더 알아보기",
     "상세 가이드",
     "",
+    "---",
+    "",
     "### 안전·권리·담당자 승인 경계",
     "이미지·파생 문서·검토 결과는 자동 승인되지 않습니다.",
+    "",
+    "---",
     "",
     "### 문제를 해결하고 작업 재개하기",
     "재개 안내",
     "",
+    "---",
+    "",
     "### 기술 문서·기여·라이선스",
     "기술 문서",
+    "",
+    "[⬆️ TOP](#top)",
     "",
   ].join("\n");
 }

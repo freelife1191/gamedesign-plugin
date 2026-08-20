@@ -1,16 +1,21 @@
 <a id="top"></a>
 
-# 게임 기획 플러그인 모음 (Game Design Plugin Suite)
+<div align="center">
+<h1>게임 기획 플러그인 모음</h1>
+<p><strong>Game Design Plugin Suite</strong><br>아이디어 한 줄을 검토 가능한 게임 기획 문서와 취업 준비 자료로 연결하는 Codex 플러그인 모음</p>
+<p>Game Design Studio는 게임 방향·규칙·콘텐츠·UX·제작 범위를 설계합니다.<br>Game Design Career는 직무 탐색부터 학습·포트폴리오·면접 준비까지 돕습니다.</p>
+<p>
+  <a href="https://github.com/freelife1191/gamedesign-plugin/releases/latest"><img src="https://img.shields.io/github/v/release/freelife1191/gamedesign-plugin?style=flat-square&label=release" alt="Latest release"></a>
+  <a href="https://github.com/freelife1191/gamedesign-plugin/actions/workflows/release-notes.yml"><img src="https://img.shields.io/github/actions/workflow/status/freelife1191/gamedesign-plugin/release-notes.yml?branch=main&style=flat-square&label=release%20note" alt="Release note gate"></a>
+  <a href="https://github.com/freelife1191/gamedesign-plugin/blob/main/LICENSE"><img src="https://img.shields.io/github/license/freelife1191/gamedesign-plugin?style=flat-square&label=license" alt="License"></a>
+  <a href="#1분-설치"><img src="https://img.shields.io/badge/Codex-App%20%7C%20CLI-111111?style=flat-square&logo=openai&logoColor=white" alt="Codex App and CLI"></a>
+</p>
+<p><a href="#대표업데이트핵심-스킬"><code>Game Design Studio</code></a> · <a href="#대표업데이트핵심-스킬"><code>Game Design Career</code></a> · <a href="#대표업데이트핵심-스킬"><code>대표 스킬</code></a> · <a href="#대표업데이트핵심-스킬"><code>업데이트 스킬</code></a> · <a href="#대표업데이트핵심-스킬"><code>Skillstead</code></a> · <a href="#전체-아키텍처-바로보기"><code>Archify</code></a></p>
+<p><a href="#1분-설치"><strong>1분 설치</strong></a> · <a href="#대표업데이트핵심-스킬"><strong>대표 스킬 사용법</strong></a> · <a href="#전체-아키텍처-바로보기"><strong>전체 아키텍처</strong></a> · <a href="#상세-가이드에서-더-알아보기"><strong>상세 가이드</strong></a></p>
+</div>
 
-게임을 기획하는 학생·기획자·멘토가 **아이디어를 검토 가능한 기획 문서로 만들도록** 돕는 두 개의 독립 플러그인입니다. 완성한 기획은 학습과 포트폴리오 작업으로도 이어집니다. **Game Design Studio**는 게임의 규칙·콘텐츠·UX·제작 범위를 설계합니다. **Game Design Career**는 역할 탐색·역기획·포트폴리오·면접·성장 계획을 돕습니다.
-
-**기준 기획 결과물(Canonical Artifact)**은 한 작업에서 기준으로 삼는 결과 폴더입니다. `content.md`에 기획 본문을, `evidence.yml`에 근거를, `decisions/`에 선택 이유를 담아 두므로 다음 수정·검토·내보내기에서도 같은 기준을 사용할 수 있습니다.
-
-이 도구는 판단과 근거 관리를 돕지만 재미, 흥행, 매출, 채용·합격, 법률 준수, 플랫폼 심사 통과 또는 담당자 승인을 보장하지 않습니다. 결과를 사용하거나 공개하기 전에는 검토 담당자를 정해야 합니다. 그 담당자가 사실, 범위, 권리와 품질을 확인합니다.
-
----
-
-**📑 목차**
+<details>
+<summary><strong>📑 목차 열기</strong></summary>
 
 1. [🚀 빠른 시작](#-빠른-시작)
    - [1분 설치](#1분-설치)
@@ -35,11 +40,14 @@
    - [문제를 해결하고 작업 재개하기](#문제를-해결하고-작업-재개하기)
    - [기술 문서·기여·라이선스](#기술-문서기여라이선스)
 
+</details>
+
 ---
 
 ## 🚀 빠른 시작
 
-처음에는 필요한 제품 하나를 설치한 뒤, 대표 진입 스킬에 원하는 결과를 한 문장으로 요청하세요. 스킬 이름을 모두 외울 필요는 없습니다. 대표 스킬이 요청을 읽고 가장 짧은 전문 경로나 오케스트레이터를 선택합니다.
+> [!TIP]
+> 처음에는 필요한 제품 하나를 설치하고, 대표 진입 스킬에 원하는 결과를 한 문장으로 요청하세요. 대표 스킬이 알맞은 전문 스킬이나 오케스트레이터를 고르므로 스킬 이름을 모두 외울 필요는 없습니다.
 
 ### 1분 설치
 
@@ -63,20 +71,22 @@ codex plugin list
 
 [편집 가능한 선택 흐름 SVG](guides/assets/shared/plugin-selection-flow.svg)에서 제품 선택과 설치 순서를 확인하세요.
 
+---
+
 ### 대표·업데이트·핵심 스킬
 
 | 하려는 일 | Studio | Career | 사용 방법 |
 | --- | --- | --- | --- |
-| 무엇을 써야 할지 모르는 요청 | `game-design-studio` | `game-design-career` | 대표 진입 스킬이 제품·경로·결과물과 다음에 사람이 결정할 항목을 먼저 보여 줍니다. |
+| 무엇을 써야 할지 모르는 요청 | `game-design-studio` | `game-design-career` | 대표 진입 스킬은 선택한 경로와 결과물, 사용자가 결정할 항목을 먼저 보여 줍니다. |
 | 여러 작업을 한 번에 조율 | `orchestrate-game-design-project` | `orchestrate-game-design-career` | 비전·설계·검토 또는 역할·학습·포트폴리오처럼 여러 단계가 연결될 때 사용합니다. |
 | 가장 먼저 방향 잡기 | `define-game-vision` | `map-game-design-career` | 게임의 핵심 재미 또는 목표 직무와 현재 역량부터 정리합니다. |
 | 근거 있는 상세 작업 | `design-game-systems` | `research-game-design-jobs` | 규칙·상태·예외를 명세하거나 최신 공개 채용 근거를 조사합니다. |
 | 결과 검토·활용 | `review-game-design` | `build-game-design-portfolio` | 기획 결과를 검토하거나 검토된 경험을 포트폴리오 사례로 정리합니다. |
-| 설치본 업데이트 확인 | `upgrade-game-design-suite` | `upgrade-game-design-suite` | 현재 설치 버전과 최신 공개 릴리스를 비교해 보여 주고, 업데이트 여부는 사용자가 승인할 때까지 보류합니다. |
+| 설치본 업데이트 확인 | `upgrade-game-design-suite` | `upgrade-game-design-suite` | 현재 설치 버전과 최신 공개 릴리스를 나란히 보여 줍니다. 업데이트는 사용자가 승인한 뒤에만 진행합니다. |
 
 [![대표 진입 스킬이 요청을 소유 제품 하나와 route 하나로 좁히는 흐름](guides/assets/shared/suite-entry-routing-flow.png)](guides/assets/shared/suite-entry-routing-flow.svg)
 
-Skillstead 도식은 대표 스킬이 담당 제품과 실행 경로를 하나씩 고르고, 다음에 사람이 결정할 항목을 남기는 과정을 보여 줍니다.
+Skillstead 도식은 대표 스킬이 담당 제품과 실행 경로를 하나씩 고른 뒤, 사용자가 결정할 항목을 남기는 흐름을 보여 줍니다.
 
 Codex CLI에서 대표 진입 스킬을 직접 지정하려면 다음처럼 적습니다.
 
@@ -95,6 +105,8 @@ $game-design-career:upgrade-game-design-suite
 
 전체 직접 실행 스킬은 [스킬별로 바로 실행하기](#스킬별로-바로-실행하기)에서 확인하세요.
 
+---
+
 ### 한 문장으로 시작하기
 
 Codex App에서는 제품 이름 뒤에 원하는 결과와 가진 자료만 적으면 됩니다. 모르는 값은 `미정`으로 남겨도 됩니다.
@@ -106,6 +118,8 @@ Codex App에서는 제품 이름 뒤에 원하는 결과와 가진 자료만 적
 
 Studio에서 검토한 전투 시스템 기획을 Career 포트폴리오 사례와 면접 준비로 연결해 줘.
 ```
+
+---
 
 ### 전체 아키텍처 바로보기
 
@@ -119,9 +133,13 @@ Studio에서 검토한 전투 시스템 기획을 Career 포트폴리오 사례�
 
 ## 🧭 제품 이해와 시작
 
+> [!NOTE]
+> 이 섹션에서는 두 제품의 차이와 설치 방법, 첫 결과를 만드는 순서를 설명합니다. 바로 사용하려면 [30초 안에 플러그인 선택하기](#30초-안에-플러그인-선택하기)부터 확인하세요.
+
 ### 플러그인 소개
 
-> 🧭 아이디어 한 줄을 그럴듯한 답변으로 끝내지 않고 근거와 선택 이유를 확인할 수 있는 게임 기획 문서로 발전시킵니다. 어떤 스킬과 검토 역할을 썼는지 남기므로 다음 수정과 포트폴리오 작업도 같은 기준에서 이어 갑니다.
+> [!NOTE]
+> 아이디어 한 줄을 근거와 선택 이유를 확인할 수 있는 게임 기획 문서로 다듬습니다. 어떤 스킬과 검토 역할을 사용했는지도 기록하므로 다음 수정과 포트폴리오 작업을 같은 기준에서 이어 갈 수 있습니다.
 
 #### 어떤 플러그인인가요?
 
@@ -307,7 +325,8 @@ Studio에서 검토한 전투 시스템 기획을 Career 포트폴리오 사례�
 - [Studio와 Career 전체 사용자 가이드](guides/README.md)
 - [사실·추론·가정 구분 기준](architecture/knowledge-and-evidence.md#사실추론가정-경계)
 
-> ⚠️ 저장소의 MIT 라이선스는 원문과 제3자 자료의 권리를 다시 허가하지 않습니다. 원문을 공개하거나 재사용하기 전에 해당 자료의 이용 조건과 권리를 따로 확인하세요.
+> [!WARNING]
+> 저장소의 MIT 라이선스는 원문과 제3자 자료의 권리를 다시 허가하지 않습니다. 원문을 공개하거나 재사용하기 전에 해당 자료의 이용 조건과 권리를 따로 확인하세요.
 
 ---
 
@@ -396,11 +415,17 @@ codex plugin list
 npm run verify:install-roundtrip
 ```
 
-전체 테스트와 플랫폼 검증을 수행하던 GitHub Actions는 2026-08-20 실행을 끝으로 중단했습니다. 이후 변경은 macOS에서 로컬로 검증합니다. 다만 Release note gate는 `ubuntu-latest`에서 릴리스 노트 형식과 태그 연결만 확인하며, 전체 테스트나 플랫폼 호환성 검증으로 간주하지 않습니다. 기본 통합 확인에는 `npm test`, 릴리스 전 전체 확인에는 `npm run validate:release`를 사용합니다. `npm run verify:install-roundtrip`은 현재 macOS 환경의 설치·제거 수명주기를 검증하지만, 그 결과를 새로운 Windows 실제 환경 검증으로 간주하지 않습니다.
+> [!IMPORTANT]
+> 전체 테스트와 플랫폼 검증을 수행하던 GitHub Actions는 2026-08-20 실행을 끝으로 중단했습니다. 이후 변경은 macOS에서 로컬로 검증합니다. Release note gate는 `ubuntu-latest`에서 릴리스 노트 형식과 태그 연결만 확인하며, 전체 테스트나 플랫폼 호환성 검증을 대신하지 않습니다.
+>
+> 기본 통합 확인에는 `npm test`, 릴리스 전 전체 확인에는 `npm run validate:release`를 사용합니다. `npm run verify:install-roundtrip`은 현재 macOS 환경의 설치·제거 수명주기를 검증하며, Windows에서 새로 검증한 결과로 보지 않습니다.
 
 #### 업데이트·재설치하기
 
 Marketplace refresh와 설치 패키지 교체는 서로 다른 작업입니다.
+
+> [!NOTE]
+> 업데이트 확인은 새 버전과 변경 내용을 살펴보는 단계입니다. 이때는 설치본을 바꾸지 않으며, 사용자가 승인한 뒤에만 업데이트합니다.
 
 [![업데이트 알림에서 승인과 재설치와 검증을 거쳐 새 세션에서 재개하는 흐름](guides/assets/shared/suite-update-approval-flow.png)](guides/assets/shared/suite-update-approval-flow.svg)
 
@@ -417,7 +442,7 @@ $game-design-studio:upgrade-game-design-suite
 $game-design-career:upgrade-game-design-suite
 ```
 
-- 현재 설치 버전과 최신 공개 릴리스를 비교해 보여 줍니다. 업데이트 여부는 사용자가 승인할 때까지 보류합니다.
+- 현재 설치 버전과 최신 공개 릴리스를 나란히 보여 줍니다. 업데이트는 사용자가 승인한 뒤에만 진행합니다.
 - 검사와 계획 단계에서는 어떤 설치도 바꾸지 않습니다.
 - 승인 없이 적용되는 업데이트는 없습니다.
 - 끝나면 이전 버전, 새 버전, 바뀐 제품, 번들 구성 요소 변화, 검증 결과를 요약하고 새 세션에서 이어가는 방법을 알려 줍니다.
@@ -592,6 +617,9 @@ $game-design-career:build-game-design-portfolio
 ---
 
 ## 🧰 활용 사례와 스킬
+
+> [!TIP]
+> 원하는 결과가 분명하면 사례 프롬프트를 복사하세요. 작업 범위가 좁고 사용할 스킬을 이미 알고 있다면 스킬 이름 앞에 제품 namespace를 붙여 직접 실행할 수 있습니다.
 
 ### 케이스별 프롬프트로 시작하기
 
@@ -1142,8 +1170,6 @@ ST-C08의 보존 결과 폴더 (`artifact`)와 중단·재개 기록을 읽고 �
 
 </details>
 
-[⬆️ TOP](#top)
-
 #### Career 학습·취업 사례 7개
 
 게임 기획을 배우거나 취업을 준비하는 사람은 Career 사례로 역할, 근거와 다음 과제를 정리합니다. 각 사례는 멘토와 함께 검토할 수 있는 학습 또는 포트폴리오 결과물을 만듭니다.
@@ -1641,8 +1667,6 @@ CA-T01의 보존 결과물과 중단 기록을 읽고 미정인 역할 근거와
 
 </details>
 
-[⬆️ TOP](#top)
-
 #### Studio와 Career 연계 사례 4개
 
 제작 기획을 포트폴리오, 면접 연습, 발표 자료 또는 재개 계획으로 발전시키려면 아래에서 목적에 맞는 사례를 고릅니다. 각 사례는 공개해도 되는 자료만 골라내고, 이름과 역할을 적은 담당자의 검토를 거칩니다.
@@ -1922,13 +1946,11 @@ $game-design-studio:export-game-design-documents \
 
 사용자 유형, 난이도와 결과를 기준으로 제작용 요청문 목록 전체를 찾을 수 있습니다.
 
-[⬆️ TOP](#top)
-
 ---
 
 ### 스킬별로 바로 실행하기
 
-오케스트레이터가 필요 없는 좁은 작업에서는 설치 namespace를 붙여 스킬을 직접 호출하세요. [Studio 스킬 인덱스](guides/game-design-studio/skills/README.md)와 [Career 스킬 인덱스](guides/game-design-career/skills/README.md)에서 입력 계약을 먼저 확인할 수 있습니다.
+오케스트레이터가 필요 없는 좁은 작업에서는 스킬 이름 앞에 제품 namespace를 붙여 직접 호출하세요. [Studio 스킬 인덱스](guides/game-design-studio/skills/README.md)와 [Career 스킬 인덱스](guides/game-design-career/skills/README.md)에서 입력 계약을 먼저 확인할 수 있습니다.
 
 [![전문 스킬과 위임된 에이전트가 협업하는 흐름](guides/assets/readme/skill-agent-collaboration.png)](guides/assets/readme/skill-agent-collaboration.svg)
 
@@ -2068,9 +2090,14 @@ Studio는 제품 스킬 17개와 공통 스킬 9개로 총 26개, Career는 제�
 
 ## 🏗️ 아키텍처와 결과물
 
+> [!NOTE]
+> 처음에는 전체 시스템 구조와 기준 결과 폴더만 확인하면 됩니다. 설치 패키지의 세부 파일과 검증 도구 목록은 필요할 때 펼쳐 보세요.
+
 ### 요청 뒤에 생성되는 결과물
 
 모든 주요 결과는 기준 결과 폴더(Canonical Artifact)에 본문, 근거, 결정, 자산과 내보내기 상태를 함께 보존합니다.
+
+**기준 기획 결과물(Canonical Artifact)**은 한 작업에서 기준으로 삼는 결과 폴더입니다. `content.md`에 기획 본문을, `evidence.yml`에 근거를, `decisions/`에 선택 이유를 담아 두므로 다음 수정·검토·내보내기에서도 같은 기준을 사용할 수 있습니다.
 
 [![기준 결과 폴더(Canonical Artifact)를 읽고 담당자가 승인하는 순서](guides/assets/readme/artifact-review-flow.png)](guides/assets/readme/artifact-review-flow.svg)
 
@@ -2340,6 +2367,9 @@ MD는 렌더러 사용 가능 여부 (renderer capability)와 무관하게 항�
 
 ## 📚 운영과 참고
 
+> [!IMPORTANT]
+> 결과를 공개하거나 전달하기 전에는 담당자가 사실·범위·권리·품질을 확인해야 합니다. 자동 검증을 통과했더라도 담당자 승인을 대신하지는 않습니다.
+
 ### 상세 가이드에서 더 알아보기
 
 작업 이름으로 다음 문서를 선택하세요. 설치부터 문제 해결까지 제품별 경로를 같은 순서로 제공합니다.
@@ -2366,6 +2396,8 @@ MD는 렌더러 사용 가능 여부 (renderer capability)와 무관하게 항�
 ---
 
 ### 안전·권리·담당자 승인 경계
+
+이 도구는 판단과 근거 관리를 돕지만 게임의 재미·흥행·매출이나 채용·합격을 보장하지 않습니다. 법률 준수, 플랫폼 심사 통과와 담당자 승인도 보장하지 않습니다. 결과를 사용하거나 공개하기 전에는 검토 담당자를 정하고, 해당 담당자가 사실·범위·권리·품질을 확인해야 합니다.
 
 민감정보와 비공개 자료를 제외하고, 생성·검토 결과를 담당자가 승인하기 전에는 전달 또는 공개하지 마세요.
 
