@@ -1,17 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900" role="img" aria-labelledby="title desc" style="font-family:Pretendard,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif">
-  <title id="title">목적에 맞는 플러그인을 고르면 설치가 단순해집니다</title>
-  <desc id="desc">Game Design Studio와 Game Design Career의 목적을 구분한 뒤 공통 game-design-suite marketplace에서 설치하는 세 단계 흐름입니다.</desc>
+  <title id="title">하려는 작업에 맞춰 설치할 제품을 고릅니다</title>
+  <desc id="desc">제작 기획은 Game Design Studio, 취업·포트폴리오 준비는 Game Design Career를 선택합니다. 두 제품은 같은 game-design-suite 마켓플레이스에서 설치합니다.</desc>
   <style>svg{--bg:#fff;--ink:#1f2733;--muted:#5b6675;--hair:#d6e0ec;--blue:#1f6fb2;--purple:#534ab7;--green:#0f7a5f;--panel:#f4f8fc}.title{fill:var(--ink);font-weight:700}.body{fill:var(--muted)}.blue{fill:#e8f1fb;stroke:var(--blue)}.purple{fill:#ecebfb;stroke:var(--purple)}.green{fill:#e7f5ef;stroke:var(--green)}.on-accent{fill:#fff}.card-title{font-weight:700}.line{stroke:#5b6675;stroke-width:2;fill:none}</style>
   <defs><marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path d="M2 2 L10 6 L2 10" fill="none" stroke="#5b6675" stroke-width="2" stroke-linecap="round"/></marker></defs>
   <rect width="1400" height="900" fill="var(--bg)"/>
   <rect x="40" y="48" width="6" height="72" rx="3" fill="var(--blue)"/>
-  <text x="70" y="74" class="title" font-size="42">목적에 맞는 플러그인을 고르면 설치가 단순해집니다</text>
-  <text x="70" y="110" class="body" font-size="20">기획 제작에는 Studio, 경력 증거에는 Career를 고른 뒤 같은 marketplace를 사용합니다.</text>
+  <text x="70" y="74" class="title" font-size="42">하려는 작업에 맞춰 설치할 제품을 고릅니다</text>
+  <text x="70" y="110" class="body" font-size="20">제작 기획은 Studio, 취업·포트폴리오 준비는 Career를 선택합니다.</text>
   <rect x="40" y="180" width="1320" height="640" rx="20" fill="var(--panel)" stroke="var(--hair)"/>
   <g aria-label="읽기 순서 1: 작업 목적 선택"><rect x="80" y="280" width="360" height="300" rx="12" class="blue" stroke-width="2"/><circle cx="130" cy="350" r="34" fill="#d8eafa"/><path d="M115 350h30M130 335v30" class="line" stroke="#1f6fb2"/><text x="180" y="338" class="card-title" fill="#124267" font-size="26" dominant-baseline="central">작업 목적 선택</text><text x="180" y="380" class="body" font-size="19">기획·시스템·UX·제작</text><text x="180" y="410" class="body" font-size="19">또는 경력·포트폴리오</text></g>
   <path d="M452 430H488" class="line" marker-end="url(#arrow)"/>
   <g aria-label="읽기 순서 2: 제품 선택"><rect x="500" y="280" width="360" height="300" rx="12" class="purple" stroke-width="2"/><circle cx="550" cy="350" r="34" fill="#e4e2fa"/><path d="M536 340h28v20h-28zM542 366h16" class="line" stroke="#534ab7"/><text x="600" y="338" class="card-title" fill="#3c3489" font-size="25" dominant-baseline="central">Studio 또는 Career</text><text x="600" y="380" class="body" font-size="19">Game Design Studio</text><text x="600" y="410" class="body" font-size="19">Game Design Career</text></g>
   <path d="M872 430H908" class="line" marker-end="url(#arrow)"/>
-  <g aria-label="읽기 순서 3: 공통 marketplace 설치"><rect x="920" y="280" width="360" height="300" rx="12" class="green" stroke-width="2"/><circle cx="970" cy="350" r="34" fill="#d8f0e5"/><path d="M956 345h28v18h-28zM962 353h.1M970 353h.1M978 353h.1" class="line" stroke="#0f7a5f"/><text x="1020" y="338" class="card-title" fill="#085041" font-size="25" dominant-baseline="central">marketplace 설치</text><text x="1020" y="380" class="body" font-size="19">game-design-suite</text><text x="1020" y="410" class="body" font-size="19">선택한 plugin만 추가</text></g>
-  <rect x="80" y="660" width="1200" height="88" rx="12" fill="#fff" stroke="var(--hair)"/><text x="120" y="705" class="title" font-size="22" dominant-baseline="central">결론</text><text x="220" y="705" class="body" font-size="20" dominant-baseline="central">두 제품은 설치 surface를 공유하지만, 호출할 플러그인은 작업 목적에 따라 하나를 고릅니다.</text>
+  <g aria-label="읽기 순서 3: 선택한 제품 설치"><rect x="920" y="280" width="360" height="300" rx="12" class="green" stroke-width="2"/><circle cx="970" cy="350" r="34" fill="#d8f0e5"/><path d="M956 345h28v18h-28zM962 353h.1M970 353h.1M978 353h.1" class="line" stroke="#0f7a5f"/><text x="1020" y="338" class="card-title" fill="#085041" font-size="25" dominant-baseline="central">선택한 제품 설치</text><text x="1020" y="380" class="body" font-size="19">game-design-suite 등록</text><text x="1020" y="410" class="body" font-size="19">필요한 플러그인만 추가</text></g>
+  <rect x="80" y="660" width="1200" height="88" rx="12" fill="#fff" stroke="var(--hair)"/><text x="120" y="705" class="title" font-size="22" dominant-baseline="central">설치 원칙</text><text x="250" y="705" class="body" font-size="20" dominant-baseline="central">두 제품은 같은 마켓플레이스를 쓰지만, 지금 필요한 제품만 설치하고 호출합니다.</text>
 </svg>

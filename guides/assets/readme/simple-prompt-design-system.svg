@@ -11,7 +11,7 @@
   <rect width="1400" height="900" fill="var(--paper)"/>
   <rect x="52" y="45" width="6" height="64" rx="3" fill="var(--blue)"/>
   <text x="78" y="70" class="title">한 줄 요청도 전문 기획 작업의 순서를 따릅니다</text>
-  <text x="78" y="106" class="subtitle">라우팅·스킬·전문 검토·자동 점검으로 일을 나누고 마지막 판단은 사람이 내립니다.</text>
+  <text x="78" y="106" class="subtitle">요청 분석, 전문 스킬, 검토 역할과 자동 점검을 차례로 거치며 최종 판단은 담당자가 내립니다.</text>
   <rect x="38" y="138" width="1324" height="702" rx="24" class="panel"/>
 
   <!-- main-flow -->
@@ -57,9 +57,9 @@
     <text x="520" y="463" class="body" text-anchor="middle">원문·현재 자료·선택 이유 확인</text>
     <text x="520" y="491" class="body" text-anchor="middle">서로 다른 질문의 역할 최대 세 개</text>
   </g>
-  <g data-flow-node="quality-work" data-stage-label="한국어·도식·이미지 다듬기">
+  <g data-flow-node="quality-work" data-stage-label="문장·도식·이미지 품질 확인">
     <rect x="710" y="390" width="620" height="160" rx="18" fill="#F7F9FC" stroke="#8994A3" class="support"/>
-    <text x="1020" y="421" class="card-title" fill="#566171" text-anchor="middle">한국어·도식·이미지 다듬기</text>
+    <text x="1020" y="421" class="card-title" fill="#566171" text-anchor="middle">문장·도식·이미지 품질 확인</text>
     <rect x="735" y="449" width="170" height="58" rx="14" fill="var(--orange-soft)" stroke="var(--orange)"/>
     <text x="820" y="478" class="pill" fill="var(--orange)" text-anchor="middle">한국어 윤문</text>
     <text x="820" y="499" class="body" text-anchor="middle">im-not-ai</text>
@@ -70,9 +70,9 @@
     <text x="1215" y="478" class="pill" fill="var(--violet)" text-anchor="middle">마스터·파생 이미지</text>
     <text x="1215" y="499" class="body" text-anchor="middle">gpt-image-2</text>
   </g>
-  <g data-flow-node="canonical-artifact" data-stage-label="기준 기획 결과물">
+  <g data-flow-node="canonical-artifact" data-stage-label="기준 결과 폴더">
     <rect x="1070" y="200" width="260" height="125" rx="18" fill="#F0F3F7" stroke="#657284" class="card"/>
-    <text x="1200" y="241" class="card-title" fill="#536071" text-anchor="middle">기준 기획 결과물</text>
+    <text x="1200" y="241" class="card-title" fill="#536071" text-anchor="middle">기준 결과 폴더</text>
     <text x="1200" y="276" class="body" text-anchor="middle">본문·근거·결정·미정 항목</text>
     <text x="1200" y="302" class="body" text-anchor="middle">수정과 내보내기의 기준</text>
   </g>
@@ -82,11 +82,11 @@
     <text x="330" y="691" class="body" text-anchor="middle">Stop 훅</text>
     <text x="330" y="717" class="body" text-anchor="middle">구조·자산·요청 형식 확인</text>
   </g>
-  <g data-flow-node="human-review" data-human-gate="검토 담당자" data-gate-role="approval-hold" data-gate-label="승인·보류" data-stage-label="검토 담당자 승인·보류">
+  <g data-flow-node="human-review" data-human-gate="검토 담당자" data-gate-role="approval-hold" data-gate-label="승인·수정·보류" data-stage-label="담당자 검토">
     <rect x="570" y="620" width="300" height="125" rx="18" fill="var(--rose-soft)" stroke="var(--rose)" class="card"/>
-    <text x="720" y="658" class="card-title" fill="var(--rose)" text-anchor="middle">검토 담당자 승인·보류</text>
+    <text x="720" y="658" class="card-title" fill="var(--rose)" text-anchor="middle">담당자 검토</text>
     <text x="720" y="691" class="body" text-anchor="middle">사실·권리·범위·품질 확인</text>
-    <text x="720" y="717" class="body" text-anchor="middle">수정 이유와 다음 담당자 기록</text>
+    <text x="720" y="717" class="body" text-anchor="middle">승인·수정·보류와 결정 이유 기록</text>
   </g>
   <g data-flow-node="verified-outputs" data-stage-label="검토된 문서·도식·이미지">
     <rect x="990" y="620" width="320" height="125" rx="18" fill="var(--green-soft)" stroke="var(--green)" class="card"/>

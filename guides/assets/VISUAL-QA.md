@@ -1,6 +1,10 @@
 # 공통 Skillstead 시각 품질 검사
 
-상태: **검증됨** — 2026-08-16에 Studio product wrapper로 lint, Chromium render, 두 단계 픽셀 검사를 완료했습니다. SVG가 편집 가능한 원본이고 PNG는 후처리하지 않은 Chromium 2× 파생물입니다.
+상태: **검증됨** — 2026-08-20에 Studio 제품 wrapper로 lint, Chromium 렌더링과 두 단계 화면 검사를 완료했습니다. SVG가 편집 가능한 원본이고 PNG는 후처리하지 않은 Chromium 2× 파생물입니다.
+
+## 도식 문구 검토 순서
+
+한국어 문구가 들어가는 도식은 SVG를 그리기 전에 제목·부제·노드·주석·대체 텍스트를 평문으로 먼저 작성하고 `$humanize-korean`으로 윤문합니다. 이때 사실, 수치, 이름, 제품·스킬 ID, 명령, 경로, 링크, 미정 항목과 승인 상태는 바꾸지 않습니다. 보호 항목 검사를 통과한 문구만 SVG에 넣으며, 문구 검토가 실패하면 렌더링을 시작하지 않고 원문과 재개 지점을 보존합니다.
 
 ## 렌더러와 공통 검사
 
@@ -15,17 +19,17 @@
 
 | 도식 | 전체 보기 검사 | 원본 해상도 검사 | 연결선·읽기 순서 | 출처 충실도 |
 | --- | --- | --- | --- | --- |
-| `plugin-selection-flow` | 3개 카드와 결론 strip이 즉시 좌→우로 읽힘 | Korean/Latin glyph 정상, 넘침·containment 실패 없음 | 36px 이상 shaft와 open-V head, card border에서 12px gap; 목적→제품→marketplace | Studio/Career installation의 제품 선택과 `game-design-suite`를 반영 |
+| `plugin-selection-flow` | 세 카드와 설치 원칙이 왼쪽에서 오른쪽으로 바로 읽힘 | 한글·영문 글리프 정상, 텍스트 넘침과 카드 경계 이탈 없음 | 36px 이상 연결선과 open-V 화살표, 카드 경계 앞 12px 간격; 목적→제품→마켓플레이스 | Studio·Career 설치 가이드의 제품 선택과 `game-design-suite`를 반영 |
 | `app-cli-install-flow` | 상단 `설치 전 확인` band 뒤에 App/CLI 두 lane이 이어지고 셋이 한 화면에 들어옴 | pill·카드·명령 label과 두 preflight 카드 본문의 clipping/overflow 없음 | band에서 App lane으로 하향 arrow(`y=298`→`y=322`), 각 lane은 좌→우; 36px shaft와 head, 12px gap | 두 installation guide의 UTF-8 BOM 진단, Git·로컬 marketplace 구분, Windows·Ubuntu 설치·선택 제거·재설치·전체 정리와 잔재 확인을 반영 |
 | `canonical-artifact-lifecycle` | 작성→검토→사람 결정과 하단 결과가 한 화면에 보임 | gate pill, 상태 문구, 하단 strip containment 정상 | 좌→우 승인 흐름 뒤 하향 arrow; shaft/head 접합 정상, endpoint `y=664`에서 target `y=676`까지 12px gap | Studio/Career workflow의 Canonical Artifact·전문 검토·사람 결정을 반영 |
 | `image-generation-mode-routing` | `생성 요청?` decision에서 no/default와 yes 분기가 즉시 구분됨 | 모든 mode glyph 정상, 카드·merge/footer strip overflow 없음 | yes는 bus center `x=880, y=375`로 연결되고 `select`/`required`/`all` center `x=640/880/1120`에 33px branch와 12px target gap으로 동등 분기; 네 결과가 하단 공통 경계로 merge됨 | 두 image-assets guide의 `prompt-only`, `select`, `required`, `all`, selection receipt 및 manifest 경계를 반영 |
 | `image-provider-cost-routing` | 한글 여부와 무료 결과 검토에서 무료·유료 경로가 분명히 갈림 | 한글·영문 model/quality 글리프, 카드와 승인 pill의 clipping·overflow 없음 | prompt-only 하향 분기와 image_gen→결과 확인 경로를 분리하고, 한글 필요·반복 실패만 유료 제안과 사람 승인으로 연결 | 두 image-assets guide의 image_gen 우선, gpt-image-2 사용 제안, low 기본·medium 선택·high 예외와 승인 전 유료 호출 0회 경계를 반영 |
 | `image-asset-lifecycle` | draft→review→approved→후속 review가 명확함 | reviewer pill·status·하단 strip 모두 containment 정상 | 좌→우 및 하향 단계; shaft/head 정상, endpoint `y=648`에서 target `y=660`까지 12px gap | 두 image-assets guide의 `concept-draft`, `document-approved`, `production-candidate` 및 named human review를 반영 |
 | `document-export-flow` | preflight, 공통 상태 rail, MD/PDF/DOCX/PPTX 형식별 검증이 즉시 구분됨 | status pill·형식 label 모두 clipping/overflow 없음 | 공통 상태 arrow tip `y=488`→panel top `y=500`는 12px gap; panel bus `y=540`에서 네 card top `y=590`까지 endpoint `y=578`의 38px branch와 12px target gap으로 연속 분배 | 두 exports guide의 모든 공통 상태 `not-requested`/`blocked`/`pending`/`unavailable`과 MD canonical text, PDF page QA, DOCX OOXML QA, PPTX story/slide QA를 반영 |
-| `project-memory-reuse-flow` | 설정→조회→재검증→현재 작업 참고→후보 검토의 주 경로와 비활성·제외 분기가 구분됨 | `.env`, 경로, Studio·Career 글리프와 모든 카드의 containment 정상 | 승인 기록만 주 경로로 보내고 비활성·오류와 부적합 기록은 하향 분기; 사람 결정 뒤 로컬 기록에서 다음 요청 조회로 되먹임 | 프로젝트 기억 가이드의 LLM Wiki 제한, 출처·범위 재검증, 사람 승인, `.game-design/memory/` 추가 전용 기록과 자동 전송 없음 경계를 반영 |
-| `suite-entry-routing-flow` | 요청 도착 → 대표 진입 스킬 → 남기는 것의 세 band가 위에서 아래로 즉시 읽힘 | `route-receipt.json`, `routeId`, ST-C01 글리프와 3열 카드 containment 정상 | band 사이 하향 arrow 2개(`y=322`, `y=562`)와 band 안 좌→우 arrow; 카드 경계에서 12px gap | 두 대표 진입 스킬 가이드의 요청 정규화, 소유 제품 판정, 여섯 줄 영수증, 전문 스킬·오케스트레이터와 최대 세 개 검토 역할, 단방향 인계 후보를 반영 |
+| `project-memory-reuse-flow` | 설정→조회→재검증→현재 작업 참고→후보 검토의 주 경로와 비활성·제외 분기가 구분됨 | `.env`, 경로, Studio·Career 글리프와 모든 카드가 경계 안에 정상 배치됨 | 승인 기록만 주 경로로 보내고 비활성·오류와 부적합 기록은 아래로 분기; 담당자 결정 뒤 로컬 기록에서 다음 요청 조회로 되돌아감 | 프로젝트 기억 가이드의 LLM Wiki 제한, 출처·범위 재검증, 담당자 승인, `.game-design/memory/` 추가 전용 기록과 자동 전송 없음 경계를 반영 |
+| `suite-entry-routing-flow` | 요청 도착→대표 스킬→선택 기록과 실행의 세 구역이 위에서 아래로 바로 읽힘 | `route-receipt.json`, `routeId`, ST-C01 글리프와 3열 카드가 경계 안에 정상 배치됨 | 구역 사이 아래 방향 화살표 두 개(`y=322`, `y=562`)와 구역 안 왼쪽→오른쪽 화살표; 카드 경계 앞 12px 간격 | 두 대표 스킬 가이드의 요청 정리, 담당 제품 결정, 여섯 줄 영수증, 전문 스킬·오케스트레이터와 최대 세 개 검토 역할, 한 번만 전달하는 인계 원칙을 반영 |
 | `suite-handoff-ownership-flow` | owner 확정 → supplier evidence → 멈춤과 승인이 한 화면에서 구분됨 | `returnToSkill`, `requestedOutputs`, facts·inferences·recommendations·unknowns 라틴 글리프와 하단 2열 카드 containment 정상 | 상단 band는 좌→우, band 2에서 하단으로 두 갈래 하향 arrow(`x=400`, `x=1000`); 반환은 owner 쪽 한 방향만 그림 | `shared/suite-handoff/references/handoff.md`의 최종 owner 규칙, 요청·반환 봉투 키, 인계 1회 제한, 상대 부재 시 blocker와 사람 승인 경계를 반영 |
-| `suite-update-approval-flow` | 알림과 검사 → 사용자 승인 → 적용과 재개가 위에서 아래로 읽히고 승인 band가 가운데에서 분명히 끊음 | `upgrade-game-design-suite`, `codex plugin add`, `codex plugin list` 글리프와 승인 band 2열 카드 containment 정상 | 검사 band에서 승인 band로 하향 arrow(`y=368`), 승인 선택 카드에서만 적용 band로 하향 arrow(`x=520`, `y=560`); 나머지 선택지는 이어지는 화살표가 없음 | 업그레이드 스킬 계약의 검사 단계 무변경, 네 선택지, 승인 뒤 재설치·검증, 새 채팅·새 세션 재개를 반영 |
+| `suite-update-approval-flow` | 알림과 비교→사용자 결정→적용과 재개의 세 구역이 위에서 아래로 읽히며 가운데에서 업데이트 여부가 분명히 갈림 | `upgrade-game-design-suite`, `codex plugin add`, `codex plugin list` 글리프와 결정 구역의 2열 카드가 경계 안에 정상 배치됨 | 비교 구역에서 결정 구역으로 아래 방향 화살표(`y=368`), `지금 업데이트` 카드에서만 적용 구역으로 아래 방향 화살표(`x=520`, `y=560`); 다른 선택지에는 다음 화살표가 없음 | 업그레이드 스킬 계약의 비교 단계 무변경, 네 선택지, 승인 뒤 재설치·검증, 새 채팅·새 세션 재개를 반영 |
 
 초기 lint 경고 하나(`plugin-selection-flow`의 `공통 marketplace 설치` text overflow 추정)는 label을 `marketplace 설치`로 줄인 뒤 재-lint하여 경고 0건으로 해소했습니다. Fix round 1에서는 전체 SVG를 다시 lint/render하고 모든 PNG를 두 단계로 재검사했습니다. Fix round 2에서는 영향을 받은 두 PNG를 canonical Chrome으로 재렌더하고 high/original 두 단계에서 bus·branch·target gap과 canvas containment를 재확인했습니다. 2026-08-16에는 새 이미지 제공자·비용 경로와 프로젝트 기억 재사용 흐름을 원본 해상도로 확인했으며, 첫 렌더에서 붐비던 분기 레이블과 화살표 끝점을 정리한 뒤 오류·경고 0건으로 다시 렌더했습니다. 2026-08-19에는 대표 진입 라우팅, 단방향 인계, 업데이트 승인 도식 셋을 새로 그리고 설치 도식에 UTF-8 preflight와 마켓플레이스 종류 band를 더했습니다. 네 SVG를 wrapper로 함께 lint해 `check-svg: 0 error(s), 0 warning(s) across 4 file(s)`를 확인했고, 네 PNG 모두 `2800×1800`과 단일 IEND 종료를 확인했습니다. 각 PNG를 전체 보기와 원본 해상도에서 열어 tofu, 텍스트 넘침, 잘린 glyph, panel containment 실패가 없음을 확인했으며 읽기 순서는 `aria-label` group 순서와 일치했습니다. 2026-08-20에는 공식 최신 태그가 `svg-infographic/v0.10.0`임을 다시 확인하고, 같은 고정본으로 설치 수명주기와 대표 오케스트레이션 도식을 보정했습니다. 두 SVG는 `check-svg: 0 error(s), 0 warning(s)`를 통과했고 Chrome 151.0.7922.170에서 각각 `2800×1800` PNG로 렌더한 뒤 전체 보기와 원본 보기에서 한글 깨짐, 넘침, 카드 경계와 화살표를 다시 확인했습니다.
 
@@ -33,7 +37,7 @@
 
 - `suite-plugin-system-architecture`는 설치·업데이트·전체 정리, 대표 스킬 라우팅, 기준 결과물과 자동 검증, 사람 검토·승인과 재개의 네 안내 보기를 제공합니다. 대표 라우팅에는 여섯 줄 영수증, 전문 스킬 또는 오케스트레이터, 최대 세 개 검토 역할이 포함됩니다.
 - Archify 2.15.0 `visual-check`는 `1440×900`, `1600×1000`, `1920×1080`, `2048×1320` 밝은 화면에서 가로·세로 넘침 0건을 확인했고, 가장 작은 화면과 가장 큰 화면의 밝은·어두운 테마 캡처도 모두 통과했습니다.
-- 고정 `agent-browser` 세션에서 `1600×1200` 전체 화면, 밝은·어두운 테마와 안내 보기 네 장, `1200×630` README 미리보기를 다시 캡처했습니다. 모든 PNG를 원본 해상도로 열어 한글 깨짐, 잘림, 노드·연결선 충돌과 낮은 대비가 없음을 확인했습니다.
+- 작업별로 분리한 `agent-browser` 세션에서 `1600×1200` 전체 화면, 밝은·어두운 테마와 안내 보기 네 장, `1200×630` README 미리보기를 다시 캡처했습니다. 모든 PNG를 원본 해상도로 열어 한글 깨짐, 잘림, 노드·연결선 충돌과 낮은 대비가 없음을 확인했습니다.
 - 전체·제품별·유형별 contact sheet 일곱 장도 다시 생성하고 원본 크기로 검토했습니다. QA manifest의 명세·HTML·렌더·contact sheet SHA-256을 새 바이트에 맞춰 갱신한 뒤 `build-archify-contact-sheets.mjs --check`, Archify 계약 테스트 30건과 curated publication check를 통과했습니다.
 
 ## Studio recipe 도식 검사 — 2026-08-06

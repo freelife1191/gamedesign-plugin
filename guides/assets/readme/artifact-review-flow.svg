@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900" role="img" style="font-family:Pretendard,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif">
-  <title>Canonical Artifact를 읽고 이름 있는 사람이 승인하는 순서</title>
-  <desc>기획 결과 폴더에서 기획 본문, 검토 근거, 주요 의사결정 기록, 이미지·첨부 자료, 출력 준비표를 순서대로 확인하고 이름 있는 사람이 승인 또는 보류를 결정하는 과정을 보여 줍니다. 기준 파일은 항상 읽고, 자산은 선택적으로 읽으며, PDF와 PPTX 같은 파생 문서는 문서 변환 도구 renderer와 시각 검증이 통과한 경우에만 확인합니다.</desc>
+  <title>결과를 전달하기 전에 기준 파일과 승인 상태를 확인하는 순서</title>
+  <desc>기획 결과 폴더의 본문, 근거, 결정 기록, 이미지·첨부 자료, 내보내기 준비 상태를 차례로 확인합니다. 승인 담당자가 최종 결과를 승인하거나 보류합니다. 기준 파일은 반드시 확인하고 자산은 필요할 때만 확인하며, PDF와 PPTX 같은 파생 문서는 렌더링과 화면 검사를 통과한 결과만 전달합니다.</desc>
   <style>
     svg{--bg:#F8FBFF;--ink:#1F2733;--muted:#5B6675;--hair:#C9D8E8;--blue:#1F6FB2;--blue-fill:#E8F1FB;--violet:#534AB7;--violet-fill:#ECEBFB;--green:#0F7A5F;--green-fill:#E7F5EF;--amber:#B56A00;--amber-fill:#FFF4DF;--rose:#A62560;--rose-fill:#FDECF3;}
     .title{fill:var(--ink);font-size:42px;font-weight:700}.sub{fill:var(--muted);font-size:19px}.card{stroke-width:2}.card-title{font-size:20px;font-weight:700}.body{font-size:16px;fill:var(--muted)}.small{font-size:16px;fill:var(--muted)}.badge{font-size:16px;font-weight:700}.line{fill:none;stroke:#52647A;stroke-width:2.8;marker-end:url(#arrow)}.optional{fill:none;stroke:var(--amber);stroke-width:2.8;stroke-dasharray:8 7;marker-end:url(#arrow-amber)}.on-accent{fill:#fff}
@@ -16,8 +16,8 @@
     <symbol id="ic-human" viewBox="0 0 24 24"><circle cx="12" cy="7" r="3.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5.5 21c.6-4 3-6 6.5-6s5.9 2 6.5 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
   </defs>
   <rect width="1400" height="900" fill="var(--bg)"/>
-  <text x="70" y="78" class="title">기준 파일을 읽고 사람의 승인까지 확인해야 결과가 완성됩니다</text>
-  <text x="70" y="116" class="sub">파일 생성은 승인과 다릅니다. 기준 내용, 근거, 결정과 출력 준비 상태를 순서대로 확인합니다.</text>
+  <text x="70" y="78" class="title">결과를 전달하기 전에 기준 파일과 승인 상태를 확인합니다</text>
+  <text x="70" y="116" class="sub">파일 생성만으로 작업이 끝나지 않습니다. 본문, 근거, 결정과 내보내기 준비 상태를 차례로 검토합니다.</text>
   <rect x="48" y="180" width="1304" height="356" rx="22" fill="#FFFFFF" stroke="var(--hair)" stroke-width="2"/>
   <path class="line" data-flow-edge="content-to-evidence" data-from="content" data-to="evidence" d="M272 365H295"/><path class="line" data-flow-edge="evidence-to-decisions" data-from="evidence" data-to="decisions" d="M485 365H508"/><path class="line" data-flow-edge="decisions-to-assets" data-from="decisions" data-to="assets" d="M698 365H721"/><path class="line" data-flow-edge="assets-to-export-manifest" data-from="assets" data-to="export-manifest" d="M911 365H934"/><path class="line" data-flow-edge="export-manifest-to-human-gate" data-from="export-manifest" data-to="human-gate" d="M1124 365H1147"/>
   <!-- main-flow -->
@@ -25,19 +25,19 @@
     <rect x="72" y="270" width="200" height="190" rx="16" fill="var(--blue-fill)" stroke="var(--blue)" class="card"/>
     <rect x="91" y="288" width="34" height="28" rx="14" fill="var(--blue)"/><text x="108" y="302" class="badge on-accent" text-anchor="middle" dominant-baseline="central">1</text>
     <circle cx="172" cy="338" r="30" fill="#D6E9FB"/><use href="#ic-doc" x="154" y="320" width="36" height="36" style="color:#1F6FB2"/>
-    <text x="172" y="393" class="card-title" fill="var(--blue)" text-anchor="middle">기획 본문</text><text x="172" y="423" class="body" text-anchor="middle">(content.md) · 항상 읽기</text>
+    <text x="172" y="393" class="card-title" fill="var(--blue)" text-anchor="middle">기획 본문</text><text x="172" y="423" class="body" text-anchor="middle">(content.md) · 필수 확인</text>
   </g>
   <g data-flow-node="evidence" data-korean-label="검토 근거" data-file-id="evidence.yml">
     <rect x="295" y="270" width="190" height="190" rx="16" fill="var(--violet-fill)" stroke="var(--violet)" class="card"/>
     <rect x="314" y="288" width="34" height="28" rx="14" fill="var(--violet)"/><text x="331" y="302" class="badge on-accent" text-anchor="middle" dominant-baseline="central">2</text>
     <circle cx="390" cy="338" r="30" fill="#E2E0FA"/><use href="#ic-file" x="372" y="320" width="36" height="36" style="color:#534AB7"/>
-    <text x="390" y="389" class="card-title" fill="var(--violet)" text-anchor="middle">검토 근거</text><text x="390" y="417" class="small" text-anchor="middle">(evidence.yml)</text><text x="390" y="441" class="small" text-anchor="middle">항상 읽기</text>
+    <text x="390" y="389" class="card-title" fill="var(--violet)" text-anchor="middle">검토 근거</text><text x="390" y="417" class="small" text-anchor="middle">(evidence.yml)</text><text x="390" y="441" class="small" text-anchor="middle">필수 확인</text>
   </g>
-  <g data-flow-node="decisions" data-korean-label="주요 의사결정 기록" data-file-id="decisions/">
+  <g data-flow-node="decisions" data-korean-label="결정 기록" data-file-id="decisions/">
     <rect x="508" y="270" width="190" height="190" rx="16" fill="var(--green-fill)" stroke="var(--green)" class="card"/>
     <rect x="527" y="288" width="34" height="28" rx="14" fill="var(--green)"/><text x="544" y="302" class="badge on-accent" text-anchor="middle" dominant-baseline="central">3</text>
     <circle cx="603" cy="338" r="30" fill="#D7F0E6"/><use href="#ic-list" x="585" y="320" width="36" height="36" style="color:#0F7A5F"/>
-    <text x="603" y="393" class="card-title" fill="var(--green)" text-anchor="middle" style="font-size:16px">주요 의사결정 기록</text><text x="603" y="423" class="body" text-anchor="middle">(decisions/) · 항상 읽기</text>
+    <text x="603" y="393" class="card-title" fill="var(--green)" text-anchor="middle">결정 기록</text><text x="603" y="423" class="body" text-anchor="middle">(decisions/) · 필수 확인</text>
   </g>
   <g data-flow-node="assets" data-korean-label="이미지·첨부 자료" data-file-id="assets/">
     <rect x="721" y="270" width="190" height="190" rx="16" fill="var(--amber-fill)" stroke="var(--amber)" class="card"/>
@@ -45,23 +45,23 @@
     <circle cx="816" cy="338" r="30" fill="#FCE9C8"/><use href="#ic-folder" x="798" y="320" width="36" height="36" style="color:#B56A00"/>
     <text x="816" y="393" class="card-title" fill="var(--amber)" text-anchor="middle" style="font-size:18px">이미지·첨부 자료</text><text x="816" y="423" class="body" text-anchor="middle">(assets/) · 필요할 때</text>
   </g>
-  <g data-flow-node="export-manifest" data-korean-label="출력 준비표" data-file-id="export-manifest.yml">
+  <g data-flow-node="export-manifest" data-korean-label="내보내기 준비" data-file-id="export-manifest.yml">
     <rect x="934" y="270" width="190" height="190" rx="16" fill="#F1F4F8" stroke="#64748B" class="card"/>
     <rect x="953" y="288" width="34" height="28" rx="14" fill="#64748B"/><text x="970" y="302" class="badge on-accent" text-anchor="middle" dominant-baseline="central">5</text>
     <circle cx="1029" cy="338" r="30" fill="#E3E8EF"/><use href="#ic-export" x="1011" y="320" width="36" height="36" style="color:#475569"/>
-    <text x="1029" y="386" class="card-title" fill="#475569" text-anchor="middle">출력 준비표</text><text x="1029" y="409" class="small" text-anchor="middle">(export-manifest.yml)</text><text x="1029" y="432" class="small" text-anchor="middle">항상 확인</text>
+    <text x="1029" y="386" class="card-title" fill="#475569" text-anchor="middle">내보내기 준비</text><text x="1029" y="409" class="small" text-anchor="middle">(export-manifest.yml)</text><text x="1029" y="432" class="small" text-anchor="middle">필수 확인</text>
   </g>
   <g data-flow-node="human-gate" data-human-gate="김기획자" data-gate-role="approval-hold" data-gate-label="승인·보류">
     <rect x="1147" y="270" width="181" height="190" rx="16" fill="var(--rose-fill)" stroke="var(--rose)" class="card"/>
     <rect x="1166" y="288" width="34" height="28" rx="14" fill="var(--rose)"/><text x="1183" y="302" class="badge on-accent" text-anchor="middle" dominant-baseline="central">6</text>
     <circle cx="1237" cy="338" r="30" fill="#F7DCE9"/><use href="#ic-human" x="1219" y="320" width="36" height="36" style="color:#A62560"/>
-    <text x="1237" y="386" class="card-title" fill="var(--rose)" text-anchor="middle" style="font-size:18px">김기획자 검토</text><text x="1237" y="415" class="body" text-anchor="middle">승인·보류</text>
+    <text x="1237" y="386" class="card-title" fill="var(--rose)" text-anchor="middle" style="font-size:18px">승인 담당자 검토</text><text x="1237" y="415" class="body" text-anchor="middle">승인·보류</text>
   </g>
   <path class="optional" d="M816 471V590H1029V471"/>
   <rect x="645" y="570" width="490" height="70" rx="16" fill="var(--amber-fill)" stroke="var(--amber)" stroke-width="2"/>
-  <text x="890" y="592" class="body" text-anchor="middle">점선: 선택 자산과 문서 변환 도구(renderer)</text><text x="890" y="620" class="small" text-anchor="middle">출력은 시각 검증을 통과한 경우에만 검토합니다.</text>
+  <text x="890" y="592" class="body" text-anchor="middle">점선: 필요할 때만 확인하는 자산과 변환 결과</text><text x="890" y="620" class="small" text-anchor="middle">파생 문서는 렌더링과 화면 검사를 통과한 결과만 전달합니다.</text>
   <rect x="48" y="700" width="1304" height="128" rx="18" fill="#EAF3FC" stroke="var(--blue)" stroke-width="2"/>
-  <text x="80" y="742" class="card-title" fill="var(--blue)">읽기 규칙</text>
-  <text x="80" y="775" class="body">항상 읽기: content.md → evidence.yml → decisions/ → export-manifest.yml</text>
-  <text x="80" y="802" class="body">선택 읽기: assets/ · 조건부 파생물: PDF, DOCX, PPTX · 마지막 결정: 이름 있는 사람이 승인·보류</text>
+  <text x="80" y="742" class="card-title" fill="var(--blue)">확인 원칙</text>
+  <text x="80" y="775" class="body">필수 확인: content.md → evidence.yml → decisions/ → export-manifest.yml</text>
+  <text x="80" y="802" class="body">선택 확인: assets/ · 조건부 결과: PDF, DOCX, PPTX · 최종 결정: 승인 담당자가 승인·보류</text>
 </svg>

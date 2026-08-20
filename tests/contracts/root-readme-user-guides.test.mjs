@@ -217,8 +217,8 @@ const readmeSkillsteadDiagrams = [
     phrases: [
       "한 줄 요청", "시작할 때 작업 환경 확인", "요청 목적과 범위 분석",
       "필요한 스킬과 작업 순서 선택", "근거 자료와 전문 검토 역할",
-      "한국어·도식·이미지 다듬기", "기준 기획 결과물", "마칠 때 결과물 점검",
-      "검토 담당자 승인·보류", "검토된 문서·도식·이미지",
+      "문장·도식·이미지 품질 확인", "기준 결과 폴더", "마칠 때 결과물 점검",
+      "담당자 검토", "검토된 문서·도식·이미지",
     ],
   },
   {
@@ -258,7 +258,7 @@ const readmeSkillsteadDiagrams = [
     section: "요청 뒤에 생성되는 결과물",
     id: "artifact-review-flow",
     alt: "기준 결과 폴더(Canonical Artifact)를 읽고 담당자가 승인하는 순서",
-    phrases: ["기획 본문", "검토 근거", "주요 의사결정 기록", "이미지·첨부 자료", "출력 준비표", "이름 있는 사람"],
+    phrases: ["기획 본문", "검토 근거", "결정 기록", "이미지·첨부 자료", "내보내기 준비", "승인 담당자 검토"],
   },
   {
     section: "케이스별 프롬프트로 시작하기",
@@ -285,7 +285,7 @@ const readmeSkillsteadDiagrams = [
     section: "플러그인 구조와 전체 시스템 아키텍처",
     id: "plugin-system-overview",
     alt: "게임 기획 플러그인 모음 전체 시스템 구조",
-    phrases: ["요청 시작점", "Game Design Studio", "Studio 기준 결과", "Game Design Career", "Career 활용 결과", "자동 검증", "사람 승인·보류", "검토된 문서·이미지·도식"],
+    phrases: ["요청 시작", "Game Design Studio", "Studio 기획 결과", "Game Design Career", "Career 준비 결과", "자동 검증", "담당자 검토", "전달 가능한 결과"],
   },
 ];
 const readmeSkillsteadGraphContracts = new Map([
@@ -2019,9 +2019,9 @@ function assertReadmeSkillsteadDiagramSource(svgSource, { id, phrases }) {
     const expectedCards = [
       ["기획 본문", "content.md"],
       ["검토 근거", "evidence.yml"],
-      ["주요 의사결정 기록", "decisions/"],
+      ["결정 기록", "decisions/"],
       ["이미지·첨부 자료", "assets/"],
-      ["출력 준비표", "export-manifest.yml"],
+      ["내보내기 준비", "export-manifest.yml"],
     ];
     const cardPattern = /<g\b(?=[^>]*data-korean-label="([^"]+)")(?=[^>]*data-file-id="([^"]+)")[^>]*>[\s\S]*?<\/g>/gu;
     const cards = [...mainFlow.matchAll(cardPattern)].map((match) => ({
@@ -2077,8 +2077,8 @@ function assertReadmeSkillsteadDiagramSource(svgSource, { id, phrases }) {
     assert.match(svgSource, /gpt-image-2/u, id + ": shows the configured image-generation route");
     assert.match(
       svgSource,
-      /<g\b[^>]*data-flow-node="human-review"[^>]*data-human-gate="검토 담당자"[^>]*data-gate-role="approval-hold"[^>]*data-gate-label="승인·보류"/u,
-      id + ": keeps a named-role human approval and hold gate",
+      /<g\b[^>]*data-flow-node="human-review"[^>]*data-human-gate="검토 담당자"[^>]*data-gate-role="approval-hold"[^>]*data-gate-label="승인·수정·보류"/u,
+      id + ": keeps a named-role review gate with approval, revision, and hold choices",
     );
     assert.match(
       svgSource,
@@ -2657,8 +2657,8 @@ test("README Skillstead explanation diagrams reject semantic and distortion regr
     [
       "English path before Korean card label",
       artifactSource.replace(
-        '<text x="172" y="393" class="card-title" fill="var(--blue)" text-anchor="middle">기획 본문</text><text x="172" y="423" class="body" text-anchor="middle">(content.md) · 항상 읽기</text>',
-        '<text x="172" y="393" class="card-title" fill="var(--blue)" text-anchor="middle">(content.md)</text><text x="172" y="423" class="body" text-anchor="middle">기획 본문 · 항상 읽기</text>',
+        '<text x="172" y="393" class="card-title" fill="var(--blue)" text-anchor="middle">기획 본문</text><text x="172" y="423" class="body" text-anchor="middle">(content.md) · 필수 확인</text>',
+        '<text x="172" y="393" class="card-title" fill="var(--blue)" text-anchor="middle">(content.md)</text><text x="172" y="423" class="body" text-anchor="middle">기획 본문 · 필수 확인</text>',
       ),
     ],
   ]) {

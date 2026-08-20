@@ -32,6 +32,15 @@ For architecture, workflow, sequence, dataflow, or lifecycle relationships, use 
 
 Use packaged `$svg-infographic` for Markdown-friendly SVG and 2× PNG output. Keep Archify HTML and Skillstead receipts distinct, and never auto-approve either diagram.
 
+## Korean copy gate
+
+When any user-facing diagram copy is Korean, finish this gate before SVG authoring:
+
+1. Load the packaged `skills/humanize-korean/SKILL.md`.
+2. Draft the title, subtitle, node labels, captions, notes, `<title>`, `<desc>`, and alt text as plain text, then run `$humanize-korean` on that copy before placing it in the SVG.
+3. Verify that facts, numbers, names, product and skill IDs, commands, paths, links, uncertainty, and approval states are unchanged. Keep concise state labels as labels, but rewrite translated or bureaucratic sentences into natural Korean.
+4. If the Korean pass or protected-content check fails, preserve the source copy, stop before SVG authoring, and return a blocked, resumable handoff. Do not render first and polish the pixels afterward.
+
 ## Produce and Verify
 
 Track these states independently:

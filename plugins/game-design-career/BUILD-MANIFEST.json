@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-career",
   "sourceDateEpoch": 0,
-  "treeSha256": "45a56afbb722adfb75c97849b66d2b11daaed6344b78b5a52edd0c67ecdb1663",
+  "treeSha256": "bcf44958d099ba0c2231fe7029944a0892b29ac74530c7e36d6b24973159e127",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -4076,8 +4076,8 @@
     },
     {
       "path": "skills/visualize-career-roadmap/SKILL.md",
-      "sha256": "9bbaf021e18136877962ed82326574a060a50dbcc2c464ba79831e040d8ce701",
-      "size": 5157
+      "sha256": "55ecad5bf4722cab07fdda8e1fb0fc441d2809c300ba447bbc4552ddf0247a7d",
+      "size": 5943
     },
     {
       "path": "skills/visualize-career-roadmap/agents/openai.yaml",

@@ -116,7 +116,7 @@ Studio에서 검토한 전투 시스템 기획을 Career 포트폴리오 사례�
 
 [Archify 전체 플러그인 시스템 구조](guides/assets/archify/suite/suite-plugin-system-architecture.html)에서는 설치부터 대표 스킬 라우팅, 전문 스킬·에이전트 검토, 기준 결과물, 한국어 문장 검증과 담당자 승인까지 한 화면에서 확인합니다.
 
-[![대표 진입 스킬이 요청을 제품과 실행 경로로 좁히는 흐름](guides/assets/shared/suite-entry-routing-flow.png)](guides/assets/shared/suite-entry-routing-flow.svg)
+[![대표 스킬이 요청을 읽고 담당 제품과 실행 방식을 정하는 흐름](guides/assets/shared/suite-entry-routing-flow.png)](guides/assets/shared/suite-entry-routing-flow.svg)
 
 정적인 작업 흐름은 Skillstead SVG·PNG로, 구성 요소의 관계는 Archify HTML로 확인하세요.
 
@@ -347,7 +347,7 @@ project-artifact/
 | `assets/` | 검토 전 이미지·도식·첨부 자료 |
 | `export-manifest.yml` | MD·PDF·DOCX·PPTX 준비와 검증 상태 |
 
-[![기준 결과 폴더를 읽고 담당자가 승인하는 순서](guides/assets/readme/artifact-review-flow.png)](guides/assets/readme/artifact-review-flow.svg)
+[![결과를 전달하기 전에 기준 파일과 승인 상태를 확인하는 순서](guides/assets/readme/artifact-review-flow.png)](guides/assets/readme/artifact-review-flow.svg)
 
 대표 결과물은 다음 여섯 종류입니다.
 
@@ -366,16 +366,24 @@ project-artifact/
 
 ### 플러그인 구조와 전체 시스템 아키텍처
 
+전체 구조는 요청을 처리하는 실행 흐름과 저장소를 빌드·설치하는 배포 흐름으로 나뉩니다. 먼저 Skillstead 도식에서 두 제품과 검증·승인 경계를 확인한 뒤, Archify에서 구성 요소의 연결 관계를 살펴보세요.
+
 [![게임 기획 플러그인 모음 전체 시스템 구조](guides/assets/readme/plugin-system-overview.png)](guides/assets/readme/plugin-system-overview.svg)
 
 ▶ [Archify HTML에서 전체 시스템 구조 열기](guides/assets/archify/suite/suite-plugin-system-architecture.html)
 
-```text
-products/<product>/plugin/   사람이 편집하는 원본
-            │ npm run build
-            ▼
-plugins/<product>/           Codex가 설치하는 생성본
-```
+저장소에서 수정할 위치와 Codex가 사용하는 위치는 다음과 같이 구분합니다.
+
+| 단계 | 경로·명령 | 하는 일 | 수정 원칙 |
+| --- | --- | --- | --- |
+| 제품 원본 | `products/<product>/plugin/` | 제품별 스킬·에이전트·가이드와 설정을 관리 | 기능과 문서는 이곳에서 수정 |
+| 공통 원본 | `shared/` | 두 제품이 함께 쓰는 계약·스크립트·지식·문서 품질 규칙을 관리 | 두 제품에 미치는 영향을 함께 검토 |
+| 생성 및 검증 | `npm run build` | 원본과 공통 모듈을 합쳐 설치 패키지를 다시 만들고 스냅샷을 검사 | 명령으로 생성하며 결과를 손으로 고치지 않음 |
+| 설치 패키지 | `plugins/<product>/` | 마켓플레이스가 배포하고 Codex가 설치할 패키지를 보관 | 생성본이므로 직접 수정하지 않음 |
+| 설치 캐시 | `$CODEX_HOME/plugins/cache/` | 현재 세션이 읽는 설치본을 보관 | `codex plugin add`·`remove`로만 변경 |
+
+> [!NOTE]
+> `npm run build`는 저장소 안의 설치 패키지를 다시 만들지만 Codex 설치 상태는 바꾸지 않습니다. 실제 설치·업데이트는 `codex plugin add`를 실행한 뒤 새 채팅이나 새 세션에서 확인합니다.
 
 원본·생성본·공통 모듈의 편집 경계와 검증 스크립트 32개는 [플러그인 스위트 아키텍처](architecture/plugin-suite.md)에서 확인하세요. Archify 원본 명세와 QA 근거는 [Archify 검증 자료](guides/archify-diagrams/README.md)에 있습니다.
 
@@ -420,20 +428,23 @@ plugins/<product>/           Codex가 설치하는 생성본
 
 ### 상세 가이드에서 더 알아보기
 
-| 하려는 작업 | Studio | Career |
-| --- | --- | --- |
-| 설치·업데이트·제거 | [Studio 설치](guides/game-design-studio/installation.md) | [Career 설치](guides/game-design-career/installation.md) |
-| 전체 작업 흐름 | [Studio 작업 흐름](guides/game-design-studio/workflow.md) | [Career 작업 흐름](guides/game-design-career/workflow.md) |
-| 스킬 전체 목록 | [Studio 스킬](guides/game-design-studio/skills/README.md) | [Career 스킬](guides/game-design-career/skills/README.md) |
-| 결과 템플릿 | [Studio 템플릿](guides/game-design-studio/templates.md) | [Career 템플릿](guides/game-design-career/templates.md) |
-| 프로젝트 기억 | [Studio 기억](guides/game-design-studio/memory.md) | [Career 기억](guides/game-design-career/memory.md) |
-| 레퍼런스 분석 | [Studio 분석](guides/game-design-studio/reference-analysis.md) | [Career 분석](guides/game-design-career/reference-analysis.md) |
-| 용어 사전 | [Studio 용어](guides/game-design-studio/glossary.md) | [Career 용어](guides/game-design-career/glossary.md) |
-| 이미지와 도식 | [Studio 이미지](guides/game-design-studio/image-assets.md) | [Career 이미지](guides/game-design-career/image-assets.md) |
-| 컷씬 이미지 사전 설계 | [Studio 컷씬](guides/game-design-studio/cutscene-visual-preproduction.md) | Studio 전용 |
-| SVG·PNG 시각화 | [Studio 시각화](guides/game-design-studio/visualization.md) | [Career 시각화](guides/game-design-career/visualization.md) |
-| 문서 내보내기 | [Studio 내보내기](guides/game-design-studio/exports.md) | [Career 내보내기](guides/game-design-career/exports.md) |
-| 자주 묻는 질문 | [Studio FAQ](guides/game-design-studio/faq.md) | [Career FAQ](guides/game-design-career/faq.md) |
+원하는 답에 가장 가까운 행을 고르면 필요한 가이드로 바로 이동할 수 있습니다.
+
+| 알아보고 싶은 내용 | 가이드에서 확인할 수 있는 것 | Studio | Career |
+| --- | --- | --- | --- |
+| 처음 설치하고 실행하기 | Codex App·CLI 설치, Windows PowerShell 경로, 설치 확인과 첫 요청 | [Studio 설치](guides/game-design-studio/installation.md) · [빠른 시작](guides/game-design-studio/quick-start.md) | [Career 설치](guides/game-design-career/installation.md) · [빠른 시작](guides/game-design-career/quick-start.md) |
+| 업데이트하거나 완전히 제거하기 | 최신 릴리스 비교, 승인 후 재설치, 선택 제거·전체 제거와 잔재 확인 | [Studio 설치·업데이트·제거](guides/game-design-studio/installation.md) | [Career 설치·업데이트·제거](guides/game-design-career/installation.md) |
+| 한 줄 요청이 처리되는 순서 이해하기 | 대표 스킬의 경로 선택, 전문 스킬·에이전트 검토, 결과 확인과 재개 | [Studio 작업 흐름](guides/game-design-studio/workflow.md) | [Career 작업 흐름](guides/game-design-career/workflow.md) |
+| 특정 스킬을 직접 실행하기 | 설치된 스킬의 목적, 필요한 입력, 생성 결과와 다음 검토 단계 | [Studio 스킬 26개](guides/game-design-studio/skills/README.md) | [Career 스킬 25개](guides/game-design-career/skills/README.md) |
+| 결과 폴더와 파일 읽기 | 결과 템플릿, 필수 파일, 읽는 순서와 승인·보류 상태 | [Studio 결과 템플릿](guides/game-design-studio/templates.md) | [Career 결과 템플릿](guides/game-design-career/templates.md) |
+| 이전 프로젝트 기록 다시 쓰기 | 기억 기능 켜기·끄기, 후보 검토, 승인·거부·폐기와 프로젝트 이동 | [Studio 프로젝트 기억](guides/game-design-studio/memory.md) | [Career 프로젝트 기억](guides/game-design-career/memory.md) |
+| 근거와 최신 자료를 구분하기 | 사실·추론·가정 구분, 출처 확인일, 최신 자료 재확인과 인용 경계 | [Studio 레퍼런스 분석](guides/game-design-studio/reference-analysis.md) | [Career 레퍼런스 분석](guides/game-design-career/reference-analysis.md) |
+| 한국어·영어 용어를 통일하기 | 권장 용어, 피해야 할 표현, 제품별 용어 추가와 충돌 처리 | [Studio 용어 사전](guides/game-design-studio/glossary.md) | [Career 용어 사전](guides/game-design-career/glossary.md) |
+| 이미지 계획·생성·검토하기 | `prompt-only`·`select`·`required`·`all`, 비용 승인, 권리와 검토 상태 | [Studio 이미지 가이드](guides/game-design-studio/image-assets.md) | [Career 이미지 가이드](guides/game-design-career/image-assets.md) |
+| 컷씬 이미지 제작을 준비하기 | 장면·샷 목록, 마스터 이미지, 비용·승인 단계와 연속성 검토 | [Studio 컷씬 이미지 사전 설계](guides/game-design-studio/cutscene-visual-preproduction.md) | Studio 전용 |
+| 흐름도와 아키텍처 만들기 | Skillstead SVG·PNG 제작, Archify HTML 탐색과 시각 검증 | [Studio 시각화](guides/game-design-studio/visualization.md) | [Career 시각화](guides/game-design-career/visualization.md) |
+| PDF·DOCX·PPTX로 내보내기 | MD 원본 보존, 형식별 준비 상태, 렌더링 실패와 재개 방법 | [Studio 문서 내보내기](guides/game-design-studio/exports.md) | [Career 문서 내보내기](guides/game-design-career/exports.md) |
+| 설치나 작업 중 발생한 문제 해결하기 | 설치 목록·캐시 확인, Windows 경로 문제, 중단된 작업과 출력 재개 | [Studio 문제 해결](guides/game-design-studio/troubleshooting.md) · [FAQ](guides/game-design-studio/faq.md) | [Career 문제 해결](guides/game-design-career/troubleshooting.md) · [FAQ](guides/game-design-career/faq.md) |
 
 [전체 사용자 가이드](guides/README.md), [프로젝트 기억 공통 가이드](guides/project-memory.md), [공통 활용 사례](guides/use-cases/README.md)에서 제품 간 공통 계약과 인계 경계를 확인하세요.
 

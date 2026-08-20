@@ -1177,10 +1177,11 @@ Expected: doctor PASS and one staged HTML per auto-validated entry under `.tmp/c
 
 ```bash
 agent-browser skills get core --full
-agent-browser --session adguard-cft-extension session info
+ARCHIFY_QA_SESSION="$(agent-browser session id --scope worktree --prefix archify-qa)"
+agent-browser --session "$ARCHIFY_QA_SESSION" session info
 ```
 
-Use only the required `adguard-cft-extension` session, keep `--session adguard-cft-extension` on every browser command, and do not pass `--headed`. List and close confirmed unused tabs before each new artifact. Do not use Archify `--open` or preview.
+Use the task-scoped session ID returned above when visual QA benefits from isolation; no pre-existing named session is required. Keep that ID on browser commands that share state, and do not pass `--headed`. Inspect tabs before each new artifact and close only tabs owned by this task. Do not use Archify `--open` or preview.
 
 - [ ] **Step 3: Capture READ, light, dark, and every guided view**
 
@@ -1188,18 +1189,18 @@ For each staged HTML:
 
 ```bash
 test -n "$QA_ID" && test -f "$QA_HTML" && mkdir -p "$QA_RENDER_ROOT"
-agent-browser --session adguard-cft-extension tab new --label "archify-qa-$QA_ID" "file://$QA_HTML"
-agent-browser --session adguard-cft-extension wait --load domcontentloaded
-agent-browser --session adguard-cft-extension eval "localStorage.removeItem('archify-theme'); location.reload()"
-agent-browser --session adguard-cft-extension wait --load domcontentloaded
-agent-browser --session adguard-cft-extension screenshot --full "$QA_RENDER_ROOT/read.png"
-agent-browser --session adguard-cft-extension eval "localStorage.setItem('archify-theme','light'); location.reload()"
-agent-browser --session adguard-cft-extension wait --load domcontentloaded
-agent-browser --session adguard-cft-extension screenshot --full "$QA_RENDER_ROOT/light.png"
-agent-browser --session adguard-cft-extension eval "localStorage.setItem('archify-theme','dark'); location.reload()"
-agent-browser --session adguard-cft-extension wait --load domcontentloaded
-agent-browser --session adguard-cft-extension screenshot --full "$QA_RENDER_ROOT/dark.png"
-agent-browser --session adguard-cft-extension snapshot -i
+agent-browser --session "$ARCHIFY_QA_SESSION" tab new --label "archify-qa-$QA_ID" "file://$QA_HTML"
+agent-browser --session "$ARCHIFY_QA_SESSION" wait --load domcontentloaded
+agent-browser --session "$ARCHIFY_QA_SESSION" eval "localStorage.removeItem('archify-theme'); location.reload()"
+agent-browser --session "$ARCHIFY_QA_SESSION" wait --load domcontentloaded
+agent-browser --session "$ARCHIFY_QA_SESSION" screenshot --full "$QA_RENDER_ROOT/read.png"
+agent-browser --session "$ARCHIFY_QA_SESSION" eval "localStorage.setItem('archify-theme','light'); location.reload()"
+agent-browser --session "$ARCHIFY_QA_SESSION" wait --load domcontentloaded
+agent-browser --session "$ARCHIFY_QA_SESSION" screenshot --full "$QA_RENDER_ROOT/light.png"
+agent-browser --session "$ARCHIFY_QA_SESSION" eval "localStorage.setItem('archify-theme','dark'); location.reload()"
+agent-browser --session "$ARCHIFY_QA_SESSION" wait --load domcontentloaded
+agent-browser --session "$ARCHIFY_QA_SESSION" screenshot --full "$QA_RENDER_ROOT/dark.png"
+agent-browser --session "$ARCHIFY_QA_SESSION" snapshot -i
 ```
 
 Before each capture, bind `QA_ID`, `QA_HTML`, and `QA_RENDER_ROOT` from the current entry in the JSON stage report. Re-snapshot after every state-changing click, activate each authored guided view by its exact `meta.views[].label`, capture `view-${view.id}.png`, then close the task tab before the next artifact.
@@ -1240,7 +1241,7 @@ node --test tests/unit/archify-visual-qa.test.mjs tests/contracts/archify-visual
 node tooling/build-archify-contact-sheets.mjs --check
 npm run validate:archify-catalog
 git diff --check
-agent-browser --session adguard-cft-extension close
+agent-browser --session "$ARCHIFY_QA_SESSION" close
 git add guides/archify-diagrams/catalog.json guides/archify-diagrams/specs guides/archify-diagrams/visual-qa
 git commit -m "docs: verify curated Archify diagrams visually"
 ```
@@ -1383,6 +1384,6 @@ Do not claim completion if any published entry lacks current source digest, curr
 - Tasks 1–6 are sequential because each establishes a contract used by the next task.
 - Tasks 7, 8, and 9 may run in parallel only after Task 6 because their spec directories are disjoint. The leader must serialize shared `catalog.json` updates or merge three temporary entry patches by ID to prevent lost updates.
 - Task 10 lands before Task 11.
-- Task 11 is a serialized visual-review lane because the required `adguard-cft-extension` browser session is shared and every image needs an individual verdict.
+- Task 11 is a serialized visual-review lane because every image needs an individual verdict and the capture sequence must preserve deterministic browser state.
 - Tasks 12 and 13 are sequential integration and verification work.
 - Use fresh reviewers for Task 13; spec authors must not self-approve their own visual diversity findings.

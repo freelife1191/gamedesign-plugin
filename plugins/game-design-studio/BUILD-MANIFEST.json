@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "9bcba2ff7bce02e2956a850a88fb06b32d61b3937c5bcc6726413d8502e2eb5c",
+  "treeSha256": "4bef3922fb8a393e29236dd119d8edd250786793fadd5354f859444dce23a5db",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -4126,8 +4126,8 @@
     },
     {
       "path": "skills/visualize-game-design/SKILL.md",
-      "sha256": "e8e2410cb2934725af9827f0d2cbf02630b354c447ffef4269812de44403892e",
-      "size": 6082
+      "sha256": "1e8c611e074d64fc21bd1b15b0662eb5bf0aa0a561a5060aff809a689692d348",
+      "size": 6868
     },
     {
       "path": "skills/visualize-game-design/agents/openai.yaml",
