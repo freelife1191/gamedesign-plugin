@@ -19,8 +19,8 @@
 
 | 핵심 플러그인 | 이런 작업에 적합합니다 | 주요 작업·구성 | 바로가기 |
 | --- | --- | --- | --- |
-| 🎮 **Game Design Studio** | 게임 아이디어를 전문 기획으로 구체화하려는 학생·인디 개발자·현업 기획자·팀 리드 | 비전·시스템·콘텐츠·UX·경제·제작 검토<br>설치 스킬 26개·전문 에이전트 12개·복합 작업 조율 | [제품 상세 설명](products/game-design-studio/plugin/README.md) · [사용자 가이드](guides/game-design-studio/README.md) · [5분 빠른 시작](guides/game-design-studio/quick-start.md) |
-| 🎓 **Game Design Career** | 게임 기획 취업 준비생·주니어 기획자·직무 전환자와 이를 돕는 멘토 | 직무 탐색·채용 공고 분석, 역기획, 학습·포트폴리오·면접 준비<br>설치 스킬 25개·전문 에이전트 10개·복합 작업 조율 | [제품 상세 설명](products/game-design-career/plugin/README.md) · [사용자 가이드](guides/game-design-career/README.md) · [5분 빠른 시작](guides/game-design-career/quick-start.md) |
+| 🎮 **Game Design Studio** | 제작팀이 검토하고 구현 범위를 정할 수 있도록 게임 아이디어를 실무 기획 문서로 발전시키려는 학생·인디 개발자·현업 기획자·팀 리드 | 대상 플레이어·핵심 재미·플레이 루프를 정하고 시스템·콘텐츠·UI·UX·경제·LiveOps·제작 범위와 검토 문서를 작성합니다.<br>설치 스킬 26개·전문 에이전트 12개·복합 작업 조율 | [제품 상세 설명](products/game-design-studio/plugin/README.md) · [사용자 가이드](guides/game-design-studio/README.md) · [5분 빠른 시작](guides/game-design-studio/quick-start.md) |
+| 🎓 **Game Design Career** | 게임 기획자로 취업하려는 취업 준비생·직무 전환자, 실무 역량을 키우려는 주니어 기획자와 이들을 돕는 멘토 | 채용 공고에서 요구하는 역량과 현재 경험을 비교한 뒤, 부족한 부분을 역기획·학습 계획·포트폴리오·면접·입사 초기 성장 계획으로 정리합니다.<br>설치 스킬 25개·전문 에이전트 10개·복합 작업 조율 | [제품 상세 설명](products/game-design-career/plugin/README.md) · [사용자 가이드](guides/game-design-career/README.md) · [5분 빠른 시작](guides/game-design-career/quick-start.md) |
 
 **한눈에 보는 핵심 구성**
 
@@ -55,6 +55,7 @@
    - [플러그인 구조와 전체 시스템 아키텍처](#플러그인-구조와-전체-시스템-아키텍처)
    - [이미지·도식·문서 내보내기](#이미지도식문서-내보내기)
 5. [📚 운영과 참고](#-운영과-참고)
+   - [게임 기획 사례와 실무 가이드](#게임-기획-사례와-실무-가이드)
    - [상세 가이드에서 더 알아보기](#상세-가이드에서-더-알아보기)
    - [안전·권리·담당자 승인 경계](#안전권리담당자-승인-경계)
    - [문제를 해결하고 작업 재개하기](#문제를-해결하고-작업-재개하기)
@@ -471,6 +472,36 @@ project-artifact/
 ---
 
 ## 📚 운영과 참고
+
+### 게임 기획 사례와 실무 가이드
+
+바로 실행할 문장이 필요하면 [케이스별 프롬프트로 시작하기](#케이스별-프롬프트로-시작하기)에서 요청문을 고르세요. 기획 원리와 작업 순서, 검토 기준까지 익히려면 아래에서 목적에 맞는 가이드를 선택하세요.
+
+> [!NOTE]
+> `케이스별 프롬프트로 시작하기`는 복사해 실행할 짧은 요청을 모은 곳입니다. 이 절에서는 같은 내용을 되풀이하지 않고 단계별 실무 가이드, 역량·장르 사례, 작성된 결과 예시를 찾아가는 순서를 안내합니다.
+
+| 원하는 도움 | 먼저 볼 문서 | 문서에서 확인할 내용 |
+| --- | --- | --- |
+| 바로 실행할 요청문 | [케이스별 프롬프트](#케이스별-프롬프트로-시작하기) | 목표에 맞는 한 줄 요청과 연결할 제품 |
+| 게임 기획의 기본기 연습 | [역량 사례 8개](guides/game-design-studio/use-cases/competency-paths.md) | 비전·핵심 루프·시스템·UX·콘텐츠·전투·경제·제작 검토를 익히는 실습 |
+| 장르와 플랫폼에 따른 차이 비교 | [장르·플랫폼 사례 10개](guides/game-design-studio/use-cases/concept-scenarios.md) | 모바일 수집형 RPG부터 샌드박스·UGC, 접근성 중심 게임까지 달라지는 설계 조건 |
+| 기획서를 작성하고 검토까지 마치기 | [단계별 실무 가이드 6개](guides/game-design-studio/README.md#목적별-레시피) | 준비할 입력, 실행 순서, 담당자가 결정할 지점, 완료 기준과 중단 후 재개 방법 |
+| 작성된 결과의 형태 확인 | 결과 예시 7개: [비전](guides/sample-results/studio/st-c01.md) · [핵심 루프](guides/sample-results/studio/st-c02.md) · [시스템](guides/sample-results/studio/st-c03.md) · [UX](guides/sample-results/studio/st-c04.md) · [콘텐츠](guides/sample-results/studio/st-c05.md) · [경제](guides/sample-results/studio/st-c07.md) · [제작 검토](guides/sample-results/studio/st-c08.md) | 짧은 요청을 보냈을 때 작업 순서, 참여 역할, 결과 파일과 담당자 결정이 어떻게 정리되는지 확인 |
+| 경쟁작과 참고 자료 분석 | [경쟁작 분석 가이드](guides/game-design-studio/reference-analysis.md) | 관찰한 사실과 해석을 나누고, 비교 결과를 설계 가설과 검토 과제로 바꾸는 방법 |
+| 결과 문서의 구조 선택 | [Studio 템플릿 15개](guides/game-design-studio/templates.md) | 기획 요약서, 시스템 명세서, 경제·밸런스표, 제작 위험표와 검토 문서의 필수 항목 |
+
+기획 주제가 정해졌다면 아래 실무 가이드에서 바로 시작할 수 있습니다.
+
+| 기획 주제 | 이 가이드에서 다루는 핵심 | 단계별 가이드 | 함께 볼 사례 |
+| --- | --- | --- | --- |
+| 게임 비전·핵심 경험·GDD | 대상 플레이어, 핵심 재미, 설계 원칙, 제외 범위와 검증 질문 | [새 게임 GDD 작성](guides/game-design-studio/recipes/new-game-gdd.md) | [비전](guides/game-design-studio/use-cases/competency-paths.md#st-c01-플레이어-경험과-게임-비전) · [핵심 루프](guides/game-design-studio/use-cases/competency-paths.md#st-c02-행동핵심-루프의미-있는-선택) |
+| 시스템·규칙·전투 | 입력과 조건, 상태 전이, 예외 우선순위, 실패 복구와 검증 항목 | [시스템 기능 명세](guides/game-design-studio/recipes/system-feature-spec.md) | [규칙·상태·예외](guides/game-design-studio/use-cases/competency-paths.md#st-c03-규칙상태예외데이터) · [캐릭터·전투](guides/game-design-studio/use-cases/competency-paths.md#st-c06-캐릭터스킬전투몬스터) |
+| UI·UX·온보딩·접근성 | 첫 화면 진입부터 각 화면의 상태, 피드백, 오류·오프라인 복구와 대체 조작 | [UX·접근성 설계](guides/game-design-studio/recipes/ux-accessibility.md) | [UI·UX·온보딩 사례](guides/game-design-studio/use-cases/competency-paths.md#st-c04-uiux온보딩접근성) |
+| 콘텐츠·내러티브·퀘스트 | 퀘스트 단계, 분기, NPC, 보상, 시스템 상태와 제작 범위 | [콘텐츠·퀘스트 설계](guides/game-design-studio/recipes/content-quest-design.md) | [콘텐츠·퀘스트 사례](guides/game-design-studio/use-cases/competency-paths.md#st-c05-콘텐츠내러티브퀘스트npc) |
+| 성장·경제·밸런스·LiveOps | 재화의 획득·소비, 수치 가설, 보호 지표, 중단 기준과 되돌리기 | [경제·LiveOps 설계](guides/game-design-studio/recipes/economy-liveops.md) | [성장·경제·LiveOps 사례](guides/game-design-studio/use-cases/competency-paths.md#st-c07-성장경제밸런스liveops) |
+| 제작 범위·위험·검토 | 일정과 인력에 맞춘 범위, 의존성, 중단 기준, 검토 결과와 문서 출력 준비 | [제작 위험 검토](guides/game-design-studio/recipes/production-review-export.md) | [제작·검토·출력 사례](guides/game-design-studio/use-cases/competency-paths.md#st-c08-제작검토이미지출력) |
+
+---
 
 ### 상세 가이드에서 더 알아보기
 

@@ -40,6 +40,7 @@ const requiredRootSubheadings = [
   "요청 뒤에 생성되는 결과물",
   "플러그인 구조와 전체 시스템 아키텍처",
   "이미지·도식·문서 내보내기",
+  "게임 기획 사례와 실무 가이드",
   "상세 가이드에서 더 알아보기",
   "안전·권리·담당자 승인 경계",
   "문제를 해결하고 작업 재개하기",
@@ -1814,6 +1815,11 @@ async function buildValidStructuredReadmeFixture() {
     "---",
     "",
     "## 📚 운영과 참고",
+    "### 게임 기획 사례와 실무 가이드",
+    "게임 기획 사례와 실무 가이드",
+    "",
+    "---",
+    "",
     "### 상세 가이드에서 더 알아보기",
     "상세 가이드",
     "",
@@ -2486,6 +2492,13 @@ test("root README introduces both primary plugins in detail and links each start
   const introduction = exactSection(readme, "플러그인 소개");
   const hero = readme.slice(0, readme.indexOf("## 🚀 빠른 시작"));
 
+  for (const phrase of [
+    "제작팀이 검토하고 구현 범위를 정할 수 있도록 게임 아이디어를 실무 기획 문서로 발전",
+    "대상 플레이어·핵심 재미·플레이 루프를 정하고 시스템·콘텐츠·UI·UX·경제·LiveOps·제작 범위와 검토 문서를 작성",
+    "게임 기획자로 취업하려는 취업 준비생·직무 전환자, 실무 역량을 키우려는 주니어 기획자",
+    "채용 공고에서 요구하는 역량과 현재 경험을 비교한 뒤, 부족한 부분을 역기획·학습 계획·포트폴리오·면접·입사 초기 성장 계획으로 정리",
+  ]) assert.ok(hero.includes(phrase), `core plugin summary table explains the product in concrete terms: ${phrase}`);
+
   for (const [anchor, heading] of [
     ["game-design-studio", "🎮 Game Design Studio로 전문 게임 기획하기"],
     ["game-design-career", "🎓 Game Design Career로 게임 기획 취업 준비하기"],
@@ -2538,6 +2551,34 @@ test("root README makes project memory, reference, glossary, image, and cutscene
     "guides/game-design-studio/image-assets.md",
     "guides/game-design-career/image-assets.md",
   ]) assert.ok(readme.includes(`](${target})`), `compact README routes detailed workflow guidance: ${target}`);
+});
+
+test("root README routes game planning readers from quick prompts to systematic cases and guides", async () => {
+  const readme = await readFile(path.join(root, "README.md"), "utf8");
+  const section = exactSection(readme, "게임 기획 사례와 실무 가이드");
+
+  for (const phrase of [
+    "바로 실행할 요청문",
+    "역량 사례 8개",
+    "장르·플랫폼 사례 10개",
+    "단계별 실무 가이드 6개",
+    "결과 예시 7개",
+    "경쟁작과 참고 자료 분석",
+  ]) assert.ok(section.includes(phrase), `game-planning guide map names the reader goal: ${phrase}`);
+
+  for (const target of [
+    "#케이스별-프롬프트로-시작하기",
+    "guides/game-design-studio/use-cases/competency-paths.md",
+    "guides/game-design-studio/use-cases/concept-scenarios.md",
+    "guides/game-design-studio/recipes/new-game-gdd.md",
+    "guides/game-design-studio/recipes/system-feature-spec.md",
+    "guides/game-design-studio/recipes/ux-accessibility.md",
+    "guides/game-design-studio/recipes/content-quest-design.md",
+    "guides/game-design-studio/recipes/economy-liveops.md",
+    "guides/game-design-studio/recipes/production-review-export.md",
+    "guides/game-design-studio/reference-analysis.md",
+    "guides/game-design-studio/templates.md",
+  ]) assert.ok(section.includes(`](${target})`), `game-planning guide map links the canonical destination: ${target}`);
 });
 
 test("primary user-facing README hubs separate major sections and use purposeful emoji cues", async () => {
