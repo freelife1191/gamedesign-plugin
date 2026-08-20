@@ -48,7 +48,7 @@ const requiredRootSubheadings = [
 const rootReadmeHero = {
   title: "게임 기획 플러그인 모음",
   suiteName: "Game Design Plugin Suite",
-  tagline: "아이디어 한 줄을 검토 가능한 게임 기획 문서와 취업 준비 자료로 연결하는 Codex 플러그인 모음",
+  tagline: "게임 아이디어는 전문 기획 문서로, 취업 목표는 학습·포트폴리오·면접 계획으로 구체화하는 Codex 플러그인 모음",
   badges: [
     [
       "https://github.com/freelife1191/gamedesign-plugin/releases/latest",
@@ -68,8 +68,8 @@ const rootReadmeHero = {
     ],
   ],
   tags: [
-    ["Game Design Studio", "#대표업데이트핵심-스킬"],
-    ["Game Design Career", "#대표업데이트핵심-스킬"],
+    ["Game Design Studio", "#game-design-studio"],
+    ["Game Design Career", "#game-design-career"],
     ["대표 스킬", "#대표업데이트핵심-스킬"],
     ["업데이트 스킬", "#대표업데이트핵심-스킬"],
     ["Skillstead", "#전체-아키텍처-바로보기"],
@@ -83,7 +83,7 @@ const rootReadmeHero = {
   ],
   metrics: "2개 제품 · 설치 스킬 51개 · 전문 에이전트 22개 · 결과 템플릿 15종",
   coreCapabilities: [
-    "한 줄 요청을 분석해 전문 스킬 또는 오케스트레이터로 연결",
+    "한 줄 요청을 분석해 전문 스킬 또는 오케스트레이터를 고릅니다",
     "레퍼런스 49편과 최근 확인한 1차 자료 16건",
     "LLM Wiki 원리를 적용한 승인 기반 프로젝트 기억",
     "image_gen 우선·승인 후 gpt-image-2 선택",
@@ -825,8 +825,8 @@ function promptTemplateAndExample(promptBlock, label, nextLabel) {
 function assertNaturalLanguageFirstRoot(markdown) {
   const quickStart = exactSection(markdown, "한 문장으로 시작하기");
   for (const phrase of [
-    "한 분야는 전문 스킬",
-    "여러 분야가 얽힌 요청은 오케스트레이터",
+    "한 분야면 전문 스킬을 실행",
+    "여러 분야가 얽히면 오케스트레이터",
     "모르는 정보는 `미정`",
   ]) assert.match(quickStart, new RegExp(escapeRegExp(phrase), "u"), `five-minute start explains ${phrase}`);
 
@@ -1366,8 +1366,8 @@ function assertRootReadmeHero(markdown) {
   assert.ok(hero.includes(`<strong>${rootReadmeHero.suiteName}</strong>`), "hero keeps the suite product name");
   assert.ok(hero.includes(rootReadmeHero.tagline), "hero states the suite value in one sentence");
   for (const phrase of [
-    "Game Design Studio는 게임 방향·규칙·콘텐츠·UX·제작 범위를 설계합니다.",
-    "Game Design Career는 직무 탐색부터 학습·포트폴리오·면접 준비까지 돕습니다.",
+    "Game Design Studio</strong>는 아이디어를 실제 제작 과정에서 검토할 수 있는 전문 게임 기획으로 발전시킵니다.",
+    "Game Design Career</strong>는 게임 기획 취업 준비생과 주니어 기획자, 직무 전환자를 위한 취업·성장 준비 플러그인입니다.",
   ]) assert.ok(hero.includes(phrase), `hero explains the product boundary: ${phrase}`);
   for (const [href, src] of rootReadmeHero.badges) {
     assert.ok(hero.includes(`<a href="${href}"><img src="${src}"`), `hero badge has a truthful target and source: ${href}`);
@@ -1695,7 +1695,7 @@ async function buildValidStructuredReadmeFixture() {
     '<div align="center">',
     `<h1>${rootReadmeHero.title}</h1>`,
     `<p><strong>${rootReadmeHero.suiteName}</strong><br>${rootReadmeHero.tagline}</p>`,
-    "<p>Game Design Studio는 게임 방향·규칙·콘텐츠·UX·제작 범위를 설계합니다.<br>Game Design Career는 직무 탐색부터 학습·포트폴리오·면접 준비까지 돕습니다.</p>",
+    "<p><strong>Game Design Studio</strong>는 아이디어를 실제 제작 과정에서 검토할 수 있는 전문 게임 기획으로 발전시킵니다. 게임의 방향과 핵심 재미를 정하고 시스템·콘텐츠·UX·경제·LiveOps·제작 범위를 구체화한 뒤, 기획 검토 문서까지 작성합니다.<br><strong>Game Design Career</strong>는 게임 기획 취업 준비생과 주니어 기획자, 직무 전환자를 위한 취업·성장 준비 플러그인입니다. 목표 직무와 채용 공고의 요구 역량을 확인하고, 현재 경험에서 보완할 부분을 찾아 역기획·학습 계획·포트폴리오·면접 준비 자료로 정리합니다.</p>",
     ...rootReadmeHero.badges.map(([href, src]) => `<a href="${href}"><img src="${src}" alt="badge"></a>`),
     ...rootReadmeHero.tags.map(([label, href]) => `<a href="${href}"><code>${label}</code></a>`),
     ...rootReadmeHero.quickLinks.map(([label, href]) => `<a href="${href}"><strong>${label}</strong></a>`),
@@ -2472,13 +2472,51 @@ test("root README explains the plugin purpose, audience, evidence, and honest li
   assertCompactGuideDelegation(readme);
   assertSafetyBoundary(readme);
   for (const phrase of [
-    "요청 분석과 오케스트레이션",
+    "요청 분석과 작업 조율",
     "근거와 프로젝트 기억",
     "이미지 제작",
     "도식과 아키텍처",
     "한국어 문서 품질",
     "검토 가능한 결과물",
   ]) assert.ok(readme.includes(`**${phrase}**`), `compact introduction keeps a readable core capability: ${phrase}`);
+});
+
+test("root README introduces both primary plugins in detail and links each starting route", async () => {
+  const readme = await readFile(path.join(root, "README.md"), "utf8");
+  const introduction = exactSection(readme, "플러그인 소개");
+  const hero = readme.slice(0, readme.indexOf("## 🚀 빠른 시작"));
+
+  for (const [anchor, heading] of [
+    ["game-design-studio", "🎮 Game Design Studio로 전문 게임 기획하기"],
+    ["game-design-career", "🎓 Game Design Career로 게임 기획 취업 준비하기"],
+  ]) {
+    assert.ok(hero.includes(`href="#${anchor}"`), `hero links the ${anchor} product introduction`);
+    assert.ok(introduction.includes(`<a id="${anchor}"></a>`), `product introduction keeps the ${anchor} anchor`);
+    assert.ok(introduction.includes(`#### ${heading}`), `product introduction explains ${heading}`);
+  }
+
+  for (const phrase of [
+    "제품 스킬 17개와 공통 스킬 9개를 합친 설치 스킬 26개",
+    "전문 에이전트 12개가 수석 게임 기획, 시스템·경제, 콘텐츠·내러티브",
+    "orchestrate-game-design-project",
+    "제품 스킬 16개와 공통 스킬 9개를 합친 설치 스킬 25개",
+    "전문 에이전트 10개가 경력 전략, 게임 기획 멘토링, 자료·경험 검증",
+    "orchestrate-game-design-career",
+    "실제 경험을 꾸미거나 합격 가능성을 단정하지 않고",
+  ]) assert.ok(introduction.includes(phrase), `detailed product introduction keeps its scope and boundary: ${phrase}`);
+
+  for (const target of [
+    "products/game-design-studio/plugin/README.md",
+    "guides/game-design-studio/README.md",
+    "guides/game-design-studio/quick-start.md",
+    "guides/game-design-studio/use-cases/README.md",
+    "guides/game-design-studio/skills/README.md",
+    "products/game-design-career/plugin/README.md",
+    "guides/game-design-career/README.md",
+    "guides/game-design-career/quick-start.md",
+    "guides/game-design-career/use-cases/README.md",
+    "guides/game-design-career/skills/README.md",
+  ]) assert.ok(introduction.includes(`](${target})`), `product introduction links the direct guide: ${target}`);
 });
 
 test("root README makes project memory, reference, glossary, image, and cutscene workflows easy to find", async () => {

@@ -2,8 +2,8 @@
 
 <div align="center">
 <h1>게임 기획 플러그인 모음</h1>
-<p><strong>Game Design Plugin Suite</strong><br>아이디어 한 줄을 검토 가능한 게임 기획 문서와 취업 준비 자료로 연결하는 Codex 플러그인 모음</p>
-<p>Game Design Studio는 게임 방향·규칙·콘텐츠·UX·제작 범위를 설계합니다.<br>Game Design Career는 직무 탐색부터 학습·포트폴리오·면접 준비까지 돕습니다.</p>
+<p><strong>Game Design Plugin Suite</strong><br>게임 아이디어는 전문 기획 문서로, 취업 목표는 학습·포트폴리오·면접 계획으로 구체화하는 Codex 플러그인 모음</p>
+<p><strong>Game Design Studio</strong>는 아이디어를 실제 제작 과정에서 검토할 수 있는 전문 게임 기획으로 발전시킵니다. 게임의 방향과 핵심 재미를 정하고 시스템·콘텐츠·UX·경제·LiveOps·제작 범위를 구체화한 뒤, 기획 검토 문서까지 작성합니다.<br><strong>Game Design Career</strong>는 게임 기획 취업 준비생과 주니어 기획자, 직무 전환자를 위한 취업·성장 준비 플러그인입니다. 목표 직무와 채용 공고의 요구 역량을 확인하고, 현재 경험에서 보완할 부분을 찾아 역기획·학습 계획·포트폴리오·면접 준비 자료로 정리합니다.</p>
 <p>
   <a href="https://github.com/freelife1191/gamedesign-plugin/releases/latest"><img src="https://img.shields.io/github/v/release/freelife1191/gamedesign-plugin?style=flat-square&label=release" alt="Latest release"></a>
   <a href="https://github.com/freelife1191/gamedesign-plugin/actions/workflows/release-notes.yml"><img src="https://img.shields.io/github/actions/workflow/status/freelife1191/gamedesign-plugin/release-notes.yml?branch=main&style=flat-square&label=release%20note" alt="Release note gate"></a>
@@ -11,13 +11,20 @@
   <a href="#1분-설치"><img src="https://img.shields.io/badge/Codex-App%20%7C%20CLI-111111?style=flat-square&logo=openai&logoColor=white" alt="Codex App and CLI"></a>
 </p>
 <p><strong>2개 제품 · 설치 스킬 51개 · 전문 에이전트 22개 · 결과 템플릿 15종</strong></p>
-<p><a href="#대표업데이트핵심-스킬"><code>Game Design Studio</code></a> · <a href="#대표업데이트핵심-스킬"><code>Game Design Career</code></a> · <a href="#대표업데이트핵심-스킬"><code>대표 스킬</code></a> · <a href="#대표업데이트핵심-스킬"><code>업데이트 스킬</code></a> · <a href="#전체-아키텍처-바로보기"><code>Skillstead</code></a> · <a href="#전체-아키텍처-바로보기"><code>Archify</code></a></p>
+<p><a href="#game-design-studio"><code>Game Design Studio</code></a> · <a href="#game-design-career"><code>Game Design Career</code></a> · <a href="#대표업데이트핵심-스킬"><code>대표 스킬</code></a> · <a href="#대표업데이트핵심-스킬"><code>업데이트 스킬</code></a> · <a href="#전체-아키텍처-바로보기"><code>Skillstead</code></a> · <a href="#전체-아키텍처-바로보기"><code>Archify</code></a></p>
 <p><a href="#1분-설치"><strong>1분 설치</strong></a> · <a href="#대표업데이트핵심-스킬"><strong>대표 스킬 사용법</strong></a> · <a href="#전체-아키텍처-바로보기"><strong>전체 아키텍처</strong></a> · <a href="#상세-가이드에서-더-알아보기"><strong>상세 가이드</strong></a></p>
 </div>
 
+**두 핵심 플러그인 바로보기**
+
+| 핵심 플러그인 | 이런 작업에 적합합니다 | 주요 작업·구성 | 바로가기 |
+| --- | --- | --- | --- |
+| 🎮 **Game Design Studio** | 게임 아이디어를 전문 기획으로 구체화하려는 학생·인디 개발자·현업 기획자·팀 리드 | 비전·시스템·콘텐츠·UX·경제·제작 검토<br>설치 스킬 26개·전문 에이전트 12개·복합 작업 조율 | [제품 상세 설명](products/game-design-studio/plugin/README.md) · [사용자 가이드](guides/game-design-studio/README.md) · [5분 빠른 시작](guides/game-design-studio/quick-start.md) |
+| 🎓 **Game Design Career** | 게임 기획 취업 준비생·주니어 기획자·직무 전환자와 이를 돕는 멘토 | 직무 탐색·채용 공고 분석, 역기획, 학습·포트폴리오·면접 준비<br>설치 스킬 25개·전문 에이전트 10개·복합 작업 조율 | [제품 상세 설명](products/game-design-career/plugin/README.md) · [사용자 가이드](guides/game-design-career/README.md) · [5분 빠른 시작](guides/game-design-career/quick-start.md) |
+
 **한눈에 보는 핵심 구성**
 
-- **요청 분석과 오케스트레이션** — 한 줄 요청을 분석해 전문 스킬 또는 오케스트레이터로 연결합니다. 복합 요청은 필요한 전문 에이전트만 최대 세 개까지 골라 검토합니다.
+- **요청 분석과 작업 조율** — 한 줄 요청을 분석해 전문 스킬 또는 오케스트레이터를 고릅니다. 여러 분야가 얽히면 작업 순서를 정하고 필요한 전문 에이전트만 최대 세 개까지 검토에 참여시킵니다.
 - **근거와 프로젝트 기억** — 레퍼런스 49편과 최근 확인한 1차 자료 16건을 사실·추론·가정으로 나눕니다. LLM Wiki 원리를 적용한 승인 기반 프로젝트 기억으로 검토된 기록만 다시 사용합니다.
 - **이미지 제작** — image_gen 우선·승인 후 gpt-image-2 선택 원칙을 지킵니다. 자산 ID·배치·대체 텍스트·권리 상태를 먼저 정하고, 생성 결과는 담당자가 검토합니다.
 - **도식과 아키텍처** — Skillstead SVG·PNG와 Archify HTML로 흐름과 관계를 설명합니다. SVG는 직접 편집하고, Archify에서는 전체 구조의 연결 관계를 따라가며 살펴봅니다.
@@ -90,7 +97,7 @@ Studio와 Career는 필요한 제품만 따로 설치합니다. 제작 기획과
 | 무엇을 써야 할지 모를 때 | `game-design-studio` | `game-design-career` | 요청을 읽고 제품·경로·결과물과 남은 결정을 먼저 정리 |
 | 여러 작업을 함께 조율할 때 | `orchestrate-game-design-project` | `orchestrate-game-design-career` | 필요한 전문 스킬과 검토 역할만 순서대로 연결 |
 | 방향부터 잡을 때 | `define-game-vision` | `map-game-design-career` | 핵심 재미 또는 목표 직무와 현재 역량부터 정리 |
-| 근거 있는 상세 작업이 필요할 때 | `design-game-systems` | `research-game-design-jobs` | 규칙·상태·예외를 명세하거나 최신 공개 채용 근거를 조사 |
+| 근거 있는 상세 작업이 필요할 때 | `design-game-systems` | `research-game-design-jobs` | 규칙·상태·예외를 명세하거나 최신 공개 채용 공고의 요구사항을 조사 |
 | 결과를 검토·활용할 때 | `review-game-design` | `build-game-design-portfolio` | 기획 결과를 검토하거나 검토된 경험을 공개 가능한 사례로 구성 |
 | 설치본과 최신 공개 릴리스를 비교할 때 | `upgrade-game-design-suite` | `upgrade-game-design-suite` | 버전과 변경 내용을 비교하고 승인 뒤에만 업데이트 |
 
@@ -108,7 +115,7 @@ Studio와 Career는 필요한 제품만 따로 설치합니다. 제작 기획과
 Studio에서 검토한 전투 시스템 기획을 Career 포트폴리오 사례와 면접 준비로 연결해 줘.
 ```
 
-모르는 정보는 `미정`으로 남겨도 됩니다. 대표 스킬이 한 분야는 전문 스킬로, 여러 분야가 얽힌 요청은 오케스트레이터로 연결합니다.
+모르는 정보는 `미정`으로 남겨도 됩니다. 대표 스킬은 한 분야면 전문 스킬을 실행하고, 여러 분야가 얽히면 오케스트레이터에 맡깁니다.
 
 ---
 
@@ -130,10 +137,49 @@ Studio에서 검토한 전투 시스템 기획을 Career 포트폴리오 사례�
 
 ### 플러그인 소개
 
-| 제품 | 다루는 작업 | 대표 결과 |
+Studio와 Career는 이 모음의 핵심 플러그인입니다. Studio는 게임 설계와 제작 검토를, Career는 직무 탐색과 취업 준비를 맡습니다.
+
+<a id="game-design-studio"></a>
+
+#### 🎮 Game Design Studio로 전문 게임 기획하기
+
+Game Design Studio는 한두 문장의 아이디어를 제작 회의와 협업에서 검토할 수 있는 전문 게임 기획으로 구체화합니다. 게임 기획을 배우는 학생, 솔로·인디 개발자, 현업 기획자와 팀 리드가 비전·시스템·콘텐츠·UX·경제·LiveOps·제작 범위를 함께 설계하거나 검토할 때 적합합니다.
+
+| 구성 | 핵심 역할 | 상세 문서 |
 | --- | --- | --- |
-| **Game Design Studio** | 게임 비전, 규칙, 콘텐츠, UX, 경제, 제작 범위 | 게임 기획 요약서, 시스템 명세서, 콘텐츠·UX 설계 |
-| **Game Design Career** | 직무 탐색, 역기획, 학습, 포트폴리오, 면접 | 경력 계획, 역량표, 포트폴리오, 면접 기록 |
+| 대표 진입 스킬 | `game-design-studio`가 요청의 목적과 범위를 읽고, 한 분야면 전문 스킬을 실행합니다. 여러 분야가 얽히면 오케스트레이터를 부릅니다. | [대표 진입 스킬 설명](guides/game-design-studio/skills/game-design-studio.md) |
+| 세부 스킬 | 제품 스킬 17개와 공통 스킬 9개를 합친 설치 스킬 26개가 비전, 시스템, 플레이어 경험, 콘텐츠, 경제, 제작 검토, 이미지·도식과 문서 출력을 맡습니다. | [Studio 스킬 26개](guides/game-design-studio/skills/README.md) |
+| 전문 에이전트 | 전문 에이전트 12개가 수석 게임 기획, 시스템·경제, 콘텐츠·내러티브, UX·접근성, 제작 가능성과 이미지 품질을 나눠 검토합니다. 한 요청에는 필요한 역할만 최대 세 개까지 참여합니다. | [Studio 전문 역할](products/game-design-studio/plugin/README.md#전문-역할-프롬프트) |
+| 복합 작업 조율(오케스트레이션) | `orchestrate-game-design-project`가 여러 기획 영역의 순서와 결과물, 검토 역할을 정합니다. 에이전트의 의견이 다르면 하나로 덮어쓰지 않고 결정할 항목으로 남깁니다. | [Studio 작업 조율 가이드](guides/game-design-studio/skills/orchestrate-game-design-project.md) |
+| 대표 결과 | 게임 기획 요약서, 시스템 명세서, UI·UX 흐름과 상태표, 콘텐츠·내러티브 설계, 경제·밸런스 문서, 제작 범위와 위험 검토서를 만듭니다. | [Studio 결과 템플릿 15개](guides/game-design-studio/templates.md) |
+
+처음이라면 [제품 상세 설명](products/game-design-studio/plugin/README.md) → [사용자 가이드](guides/game-design-studio/README.md) → [5분 빠른 시작](guides/game-design-studio/quick-start.md) → [활용 사례](guides/game-design-studio/use-cases/README.md) 순서로 읽으세요.
+
+```text
+@Game Design Studio 모바일 협동 RPG의 대상 플레이어와 핵심 재미,
+첫 10분 플레이 흐름, 핵심 시스템과 8주 제작 범위를 함께 정리해 줘.
+```
+
+<a id="game-design-career"></a>
+
+#### 🎓 Game Design Career로 게임 기획 취업 준비하기
+
+Game Design Career는 게임 기획 취업 준비생이 목표 직무를 정하고, 현재 경험을 점검해 부족한 역량과 다음 준비 과정을 찾도록 돕습니다. 취업 준비생, 주니어 기획자, 직무 전환자와 멘토가 채용 공고 분석·역기획·학습·포트폴리오·면접·성장 준비를 하나의 계획으로 정리할 때 적합합니다.
+
+| 구성 | 핵심 역할 | 상세 문서 |
+| --- | --- | --- |
+| 대표 진입 스킬 | `game-design-career`가 목표 직무, 현재 경험과 원하는 결과를 읽고, 한 단계면 전문 스킬을 실행합니다. 여러 준비 단계를 함께 다루면 오케스트레이터를 부릅니다. | [대표 진입 스킬 설명](guides/game-design-career/skills/game-design-career.md) |
+| 세부 스킬 | 제품 스킬 16개와 공통 스킬 9개를 합친 설치 스킬 25개가 직무 탐색, 채용 공고 분석, 역량 진단, 역기획, 학습 계획, 포트폴리오, 면접과 성장을 맡습니다. | [Career 스킬 25개](guides/game-design-career/skills/README.md) |
+| 전문 에이전트 | 전문 에이전트 10개가 경력 전략, 게임 기획 멘토링, 자료·경험 검증, 역기획 비평, 포트폴리오 검토와 면접 코칭을 나눠 맡습니다. 한 요청에는 필요한 역할만 최대 세 개까지 참여합니다. | [Career 전문 역할](products/game-design-career/plugin/README.md#전문-역할-프롬프트) |
+| 복합 작업 조율(오케스트레이션) | `orchestrate-game-design-career`가 직무 탐색·학습·포트폴리오·면접 준비의 순서와 결과물을 정합니다. 실제 경험을 꾸미거나 합격 가능성을 단정하지 않고, 근거가 부족한 항목은 다음 과제로 남깁니다. | [Career 작업 조율 가이드](guides/game-design-career/skills/orchestrate-game-design-career.md) |
+| 대표 결과 | 목표 역할 지도, 역량표, 학습 로드맵, 채용 공고 분석표, 역기획 문서, 창작 기획 포트폴리오, 면접 질문·답변 기록, 주니어 성장 계획과 검토 기록을 만듭니다. | [Career 결과 템플릿 15개](guides/game-design-career/templates.md) |
+
+처음이라면 [제품 상세 설명](products/game-design-career/plugin/README.md) → [사용자 가이드](guides/game-design-career/README.md) → [5분 빠른 시작](guides/game-design-career/quick-start.md) → [활용 사례](guides/game-design-career/use-cases/README.md) 순서로 읽으세요.
+
+```text
+@Game Design Career 신입 시스템 기획 취업을 목표로 현재 경험을 진단하고,
+채용 공고 분석부터 12주 학습·포트폴리오·면접 준비까지 계획해 줘.
+```
 
 두 제품은 같은 근거·문서 품질·이미지·도식·출력 계약을 사용하지만 결과 폴더와 승인 기록은 따로 관리합니다. 설계 원칙과 참고 자료는 [전체 사용자 가이드](guides/README.md)와 [지식·근거 아키텍처](architecture/knowledge-and-evidence.md)에서 확인하세요.
 
@@ -178,8 +224,8 @@ Studio에서 검토한 전투 시스템 기획을 Career 포트폴리오 사례�
 
 | 선택 | 주로 사용하는 사람 | 원하는 결과 | 첫 결과 |
 | --- | --- | --- | --- |
-| Studio | 게임 기획 학생·현업 기획자·팀 리드 | 재미·규칙·콘텐츠·UX·경제·제작 범위 | 게임 기획 요약서 (`game-design-brief`) |
-| Career | 취업 준비생·주니어·직무 전환자·멘토 | 역할 탐색·학습·역기획·포트폴리오·면접 | 게임 기획 경력 계획 (`game-design-career-plan`) |
+| [Studio](#game-design-studio) | 게임 기획을 배우는 학생·현업 기획자·팀 리드 | 재미·규칙·콘텐츠·UX·경제·제작 범위 | 게임 기획 요약서 (`game-design-brief`) |
+| [Career](#game-design-career) | 게임 기획 취업 준비생·주니어 기획자·직무 전환자·멘토 | 역할 탐색·학습·역기획·포트폴리오·면접 | 게임 기획 경력 계획 (`game-design-career-plan`) |
 | 둘 다 | 검토한 기획을 취업 자료로 발전시킬 사람 | Studio 결과를 Career 사례로 정리 | 제품별 기준 결과 폴더와 인계 기록 |
 
 결정하기 어렵다면 두 제품을 모두 설치하고 원하는 결과만 말하세요. 대표 스킬이 최종 결과를 맡을 제품을 하나 정하고, 필요한 경우에만 다른 제품에 근거를 요청합니다.
